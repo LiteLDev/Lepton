@@ -1,0 +1,46 @@
+{
+  "format_version": 3,
+  "format_uuid": "289f771f-2c9a-4d73-9f3f-8492495a924d",
+  "tooth": "github.com/LiteLDev/Lepton",
+  "version": "0.1.0",
+  "info": {
+    "name": "Lepton",
+    "description": "Quark for Minecraft Bedrock Edition: small vanilla+ improvements, each one a module you can turn off",
+    "tags": ["platform:levilamina", "type:mod", "server", "client", "category:game-mechanics", "category:utility", "vanilla-plus"]
+  },
+  "variants": [
+    {
+      "platform": "win-x64",
+      "dependencies": {
+        "github.com/LiteLDev/LeviLamina": "26.51.*"
+      },
+      "assets": [
+        {
+          "type": "zip",
+          "urls": ["https://{{tooth}}/releases/download/v{{version}}/lepton-server-windows-x64.zip"],
+          "placements": [
+            { "type": "dir", "src": "Lepton/", "dest": "plugins/Lepton/" }
+          ]
+        }
+      ],
+      "preserve_files": ["plugins/Lepton/config/*"]
+    },
+    {
+      "label": "client",
+      "platform": "win-x64",
+      "dependencies": {
+        "github.com/LiteLDev/LeviLamina#client": "26.51.*"
+      },
+      "assets": [
+        {
+          "type": "zip",
+          "urls": ["https://{{tooth}}/releases/download/v{{version}}/lepton-client-windows-x64.zip"],
+          "placements": [
+            { "type": "dir", "src": "Lepton/", "dest": "mods/Lepton/" }
+          ]
+        }
+      ],
+      "preserve_files": ["mods/Lepton/config/*"]
+    }
+  ]
+}

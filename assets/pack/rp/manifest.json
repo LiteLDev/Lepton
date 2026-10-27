@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Lepton RP",
+    "description": "Textures, models and names of Lepton (Quark for Bedrock)",
+    "uuid": "c8372485-db90-443f-ae4d-caf1c700ca44",
+    "version": "${version}",
+    "min_engine_version": [
+      1,
+      21,
+      40
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "c8e9f006-11b0-463a-beb2-2650d0a086f2",
+      "version": "${version}"
+    }
+  ]
+}

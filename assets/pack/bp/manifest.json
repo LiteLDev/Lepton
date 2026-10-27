@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Lepton BP",
+    "description": "Blocks, items and recipes of Lepton (Quark for Bedrock)",
+    "uuid": "981bca4f-a7af-4d8d-8d18-b54454b03f33",
+    "version": "${version}",
+    "min_engine_version": [
+      1,
+      21,
+      40
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "12fd42b7-5851-48c6-bb22-c94a996024ac",
+      "version": "${version}"
+    }
+  ]
+}
