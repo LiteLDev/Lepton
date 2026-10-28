@@ -129,8 +129,6 @@ std::optional<ItemStack> projectileFor(Player const& player, ItemStackBase const
     return ItemStack{};
 }
 
-namespace {
-/// Quark's getLogicalStack for `stack` with `count` (of the real stack).
 ItemStack logicalStack(Player const& player, TickerSlot slot, ItemStack const& stack, int count) {
     if (game::isEmpty(stack)) return ItemStack{};
     if (auto proj = projectileFor(player, stack)) return *proj;
@@ -138,7 +136,6 @@ ItemStack logicalStack(Player const& player, TickerSlot slot, ItemStack const& s
     if (stack.isStackable() && count == stack.mCount) return ItemStack{};
     return stack;
 }
-} // namespace
 
 TickerStack tickerStack(Player const& player, TickerSlot slot) {
     auto const& real  = tickerSource(player, slot);

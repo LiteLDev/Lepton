@@ -3,13 +3,21 @@
 #include "feature/hud/HudConfig.h"
 
 #include <algorithm>
+#include <vector>
+
+#include "ll/api/command/CommandHandle.h"
 
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/server/commands/CommandOrigin.h"
+#include "mc/server/commands/CommandOutput.h"
 #include "mc/world/item/ItemStack.h"
 
 #include "feature/hud/Logic.h"
+#include "game/Inventory.h"
+#include "mod/Commands.h"
+#include "mod/Log.h"
 #include "game/Items.h"
 #include "mod/Config.h"
 #include "selftest/SelfTest.h"
@@ -33,6 +41,36 @@ void clearPlayer(Player& p) {
     p.setSelectedSlot(0);
 }
 } // namespace
+
+/// The tooltip test kit of `/quark debug hud` (hotbar 0..8).
+std::vector<ItemStack> debugKit() {
+    return {
+        game::makeItem("minecraft:diamond_sword"),
+        game::makeItem("minecraft:diamond_helmet"),
+        game::makeItem("minecraft:cooked_beef", 16),
+        game::itemFromSnbt(
+            R"({Name:"minecraft:red_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:12b,Damage:0s,Slot:0b},{Name:"minecraft:golden_apple",Count:3b,Damage:0s,Slot:1b},{Name:"minecraft:oak_log",Count:64b,Damage:0s,Slot:2b},{Name:"minecraft:iron_pickaxe",Count:1b,Damage:40s,Slot:3b},{Name:"minecraft:redstone",Count:30b,Damage:0s,Slot:4b},{Name:"minecraft:torch",Count:48b,Damage:0s,Slot:5b},{Name:"minecraft:bread",Count:9b,Damage:0s,Slot:6b},{Name:"minecraft:emerald",Count:5b,Damage:0s,Slot:7b},{Name:"minecraft:bone",Count:2b,Damage:0s,Slot:8b},{Name:"minecraft:arrow",Count:20b,Damage:0s,Slot:9b}]}})"
+        ),
+        game::itemFromSnbt(R"({Name:"minecraft:enchanted_book",Count:1b,Damage:0s,tag:{ench:[{id:9s,lvl:5s},{id:26s,lvl:1s}]}})"),
+        game::makeItem("minecraft:empty_map"),
+        game::makeItem("minecraft:rotten_flesh", 4),
+        game::makeItem("minecraft:coal", 20),
+        game::makeItem("minecraft:cobblestone", 64),
+    };
+}
+
+LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
+    cmd.overload().text("debug").text("hud").execute([](CommandOrigin const& origin, CommandOutput& output) {
+        auto* p = commands::playerOf(origin);
+        if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+        auto kit = debugKit();
+        auto& inv = p->getInventory();
+        for (int i = 0; i < static_cast<int>(kit.size()); ++i) inv.setItem(i, kit[static_cast<size_t>(i)]);
+        game::inv::sync(*p);
+        log().info("hud: debug kit given to {}", p->getRealName());
+        output.success("Lepton hud test kit given.");
+    });
+});
 
 LP_REGISTER_SELFTEST("hud.config", [](Context& ctx) {
     auto const& c = cfg();

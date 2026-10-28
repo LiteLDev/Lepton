@@ -51,6 +51,8 @@ struct TickerStack {
 [[nodiscard]] int tickerCount(Player const& player, ItemStackBase const& display);
 /// The projectile a bow / crossbow without Infinity would use (empty if none / not a launcher).
 [[nodiscard]] std::optional<ItemStack> projectileFor(Player const& player, ItemStackBase const& weapon);
+/// Quark's `getLogicalStack`: what to show for the real `stack` (whose total is `count`).
+[[nodiscard]] ItemStack logicalStack(Player const& player, TickerSlot slot, ItemStack const& stack, int count);
 /// Quark's `getLogicalStack` + `getStackCount` for the slot.
 [[nodiscard]] TickerStack tickerStack(Player const& player, TickerSlot slot);
 /// Quark's `shouldChange`.
