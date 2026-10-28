@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $script:RepoRoot = (Resolve-Path "$PSScriptRoot/../..").Path
 $script:BP = Join-Path $script:RepoRoot 'assets/pack/bp'
 $script:RP = Join-Path $script:RepoRoot 'assets/pack/rp'
-$script:FormatVersion = '1.21.120'
+$script:FormatVersion = '1.26.0'
 $script:RecipeFormat = '1.20.10'
 $script:ItemFormat = '1.21.60'
 # Bedrock block geometry: +x of the model is world west (the model is mirrored on x relative to
@@ -711,6 +711,7 @@ function New-ShapeSet {
     if ($Shapes -contains 'wall') {
         $sid = $id.wall
         $c = & $partial 'wall' @('lepton:wall')
+        $c['minecraft:connection_rule'] = [ordered]@{ accepts_connections_from = 'all' }   # vanilla walls/panes/bars connect to it
         $vis = [ordered]@{ post = Get-StateCond 'lepton:post' $true }
         foreach ($d in $script:Dirs.Keys) { $vis["${d}_short"] = Get-StateCond "lepton:$d" 'short'; $vis["${d}_tall"] = Get-StateCond "lepton:$d" 'tall' }
         $c['minecraft:geometry'] = [ordered]@{ identifier = 'geometry.lepton.wall'; bone_visibility = $vis }
@@ -729,6 +730,7 @@ function New-ShapeSet {
         if ($Shapes -notcontains $kind) { continue }
         $sid = $id[$kind]
         $c = & $partial $kind @("lepton:$kind")
+        $c['minecraft:connection_rule'] = [ordered]@{ accepts_connections_from = $(if ($kind -eq 'fence') { 'only_fences' } else { 'all' }) }
         $vis = [ordered]@{ post = 'true' }
         foreach ($d in $script:Dirs.Keys) { $vis[$d] = Get-StateCond "lepton:$d" $true }
         $c['minecraft:geometry'] = [ordered]@{ identifier = "geometry.lepton.$kind"; bone_visibility = $vis }
@@ -751,6 +753,7 @@ function New-ShapeSet {
     if ($Shapes -contains 'fence_gate') {
         $sid = $id.fence_gate
         $c = & $partial 'fence_gate' @('lepton:fence_gate')
+        $c['minecraft:connection_rule'] = [ordered]@{ accepts_connections_from = 'only_fences' }
         $open = Get-StateCond 'lepton:open' $true; $closed = Get-StateCond 'lepton:open' $false
         $vis = [ordered]@{}
         foreach ($w in $false, $true) {

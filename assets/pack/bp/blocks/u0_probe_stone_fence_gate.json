@@ -1,5 +1,5 @@
 {
-  "format_version": "1.21.120",
+  "format_version": "1.26.0",
   "minecraft:block": {
     "description": {
       "identifier": "lepton:u0_probe_stone_fence_gate",
@@ -67,6 +67,9 @@
           "texture": "lepton_u0probe_u0_probe_stone",
           "render_method": "opaque"
         }
+      },
+      "minecraft:connection_rule": {
+        "accepts_connections_from": "only_fences"
       },
       "minecraft:geometry": {
         "identifier": "geometry.lepton.fence_gate",
