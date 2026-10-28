@@ -81,12 +81,20 @@ int transferSlot(Container& from, int slot, Container& to, Range toRange, int ma
     int       n      = maxCount < 0 ? have : std::min(have, maxCount);
     ItemStack moving = source;
     moving.set(n);
+    // Take the stack out first, so a transfer within one container never merges a slot into itself.
+    from.setItem(slot, ItemStack{});
     int moved = insert(to, moving, toRange);
-    if (moved == 0) return 0;
-    if (moved >= have) from.setItem(slot, ItemStack{});
-    else {
-        source.set(have - moved);
-        from.setItem(slot, source);
+    int left  = have - moved;
+    if (left > 0) {
+        ItemStack rest = from.getItem(slot); // something may have been inserted into the freed slot
+        if (isEmpty(rest)) {
+            source.set(left);
+            from.setItem(slot, source);
+        } else {
+            // the freed slot got part of the moving stack back (same container): add the rest on top
+            rest.set(rest.mCount + left);
+            from.setItem(slot, rest);
+        }
     }
     return moved;
 }

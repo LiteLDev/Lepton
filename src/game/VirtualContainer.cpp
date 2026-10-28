@@ -127,13 +127,6 @@ Container* containerOf(Actor& actor) {
     return comp ? &comp->mContainer.get() : nullptr;
 }
 
-BlockSource* regionOf(int dim) {
-    auto level = ll::service::getLevel();
-    if (!level) return nullptr;
-    auto d = level->getDimension(dim).lock();
-    return d ? &d->getBlockSourceFromMainChunkSource() : nullptr;
-}
-
 /// The player has the helper `entity`'s container screen open.
 bool hasOpen(Player const& player, int64_t entity) {
     auto const& manager = player.mContainerManager.get();
@@ -169,7 +162,9 @@ void finish(GlobalPos const& pos) {
 
 bool sameStack(ItemStack const& a, ItemStack const& b) {
     if (isEmpty(a) || isEmpty(b)) return isEmpty(a) && isEmpty(b);
-    return a.mCount == b.mCount && itemToSnbt(a) == itemToSnbt(b);
+    if (a.mCount != b.mCount || a.getId() != b.getId() || a.getAuxValue() != b.getAuxValue()) return false;
+    if (a.isStackable(b)) return true; // same item, data and user data
+    return a.getMaxStackSize() == 1 && itemToSnbt(a) == itemToSnbt(b); // unstackables (tools, ...)
 }
 
 /// Pushes rejected items back to a viewer (or drops them at the container).
@@ -179,7 +174,8 @@ void rejectItems(GlobalPos const& pos, Session& s, Container& c) {
         ItemStack stack = c.getItem(i);
         if (isEmpty(stack) || s.spec.accepts(stack)) continue;
         c.setItem(i, ItemStack{});
-        Player* to = s.viewers.empty() ? nullptr : playerByUuid(*s.viewers.begin());
+        // Who put it in is unknown with several viewers: then it drops at the container.
+        Player* to = s.viewers.size() == 1 ? playerByUuid(*s.viewers.begin()) : nullptr;
         if (to) {
             inv::insert(inv::playerInventory(*to), stack, inv::kPlayerAll);
             inv::sync(*to);
@@ -453,6 +449,8 @@ public:
                 co_await ll::chrono::ticks(1);
                 auto* p = playerByUuid(uuid);
                 if (!p) co_return;
+                auto* r = regionOf(pos.dim);
+                if (!r || !bindings().contains(blockIdAt(*r, blockPos(pos)))) co_return; // broken meanwhile
                 if (spec.canOpen && !spec.canOpen(*p, pos)) co_return;
                 open(*p, pos, spec);
             }).launch(ll::thread::ServerThreadExecutor::getDefault());

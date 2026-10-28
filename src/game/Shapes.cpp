@@ -198,13 +198,6 @@ State& st() {
     return s;
 }
 
-BlockSource* regionOf(int dim) {
-    auto level = ll::service::getLevel();
-    if (!level) return nullptr;
-    auto d = level->getDimension(DimensionType(dim)).lock();
-    return d ? &d->getBlockSourceFromMainChunkSource() : nullptr;
-}
-
 void later(uint64_t delay, std::function<void()> fn) {
     st().tasks.push_back({st().tick + std::max<uint64_t>(delay, 1), std::move(fn)});
 }

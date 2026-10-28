@@ -13,21 +13,20 @@
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/phys/AABB.h"
 
+#include "game/Blocks.h"
+
 namespace lp::game::entities {
 
 Actor* spawn(BlockSource& region, std::string_view type, Vec3 const& pos, Actor* summoner) {
-    if (!region.hasChunksAt(BlockPos{pos}, 0, false)) return nullptr;
+    if (!region.hasChunksAt(blockPosOf(pos), 0, false)) return nullptr;
     ActorDefinitionIdentifier ident{std::string(type)};
     ActorUniqueID             id{};
     return CommandUtils::spawnEntityAt(region, pos, ident, id, summoner);
 }
 
 Actor* spawn(int dim, std::string_view type, Vec3 const& pos, Actor* summoner) {
-    auto level = ll::service::getLevel();
-    if (!level) return nullptr;
-    auto d = level->getDimension(dim).lock();
-    if (!d) return nullptr;
-    return spawn(d->getBlockSourceFromMainChunkSource(), type, pos, summoner);
+    auto* region = regionOf(dim);
+    return region ? spawn(*region, type, pos, summoner) : nullptr;
 }
 
 int64_t idOf(Actor const& actor) { return actor.getOrCreateUniqueID().rawID; }

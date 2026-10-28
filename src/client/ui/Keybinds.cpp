@@ -102,7 +102,7 @@ public:
         // Keybinds with `inScreens`: the game's mapping only fires in gameplay, so screens are
         // served from the raw key events.
         mListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
-            if (topScreen() == "hud_screen") return;
+            if (ev.isCancelled() || topScreen() == "hud_screen") return;
             for (auto const& k : KeybindRegistry::entries()) {
                 if (!k.inScreens) continue;
                 for (int code : keysOf(k.name))

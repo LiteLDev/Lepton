@@ -19,6 +19,9 @@ class Actor;
 
 namespace lp::game {
 
+/// The main block source of dimension `dim` (0 overworld, 1 nether, 2 end); nullptr without a level.
+[[nodiscard]] BlockSource* regionOf(int dim);
+
 /// The block's full id ("minecraft:stone", "lepton:example", ...).
 [[nodiscard]] std::string blockId(Block const& block);
 /// The block at `pos` ("" when the chunk isn't loaded).

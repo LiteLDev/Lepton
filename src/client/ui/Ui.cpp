@@ -330,6 +330,7 @@ void processInput(std::deque<InputEvent> events) {
                 if (gCustom) gCustom->onClick(e.pos, e.button);
                 break;
             case InputEvent::Kind::CustomKey:
+                // Escape is cancelled for the game (onKey below): Lepton pops the scene itself.
                 if (gCustom && !gCustom->onKey(e.key) && e.key == Key::Escape) gCustom->close();
                 break;
             case InputEvent::Kind::FieldChar: {
@@ -417,12 +418,16 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     else if (gCustom && isHud && gCustomSeenFrames > 0 && !isCustomScreenName(c->getClientSceneStack()->getScreenName()))
         closeCustom(false);
 
+    // The HUD renders first in every frame, also below open screens: it only becomes the "top
+    // screen" when no menu is shown, so input never sees a half-updated state.
+    bool hudOnTop = isHud && !c->isShowingMenu();
     if (!isHud) gCallbacks = std::move(callbacks);
     std::lock_guard lock(gInputMutex);
+    if (isHud && !hudOnTop) return;
     gTopScreen   = name;
     gCustomOnTop = isCustom && gCustom != nullptr;
-    if (!isHud) gRegions = std::move(regions);
-    else if (gTopScreen == "hud_screen") gRegions.clear();
+    if (isHud) gRegions.clear();
+    else gRegions = std::move(regions);
 }
 
 void onMouse(ll::event::MouseInputEvent& ev) {
@@ -462,7 +467,7 @@ void onKey(ll::event::KeyInputEvent& ev) {
     if (key == Key::Shift) gShiftDown = down;
     if (gCustomOnTop) {
         if (down) gEvents.push_back(InputEvent{InputEvent::Kind::CustomKey, -1, {}, {}, 0, key});
-        if (key != Key::Escape) ev.cancel();
+        ev.cancel();
         return;
     }
     if (gFocusedField.empty() || gTopScreen == "hud_screen") return;
@@ -523,7 +528,8 @@ public:
         auto& bus = ll::event::EventBus::getInstance();
         mListeners.push_back(bus.emplaceListener<ll::event::AfterUIRenderEvent>(onRender));
         mListeners.push_back(bus.emplaceListener<ll::event::MouseInputEvent>(onMouse));
-        mListeners.push_back(bus.emplaceListener<ll::event::KeyInputEvent>(onKey));
+        // High priority: widgets see keys before keybind listeners (which skip cancelled events).
+        mListeners.push_back(bus.emplaceListener<ll::event::KeyInputEvent>(onKey, ll::event::EventPriority::High));
         TooltipHook::hook();
     }
     void uninstall() {

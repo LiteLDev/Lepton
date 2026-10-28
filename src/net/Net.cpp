@@ -157,6 +157,8 @@ std::string modVersion() {
     return v ? v->to_string() : std::string("0.0.0");
 }
 
+/// The (primary) player of a connection. Split-screen sub-clients (consoles only) share the
+/// connection and are not told apart: the runtime packet does not carry the sub-client id.
 Player* playerByNetworkId(NetworkIdentifier const& id) {
     auto    level = ll::service::getLevel();
     Player* found = nullptr;
@@ -218,6 +220,11 @@ public:
         auto* player = playerByNetworkId(source);
         if (!player) {
             log().debug("net: {} from an unknown connection", packet.id);
+            return;
+        }
+        // Until the handshake succeeded (same protocol) only the hello is accepted.
+        if (packet.id != Hello::kId && !hasClientMod(*player)) {
+            log().debug("net: {} from {} before the handshake: dropped", packet.id, player->getRealName());
             return;
         }
         dispatchServer(*player, packet.id, packet.payload);
