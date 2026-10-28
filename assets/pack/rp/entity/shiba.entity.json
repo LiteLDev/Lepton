@@ -1,0 +1,60 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:shiba",
+      "materials": { "default": "entity_alphatest", "collar": "entity_alphatest", "armor": "entity_alphatest" },
+      "textures": {
+        "coat0": "textures/entity/lepton/shiba0",
+        "coat1": "textures/entity/lepton/shiba1",
+        "coat2": "textures/entity/lepton/shiba2",
+        "rare": "textures/entity/lepton/shiba_rare",
+        "doge": "textures/entity/lepton/shiba_doge",
+        "rad": "textures/entity/lepton/shiba_rad",
+        "armor": "textures/entity/lepton/shiba_armor",
+        "collar_white": "textures/entity/lepton/shiba_collar_white",
+        "collar_orange": "textures/entity/lepton/shiba_collar_orange",
+        "collar_magenta": "textures/entity/lepton/shiba_collar_magenta",
+        "collar_light_blue": "textures/entity/lepton/shiba_collar_light_blue",
+        "collar_yellow": "textures/entity/lepton/shiba_collar_yellow",
+        "collar_lime": "textures/entity/lepton/shiba_collar_lime",
+        "collar_pink": "textures/entity/lepton/shiba_collar_pink",
+        "collar_gray": "textures/entity/lepton/shiba_collar_gray",
+        "collar_light_gray": "textures/entity/lepton/shiba_collar_light_gray",
+        "collar_cyan": "textures/entity/lepton/shiba_collar_cyan",
+        "collar_purple": "textures/entity/lepton/shiba_collar_purple",
+        "collar_blue": "textures/entity/lepton/shiba_collar_blue",
+        "collar_brown": "textures/entity/lepton/shiba_collar_brown",
+        "collar_green": "textures/entity/lepton/shiba_collar_green",
+        "collar_red": "textures/entity/lepton/shiba_collar_red",
+        "collar_black": "textures/entity/lepton/shiba_collar_black"
+      },
+      "geometry": {
+        "default": "geometry.lepton.shiba",
+        "collar": "geometry.lepton.shiba.collar",
+        "armor": "geometry.lepton.shiba.armor"
+      },
+      "animations": {
+        "walk": "animation.lepton.shiba.walk",
+        "sit": "animation.lepton.shiba.sit",
+        "tail": "animation.lepton.shiba.tail",
+        "look_at_target": "animation.common.look_at_target"
+      },
+      "scripts": {
+        "animate": [
+          { "walk": "!q.is_sitting" },
+          { "sit": "q.is_sitting" },
+          "tail",
+          "look_at_target"
+        ]
+      },
+      "enable_attachables": true,
+      "render_controllers": [
+        "controller.render.lepton.shiba",
+        { "controller.render.lepton.shiba_collar": "q.is_tamed" },
+        { "controller.render.lepton.shiba_armor": "q.property('lepton:armor')" }
+      ],
+      "spawn_egg": { "base_color": "#a86741", "overlay_color": "#e8d5b6" }
+    }
+  }
+}

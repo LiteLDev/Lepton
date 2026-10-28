@@ -1,0 +1,11 @@
+{
+  "effect.quark.resilience": "稳定",
+  "quark.jei.hint.crab_info": "螃蟹可以在沙滩系生物群系中找到。可以用小麦、鸡肉或任何鱼来繁殖它们。",
+  "quark.jei.hint.shiba_find_low_light": "如果你手里拿着火把，柴犬会为你指出需要照亮的暗处。",
+  "lp.mobsoverworld.effect_start": "你感到更加稳定（{0}）",
+  "lp.mobsoverworld.effect_end": "稳定效果已消失",
+  "lp.mobsoverworld.effect_hud": "{0} {1}",
+  "lp.mobsoverworld.level_2": "II",
+  "lp.mobsoverworld.potion_tooltip": "稳定{0}（{1}）",
+  "lp.mobsoverworld.potion_attr": "+{0} 击退抗性"
+}

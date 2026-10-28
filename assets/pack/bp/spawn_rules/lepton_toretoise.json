@@ -1,0 +1,18 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": { "identifier": "lepton:toretoise", "population_control": "monster" },
+    "conditions": [
+      {
+        "minecraft:spawns_underground": {},
+        "minecraft:spawns_on_block_filter": ["minecraft:stone", "minecraft:deepslate", "minecraft:tuff", "minecraft:granite", "minecraft:diorite", "minecraft:andesite", "minecraft:calcite", "minecraft:cobbled_deepslate", "minecraft:cobblestone", "minecraft:smooth_basalt", "minecraft:dripstone_block"],
+        "minecraft:brightness_filter": { "min": 0, "max": 7, "adjust_for_weather": true },
+        "minecraft:height_filter": { "min": -64, "max": 0 },
+        "minecraft:difficulty_filter": { "min": "easy", "max": "hard" },
+        "minecraft:weight": { "default": 120 },
+        "minecraft:herd": { "min_size": 2, "max_size": 4 },
+        "minecraft:biome_filter": { "all_of": [{ "test": "has_biome_tag", "value": "overworld" }, { "test": "has_biome_tag", "operator": "!=", "value": "nether" }, { "test": "has_biome_tag", "operator": "!=", "value": "the_end" }] }
+      }
+    ]
+  }
+}

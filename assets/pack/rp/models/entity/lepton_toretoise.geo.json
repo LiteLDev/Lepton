@@ -1,0 +1,209 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.lepton.toretoise",
+        "texture_width": 128,
+        "texture_height": 64,
+        "visible_bounds_width": 3.0,
+        "visible_bounds_height": 2.0,
+        "visible_bounds_offset": [
+          0,
+          1.0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "root",
+          "pivot": [
+            0,
+            6,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10,
+                3,
+                -10
+              ],
+              "size": [
+                20,
+                3,
+                20
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -12,
+                6,
+                -12
+              ],
+              "size": [
+                24,
+                8,
+                24
+              ],
+              "uv": [
+                0,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            7,
+            -12
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3,
+                4,
+                -18
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                80,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "leg0",
+          "parent": "root",
+          "pivot": [
+            -8,
+            6,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                0,
+                -11
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                80,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "name": "leg1",
+          "parent": "root",
+          "pivot": [
+            8,
+            6,
+            -8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                5,
+                0,
+                -11
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                80,
+                12
+              ],
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "leg2",
+          "parent": "root",
+          "pivot": [
+            -8,
+            6,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                0,
+                5
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                80,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "name": "leg3",
+          "parent": "root",
+          "pivot": [
+            8,
+            6,
+            8
+          ],
+          "cubes": [
+            {
+              "origin": [
+                5,
+                0,
+                5
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                80,
+                12
+              ],
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
