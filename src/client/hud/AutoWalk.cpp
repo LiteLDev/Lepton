@@ -40,6 +40,7 @@ namespace {
 
 std::atomic<bool> gAutorun{false};
 std::atomic<bool> gReleaseForward{false}; ///< clear the forward flag we set (on the client thread)
+std::atomic<int>  gPressedKey{0};         ///< last key pressed in game (window thread -> client thread)
 
 std::vector<int> forwardKeys() {
     auto* c = client::currentClient();
@@ -100,6 +101,13 @@ void onTick() {
     if (!player || !cfg().enableAutoWalkKeybind) {
         if (gAutorun) stop(player ? "disabled" : "left the world");
     }
+    // The forward key stops auto-walk (Quark: keyUp.isDown()). The game itself keeps moving the
+    // player while the key is held, so the forced flag is not cleared here.
+    if (int key = gPressedKey.exchange(0); key != 0 && gAutorun) {
+        auto keys = forwardKeys();
+        if (std::find(keys.begin(), keys.end(), key) != keys.end() && gAutorun.exchange(false))
+            log().info("hud: auto-walk off (forward key)");
+    }
     if (gReleaseForward.exchange(false)) setForward(false);
     bool running = gAutorun.load();
     if (player && running && !gWasRunning) gStart = player->getPosition();
@@ -135,14 +143,9 @@ public:
     void install() {
         auto& bus = ll::event::EventBus::getInstance();
         mTick     = bus.emplaceListener<ll::event::ClientLevelTickEvent>([](ll::event::ClientLevelTickEvent&) { onTick(); });
-        // The forward key stops auto-walk (Quark: keyUp.isDown()). Window thread: only flags.
+        // Window thread: only remember the key; onTick (client thread) checks the binding.
         mKey = bus.emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
-            if (!gAutorun || !ev.isDown() || ui::topScreen() != "hud_screen") return;
-            auto keys = forwardKeys();
-            if (std::find(keys.begin(), keys.end(), ev.keyCode()) != keys.end()) {
-                gAutorun = false;
-                log().info("hud: auto-walk off (forward key)");
-            }
+            if (gAutorun && ev.isDown() && ui::topScreen() == "hud_screen") gPressedKey = ev.keyCode();
         });
         AutoJumpHook::hook();
     }

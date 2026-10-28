@@ -14,6 +14,7 @@
 class MinecraftUIRenderContext;
 class ItemStack;
 class ItemStackBase;
+class UIControl;
 
 namespace lp::client::hud {
 
@@ -47,6 +48,10 @@ private:
 /// Java's item durability bar for damaged items: filled width (0..13) and colour. False when the
 /// item shows no bar.
 bool durabilityBar(ItemStackBase const& stack, int& width, Color& color);
+
+/// Position of a control on the screen (read-only: the cached position, or the sum of the relative
+/// positions while the cache is dirty, as client/ui does).
+[[nodiscard]] ui::Vec screenPos(UIControl const& c);
 
 /// Width of one space in the game font (measured on the first rendered frame; 4 before).
 [[nodiscard]] float spaceWidth();

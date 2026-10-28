@@ -31,18 +31,6 @@ namespace {
 
 bool gLogged = false;
 
-/// Position of a control on the screen (cached position, or the sum of relative positions).
-glm::vec2 screenPos(UIControl const& c) {
-    if (!c.mCachedPositionDirty) return c.mCachedPosition.get();
-    glm::vec2 v{0, 0};
-    for (UIControl const* cur = &c; cur;) {
-        v += cur->mParentRelativePosition.get();
-        auto parent = cur->mParent.lock();
-        cur         = parent.get();
-    }
-    return v;
-}
-
 bool elytraActive() {
     if (!cfg().enableElytraIndicator) return false;
     auto* player = client::currentPlayer();

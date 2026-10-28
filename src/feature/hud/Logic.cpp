@@ -195,9 +195,10 @@ std::optional<FoodInfo> foodInfo(ItemStackBase const& stack) {
         "minecraft:chicken"};
     info.poison = std::find(kHarmful.begin(), kHarmful.end(), id) != kHarmful.end();
     if (id == "minecraft:suspicious_stew") {
-        // Aux values with a harmful effect: weakness, blindness, poison, wither.
+        // Aux values with a harmful effect: tulips (weakness), azure bluet (blindness), lily of the
+        // valley (poison), wither rose (wither), open / closed eyeblossom (blindness / nausea).
         int aux     = stack.getAuxValue();
-        info.poison = aux == 2 || aux == 3 || aux == 4 || aux == 8;
+        info.poison = aux == 2 || aux == 3 || aux == 4 || aux == 9 || aux == 11 || aux == 12;
     }
     return info;
 }

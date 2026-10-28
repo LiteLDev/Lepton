@@ -11,6 +11,7 @@
 #include "mc/client/gui/FontHandle.h"
 #include "mc/client/gui/TextAlignment.h"
 #include "mc/client/gui/TextMeasureData.h"
+#include "mc/client/gui/controls/UIControl.h"
 #include "mc/client/renderer/BaseActorRenderContext.h"
 #include "mc/client/renderer/actor/ItemRenderer.h"
 #include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
@@ -103,6 +104,22 @@ void Painter::flush() {
     if (!mText) return;
     mRc.flushText(0.f, std::nullopt);
     mText = false;
+}
+
+ui::Vec screenPos(UIControl const& c) {
+    if (!c.mCachedPositionDirty) {
+        auto const& p = c.mCachedPosition.get();
+        return {p.x, p.y};
+    }
+    ui::Vec v;
+    for (UIControl const* cur = &c; cur;) {
+        auto const& rel = cur->mParentRelativePosition.get();
+        v.x += rel.x;
+        v.y += rel.y;
+        auto parent = cur->mParent.lock();
+        cur         = parent.get();
+    }
+    return v;
 }
 
 bool durabilityBar(ItemStackBase const& stack, int& width, Color& color) {

@@ -36,6 +36,7 @@ struct Element {
     ItemStack  currStack;
     ItemStack  currReal;
     int        currCount = 0;
+    TickerStack shown; ///< what is drawn (Quark recomputes it per frame; per tick is enough)
 };
 
 std::vector<Element>                  gElements;
@@ -82,6 +83,8 @@ void onTick() {
             gLogged = true;
             log().info("hud: usage ticker shows {}", game::itemId(displayed));
         }
+        // Quark compares with the count of the real stack for both (ammo of a bow included).
+        e.shown     = e.anim.visible() ? tickerStack(*player, e.slot) : TickerStack{};
         e.currCount = count;
         e.currStack = std::move(displayed);
         e.currReal  = std::move(real);
@@ -100,7 +103,7 @@ void draw(ui::DrawContext& dc) {
     auto const& conf = cfg();
     for (auto const& e : gElements) {
         if (!e.anim.visible()) continue;
-        auto shown = tickerStack(*player, e.slot);
+        auto const& shown = e.shown;
         if (game::isEmpty(shown.stack)) continue;
         float x = std::floor(tickerX(size.x, e.slot, conf.invert, offEmpty, conf.shiftLeft, conf.shiftRight));
         float y = std::floor(size.y - e.anim.offset(partial));

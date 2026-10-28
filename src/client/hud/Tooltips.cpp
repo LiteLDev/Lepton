@@ -51,6 +51,7 @@
 #include "feature/hud/HudConfig.h"
 #include "feature/hud/Logic.h"
 #include "game/Items.h"
+#include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
 #include "selftest/SelfTest.h"
@@ -219,6 +220,15 @@ float attributeWidth(Component const& c) {
     return w;
 }
 
+/// enchantItems() per enchantment type, until the config is reloaded.
+std::map<int, std::vector<std::string>> gEnchantCache;
+
+std::vector<std::string> const& cachedEnchantItems(int type) {
+    auto it = gEnchantCache.find(type);
+    if (it == gEnchantCache.end()) it = gEnchantCache.emplace(type, enchantItems(type)).first;
+    return it->second;
+}
+
 bool inFurnaceScreen() {
     auto name = ui::topScreen();
     return name.find("furnace") != std::string::npos || name.find("smoker") != std::string::npos;
@@ -267,12 +277,10 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
             if (!conf.shulkerBoxRequireShift || shift) {
                 Component c;
                 c.kind   = Kind::Shulker;
-                auto dim = shulkerDims(static_cast<int>(items.size()));
-                (void)dim;
-                int rows = 1 + (static_cast<int>(items.size()) - 1) / 9;
+                auto [cols, rows] = shulkerDims(static_cast<int>(items.size()));
                 if (conf.shulkerBoxUseColors) c.tint = shulkerColor(stack);
-                c.items  = std::move(items);
-                auto r   = reserve(c, id++, 9.f + std::min<int>(static_cast<int>(c.items.size()), 9) * 18.f, 11.f + rows * 18.f);
+                c.items = std::move(items);
+                auto r  = reserve(c, id++, 9.f + cols * 18.f, 11.f + rows * 18.f);
                 insert.insert(insert.end(), r.begin(), r.end());
                 layout->comps.push_back(std::move(c));
             } else {
@@ -302,13 +310,14 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
         }
     }
     if (conf.attributeTooltips && !shift) {
-        std::vector<std::string> kept;
-        for (size_t i = 0; i < lines.size(); ++i)
-            if (i == 0 || !isAttributeLine(lines[i])) kept.push_back(lines[i]);
-        // Bedrock puts an empty line before the modifiers; drop a trailing empty line left behind.
-        while (kept.size() > 1 && stripCodes(kept.back()).empty()) kept.pop_back();
-        lines = std::move(kept);
+        // The vanilla modifier lines are replaced only when the component shows the values instead.
         if (auto c = attributeComponent(stack, *player)) {
+            std::vector<std::string> kept;
+            for (size_t i = 0; i < lines.size(); ++i)
+                if (i == 0 || !isAttributeLine(lines[i])) kept.push_back(lines[i]);
+            // Bedrock puts an empty line before the modifiers; drop a trailing empty line left behind.
+            while (kept.size() > 1 && stripCodes(kept.back()).empty()) kept.pop_back();
+            lines = std::move(kept);
             auto r = reserve(*c, id++, attributeWidth(*c), static_cast<float>(c->groups.size()) * 10.f);
             insert.insert(insert.end(), r.begin(), r.end());
             layout->comps.push_back(std::move(*c));
@@ -322,7 +331,7 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
             auto want = stripCodes(e.line);
             for (size_t i = from; i < lines.size(); ++i) {
                 if (stripCodes(lines[i]).find(want) == std::string::npos) continue;
-                auto ids = enchantItems(e.type);
+                auto const& ids = cachedEnchantItems(e.type);
                 if (ids.empty()) break;
                 Component c;
                 c.kind = Kind::Enchant;
@@ -482,17 +491,6 @@ void drawFuel(Painter& p, Component const& c, float x, float y) {
     p.text(c.fuel, x + 16, y + 5, rgb(0xFFB600));
 }
 
-glm::vec2 screenPos(UIControl const& c) {
-    if (!c.mCachedPositionDirty) return c.mCachedPosition.get();
-    glm::vec2 v{0, 0};
-    for (UIControl const* cur = &c; cur;) {
-        v += cur->mParentRelativePosition.get();
-        auto parent = cur->mParent.lock();
-        cur         = parent.get();
-    }
-    return v;
-}
-
 int gRenderLogs = 0;
 
 LL_TYPE_INSTANCE_HOOK(
@@ -576,8 +574,11 @@ LL_TYPE_INSTANCE_HOOK(
         }
         if (layout) {
             if (gLayouts.size() > 64) gLayouts.clear();
+            // The game rebuilds the hover text often: log only tooltips not seen yet.
+            bool fresh = !gLayouts.contains(out);
+            auto n     = layout->comps.size();
             gLayouts[out] = std::move(layout);
-            log().info("hud: tooltip components for {} ({})", game::itemId(item), gLayouts[out]->comps.size());
+            if (fresh) log().debug("hud: tooltip components for {} ({})", game::itemId(item), n);
         }
         return out;
     } catch (std::exception const& e) {
@@ -602,6 +603,14 @@ public:
         mKey = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
             if (ev.keyCode() == ui::Key::Shift) gShift = ev.isDown();
         });
+        static bool reloadHooked = false;
+        if (!reloadHooked) {
+            reloadHooked = true;
+            config::onReload([] {
+                gEnchantCache.clear();
+                gLayouts.clear();
+            });
+        }
         HoverTextHook::hook();
         HoverRenderHook::hook();
     }
