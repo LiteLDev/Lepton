@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:dirt_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "C#",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:dirt"
+      },
+      "C": {
+        "item": "lepton:cobblestone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:cobblestone_bricks"
+      },
+      {
+        "item": "minecraft:dirt"
+      }
+    ],
+    "result": {
+      "item": "lepton:dirt_bricks",
+      "count": 4
+    }
+  }
+}

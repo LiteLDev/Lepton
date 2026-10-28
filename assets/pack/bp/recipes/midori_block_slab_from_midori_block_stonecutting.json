@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:midori_block_slab_from_midori_block_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:midori_block"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:midori_block"
+      }
+    ],
+    "result": {
+      "item": "lepton:midori_block_slab",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:cut_soul_sandstone_stonecutter"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:soul_sandstone"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:soul_sandstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:cut_soul_sandstone",
+      "count": 1
+    }
+  }
+}

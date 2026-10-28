@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:cobblestone_bricks_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:cobblestone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:cobblestone_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:cobblestone_bricks_slab",
+      "count": 6
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "lepton_bricks_blackstone_bricks": {
+    "textures": "textures/blocks/blackstone_bricks"
+  },
+  "lepton_bricks_blue_nether_bricks": {
+    "textures": "textures/blocks/blue_nether_bricks"
+  },
+  "lepton_bricks_carved_mud_bricks": {
+    "textures": "textures/blocks/carved_mud_bricks"
+  },
+  "lepton_bricks_chiseled_soul_sandstone": {
+    "textures": "textures/blocks/chiseled_soul_sandstone"
+  },
+  "lepton_bricks_cobblestone_bricks": {
+    "textures": "textures/blocks/cobblestone_bricks"
+  },
+  "lepton_bricks_cut_soul_sandstone": {
+    "textures": "textures/blocks/cut_soul_sandstone"
+  },
+  "lepton_bricks_dirt_bricks": {
+    "textures": "textures/blocks/dirt_bricks"
+  },
+  "lepton_bricks_duskbound_block": {
+    "textures": "textures/blocks/duskbound_block"
+  },
+  "lepton_bricks_duskbound_lantern": {
+    "textures": "textures/blocks/duskbound_lantern"
+  },
+  "lepton_bricks_midori_block": {
+    "textures": "textures/blocks/midori_block"
+  },
+  "lepton_bricks_midori_pillar": {
+    "textures": "textures/blocks/midori_pillar"
+  },
+  "lepton_bricks_midori_pillar_top": {
+    "textures": "textures/blocks/midori_pillar_top"
+  },
+  "lepton_bricks_mossy_cobblestone_bricks": {
+    "textures": "textures/blocks/mossy_cobblestone_bricks"
+  },
+  "lepton_bricks_mud_brick_lattice": {
+    "textures": "textures/blocks/mud_brick_lattice"
+  },
+  "lepton_bricks_mud_pillar": {
+    "textures": "textures/blocks/mud_pillar"
+  },
+  "lepton_bricks_mud_pillar_top": {
+    "textures": "textures/blocks/mud_pillar_top"
+  },
+  "lepton_bricks_netherrack_bricks": {
+    "textures": "textures/blocks/netherrack_bricks"
+  },
+  "lepton_bricks_red_sandstone_bricks": {
+    "textures": "textures/blocks/red_sandstone_bricks"
+  },
+  "lepton_bricks_sandstone_bricks": {
+    "textures": "textures/blocks/sandstone_bricks"
+  },
+  "lepton_bricks_smooth_soul_sandstone": {
+    "textures": "textures/blocks/smooth_soul_sandstone"
+  },
+  "lepton_bricks_soul_sandstone": {
+    "textures": "textures/blocks/soul_sandstone"
+  },
+  "lepton_bricks_soul_sandstone_bottom": {
+    "textures": "textures/blocks/soul_sandstone_bottom"
+  },
+  "lepton_bricks_soul_sandstone_bricks": {
+    "textures": "textures/blocks/soul_sandstone_bricks"
+  },
+  "lepton_bricks_soul_sandstone_top": {
+    "textures": "textures/blocks/soul_sandstone_top"
+  }
+}
