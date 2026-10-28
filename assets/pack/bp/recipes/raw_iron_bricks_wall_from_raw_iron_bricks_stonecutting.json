@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:raw_iron_bricks_wall_from_raw_iron_bricks_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:raw_iron_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:raw_iron_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:raw_iron_bricks_wall",
+      "count": 1
+    }
+  }
+}

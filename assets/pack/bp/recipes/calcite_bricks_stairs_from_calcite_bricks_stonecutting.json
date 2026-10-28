@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:calcite_bricks_stairs_from_calcite_bricks_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:calcite_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:calcite_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:calcite_bricks_stairs",
+      "count": 1
+    }
+  }
+}

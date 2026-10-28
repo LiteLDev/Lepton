@@ -1,0 +1,89 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:andesite_pillar",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.stoneBrick"
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#707070",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_stones_stones_andesite_pillar",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_stones_stones_andesite_pillar",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_stones_stones_andesite_pillar",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_stones_stones_andesite_pillar",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_stones_stones_andesite_pillar",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_stones_stones_andesite_pillar_top",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_stones_stones_andesite_pillar_top",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/andesite_pillar.json",
+      "tag:lepton:pillar": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              90
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

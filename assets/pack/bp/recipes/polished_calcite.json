@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:polished_calcite"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:calcite"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:calcite"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_calcite",
+      "count": 4
+    }
+  }
+}

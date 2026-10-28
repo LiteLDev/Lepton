@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:raw_gold_bricks_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:raw_gold_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:raw_gold_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:raw_gold_bricks_slab",
+      "count": 6
+    }
+  }
+}

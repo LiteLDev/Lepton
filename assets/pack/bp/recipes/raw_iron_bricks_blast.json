@@ -1,0 +1,13 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "lepton:raw_iron_bricks_blast"
+    },
+    "tags": [
+      "blast_furnace"
+    ],
+    "input": "lepton:raw_iron_bricks",
+    "output": "minecraft:iron_block"
+  }
+}
