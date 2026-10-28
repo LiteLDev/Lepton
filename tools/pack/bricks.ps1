@@ -13,7 +13,7 @@ foreach ($p in (& "$PSScriptRoot/../textures/bricks.ps1" -Root $script:RepoRoot)
 # content group of every block/item id (see docs/spec/bricks.md §5), filled as blocks are written
 $script:GroupOf = [System.Collections.Generic.SortedDictionary[string, string]]::new([StringComparer]::Ordinal)
 $script:CurrentGroup = $null
-function Set-Group([string]$Group, [string]$Tool = 'pickaxe') { $script:CurrentGroup = $Group; $script:CurrentTool = $Tool }
+function Set-Group([string]$Group) { $script:CurrentGroup = $Group }
 function Update-Groups {
     foreach ($id in $script:Pack.Blocks.Keys) {
         if (-not $script:GroupOf.ContainsKey($id)) { $script:GroupOf[$id] = $script:CurrentGroup }
@@ -78,7 +78,7 @@ Add-Family 'blackstone_bricks' @{ en = 'Blackstone Bricks'; zh = '黑石砖' } @
 Write-ShapedRecipe 'blackstone_bricks' @('C#', '##') @{ '#' = 'minecraft:blackstone'; 'C' = 'lepton:cobblestone_bricks' } 'lepton:blackstone_bricks' 4
 
 # dirt bricks: shovel, gravel sounds, no stonecutter recipes (as in Quark)
-Set-Group 'dirt_bricks' 'shovel'
+Set-Group 'dirt_bricks'
 Add-Family 'dirt_bricks' @{ en = 'Dirt Bricks'; zh = '泥土砖' } @{ en = 'Dirt Brick'; zh = '泥土砖' } $all4 'textures/blocks/dirt_bricks' (P 0.5 0.5 'gravel' '#976d4d' 'shovel')
 Write-ShapedRecipe 'dirt_bricks' @('C#', '##') @{ '#' = 'minecraft:dirt'; 'C' = 'lepton:cobblestone_bricks' } 'lepton:dirt_bricks' 4
 

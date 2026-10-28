@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -104,7 +105,38 @@ bool itemRegistered(char const* id) {
     return static_cast<bool>(reg.lookupByNameNoAlias(std::string_view{id}));
 }
 
-bool blockHasTag(Block const& b, char const* tag) { return b.getBlockType().hasTag(HashedString(tag)); }
+/// Tag names, hashed once (function-local: HashedString must not be built during static init).
+struct Tags {
+    HashedString soulFire{"lepton:soul_fire_base"};
+    HashedString soulSpeed{"lepton:soul_speed"};
+    HashedString infiniburn{"lepton:infiniburn"};
+    HashedString dragonImmune{"lepton:dragon_immune"};
+    HashedString requiresTool{"lepton:requires_tool"};
+    HashedString shovelBlock{"minecraft:is_shovel_item_destructible"};
+    HashedString axeBlock{"minecraft:is_axe_item_destructible"};
+    HashedString hoeBlock{"minecraft:is_hoe_item_destructible"};
+    ItemTag      pickaxe{HashedString("minecraft:is_pickaxe")};
+    ItemTag      shovel{HashedString("minecraft:is_shovel")};
+    ItemTag      axe{HashedString("minecraft:is_axe")};
+    ItemTag      hoe{HashedString("minecraft:is_hoe")};
+};
+Tags const& tags() {
+    static Tags t;
+    return t;
+}
+
+bool blockHasTag(Block const& b, HashedString const& tag) { return b.getBlockType().hasTag(tag); }
+
+/// The other units' settings, read once per world load (the gate asks for every recipe and item).
+std::optional<Externals>& externalsCache() {
+    static std::optional<Externals> e;
+    return e;
+}
+Externals const& externals() {
+    auto& e = externalsCache();
+    if (!e) e = currentExternals();
+    return *e;
+}
 
 // ---- content gate: recipes ----------------------------------------------------------------------
 
@@ -123,7 +155,7 @@ LL_TYPE_INSTANCE_HOOK(
     Recipes::Buffers&         buffers
 ) {
     auto name = stripNamespace(recipeId);
-    if (!name.empty() && isOurRecipe(name) && !recipeEnabled(cfg(), currentExternals(), name)) {
+    if (!name.empty() && isOurRecipe(name) && !recipeEnabled(cfg(), externals(), name)) {
         ++gStats.recipesSkipped;
         return true; // as if loaded: the recipe simply does not exist
     }
@@ -135,7 +167,7 @@ LL_TYPE_INSTANCE_HOOK(
 bool creativeAllowed(ItemInstance const& item) {
     auto path = stripNamespace(game::itemId(item));
     if (path.empty() || groupOf(path).empty()) return true;
-    if (itemEnabled(cfg(), currentExternals(), path)) return true;
+    if (itemEnabled(cfg(), externals(), path)) return true;
     ++gStats.creativeSkipped;
     return false;
 }
@@ -167,7 +199,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 bool soulBase(BlockSource& region, BlockPos const& pos) {
     if (!cfg().enableSoulSandstone) return false;
-    return blockHasTag(region.getBlock(BlockPos{pos.x, pos.y - 1, pos.z}), "lepton:soul_fire_base");
+    return blockHasTag(region.getBlock(BlockPos{pos.x, pos.y - 1, pos.z}), tags().soulFire);
 }
 
 LL_STATIC_HOOK(
@@ -218,6 +250,16 @@ BlockPos below(Mob const& mob) {
     };
 }
 
+/// Java damages the boots by 1 with a 4% chance per tick while the boost is active and the mob moves
+/// (never in creative).
+void damageBoots(Mob& mob, ItemStack const& boots) {
+    auto const& d = mob.getPosDelta();
+    if (d.x * d.x + d.z * d.z <= 1e-6f || mob.isCreative() || mob.getRandom().nextFloat() >= 0.04f) return;
+    ItemStack copy = boots;
+    copy.hurtAndBreak(1, &mob);
+    mob.setArmor(SharedTypes::Legacy::ArmorSlot::Feet, copy);
+}
+
 // Bedrock's own soul speed only looks at soul sand / soil, so the boost is applied every mob tick here.
 LL_TYPE_INSTANCE_HOOK(SoulSpeedHook, ll::memory::HookPriority::Normal, Mob, &Mob::$normalTick, void) {
     origin();
@@ -231,17 +273,23 @@ LL_TYPE_INSTANCE_HOOK(SoulSpeedHook, ll::memory::HookPriority::Normal, Mob, &Mob
     auto* inst = attr.mInstance->mPtr;
     if (!inst) return;
     bool on = cfg().enableSoulSandstone && level > 0 && isOnGround()
-           && blockHasTag(getDimensionBlockSource().getBlock(below(*this)), "lepton:soul_speed");
-    bool had = false;
+           && blockHasTag(getDimensionBlockSource().getBlock(below(*this)), tags().soulSpeed);
+    float bonus = on ? 0.03f * (1.0f + static_cast<float>(level) * 0.35f) : 0.f; // Java getSoulSpeedBonus
+    std::optional<float> current;
     for (auto const& m : inst->mModifierList.get())
-        if (m.mId->a == kSoulSpeedId.a && m.mId->b == kSoulSpeedId.b) had = true;
-    if (had) inst->removeModifier(kSoulSpeedId, attr.mContext);
+        if (m.mId->a == kSoulSpeedId.a && m.mId->b == kSoulSpeedId.b) current = m.mAmount;
     if (!on) {
         tracked.erase(uid);
+        if (current) inst->removeModifier(kSoulSpeedId, attr.mContext);
         return;
     }
     tracked.insert(uid);
-    float bonus = 0.03f * (1.0f + static_cast<float>(level) * 0.35f); // Java getSoulSpeedBonus
+    if (current && *current == bonus) {
+        damageBoots(*this, boots);
+        return; // unchanged: no attribute update
+    }
+    if (current) inst->removeModifier(kSoulSpeedId, attr.mContext);
+    // not serializable: never saved with the entity, so a restart cannot leave it behind
     inst->addModifier(
         AttributeModifier(
             kSoulSpeedId,
@@ -253,24 +301,19 @@ LL_TYPE_INSTANCE_HOOK(SoulSpeedHook, ll::memory::HookPriority::Normal, Mob, &Mob
         ),
         attr.mContext
     );
-    // Java damages the boots by 1 with a 4% chance per tick while the boost is active and moving.
-    auto const& d = getPosDelta();
-    if (d.x * d.x + d.z * d.z > 1e-6f && getRandom().nextFloat() < 0.04f) {
-        ItemStack copy = boots;
-        copy.hurtAndBreak(1, this);
-        setArmor(SharedTypes::Legacy::ArmorSlot::Feet, copy);
-    }
+    damageBoots(*this, boots);
 }
 
 // ---- requiresCorrectToolForDrops: no drops (and no playerDestroy) without the block's tool ----------
 
 /// The item tag a `lepton:requires_tool` block needs ("" when the block has no requirement).
-char const* requiredToolTag(Block const& b) {
-    if (!blockHasTag(b, "lepton:requires_tool")) return "";
-    if (blockHasTag(b, "minecraft:is_shovel_item_destructible")) return "minecraft:is_shovel";
-    if (blockHasTag(b, "minecraft:is_axe_item_destructible")) return "minecraft:is_axe";
-    if (blockHasTag(b, "minecraft:is_hoe_item_destructible")) return "minecraft:is_hoe";
-    return "minecraft:is_pickaxe";
+ItemTag const* requiredToolTag(Block const& b) {
+    auto const& t = tags();
+    if (!blockHasTag(b, t.requiresTool)) return nullptr;
+    if (blockHasTag(b, t.shovelBlock)) return &t.shovel;
+    if (blockHasTag(b, t.axeBlock)) return &t.axe;
+    if (blockHasTag(b, t.hoeBlock)) return &t.hoe;
+    return &t.pickaxe;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -282,11 +325,10 @@ LL_TYPE_INSTANCE_HOOK(
     Player&         player,
     BlockPos const& pos
 ) {
-    char const* tag = requiredToolTag(*this);
-    if (*tag) {
+    if (auto const* tag = requiredToolTag(*this)) {
         auto const& held = player.getSelectedItem();
         // Java: ServerPlayerGameMode only calls playerDestroy when the player can harvest the block
-        if (held.isNull() || !held.hasTag(ItemTag{HashedString(tag)})) return;
+        if (held.isNull() || !held.hasTag(*tag)) return;
     }
     origin(player, pos);
 }
@@ -305,7 +347,7 @@ LL_TYPE_INSTANCE_HOOK(DragonWallsHook, ll::memory::HookPriority::Normal, EnderDr
                 for (int z = (int)std::floor(bb.min.z); z <= (int)std::floor(bb.max.z); ++z) {
                     BlockPos p{x, y, z};
                     auto const& b = region.getBlock(p);
-                    if (blockHasTag(b, "lepton:dragon_immune")) saved.emplace_back(p, &b);
+                    if (blockHasTag(b, tags().dragonImmune)) saved.emplace_back(p, &b);
                 }
     }
     BlockChangeContext ctx{};
@@ -318,17 +360,17 @@ LL_TYPE_INSTANCE_HOOK(DragonWallsHook, ll::memory::HookPriority::Normal, EnderDr
 // ---- infiniburn: fire on netherrack bricks never burns out --------------------------------------
 
 void applyInfiniburn() {
-    if (!cfg().enableMoreBrickTypes) return;
-    int n = 0;
+    bool on = groupEnabled(cfg(), "netherrack_bricks");
+    int  n  = 0;
     for (auto const& e : kItems) {
         if (e.value != "netherrack_bricks") continue;
         auto const* b = game::blockstates::of(std::string("lepton:") + std::string(e.key));
-        if (!b || !blockHasTag(*b, "lepton:infiniburn")) continue;
+        if (!b || !blockHasTag(*b, tags().infiniburn)) continue;
         auto& type = const_cast<BlockType&>(b->getBlockType());
-        type.mProperties = static_cast<BlockProperty>(
-            static_cast<uint64>(type.mProperties) | static_cast<uint64>(BlockProperty::InfiniBurn)
-        );
-        ++n;
+        auto bits = static_cast<uint64>(type.mProperties) & ~static_cast<uint64>(BlockProperty::InfiniBurn);
+        if (on) bits |= static_cast<uint64>(BlockProperty::InfiniBurn);
+        type.mProperties = static_cast<BlockProperty>(bits);
+        n += on ? 1 : 0;
     }
     lp::log().debug("bricks: infiniburn on {} block types", n);
 }
@@ -412,6 +454,11 @@ struct BricksModule {
         CreativeGroupGateHook::hook();
         CreativeLooseGateHook::hook();
         // before the world DB module installs (it fires the BDS world-ready right away)
+        game::db::onWorldClosed([] {
+            gStats = {};
+            externalsCache().reset();
+            soulSpeedMobs().clear();
+        });
         game::db::onWorldReady([] {
             applyInfiniburn();
             lp::log().info(
