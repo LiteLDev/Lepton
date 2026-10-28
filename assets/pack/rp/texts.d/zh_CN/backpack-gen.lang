@@ -1,0 +1,6 @@
+entity.lepton:backpack_storage.name=背包
+entity.lepton:totem.name=留存图腾
+item.lepton:backpack.name=背包
+item.lepton:ravager_hide.name=劫掠兽皮
+item.lepton:seed_pouch.name=种子袋
+tile.lepton:bonded_ravager_hide.name=打包劫掠兽皮

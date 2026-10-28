@@ -1,0 +1,15 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:seed_pouch",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_backpack_seed_pouch",
+      "minecraft:max_stack_size": 1
+    }
+  }
+}

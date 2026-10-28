@@ -1,0 +1,52 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.lepton.totem.idle": {
+      "loop": true,
+      "animation_length": 0.1,
+      "bones": {
+        "root": {
+          "rotation": [
+            0,
+            "q.life_time * 20",
+            0
+          ],
+          "position": [
+            0,
+            "math.sin(q.life_time * 20 * 1.71887) * 1.6",
+            0
+          ]
+        }
+      },
+      "particle_effects": {
+        "0.0": {
+          "effect": "portal",
+          "locator": "center"
+        },
+        "0.05": {
+          "effect": "portal",
+          "locator": "center"
+        }
+      }
+    },
+    "animation.lepton.totem.dying": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 2,
+      "bones": {
+        "root": {
+          "rotation": [
+            0,
+            "q.life_time * 20 + q.anim_time * 100",
+            0
+          ],
+          "position": [
+            0,
+            "q.anim_time / 2 * 80",
+            0
+          ],
+          "scale": "math.max(0, 1 - q.anim_time / 2)"
+        }
+      }
+    }
+  }
+}
