@@ -77,22 +77,23 @@ void registerCommands(ll::command::CommandHandle& cmd) {
         sortRange(*c, 0, c->getContainerSize());
         out.success(trFor(*p, "lp.inventory.sorted", "Sorted."));
     });
-    for (bool restock : {false, true}) {
-        for (bool smart : {false, true}) {
-            auto& ov = cmd.overload().text("transfer").text(restock ? "extract" : "insert");
-            if (smart) ov.text("filtered");
-            ov.execute([restock, smart](CommandOrigin const& o, CommandOutput& out) {
-                auto* p = commands::playerOf(o);
-                if (!p) return out.error("Players only.");
-                if (!cfg().enableEasyTransferring || p->isSpectator())
-                    return out.error(trFor(*p, "lp.inventory.disabled", "This feature is disabled."));
-                auto* c = lookedAtContainer(*p);
-                if (!c) return out.error(trFor(*p, "lp.inventory.no_container", "Look at a container within reach."));
-                int n = transferItems(*p, *c, restock, smart);
-                out.success(trFor(*p, "lp.inventory.transferred", "Moved {} items.", n));
-            });
-        }
-    }
+    // Each overload is built in one expression: the builder returned by overload() is a temporary.
+    auto transfer = [](bool restock, bool smart) {
+        return [restock, smart](CommandOrigin const& o, CommandOutput& out) {
+            auto* p = commands::playerOf(o);
+            if (!p) return out.error("Players only.");
+            if (!cfg().enableEasyTransferring || p->isSpectator())
+                return out.error(trFor(*p, "lp.inventory.disabled", "This feature is disabled."));
+            auto* c = lookedAtContainer(*p);
+            if (!c) return out.error(trFor(*p, "lp.inventory.no_container", "Look at a container within reach."));
+            int n = transferItems(*p, *c, restock, smart);
+            out.success(trFor(*p, "lp.inventory.transferred", "Moved {} items.", n));
+        };
+    };
+    cmd.overload().text("transfer").text("insert").execute(transfer(false, false));
+    cmd.overload().text("transfer").text("insert").text("filtered").execute(transfer(false, true));
+    cmd.overload().text("transfer").text("extract").execute(transfer(true, false));
+    cmd.overload().text("transfer").text("extract").text("filtered").execute(transfer(true, true));
     cmd.overload().text("hotbar").execute([](CommandOrigin const& o, CommandOutput& out) {
         auto* p = commands::playerOf(o);
         if (!p) return out.error("Players only.");
