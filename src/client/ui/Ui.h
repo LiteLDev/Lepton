@@ -136,6 +136,8 @@ public:
                                  std::function<void(std::string const&)> onChange = {});
     /// Darkens a rectangle (e.g. a slot the player can't use).
     void greyOut(Rect const& r, Color color = colors::shade);
+    /// The mouse position this frame (UI units), for custom hover effects.
+    [[nodiscard]] Vec mouse() const;
 
 private:
     Impl& mImpl;
