@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:encased_pipe_revert"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:encased_pipe"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:encased_pipe"
+      }
+    ],
+    "result": {
+      "item": "lepton:pipe",
+      "count": 1
+    }
+  }
+}

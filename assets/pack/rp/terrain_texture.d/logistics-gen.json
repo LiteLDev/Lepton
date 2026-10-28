@@ -1,0 +1,44 @@
+{
+  "lepton_logistics_glass": {
+    "textures": "textures/blocks/glass"
+  },
+  "lepton_logistics_hayblock_side": {
+    "textures": "textures/blocks/hayblock_side"
+  },
+  "lepton_logistics_hayblock_top": {
+    "textures": "textures/blocks/hayblock_top"
+  },
+  "lepton_logistics_logistics_chute_bottom": {
+    "textures": "textures/blocks/logistics/chute_bottom"
+  },
+  "lepton_logistics_logistics_chute_side": {
+    "textures": "textures/blocks/logistics/chute_side"
+  },
+  "lepton_logistics_logistics_chute_top": {
+    "textures": "textures/blocks/logistics/chute_top"
+  },
+  "lepton_logistics_logistics_crate": {
+    "textures": "textures/blocks/logistics/crate"
+  },
+  "lepton_logistics_logistics_crate_open": {
+    "textures": "textures/blocks/logistics/crate_open"
+  },
+  "lepton_logistics_logistics_pipe_connectors": {
+    "textures": "textures/blocks/logistics/pipe_connectors"
+  },
+  "lepton_logistics_logistics_pipe_structure": {
+    "textures": "textures/blocks/logistics/pipe_structure"
+  },
+  "lepton_logistics_logistics_trough_bottom": {
+    "textures": "textures/blocks/logistics/trough_bottom"
+  },
+  "lepton_logistics_logistics_trough_side": {
+    "textures": "textures/blocks/logistics/trough_side"
+  },
+  "lepton_logistics_logistics_trough_side_inner": {
+    "textures": "textures/blocks/logistics/trough_side_inner"
+  },
+  "lepton_logistics_logistics_trough_top": {
+    "textures": "textures/blocks/logistics/trough_top"
+  }
+}

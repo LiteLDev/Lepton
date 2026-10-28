@@ -1,0 +1,54 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:crate",
+      "menu_category": {
+        "category": "items"
+      },
+      "states": {
+        "lepton:open": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 2.5
+      },
+      "minecraft:map_color": "#8f7748",
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_logistics_logistics_crate",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/crate.json",
+      "tag:lepton:logistics": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:open')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_logistics_logistics_crate",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_logistics_logistics_crate_open",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
