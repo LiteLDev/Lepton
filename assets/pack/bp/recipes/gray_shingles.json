@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:gray_shingles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:gray_terracotta"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:gray_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:gray_shingles",
+      "count": 2
+    }
+  }
+}

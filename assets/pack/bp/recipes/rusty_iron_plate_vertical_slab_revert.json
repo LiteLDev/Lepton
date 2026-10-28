@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:rusty_iron_plate_vertical_slab_revert"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:rusty_iron_plate_vertical_slab"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:rusty_iron_plate_vertical_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:rusty_iron_plate_slab",
+      "count": 1
+    }
+  }
+}

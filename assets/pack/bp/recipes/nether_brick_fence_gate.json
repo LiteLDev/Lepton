@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:nether_brick_fence_gate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "S#S",
+      "S#S"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:nether_brick"
+      },
+      "S": {
+        "item": "minecraft:netherbrick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:nether_brick"
+      },
+      {
+        "item": "minecraft:netherbrick"
+      }
+    ],
+    "result": {
+      "item": "lepton:nether_brick_fence_gate",
+      "count": 1
+    }
+  }
+}

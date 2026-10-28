@@ -1,0 +1,52 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:light_gray_framed_glass_pane_dye"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "minecraft:light_gray_dye"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:framed_glass_pane"
+      },
+      {
+        "item": "minecraft:light_gray_dye"
+      }
+    ],
+    "result": {
+      "item": "lepton:light_gray_framed_glass_pane",
+      "count": 8
+    }
+  }
+}

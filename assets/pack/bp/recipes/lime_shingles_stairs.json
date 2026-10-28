@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:lime_shingles_stairs"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#  ",
+      "## ",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:lime_shingles"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:lime_shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:lime_shingles_stairs",
+      "count": 4
+    }
+  }
+}

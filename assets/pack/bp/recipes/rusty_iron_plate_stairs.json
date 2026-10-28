@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:rusty_iron_plate_stairs"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#  ",
+      "## ",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:rusty_iron_plate"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:rusty_iron_plate"
+      }
+    ],
+    "result": {
+      "item": "lepton:rusty_iron_plate_stairs",
+      "count": 4
+    }
+  }
+}

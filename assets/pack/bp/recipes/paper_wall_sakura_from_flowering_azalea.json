@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:paper_wall_sakura_from_flowering_azalea"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:paper_wall"
+      },
+      {
+        "item": "minecraft:flowering_azalea"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:paper_wall"
+      },
+      {
+        "item": "minecraft:flowering_azalea"
+      }
+    ],
+    "result": {
+      "item": "lepton:paper_wall_sakura",
+      "count": 1
+    }
+  }
+}

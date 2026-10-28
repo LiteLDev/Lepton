@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:shingles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:hardened_clay"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:hardened_clay"
+      }
+    ],
+    "result": {
+      "item": "lepton:shingles",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:green_framed_glass_pane"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:green_framed_glass"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:green_framed_glass"
+      }
+    ],
+    "result": {
+      "item": "lepton:green_framed_glass_pane",
+      "count": 16
+    }
+  }
+}

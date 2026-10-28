@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:shingles_stairs_from_shingles_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:shingles"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:shingles_stairs",
+      "count": 1
+    }
+  }
+}

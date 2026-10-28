@@ -1,0 +1,42 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:paper_lantern"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "PSP",
+      "PGP",
+      "PSP"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:glowstone_dust"
+      },
+      "P": {
+        "item": "minecraft:paper"
+      },
+      "S": {
+        "item": "minecraft:bamboo"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:bamboo"
+      },
+      {
+        "item": "minecraft:glowstone_dust"
+      },
+      {
+        "item": "minecraft:paper"
+      }
+    ],
+    "result": {
+      "item": "lepton:paper_lantern",
+      "count": 1
+    }
+  }
+}

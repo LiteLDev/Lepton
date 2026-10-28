@@ -1,0 +1,55 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:red_framed_glass",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 3.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 10.0
+      },
+      "tag:lepton:framed_glass": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "up": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_red_framed_glass",
+          "render_method": "blend"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/red_framed_glass.json",
+      "minecraft:light_dampening": 0
+    }
+  }
+}
