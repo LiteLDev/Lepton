@@ -1,0 +1,8 @@
+{
+  "lepton_enchanting_ancient_tome": {
+    "textures": "textures/items/ancient_tome"
+  },
+  "lepton_enchanting_smithing_template_rune": {
+    "textures": "textures/items/smithing_template_rune"
+  }
+}

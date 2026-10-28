@@ -1,0 +1,11 @@
+{
+  "lepton_enchanting_matrix_enchanter_bottom": {
+    "textures": "textures/blocks/enchanting_table_bottom"
+  },
+  "lepton_enchanting_matrix_enchanter_side": {
+    "textures": "textures/blocks/enchanting_table_side"
+  },
+  "lepton_enchanting_matrix_enchanter_top": {
+    "textures": "textures/blocks/enchanting_table_top"
+  }
+}
