@@ -98,7 +98,7 @@ Recipe `###/###` gold ingots -> 16.
 | `lepton:iron_plate` (+ `_stairs`, `_slab`, `_vertical_slab`) | Iron Plate (Stairs, Slab, Vertical Slab) | strength 5 / 6, metal sound, pickaxe |
 | `lepton:rusty_iron_plate` (+ shapes) | Rusty Iron Plate (...) | same |
 | `lepton:iron_pillar` | Iron Pillar | axis block (`minecraft:block_face`, tag `lepton:pillar`) |
-| `lepton:iron_ladder` | Iron Ladder | strength 0.8, metal sound, pickaxe; states `lepton:facing` (trait `minecraft:block_face`); tags `lepton:ladder`, `lepton:climbable` |
+| `lepton:iron_ladder` | Iron Ladder | strength 0.8, metal sound, pickaxe; state: trait `minecraft:block_face` (the clicked side face = the ladder's open side); tags `lepton:ladder`, `lepton:climbable` |
 
 Recipes: `###/# #/###` iron ingots -> 24 iron plates; `###/#W#/###` iron ingots + water bucket ->
 24 rusty plates; `###/#W#/###` iron plates + water bucket -> 8 rusty plates (the bucket is
@@ -235,8 +235,10 @@ through."), kept in `assets/lang/*/palette.json` for completeness (JEI does not 
   turn into obsidian next to water). Not possible.
 - **Crawl-space / `isLog` integrations** of `GrateBlock` (Zeta interfaces for other Java mods): no
   meaning on Bedrock.
-- **Disabled content in the creative inventory**: Bedrock sends the creative inventory once from
-  the behaviour pack; disabled blocks stay listed there (but cannot be crafted or placed).
+- **Disabled content in the creative inventory and recipe book**: Bedrock sends the creative
+  inventory and the crafting data once from the behaviour pack; disabled blocks and their recipes
+  stay listed there. The server refuses the craft (the output slot empties again) and the
+  placement, so the content cannot be obtained or used.
 - **Fence gate sounds**: the nether brick gate plays Bedrock's generic fence gate open/close sound
   (played by `game/Shapes`), not the nether wood one.
 - **Iron ladder sounds**: metal break/place/hit (Quark: metal break/place/hit + ladder step/fall).

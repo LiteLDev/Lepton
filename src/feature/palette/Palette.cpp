@@ -97,9 +97,30 @@ std::string const& nameOf(Block const& b) { return b.getTypeName(); }
 std::atomic<BlockType const*> gGrateType{nullptr};
 std::atomic<Block const*>     gGoldBars{nullptr};
 
+// Block types that need a support check when a neighbour changes (ladders, the bamboo carpet).
+std::vector<BlockType const*> gSupportTypes;
+
 void cacheBlocks() {
-    if (auto const* g = bs::of("lepton:grate")) gGrateType = &g->getBlockType();
-    if (auto const* b = bs::of("lepton:gold_bars")) gGoldBars = b;
+    auto const* g = bs::of("lepton:grate");
+    gGrateType    = g ? &g->getBlockType() : nullptr;
+    gGoldBars     = bs::of("lepton:gold_bars");
+    gSupportTypes.clear();
+    for (auto const& e : kIds) {
+        auto const* b = bs::of(e.id);
+        if (b && (b->hasTag(HashedString("lepton:ladder")) || e.id == "lepton:bamboo_mat_carpet"))
+            gSupportTypes.push_back(&b->getBlockType());
+    }
+}
+
+void clearCachedBlocks() {
+    gGrateType = nullptr;
+    gGoldBars  = nullptr;
+    gSupportTypes.clear();
+}
+
+bool needsSupport(Block const& b) {
+    auto const* t = &b.getBlockType();
+    return std::find(gSupportTypes.begin(), gSupportTypes.end(), t) != gSupportTypes.end();
 }
 
 // ---- small scheduler --------------------------------------------------------------------------
@@ -155,7 +176,7 @@ void processBars() {
             keep.push_back(gp);
             continue;
         }
-        if (nameOf(region->getBlock(pos)) == "lepton:gold_bars") shapes::updateShape(*region, pos);
+        if (nameOf(region->getBlock(pos)) == "lepton:gold_bars") shapes::queueUpdate(*region, pos); // + neighbours
     }
     if (!keep.empty()) {
         std::lock_guard lock(gBarsMutex);
@@ -234,7 +255,8 @@ AABB grateShape(IConstBlockSource const& region, BlockPos const& pos, optional_r
         return grateBox(region, pos, static_cast<uint32_t>(a->getEntityTypeId()), a->isLeashed(), a->getFeetPos(), a->getMaxAutoStep());
     }
     auto const& box = entity->getAABB();
-    return grateBox(region, pos, static_cast<uint32_t>(entity->getEntityTypeId()), false, box.min, 0.5625f);
+    Vec3 feet{(box.min.x + box.max.x) / 2.f, box.min.y, (box.min.z + box.max.z) / 2.f};
+    return grateBox(region, pos, static_cast<uint32_t>(entity->getEntityTypeId()), false, feet, 0.5625f);
 }
 
 bool isActiveGrate(Block const& block) {
@@ -421,8 +443,9 @@ void applyClimbable() {
 
 namespace testing {
 Block const* fortressReplacement(int pieceType, Block const& block) {
+    if (!isFortressPiece(pieceType)) return nullptr; // cheapest test first: runs for every structure block
     if (!enabled(Part::GoldBars) || !cfg().generateInNetherFortress) return nullptr;
-    if (nameOf(block) != "minecraft:nether_brick_fence" || !isFortressPiece(pieceType)) return nullptr;
+    if (nameOf(block) != "minecraft:nether_brick_fence") return nullptr;
     return gGoldBars.load();
 }
 size_t pendingBars() {
@@ -499,8 +522,7 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     auto const& pos = ev.pos();
     for (auto d : {"north", "south", "west", "east", "up"}) {
         auto        n = shapes::neighbor(pos, d);
-        auto const& b = region.getBlock(n);
-        if (hasTag(b, "lepton:ladder") || nameOf(b) == "lepton:bamboo_mat_carpet") queueCheck(region, n);
+        if (needsSupport(region.getBlock(n))) queueCheck(region, n);
     }
 }
 
@@ -602,7 +624,9 @@ void loadBars() {
     if (!j || !j->is_array()) return;
     std::lock_guard lock(gBarsMutex);
     for (auto const& e : *j) {
+        if (gBars.size() >= kMaxBars) break;
         if (!e.is_array() || e.size() != 4) continue;
+        if (!std::all_of(e.begin(), e.end(), [](auto const& v) { return v.is_number_integer(); })) continue;
         gBars.push_back(core::GlobalPos{e[0].get<int>(), e[1].get<int>(), e[2].get<int>(), e[3].get<int>()});
     }
 }
@@ -648,7 +672,8 @@ public:
             if (l && l != seen) {
                 seen = l;
                 applyClimbable();
-                cacheBlocks();
+                // only the atomic grate type: the rest of the cache belongs to the server thread
+                if (auto const* g = bs::of("lepton:grate")) gGrateType = &g->getBlockType();
             }
         }));
 #endif
@@ -664,6 +689,7 @@ public:
             game::db::onWorldSave(saveBars);
             game::db::onWorldClosed([] {
                 gReady = false;
+                clearCachedBlocks();
                 st() = State{};
                 std::lock_guard lock(gBarsMutex);
                 gBars.clear();
