@@ -1,0 +1,9 @@
+{
+  "lp.ui.demo.radial": "Lepton 轮盘演示",
+  "lp.ui.demo.hud": "Lepton HUD 演示",
+  "lp.ui.demo.hud_sub": "文字、矩形、物品",
+  "lp.ui.demo.button": "整理",
+  "lp.ui.demo.button_tip": "Lepton 叠加按钮",
+  "lp.ui.demo.search": "搜索...",
+  "lp.ui.demo.tooltip": "Lepton 提示行"
+}

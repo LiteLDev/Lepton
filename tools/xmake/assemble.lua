@@ -9,6 +9,7 @@
 --   assets/pack/rp/texts.d/<locale>/*.lang    -> RP texts/<locale>.lang (+ texts/languages.json)
 --   assets/pack/rp/sounds.d/*.json            -> RP sounds/sound_definitions.json (sound_definitions entries)
 --   assets/pack/rp/blocks.d/*.json            -> RP blocks.json (per-block "sound" / "textures" entries)
+--   assets/pack/rp/ui_defs.d/*.json           -> RP ui/_ui_defs.json (each file: a JSON array of ui/*.json paths)
 -- Empty merges write nothing (an empty Lua table would be saved as a JSON array).
 -- Everything else under assets/pack/{bp,rp} is copied as is (directories ending in ".d" are skipped).
 -- "${version}" in pack manifests is replaced by the mod version as a JSON array [major, minor, patch].
@@ -100,6 +101,27 @@ local function merge_blocks(src, dst)
     json.savefile(path.join(dst, "blocks.json"), data)
 end
 
+local function merge_ui_defs(src, dst)
+    local dir = path.join(src, "ui_defs.d")
+    if not os.isdir(dir) then return end
+    local defs = {}
+    local origin = {}
+    for _, file in ipairs(os.files(path.join(dir, "*.json"))) do
+        for _, entry in ipairs(json.loadfile(file)) do
+            if origin[entry] then
+                raise("duplicate ui_defs entry '%s' in %s (already listed in %s)", entry, file, origin[entry])
+            end
+            origin[entry] = file
+            table.insert(defs, entry)
+        end
+    end
+    if #defs == 0 then return end
+    table.sort(defs)
+    local out = path.join(dst, "ui", "_ui_defs.json")
+    os.mkdir(path.directory(out))
+    json.savefile(out, {ui_defs = defs})
+end
+
 local function merge_texts(src, dst)
     local textsd = path.join(src, "texts.d")
     if not os.isdir(textsd) then return end
@@ -165,6 +187,7 @@ function main(target, target_type)
     merge_atlas(rpsrc, rpdst, "terrain_texture.d", "terrain_texture.json", "atlas.terrain")
     merge_sounds(rpsrc, rpdst)
     merge_blocks(rpsrc, rpdst)
+    merge_ui_defs(rpsrc, rpdst)
     merge_texts(rpsrc, rpdst)
 
     cprint("${bright green}[assemble]: ${reset}%s", outdir)

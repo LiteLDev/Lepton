@@ -1,0 +1,9 @@
+{
+  "lp.ui.demo.radial": "Lepton radial demo",
+  "lp.ui.demo.hud": "Lepton HUD demo",
+  "lp.ui.demo.hud_sub": "text, rects, items",
+  "lp.ui.demo.button": "Sort",
+  "lp.ui.demo.button_tip": "Lepton overlay button",
+  "lp.ui.demo.search": "Search...",
+  "lp.ui.demo.tooltip": "Lepton tooltip line"
+}
