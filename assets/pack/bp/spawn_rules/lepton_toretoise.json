@@ -5,7 +5,7 @@
     "conditions": [
       {
         "minecraft:spawns_underground": {},
-        "minecraft:spawns_on_block_filter": ["minecraft:stone", "minecraft:deepslate", "minecraft:tuff", "minecraft:granite", "minecraft:diorite", "minecraft:andesite", "minecraft:calcite", "minecraft:cobbled_deepslate", "minecraft:cobblestone", "minecraft:smooth_basalt", "minecraft:dripstone_block"],
+        "minecraft:spawns_on_block_filter": ["minecraft:stone", "minecraft:deepslate", "minecraft:tuff", "minecraft:granite", "minecraft:diorite", "minecraft:andesite", "minecraft:calcite", "minecraft:cobbled_deepslate", "minecraft:cobblestone", "minecraft:smooth_basalt", "minecraft:dripstone_block", "minecraft:mossy_cobblestone", "minecraft:polished_granite", "minecraft:polished_diorite", "minecraft:polished_andesite", "minecraft:polished_deepslate", "minecraft:infested_stone", "minecraft:infested_deepslate"],
         "minecraft:brightness_filter": { "min": 0, "max": 7, "adjust_for_weather": true },
         "minecraft:height_filter": { "min": -64, "max": 0 },
         "minecraft:difficulty_filter": { "min": "easy", "max": "hard" },

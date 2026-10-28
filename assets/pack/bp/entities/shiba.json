@@ -13,6 +13,7 @@
       }
     },
     "component_groups": {
+      "lepton:frozen": { "minecraft:movement": { "value": 0 } },
       "lepton:baby": {
         "minecraft:is_baby": {},
         "minecraft:scale": { "value": 0.5 },
@@ -102,6 +103,7 @@
       }
     },
     "events": {
+      "lepton:freeze": { "add": { "component_groups": ["lepton:frozen"] } },
       "minecraft:entity_spawned": {
         "sequence": [
           { "add": { "component_groups": ["lepton:adult", "lepton:wild", "lepton:wander"] } },

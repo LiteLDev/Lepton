@@ -14,6 +14,8 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/Level.h"
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/world/level/block/actor/JukeboxBlockActor.h"
 
 #include "feature/mobsoverworld/Common.h"
@@ -431,4 +433,107 @@ LP_REGISTER_SELFTEST("mobsoverworld.spawn_rules", [](Context& ctx) {
     cfg.enableCrabs = false;
     ctx.check(!mo::spawning::allowed(std::string(mo::kCrab), 0, BlockPos{0, 64, 0}, false), "disabled crabs never spawn");
     cfg.enableCrabs = crabs;
+});
+
+// Gallery for the client e2e screenshots: every crab colour (+ mould), a raving crab, a giant
+// crab, shibas (coats, collars, armour, a sword in the mouth) and oretoises with each ore. Without
+// a real player (BDS runs) it only checks that everything spawns.
+LP_REGISTER_SELFTEST("mobsoverworld.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(2045, -2);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    Spawned s;
+    auto&   sim = ctx.player();
+    Player* viewer = nullptr;
+    sim.getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    auto place = [&](std::string_view type, float dx, float dz) {
+        return s.add(entities::spawn(0, type, at(base, dx, dz)));
+    };
+    // Crabs: colours 0..2 without / with mould, one giant.
+    std::vector<int64_t> crabs;
+    for (int i = 0; i < 6; ++i) {
+        if (Actor* c = place(mo::kCrab, static_cast<float>(i) * 1.5f, 0)) crabs.push_back(entities::idOf(*c));
+    }
+    Actor* giant = place(mo::kCrab, 13, -3);
+    Actor* raver = place(mo::kCrab, 10, 0);
+    // Shibas: three coats + the rare one, two tamed with collars, one armoured, one with a sword.
+    std::vector<int64_t> shibas;
+    for (int i = 0; i < 5; ++i) {
+        if (Actor* a = place(mo::kShiba, 20.f + static_cast<float>(i) * 1.6f, 0)) shibas.push_back(entities::idOf(*a));
+    }
+    // Oretoises: ores 1..5 and a bare shell.
+    std::vector<int64_t> tortoises;
+    for (int i = 0; i < 6; ++i) {
+        if (Actor* a = place(mo::kToretoise, 30.f + static_cast<float>(i) * 2.6f, 0)) tortoises.push_back(entities::idOf(*a));
+    }
+    ctx.require(crabs.size() == 6 && shibas.size() == 5 && tortoises.size() == 6 && giant && raver, "gallery mobs spawn");
+    int64_t giantId = entities::idOf(*giant), raverId = entities::idOf(*raver);
+    co_await ctx.ticks(2);
+    for (int i = 0; i < 6; ++i) {
+        if (Actor* c = entities::find(crabs[i])) {
+            entities::triggerEvent(*c, "lepton:color_" + std::to_string(i % 3));
+            entities::triggerEvent(*c, i >= 3 ? "lepton:mold" : "lepton:no_mold");
+            entities::triggerEvent(*c, "lepton:freeze");
+        }
+    }
+    if (Actor* g = entities::find(giantId)) {
+        entities::triggerEvent(*g, "lepton:size_1");
+        entities::triggerEvent(*g, "lepton:freeze");
+    }
+    if (Actor* r = entities::find(raverId)) {
+        entities::triggerEvent(*r, "lepton:rave_start");
+        entities::triggerEvent(*r, "lepton:freeze");
+    }
+    for (int i = 0; i < 5; ++i) {
+        Actor* a = entities::find(shibas[i]);
+        if (!a) continue;
+        entities::triggerEvent(*a, "lepton:coat_" + std::to_string(std::min(i, 3)));
+        entities::triggerEvent(*a, "lepton:freeze");
+        if (i >= 1) {
+            tame(*a, viewer ? *viewer : sim);
+            a->setSitting(i == 4);
+        }
+        if (i == 1) mo::setIntProperty(*a, "lepton:collar", 11);
+        if (i == 2) {
+            a->setArmor(SharedTypes::Legacy::ArmorSlot::Body, lp::game::makeItem("minecraft:wolf_armor"));
+            entities::triggerEvent(*a, "lepton:armor_on");
+        }
+        if (i == 3) a->setCarriedItem(lp::game::makeItem("minecraft:iron_sword"));
+    }
+    for (int i = 0; i < 6; ++i) {
+        if (Actor* a = entities::find(tortoises[i])) {
+            mo::toretoise::setOre(*a, i < 5 ? i + 1 : 0);
+            entities::triggerEvent(*a, "lepton:freeze");
+        }
+    }
+    co_await ctx.ticks(4);
+    if (Actor* g = entities::find(giantId)) ctx.check(mo::crabs::sizeOf(*g) == 1, "the giant crab is scale 3");
+    if (Actor* a = entities::find(tortoises[2])) ctx.check(mo::toretoise::oreOf(*a) == 3, "the third oretoise carries redstone");
+    if (!viewer) co_return;
+
+    for (auto id : {"lepton:crab_leg", "lepton:cooked_crab_leg", "lepton:crab_shell", "lepton:crab_bucket",
+                    "lepton:resilience_potion", "lepton:resilience_splash_potion", "lepton:resilience_lingering_potion"}) {
+        ItemStack stack = lp::game::makeItem(id);
+        viewer->add(stack);
+    }
+    viewer->refreshInventory();
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](float dx, float dz, float pitch, float yaw) {
+        if (auto* v = sim.getLevel().getPlayer(uid)) {
+            v->teleport(Vec3{static_cast<float>(base.x) + dx, static_cast<float>(base.y) + 1.f, static_cast<float>(base.z) + dz},
+                        DimensionType(base.dim), Vec2{pitch, yaw});
+        }
+    };
+    ctx.info("GALLERY view crabs");
+    view(7.f, 7.f, 30.f, 180.f);
+    co_await ctx.ticks(150);
+    ctx.info("GALLERY view shibas");
+    view(23.5f, 5.f, 30.f, 180.f);
+    co_await ctx.ticks(150);
+    ctx.info("GALLERY view oretoises");
+    view(37.f, 9.f, 25.f, 180.f);
+    co_await ctx.ticks(150);
+    ctx.info("GALLERY done");
 });

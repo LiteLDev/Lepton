@@ -13,6 +13,7 @@
       }
     },
     "component_groups": {
+      "lepton:frozen": { "minecraft:movement": { "value": 0 } },
       "lepton:wild": {
         "minecraft:despawn": { "despawn_from_distance": {} }
       },
@@ -48,6 +49,7 @@
       "minecraft:behavior.random_look_around": { "priority": 5 }
     },
     "events": {
+      "lepton:freeze": { "add": { "component_groups": ["lepton:frozen"] } },
       "minecraft:entity_spawned": {
         "sequence": [
           { "add": { "component_groups": ["lepton:wild", "lepton:ore_shell"] } },
