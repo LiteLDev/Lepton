@@ -42,10 +42,10 @@ try {
     $targets = if ($Target -eq 'all') { @('server', 'client') } else { @($Target) }
     foreach ($t in $targets) {
         Write-Host "==> configuring $t ($Mode)"
-        xmake f -a x64 -m $Mode -p windows --target_type=$t -o "build/$t" @vsArgs -y
+        xmake f -P $root -a x64 -m $Mode -p windows --target_type=$t -o "build/$t" @vsArgs -y
         if ($LASTEXITCODE) { throw "xmake config failed for $t" }
         Write-Host "==> building $t"
-        xmake build -y Lepton
+        xmake build -P $root -y Lepton
         if ($LASTEXITCODE) { throw "build failed for $t" }
         $out = Join-Path $root "bin/$t/Lepton"
         if (-not (Test-Path (Join-Path $out 'Lepton.dll'))) { throw "missing output $out" }
@@ -53,9 +53,9 @@ try {
     }
     if ($Tests) {
         Write-Host '==> unit tests'
-        xmake build -y lp-tests
+        xmake build -P $root -y lp-tests
         if ($LASTEXITCODE) { throw 'lp-tests build failed' }
-        xmake run lp-tests
+        xmake run -P $root lp-tests
         if ($LASTEXITCODE) { throw 'unit tests failed' }
     }
 } finally {
