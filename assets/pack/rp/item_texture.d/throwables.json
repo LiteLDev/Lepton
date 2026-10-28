@@ -1,0 +1,35 @@
+{
+  "lepton_throwables_pickarang": {
+    "textures": "textures/items/pickarang"
+  },
+  "lepton_throwables_flamerang": {
+    "textures": "textures/items/flamerang"
+  },
+  "lepton_throwables_torch_arrow": {
+    "textures": "textures/items/torch_arrow"
+  },
+  "lepton_throwables_bottled_cloud": {
+    "textures": "textures/items/bottled_cloud"
+  },
+  "lepton_throwables_slime_in_a_bucket": {
+    "textures": "textures/items/slime_in_a_bucket"
+  },
+  "lepton_throwables_slime_in_a_bucket_excited": {
+    "textures": "textures/items/slime_in_a_bucket_excited"
+  },
+  "lepton_throwables_egg_parrot_red_blue": {
+    "textures": "textures/items/egg_parrot_red_blue"
+  },
+  "lepton_throwables_egg_parrot_blue": {
+    "textures": "textures/items/egg_parrot_blue"
+  },
+  "lepton_throwables_egg_parrot_green": {
+    "textures": "textures/items/egg_parrot_green"
+  },
+  "lepton_throwables_egg_parrot_yellow_blue": {
+    "textures": "textures/items/egg_parrot_yellow_blue"
+  },
+  "lepton_throwables_egg_parrot_gray": {
+    "textures": "textures/items/egg_parrot_gray"
+  }
+}
