@@ -1,0 +1,7 @@
+key.lepton.sort_player=Sort Player Inventory
+key.lepton.sort_container=Sort Target Inventory
+key.lepton.transfer_insert=Insert Items
+key.lepton.transfer_extract=Extract Items
+key.lepton.shift_lock=Shift Lock
+key.lepton.change_hotbar=Hotbar Swapper
+key.lepton.share_item=Share Item (with Shift)
