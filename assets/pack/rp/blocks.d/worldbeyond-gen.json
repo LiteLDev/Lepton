@@ -1,0 +1,14 @@
+{
+  "lepton:chorus_twist": {
+    "sound": "grass"
+  },
+  "lepton:chorus_weeds": {
+    "sound": "grass"
+  },
+  "lepton:dusky_myalite": {
+    "sound": "stone"
+  },
+  "lepton:myalite_crystal": {
+    "sound": "glass"
+  }
+}

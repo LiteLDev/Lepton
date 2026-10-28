@@ -1,0 +1,76 @@
+{
+  "lepton_worldbeyond_chorus_twist": {
+    "textures": "textures/blocks/chorus_twist"
+  },
+  "lepton_worldbeyond_chorus_weeds": {
+    "textures": [
+      {
+        "variations": [
+          {
+            "path": "textures/blocks/chorus_weeds_0",
+            "weight": 1
+          },
+          {
+            "path": "textures/blocks/chorus_weeds_1",
+            "weight": 1
+          },
+          {
+            "path": "textures/blocks/chorus_weeds_2",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  "lepton_worldbeyond_dusky_myalite": {
+    "textures": "textures/blocks/dusky_myalite"
+  },
+  "lepton_worldbeyond_myalite_crystal_0": {
+    "textures": "textures/blocks/myalite_crystal_0"
+  },
+  "lepton_worldbeyond_myalite_crystal_1": {
+    "textures": "textures/blocks/myalite_crystal_1"
+  },
+  "lepton_worldbeyond_myalite_crystal_10": {
+    "textures": "textures/blocks/myalite_crystal_10"
+  },
+  "lepton_worldbeyond_myalite_crystal_11": {
+    "textures": "textures/blocks/myalite_crystal_11"
+  },
+  "lepton_worldbeyond_myalite_crystal_12": {
+    "textures": "textures/blocks/myalite_crystal_12"
+  },
+  "lepton_worldbeyond_myalite_crystal_13": {
+    "textures": "textures/blocks/myalite_crystal_13"
+  },
+  "lepton_worldbeyond_myalite_crystal_14": {
+    "textures": "textures/blocks/myalite_crystal_14"
+  },
+  "lepton_worldbeyond_myalite_crystal_15": {
+    "textures": "textures/blocks/myalite_crystal_15"
+  },
+  "lepton_worldbeyond_myalite_crystal_2": {
+    "textures": "textures/blocks/myalite_crystal_2"
+  },
+  "lepton_worldbeyond_myalite_crystal_3": {
+    "textures": "textures/blocks/myalite_crystal_3"
+  },
+  "lepton_worldbeyond_myalite_crystal_4": {
+    "textures": "textures/blocks/myalite_crystal_4"
+  },
+  "lepton_worldbeyond_myalite_crystal_5": {
+    "textures": "textures/blocks/myalite_crystal_5"
+  },
+  "lepton_worldbeyond_myalite_crystal_6": {
+    "textures": "textures/blocks/myalite_crystal_6"
+  },
+  "lepton_worldbeyond_myalite_crystal_7": {
+    "textures": "textures/blocks/myalite_crystal_7"
+  },
+  "lepton_worldbeyond_myalite_crystal_8": {
+    "textures": "textures/blocks/myalite_crystal_8"
+  },
+  "lepton_worldbeyond_myalite_crystal_9": {
+    "textures": "textures/blocks/myalite_crystal_9"
+  }
+}

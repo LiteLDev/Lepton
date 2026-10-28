@@ -1,0 +1,110 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:chorus_weeds",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:map_color": "#007c00",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 60,
+        "destroy_chance_modifier": 100
+      },
+      "minecraft:geometry": "geometry.lepton.worldbeyond_cross",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldbeyond_chorus_weeds",
+          "render_method": "alpha_test",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        }
+      },
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          13,
+          12
+        ]
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:replaceable": {},
+      "minecraft:flower_pottable": {},
+      "minecraft:embedded_visual": {
+        "geometry": "geometry.lepton.worldbeyond_cross",
+        "material_instances": {
+          "*": {
+            "texture": "lepton_worldbeyond_chorus_weeds",
+            "render_method": "alpha_test",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          }
+        }
+      },
+      "minecraft:random_offset": {
+        "x": {
+          "steps": 16,
+          "range": {
+            "min": -4,
+            "max": 4
+          }
+        },
+        "y": {
+          "steps": 0,
+          "range": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        "z": {
+          "steps": 16,
+          "range": {
+            "min": -4,
+            "max": 4
+          }
+        }
+      },
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "up"
+            ],
+            "block_filter": [
+              "minecraft:end_stone"
+            ]
+          }
+        ]
+      },
+      "minecraft:liquid_detection": {
+        "detection_rules": [
+          {
+            "liquid_type": "water",
+            "can_contain_liquid": false,
+            "on_liquid_touches": "popped"
+          }
+        ]
+      },
+      "minecraft:movable": {
+        "movement_type": "popped"
+      },
+      "minecraft:loot": "loot_tables/blocks/chorus_weeds.json",
+      "tag:plant": {},
+      "tag:lepton:chorus_vegetation": {}
+    }
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:myalite_crystal",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.stone"
+      },
+      "states": {
+        "lepton:hue": [
+          6,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1200
+      },
+      "minecraft:map_color": "#7f3fb2",
+      "tag:lepton:myalite_crystal": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:light_emission": 14,
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldbeyond_myalite_crystal_6",
+          "render_method": "blend"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/myalite_crystal.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:hue') == 0",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_0",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_1",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 2",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_2",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 3",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_3",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 4",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_4",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 5",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_5",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 6",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_6",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 7",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_7",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 8",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_8",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 9",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_9",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 10",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_10",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 11",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_11",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 12",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_12",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 13",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_13",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 14",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_14",
+              "render_method": "blend"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:hue') == 15",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_worldbeyond_myalite_crystal_15",
+              "render_method": "blend"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
