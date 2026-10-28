@@ -96,7 +96,7 @@ std::map<std::string, std::function<void(std::string const&)>> gFieldChange;
 std::shared_ptr<CustomScreen>               gCustom;
 bool                                        gCustomPushed = false;
 int                                         gCustomSeenFrames = 0;
-std::set<std::string>                       gDumped;
+std::map<std::string, int>                  gSeenFrames; ///< frames rendered per screen name (tree dump after 20)
 
 float invGuiScale() {
     auto* c = client::currentClient();
@@ -121,10 +121,22 @@ char keyToChar(int key, bool shift) {
 
 // ---- control tree helpers -----------------------------------------------------------------------
 
+/// Read-only: never refresh the game's cached positions (doing it mid-render, before the layout
+/// pass, leaves stale positions marked clean and breaks the game's own hit testing).
 Vec positionOf(UIControl const& c) {
-    if (c.mCachedPositionDirty) c._setCachedPosition();
-    auto const& p = c.mCachedPosition.get();
-    return {p.x, p.y};
+    if (!c.mCachedPositionDirty) {
+        auto const& p = c.mCachedPosition.get();
+        return {p.x, p.y};
+    }
+    Vec v;
+    for (UIControl const* cur = &c; cur;) {
+        auto const& rel = cur->mParentRelativePosition.get();
+        v.x += rel.x;
+        v.y += rel.y;
+        auto parent = cur->mParent.lock();
+        cur         = parent.get(); // the tree owns its controls; the pointer stays valid this frame
+    }
+    return v;
 }
 
 void collectSlots(UIControl& c, std::vector<Slot>& out, std::set<std::pair<std::string, int>>& seen, int depth) {
@@ -378,7 +390,7 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     std::vector<Region>                regions;
     std::vector<std::function<void()>> callbacks;
 
-    if (gDumped.insert(name).second) {
+    if (++gSeenFrames[name] == 20) { // after the layout settled
         std::string tree;
         if (auto const& t = view.mVisualTree.get(); t && t->mRootControl.get()) dumpControl(*t->mRootControl.get(), 0, tree);
         log().debug("ui: screen {} (top: {}) control tree:\n{}", name, c->getTopScreenName(), tree);
