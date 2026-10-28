@@ -169,7 +169,10 @@ Block names (RP `texts.d/*/stones-gen.lang`) are Quark's English names listed in
   in the stairs/slab/walls groups.
 - **Advanced tooltips**: Bedrock has no advanced-tooltip mode (F3+H); the client mod shows the
   celebration line on lamp tooltips always. Vanilla clients don't see it.
-- **Lamp light level** is a block state: lamps placed before a `lightLevel` change keep their light.
+- **Lamp light level** is a block state: lamps placed before a `lightLevel` change keep their light,
+  and a lamp set to another light (e.g. `/setblock` with `lepton:light`) is reset to `lightLevel`.
+- **Smelting XP** is keyed on the furnace result (the game asks for the result item's multiplier):
+  iron / copper block 6.3, gold block 9.
 - **Cooking time / XP**: Bedrock recipe JSON has neither; done natively in the furnace tick and XP hooks.
 - Quark's Cyclic-compat recipe, advancements and `@Hint` (JEI) are not ported (SPEC §8).
 
@@ -180,9 +183,11 @@ Selftests (dx 200..299): `stones.content` (every block registered; shapes carry 
 (recipe ids loaded per gate), `stones.sturdy` (dx 200: a piston fails to push sturdy stone but pushes
 stone), `stones.lamp` (dx 210: light state follows `lightLevel` on placement), `stones.pillar`
 (dx 220: axis from the clicked face), `stones.furnace` (dx 230: raw iron bricks smelt 9x slower),
-`stones.loot` (dx 240: drops need the right pickaxe tier), `stones.gallery` (dx 250: a row of
-every block, screenshots).
+`stones.loot` (dx 234..248: drops need the right pickaxe tier), `stones.gallery` (dx 250..289: every
+block in two lines, screenshots).
 
-E2E: `tools/e2e/server/scenarios/stones.ps1` (all `stones.*` selftests); client
-`tools/e2e/client/scenarios/stones.ps1` (gallery screenshots `gallery-south`, `gallery-east`,
-`gallery-north`, `lamps-night`).
+E2E: `tools/e2e/server/scenarios/stones.ps1` (all `stones.*` selftests),
+`stones-disabled.ps1` (+ `.prelaunch.ps1`: bricks and SturdyStone off in `config/stones.json`; the
+world loads without their recipes / creative entries); client `tools/e2e/client/scenarios/stones.ps1`
+(gallery screenshots `gallery-south` and `gallery-east` (the two halves seen from the south),
+`gallery-north`, `gallery-night` (lamps lit at midnight)).

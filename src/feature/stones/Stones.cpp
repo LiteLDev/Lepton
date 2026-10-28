@@ -278,7 +278,15 @@ public:
         refreshCrossUnit();
         config::onReload([] { refreshCrossUnit(); });
         hookAll();
-        log().debug("stones: {} blocks, {} recipes gated", blockCount(), recipeCount());
+        auto const& c = cfg();
+        auto        on = [](bool b) { return b ? "on" : "off"; };
+        log().info(
+            "stones: {} blocks, {} recipes; moreStoneVariants={} bricks={} chiseled={} pillar={} rawMetalBricks={} "
+            "sturdyStone={} lamps={} (light {}) verticalSlabs={} smeltOreBlocks={}",
+            blockCount(), recipeCount(), on(c.enableMoreStoneVariants), on(c.enableBricks), on(c.enableChiseledBricks),
+            on(c.enablePillar), on(c.enableRawMetalBricks), on(c.enableSturdyStone), on(c.enableCelebratoryLamps),
+            lampLight(), on(crossUnit().verticalSlabs), on(crossUnit().smeltOreBlocks)
+        );
     }
     void install() {
         hookAll(); // again after a disable/enable cycle
