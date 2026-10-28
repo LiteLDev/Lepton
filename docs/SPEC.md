@@ -240,10 +240,11 @@ Rules shared by every unit:
   hollow logs, hedges, leaf carpets, chests, ...) implements the behaviour once, keyed by a block
   tag (`lepton:<feature>`, documented in its spec), and material owners add tagged blocks.
 - **Generated shape and wood sets.** Shapes (block, stairs, slab, vertical slab, wall, fence, fence
-  gate, pane) come from `New-ShapeSet` and wood sets (log, wood, stripped, planks, ..., sign, boat)
+  gate, pane) come from `New-ShapeSet` and wood sets (log, wood, stripped, planks, ..., door, trapdoor,
+  button, pressure plate; signs and boats are not feasible, see `tools/pack/README.md`)
   from `New-WoodSet` in `tools/pack/lib.ps1`. A unit calls them from `tools/pack/<unit>.ps1` and
   commits the generated files. Native placement rules for these shapes (stairs corners, double
-  slabs, vertical slab stacking, wall/fence/pane connections, axis pillars) are in `game/Placement`.
+  slabs, vertical slab stacking, wall/fence/pane connections, axis pillars) are in `game/Shapes`.
 - **Recipes** use Bedrock recipe JSON in the behavior pack (crafting table and stonecutter as in
   Quark). A disabled module must not leave working recipes or obtainable items behind: the unit
   removes or blocks them natively when its `enable<Module>` key is false.
@@ -1163,6 +1164,10 @@ descriptions.
 |---|---|---|
 | `/quark selftest ["glob"]` | operator / console | Runs the in-game selftests (`SELFTEST PASS/FAIL/DONE` lines). Quote globs. |
 | `/quark reload` | operator / console | Reloads every `config/*.json` and the translations. |
+| `/quark net` | operator / console | Lists the online players and whether they run the client mod (`Lepton net: ...`). |
+| `/quark net ping` | operator / console | Pings every client mod (each answers; logged as `net: pong <n> from <player>`). |
+| `/quark debug form` | operator (player) | Sends a test form (`form test: ...` log lines). |
+| `/quark debug container` | operator (player) | Opens a 27-slot virtual container at the player's position. |
 
 Units add sub-commands with `LP_REGISTER_SUBCOMMAND` (in `src/mod/Commands.h`); each is listed in
 the unit spec. Quark 4.1-488 itself registers **no commands** (its configuration is a GUI and a
@@ -1210,7 +1215,7 @@ Every unit writes `docs/spec/<unit>.md` before its first feature.
 | Unit | Name | Quark modules | Selftest dx | Spec | Depends on (beyond the foundation) |
 |---|---|---|---|---|---|
 | U0 | foundation | (spec, net, forms, client UI, game helpers, generators) | 0..99 | this file | |
-| U1 | vslabs | VerticalSlabs, SlabsToBlocks | 100..199 | `docs/spec/vslabs.md` | New-ShapeSet; vertical slab placement in `game/Placement` |
+| U1 | vslabs | VerticalSlabs, SlabsToBlocks | 100..199 | `docs/spec/vslabs.md` | New-ShapeSet; vertical slab placement in `game/Shapes` |
 | U2 | stones | MoreStoneVariants, RawMetalBricks, SturdyStone, CelebratoryLamps | 200..299 | `docs/spec/stones.md` | New-ShapeSet |
 | U3 | newstones | NewStoneTypes, Permafrost, BigStoneClusters, VanillaStoneClusters | 300..399 | `docs/spec/newstones.md` | New-ShapeSet; U2 variant set for the new stones |
 | U4 | bricks | MoreBrickTypes, SoulSandstone, MoreMudBlocks, Midori, DuskboundBlocks | 400..499 | `docs/spec/bricks.md` | New-ShapeSet |
@@ -1219,14 +1224,14 @@ Every unit writes `docs/spec/<unit>.md` before its first feature.
 | U7 | newwoods | AzaleaWood, AncientWood, BlossomTrees | 700..799 | `docs/spec/newwoods.md` | New-WoodSet; tags defined by U6/U9 for its woods' variants |
 | U8 | storage | CompressedBlocks, Stools, Rope, ShearVines, MorePottedPlants, GlassShard, UtilityRecipes | 800..899 | `docs/spec/storage.md` | `game/Entities` (stool seat) |
 | U9 | variantcontainers | VariantChests, VariantFurnaces | 900..999 | `docs/spec/variantcontainers.md` | `game/VirtualContainer` |
-| U10 | redstone | ChainsConnectBlocks, IronRod, PistonsMoveTileEntities, Gravisand, MetalButtons, ObsidianPlate, RedstoneRandomizer, EnderWatcher, DispensersPlaceBlocks | 1000..1099 | `docs/spec/redstone.md` | `game/Placement` |
+| U10 | redstone | ChainsConnectBlocks, IronRod, PistonsMoveTileEntities, Gravisand, MetalButtons, ObsidianPlate, RedstoneRandomizer, EnderWatcher, DispensersPlaceBlocks | 1000..1099 | `docs/spec/redstone.md` | `game/Shapes` |
 | U11 | logistics | Chute, Pipes, FeedingTrough, Crate | 1100..1199 | `docs/spec/logistics.md` | `game/VirtualContainer`, `game/Inventory` |
 | U12 | crystals | Corundum, RainbowLamps, BeaconRedirection, Magnets | 1200..1299 | `docs/spec/crystals.md` | |
 | U13 | enchanting | MatrixEnchanting, AncientTomes, ColorRunes | 1300..1399 | `docs/spec/enchanting.md` | `client/ui` custom screen, `src/net`, `game/Forms` fallback |
 | U14 | backpack | Backpack, TotemOfHolding, SeedPouch | 1400..1499 | `docs/spec/backpack.md` | `game/VirtualContainer`, `game/Inventory`, `game/Entities` |
 | U15 | inventory | InventorySorting, EasyTransferring, ChestSearching, HotbarChanger, AutomaticToolRestock, QuickArmorSwapping, ExpandedItemInteractions, ItemSharing | 1500..1599 | `docs/spec/inventory.md` | `client/ui` overlays + keybinds, `src/net`, `game/Inventory` |
 | U16 | hud | UsageTicker, ElytraIndicator, ImprovedTooltips, AutoWalkKeybind, BackButtonKeybind | 1600..1699 | `docs/spec/hud.md` | `client/ui` HUD + tooltip hooks + keybinds |
-| U17 | placement | ReacharoundPlacing, LockRotation, VariantSelector, Trowel, ReplaceScaffolding, LongRangePickBlock, EnhancedLadders | 1700..1799 | `docs/spec/placement.md` | `game/Placement`, `client/ui`, `src/net` |
+| U17 | placement | ReacharoundPlacing, LockRotation, VariantSelector, Trowel, ReplaceScaffolding, LongRangePickBlock, EnhancedLadders | 1700..1799 | `docs/spec/placement.md` | `game/Shapes`, `client/ui`, `src/net` |
 | U18 | cosmetics | GreenerGrass, VariantAnimalTextures, BucketsShowInhabitants, SoulCandles, WoolShutsUpMinecarts, UsesForCurses, MoreVillagers, Camera | 1800..1899 | `docs/spec/cosmetics.md` | resource pack; `client/ui` (Camera) |
 | U19 | emotes | Emotes, PatTheDogs | 1900..1999 | `docs/spec/emotes.md` | `client/ui` custom screen + keybinds, `src/net` |
 | U20 | mobsoverworld | Crabs, Shiba, Toretoise | 2000..2099 | `docs/spec/mobsoverworld.md` | `game/Entities` |

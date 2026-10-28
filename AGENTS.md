@@ -30,6 +30,18 @@ should match the wording of Quark (they are behaviour), written into our own lan
 | `tools/xmake/assemble.lua` | Post-build: copies binaries, merges lang + pack fragments. |
 | `tools/textures/lib.ps1` | Pixel-art helpers (`Save-PixelArt`, `Merge-Rows`, `Shade-Color`). |
 | `tools/e2e/` | Real-game harnesses (server + client); see `tools/e2e/README.md`. |
+| `docs/SPEC.md`, `docs/spec/<unit>.md` | Behaviour spec: module inventory, conventions, config keys, work plan (§9); per-unit detail in `docs/spec/` (template in `docs/spec/README.md`). |
+| `src/game/Items.h` | `makeItem(id, count, aux)`, `itemId`, `isEmpty`, `canMerge`, `itemToSnbt` / `itemFromSnbt`. |
+| `src/game/Inventory.h` | `lp::game::inv`: slot ranges (`kHotbar`, `kPlayerMain`, `kPlayerAll`), `insert`, `roomFor`, `transferSlot/All`, `count`, `remove`, `compact`, `sort`, `snapshot/restore`, `sync`. |
+| `src/game/Forms.h` | `lp::game::forms`: `SimpleForm`, `ModalForm`, `CustomForm` (+ `Response`), `closeFor`; `forms::testing::click/submit/close` answer forms in selftests. |
+| `src/game/Entities.h` | `lp::game::entities`: `spawn`, `find(uniqueId)`, `idOf`, `typeOf`, `inBox`, `ofType`, `triggerEvent`, `despawn`. |
+| `src/game/VirtualContainer.h` | `lp::game::vc`: container contents in the world DB opened in the vanilla chest/hopper/dispenser screen (`open`, `items`, `setItems`, `takeAll`, `dropContents`, `liveContainer`, `bindBlock`). |
+| `src/game/BlockStates.h`, `src/game/Shapes.h` | Typed block states (`blockstates::get/with/of`) and the native behaviour of generated shapes (`lp::game::shapes`: stairs corners, slab merging, connections, doors, gates, buttons, ...; state and tag names in the header and `tools/pack/README.md`). |
+| `src/net/Net.h` | Companion protocol (custom LeviLamina packets): `hasClientMod`, `onServer/onClient`, `sendToClient/sendToServer/broadcast`, `net::testing`. |
+| `src/client/ui/Ui.h` | Client UI toolkit (client build): `DrawContext`, HUD hooks, screen overlays (buttons, text fields, greyed slots), tooltip lines, keybinds, custom screens. Demo: `UiDemo.cpp`. |
+| `tools/pack/lib.ps1` | Pack generators `New-ShapeSet` / `New-WoodSet` (+ single blocks, recipes, loot, fragments); see `tools/pack/README.md`. Units run them from `tools/pack/<unit>.ps1` and commit the output. |
+| `assets/pack/rp/ui/`, `ui_defs.d/<unit>.json` | JSON-UI files of the resource pack; each fragment is a JSON array of `ui/*.json` paths merged into `ui/_ui_defs.json`. |
+| `assets/pack/bp/entities/`, `assets/pack/rp/entity/` | Behaviour / client entity definitions (`lepton:virtual_container` helper, `lepton:u0_probe_entity` test entity). |
 
 ## Work as a feature unit (no shared-file edits)
 
@@ -59,6 +71,11 @@ reference it with `tr(key, "English fallback")` without defining it.
 | `LP_REGISTER_CONFIG("section", T)` | `mod/Config.h` | Reflectable struct with `int version`; file `config/<section>.json`; `lp::config::get<T>()`. One section per unit. |
 | `LP_REGISTER_SUBCOMMAND(fn)` | `mod/Commands.h` | Adds overloads to `/quark` (alias `/lepton`). `commands::playerOf`, `commands::isAdmin`. |
 | `LP_REGISTER_SELFTEST("unit.case", fn)` | `selftest/SelfTest.h` | `fn(Context&)` or `ll::coro::CoroTask<>(Context&)`. |
+| `LP_REGISTER_MESSAGE(T)` | `net/Net.h` | Companion-protocol message: reflectable struct with `static constexpr std::string_view kId = "<unit>:<name>"`, external linkage. Handlers: `net::onServer<T>` / `net::onClient<T>` in `install()`. |
+| `LP_REGISTER_KEYBIND("name", Key::X, onDown[, onUp])` | `client/ui/Ui.h` | Client keybind `key.lepton.<name>` (rebindable in Controls; default from `config/keybinds.json`). Add the `key.lepton.<name>` name to your `texts.d` lang. |
+| `LP_REGISTER_HUD(fn)` | `client/ui/Ui.h` | `fn(DrawContext&)` draws on the HUD every frame. |
+| `LP_REGISTER_SCREEN_OVERLAY("glob", fn)` | `client/ui/Ui.h` | `fn(Overlay&, ScreenInfo const&)` adds widgets to screens whose name matches (`inventory_screen`, `*chest_screen`, ...). |
+| `LP_REGISTER_TOOLTIP(fn)` | `client/ui/Ui.h` | `fn(ItemStackBase const&, std::vector<std::string>& lines)` appends tooltip lines. |
 
 Registrations live in .cpp files linked directly into the DLL, so they are never stripped.
 
@@ -79,6 +96,30 @@ Registrations live in .cpp files linked directly into the DLL, so they are never
   `co_await ctx.ticks(n)`, `co_await ctx.ensureLoaded(pos)`, `ctx.check/require/fail/info`.
   `/quark selftest` (no glob) and the server scenario `full` run every unit's tests together:
   keep them passing there.
+- **Companion protocol** (`net/Net.h`): LeviLamina runtime packets (one per direction) carrying
+  `(kId, JSON)`. The client mod says `lp:hello` after joining; the server answers `lp:welcome`.
+  The server sends Lepton messages **only** to `net::hasClientMod(player)` players (`sendToClient`
+  returns false otherwise), so vanilla clients never see unknown packets; give them a fallback
+  (`game/Forms` or `game/VirtualContainer`). The client checks `net::serverHasMod()`. Server
+  handlers get the sending `Player&`: validate everything (a client may lie). Selftests mark a
+  SimulatedPlayer as a mod client with `net::testing::setClientMod`, read what was sent with
+  `takeOutbox`, and inject client messages with `receiveFromClient`. `/quark net` lists who has the mod.
+- **Vanilla-client fallbacks**: `game/Forms.h` (`SimpleForm`/`ModalForm`/`CustomForm`, per-button
+  callbacks, `onClose`; texts are sent as given, translate with `trFor`). Containers: `game/VirtualContainer.h`
+  (`vc::bindBlock("lepton:crate", spec)` in `install()` makes using the block open its inventory and
+  breaking it drop the contents; contents live under `lp:vc:<dim>:<x>:<y>:<z>`). Every client gets
+  the vanilla screen, served by a hidden helper entity, so item moves are server-authoritative.
+- **Shapes** (`game/Shapes.h`): blocks generated by `New-ShapeSet` / `New-WoodSet` get vanilla-like
+  native behaviour from their tags (`lepton:stairs`, `lepton:slab`, ...) automatically; don't
+  re-implement it. Vertical slabs: `lepton:type` (north|south|west|east|double).
+- **Client UI** (`client/ui/Ui.h`, client build): immediate-mode drawing in UI units on top of the
+  game's screens; screen names are the JSON-UI root names (the first time a screen is seen, its
+  control tree is logged at debug level: use it to find slot collections and positions). Text
+  fields take key presses (letters, digits, space, `-`, `.`). Custom screens: subclass
+  `ui::CustomScreen`, `ui::openScreen(...)`; Esc closes them. The demo (`config/ui.json`
+  `"demo": true`, client scenario `ui`) shows every feature.
+- **Items** need `game::makeItem` (`game/Items.h`; counts are capped at the max stack size).
+  Entities: `game/Entities.h`; store `entities::idOf(actor)`, never `Actor*`.
 
 ## Build, test, run
 
@@ -103,6 +144,12 @@ pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless 
   `%APPDATA%\levilauncher.exe\` (`bei-e2e.lock` for slot 1, `hiN-e2e.lock` for clones); the harness
   waits for them. Headless input (LeviHeadlessInput) is the default: the game runs in the
   background and never takes the real mouse/keyboard.
+- Worktrees under the main checkout: run xmake with `-P .` (as `tools/build.ps1` does), otherwise xmake
+  picks the parent checkout's project and builds there. If a build rewrites `xmake-requires.lock`
+  (repo commit bumps only), revert it: `git checkout xmake-requires.lock`.
+- Client e2e: `full` (all selftests + handshake), `ui` (UI toolkit demo, screenshots), `net` (run with
+  `-Mode local`, `remote-mod` and `remote-vanilla`: handshake, container screen, form fallback),
+  `shapes` (generated shape gallery).
 
 Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/Lepton` to
 `%APPDATA%\levilauncher.exe\versions\1.26.51.01\mods\`.
@@ -130,6 +177,15 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
 - A cancelled `PlayerInteractBlockEvent` rolls back block changes made during it: defer world edits
   to the next tick (`ll::coro` / `ServerLevelTickEvent`).
 - Don't keep `Player*` across ticks; store `getOrCreateUniqueID()` / the UUID and look it up again.
+- `PlayerInteractBlockEvent::block()` may be empty: read the block from the region at `blockPos()`.
+  `PlayerPlacedBlockEvent` fires before the block exists: fix placements up on the next tick.
+- `SimulatedPlayer::simulateUseItemOnBlock` needs a non-empty item (an empty hand never reaches
+  `useItemOn`), and a second use within a few ticks is ignored: wait ~10 ticks between uses.
+- Reflected types (config structs, net messages, command parameters) need external linkage.
+- `Block::tryGetFromRegistry(name, states)` silently returns the default state for unknown states:
+  use `game::blockstates::with/of`.
+- `NetEventCallback` has no `_getServerPlayer` in 26.51.7: find the player by
+  `Player::getNetworkIdentifier()` (see `src/net/Net.cpp`).
 
 ## Conventions
 
@@ -142,6 +198,28 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
 - Commit / PR titles in the imperative mood, as in [CONTRIBUTING.md](CONTRIBUTING.md) ("Add the biome search cooldown"),
   PR into `main`. Work on a unit of the plan may prefix its title with the unit id (`U<n>: <summary>`).
 
+## Unit checklist (wave 1)
+
+1. Read `docs/SPEC.md` (your row in §9, your modules in §2.1, your config keys in §5.1) and the
+   Quark source of your modules (behaviour only). Write `docs/spec/<unit>.md` first (template:
+   `docs/spec/README.md`).
+2. Own only your files (see "Work as a feature unit"): `src/feature/<unit>/`, `src/client/<unit>/`,
+   `assets/lang/{en_US,zh_CN}/<unit>.json`, pack files and `<unit>` fragments, `tools/pack/<unit>.ps1`,
+   `tools/textures/<unit>.ps1`, `tools/e2e/{server,client}/scenarios/<unit>*.ps1`.
+3. Config: `LP_REGISTER_CONFIG("<unit>", T)` with one `enable<Module>` per module and Quark's options
+   and defaults.
+4. Blocks: generate shapes / wood sets with `tools/pack/lib.ps1`, commit the output; shared native
+   behaviour comes from `game/Shapes`. Containers: `game/VirtualContainer`. UI: `client/ui` for mod
+   clients, `game/Forms` / vanilla screens for vanilla clients (decide with `net::hasClientMod`).
+5. Selftests named `<unit>.*` in your dx range (U<n>: 100n..100n+99), passing inside the server
+   `full` scenario; an e2e scenario per unit (client scenarios with screenshots for anything visual).
+6. `pwsh tools/build.ps1 -Target all -Tests` and `tools/e2e/server/run.ps1 -Scenario full` pass.
+7. **Do not edit** `CHANGELOG.md`, `README.md`, `docs/SPEC.md` or `AGENTS.md`: put the changelog
+   lines, README lines and any spec/contract change you need in your PR body (sections "Changelog",
+   "README", "Spec changes"); the coordinator merges them.
+8. PR title `U<n>: <imperative summary>` into `main`.
+
 ## Out of scope
 
-To be filled in with docs/SPEC.md: Quark features with no Bedrock equivalent.
+See [docs/SPEC.md §8](docs/SPEC.md#8-not-ported) ("Not ported"): Quark features with no Bedrock
+equivalent (config GUI, mod-compat and Java-only modules after U27's review).
