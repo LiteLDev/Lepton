@@ -1,0 +1,561 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.lepton.trapdoor",
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 2,
+        "visible_bounds_height": 2.5,
+        "visible_bounds_offset": [
+          0,
+          0.75,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "panel_bottom",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                0,
+                -8
+              ],
+              "size": [
+                16,
+                3,
+                16
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "panel_top",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                13,
+                -8
+              ],
+              "size": [
+                16,
+                3,
+                16
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "panel_n",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                0,
+                -8
+              ],
+              "size": [
+                16,
+                16,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "panel_s",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                0,
+                5
+              ],
+              "size": [
+                16,
+                16,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    13
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    3
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "panel_w",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                5,
+                0,
+                -8
+              ],
+              "size": [
+                3,
+                16,
+                16
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "panel_e",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                0,
+                -8
+              ],
+              "size": [
+                3,
+                16,
+                16
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "north"
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "east"
+                },
+                "south": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "south"
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ],
+                  "material_instance": "west"
+                },
+                "up": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "up"
+                },
+                "down": {
+                  "uv": [
+                    13,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    16
+                  ],
+                  "material_instance": "down"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

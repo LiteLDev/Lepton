@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:u0_probe_door",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_u0probe_u0_probe_door",
+      "minecraft:block_placer": {
+        "block": "lepton:u0_probe_door",
+        "replace_block_item": true
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

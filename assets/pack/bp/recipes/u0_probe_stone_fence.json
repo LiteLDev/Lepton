@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:u0_probe_stone_fence"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#S#",
+      "#S#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:u0_probe_stone"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:u0_probe_stone"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "lepton:u0_probe_stone_fence",
+      "count": 3
+    }
+  }
+}

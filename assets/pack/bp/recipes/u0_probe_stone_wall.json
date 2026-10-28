@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:u0_probe_stone_wall"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:u0_probe_stone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:u0_probe_stone"
+      }
+    ],
+    "result": {
+      "item": "lepton:u0_probe_stone_wall",
+      "count": 6
+    }
+  }
+}
