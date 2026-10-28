@@ -1,0 +1,319 @@
+{
+  "format_version": "1.21.120",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:u0_probe_button",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      },
+      "states": {
+        "lepton:pressed": [
+          false,
+          true
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.5
+      },
+      "minecraft:map_color": "#8a6c9c",
+      "tag:lepton:wooden": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "tag:lepton:button": {},
+      "tag:lepton:press_ticks_30": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_u0probe_u0_probe_planks",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/u0_probe_button.json",
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.button",
+        "bone_visibility": {
+          "up": "(q.block_state('minecraft:block_face') == 'up' && q.block_state('lepton:pressed') == false)",
+          "up_pressed": "(q.block_state('minecraft:block_face') == 'up' && q.block_state('lepton:pressed') == true)",
+          "down": "(q.block_state('minecraft:block_face') == 'down' && q.block_state('lepton:pressed') == false)",
+          "down_pressed": "(q.block_state('minecraft:block_face') == 'down' && q.block_state('lepton:pressed') == true)",
+          "north": "(q.block_state('minecraft:block_face') == 'north' && q.block_state('lepton:pressed') == false)",
+          "north_pressed": "(q.block_state('minecraft:block_face') == 'north' && q.block_state('lepton:pressed') == true)",
+          "south": "(q.block_state('minecraft:block_face') == 'south' && q.block_state('lepton:pressed') == false)",
+          "south_pressed": "(q.block_state('minecraft:block_face') == 'south' && q.block_state('lepton:pressed') == true)",
+          "west": "(q.block_state('minecraft:block_face') == 'west' && q.block_state('lepton:pressed') == false)",
+          "west_pressed": "(q.block_state('minecraft:block_face') == 'west' && q.block_state('lepton:pressed') == true)",
+          "east": "(q.block_state('minecraft:block_face') == 'east' && q.block_state('lepton:pressed') == false)",
+          "east_pressed": "(q.block_state('minecraft:block_face') == 'east' && q.block_state('lepton:pressed') == true)"
+        }
+      }
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'up'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              0,
+              -2
+            ],
+            "size": [
+              6,
+              2,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'up' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              0,
+              -2
+            ],
+            "size": [
+              6,
+              1,
+              4
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "down"
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'down'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              14,
+              -2
+            ],
+            "size": [
+              6,
+              2,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'down' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              15,
+              -2
+            ],
+            "size": [
+              6,
+              1,
+              4
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "up"
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              6,
+              6
+            ],
+            "size": [
+              6,
+              4,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'north' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              6,
+              7
+            ],
+            "size": [
+              6,
+              4,
+              1
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "south"
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              6,
+              -8
+            ],
+            "size": [
+              6,
+              4,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'south' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3,
+              6,
+              -8
+            ],
+            "size": [
+              6,
+              4,
+              1
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "north"
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              6,
+              6,
+              -3
+            ],
+            "size": [
+              2,
+              4,
+              6
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'west' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              7,
+              6,
+              -3
+            ],
+            "size": [
+              1,
+              4,
+              6
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "east"
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              6,
+              -3
+            ],
+            "size": [
+              2,
+              4,
+              6
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'east' && q.block_state('lepton:pressed') == true)",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              6,
+              -3
+            ],
+            "size": [
+              1,
+              4,
+              6
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "west"
+          }
+        }
+      }
+    ]
+  }
+}

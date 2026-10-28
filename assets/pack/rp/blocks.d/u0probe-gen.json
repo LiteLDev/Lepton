@@ -1,0 +1,68 @@
+{
+  "lepton:stripped_u0_probe_log": {
+    "sound": "wood"
+  },
+  "lepton:stripped_u0_probe_wood": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_button": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_door": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_fence": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_fence_gate": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_log": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_planks": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_pressure_plate": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_slab": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_stairs": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_stone": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_fence": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_fence_gate": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_pane": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_slab": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_stairs": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_stone_wall": {
+    "sound": "stone"
+  },
+  "lepton:u0_probe_trapdoor": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_vertical_slab": {
+    "sound": "wood"
+  },
+  "lepton:u0_probe_wood": {
+    "sound": "wood"
+  }
+}

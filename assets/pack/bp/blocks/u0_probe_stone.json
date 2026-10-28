@@ -1,0 +1,55 @@
+{
+  "format_version": "1.21.120",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:u0_probe_stone",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#7f8f9f",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_u0probe_u0_probe_stone",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/u0_probe_stone.json"
+    }
+  }
+}

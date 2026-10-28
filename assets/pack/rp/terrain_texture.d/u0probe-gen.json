@@ -1,0 +1,29 @@
+{
+  "lepton_u0probe_u0_probe_door_bottom": {
+    "textures": "textures/blocks/u0_probe_door_bottom"
+  },
+  "lepton_u0probe_u0_probe_door_top": {
+    "textures": "textures/blocks/u0_probe_door_top"
+  },
+  "lepton_u0probe_u0_probe_log": {
+    "textures": "textures/blocks/u0_probe_log"
+  },
+  "lepton_u0probe_u0_probe_log_top": {
+    "textures": "textures/blocks/u0_probe_log_top"
+  },
+  "lepton_u0probe_u0_probe_planks": {
+    "textures": "textures/blocks/u0_probe_planks"
+  },
+  "lepton_u0probe_u0_probe_stone": {
+    "textures": "textures/blocks/u0_probe_stone"
+  },
+  "lepton_u0probe_u0_probe_stripped_log": {
+    "textures": "textures/blocks/u0_probe_stripped_log"
+  },
+  "lepton_u0probe_u0_probe_stripped_log_top": {
+    "textures": "textures/blocks/u0_probe_stripped_log_top"
+  },
+  "lepton_u0probe_u0_probe_trapdoor": {
+    "textures": "textures/blocks/u0_probe_trapdoor"
+  }
+}
