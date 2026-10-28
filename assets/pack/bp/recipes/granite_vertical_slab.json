@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:granite_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:granite_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:granite_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:granite_vertical_slab",
+      "count": 3
+    }
+  }
+}

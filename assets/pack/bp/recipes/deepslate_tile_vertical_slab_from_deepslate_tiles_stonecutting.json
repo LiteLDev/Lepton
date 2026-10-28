@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:deepslate_tile_vertical_slab_from_deepslate_tiles_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:deepslate_tiles"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:deepslate_tiles"
+      }
+    ],
+    "result": {
+      "item": "lepton:deepslate_tile_vertical_slab",
+      "count": 2
+    }
+  }
+}

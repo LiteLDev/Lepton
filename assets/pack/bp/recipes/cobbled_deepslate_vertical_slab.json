@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:cobbled_deepslate_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:cobbled_deepslate_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:cobbled_deepslate_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:cobbled_deepslate_vertical_slab",
+      "count": 3
+    }
+  }
+}

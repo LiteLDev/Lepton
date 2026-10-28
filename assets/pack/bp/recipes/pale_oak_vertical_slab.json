@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:pale_oak_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:pale_oak_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:pale_oak_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:pale_oak_vertical_slab",
+      "count": 3
+    }
+  }
+}

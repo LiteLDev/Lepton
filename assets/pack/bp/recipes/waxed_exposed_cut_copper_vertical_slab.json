@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:waxed_exposed_cut_copper_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:waxed_exposed_cut_copper_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:waxed_exposed_cut_copper_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:waxed_exposed_cut_copper_vertical_slab",
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:andesite_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:andesite_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:andesite_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:andesite_vertical_slab",
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:prismarine_brick_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:prismarine_brick_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:prismarine_brick_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:prismarine_brick_vertical_slab",
+      "count": 3
+    }
+  }
+}

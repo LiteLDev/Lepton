@@ -46,6 +46,7 @@
 //
 // Everything runs on the server thread; client-side levels are ignored.
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -112,5 +113,14 @@ void queueUpdate(BlockSource& region, BlockPos const& pos);
 bool setOpen(BlockSource& region, BlockPos const& pos, bool open, Player* by = nullptr);
 /// Presses a button or pressure plate (released automatically). False if not pressable.
 bool press(BlockSource& region, BlockPos const& pos);
+
+/// Extra connection rule for the generated walls, panes and fences (added for U1 VerticalSlabs:
+/// walls/panes connect to the side of vertical slabs). `self` is the kind being updated
+/// (Kind::Wall, Kind::Pane or Kind::Fence), `other` the neighbour and `face` the neighbour's face
+/// that points at `self` ("north", ...). Return true to connect; the rules are OR-ed with the
+/// built-in ones. Register in install(); the returned id removes the rule in uninstall().
+using ConnectRule = std::function<bool(Kind self, Block const& other, std::string_view face)>;
+int  addConnectRule(ConnectRule rule);
+void removeConnectRule(int id);
 
 } // namespace lp::game::shapes
