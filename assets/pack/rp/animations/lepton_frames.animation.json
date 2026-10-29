@@ -42,17 +42,24 @@
         },
         "holder": {
           "position": [
-            "(q.property('lepton:kind') == 4 ? -4 : 0)",
-            0,
+            "(q.property('lepton:kind') == 2 ? 2 : 0)",
+            "(q.property('lepton:kind') == 2 ? -2 : 0)",
             "(q.property('lepton:kind') == 4 ? 8.0 : (q.property('lepton:kind') == 3 ? 8.8 : 7.6))"
           ],
-          "scale": "(q.property('lepton:kind') == 3 ? 0.5 : (q.property('lepton:kind') == 4 ? 0.5 * q.property('lepton:scale') * 2.6667 : 0.5 * q.property('lepton:scale')))"
+          "scale": "(q.property('lepton:kind') == 3 ? 0.5 : (q.property('lepton:kind') == 4 ? 0.5 * q.property('lepton:scale') * 0.6667 : 0.5 * q.property('lepton:scale')))"
         },
         "rightArm": {
           "rotation": [
-            "(q.property('lepton:kind') == 2 ? 0 : 0)",
-            "(q.property('lepton:kind') == 2 ? 0 : 90)",
-            "(q.property('lepton:kind') == 1 ? -45 : 0)"
+            "(q.property('lepton:kind') == 1 || q.property('lepton:kind') == 4 ? 0 : -90)",
+            "(q.property('lepton:kind') == 1 ? 90 : (q.property('lepton:kind') == 4 ? -90 : (q.property('lepton:kind') == 3 ? -90 : 0)))",
+            "(q.property('lepton:kind') == 1 ? -45 : (q.property('lepton:kind') == 4 ? 90 : 0))"
+          ]
+        },
+        "rightItem": {
+          "rotation": [
+            0,
+            "(q.property('lepton:kind') == 2 ? 45 : 0)",
+            0
           ]
         }
       }

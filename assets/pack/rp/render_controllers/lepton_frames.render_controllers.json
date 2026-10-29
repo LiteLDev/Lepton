@@ -11,11 +11,11 @@
       "textures": [
         "Texture.default"
       ],
-      "color": {
+      "overlay_color": {
         "r": "math.mod(math.floor(q.property('lepton:color') / 65536), 256) / 255",
         "g": "math.mod(math.floor(q.property('lepton:color') / 256), 256) / 255",
         "b": "math.mod(q.property('lepton:color'), 256) / 255",
-        "a": "1.0"
+        "a": "0.72"
       },
       "part_visibility": [
         {
