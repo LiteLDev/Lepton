@@ -129,6 +129,7 @@ std::optional<int> copperAge(std::string_view id) {
     }
     if (!id.starts_with("minecraft:")) return std::nullopt;
     auto path = id.substr(10);
+    if (path.find("copper") == std::string_view::npos && !path.ends_with("lightning_rod")) return std::nullopt;
     for (int age = 3; age >= 1; --age) {
         if (path.starts_with(kStagePrefix[age])) {
             return isVanillaCopperBase(path.substr(kStagePrefix[age].size()), false) ? std::optional(age) : std::nullopt;
@@ -143,6 +144,8 @@ std::string copperSlabId(int age, bool waxed) {
 }
 
 std::optional<std::pair<int, bool>> copperSlabStage(std::string_view id) {
+    // cheap filter first: this runs for every block change and in the weathering scan
+    if (!id.starts_with("lepton:") || !id.ends_with("cut_copper_vertical_slab")) return std::nullopt;
     for (int age = 0; age < 4; ++age) {
         for (bool waxed : {false, true}) {
             if (id == copperSlabId(age, waxed)) return std::pair{age, waxed};
@@ -328,12 +331,15 @@ int gTickDelayMax = 8191;
 /// blocks per subchunk). Custom blocks get no random ticks, so the slab carries its own.
 uint64_t levelTick(BlockSource& region) { return region.getLevel().getCurrentTick().tickID; }
 
-void scheduleWeathering(BlockSource& region, BlockPos const& pos) {
+/// `restart`: the block just changed type (placed, aged, scraped, ...), so a tick queued for the
+/// old block may be dropped by the game: start a new chain (the old tick, if it still comes, is
+/// then rejected as a stray by takeWeatheringTick).
+void scheduleWeathering(BlockSource& region, BlockPos const& pos, bool restart = false) {
     auto const& b = region.getBlock(pos);
     if (!isWeatheringSlab(b.getTypeName())) return;
     auto  now = levelTick(region);
     auto& due = st().pending[game::globalPos(region, pos)];
-    if (due > now) return; // one chain per block
+    if (!restart && due > now) return; // one chain per block
     int delay = 1 + nextInt(std::max(1, gTickDelayMax));
     due       = now + static_cast<uint64_t>(delay);
     region.addToTickingQueue(pos, b, delay, 0, false);
@@ -345,7 +351,9 @@ bool takeWeatheringTick(BlockSource& region, BlockPos const& pos) {
     auto  it      = pending.find(game::globalPos(region, pos));
     if (it == pending.end()) return true; // a tick queued before a reload: adopt it
     auto now = levelTick(region);
-    if (it->second + 1 < now || it->second > now + 1) return false;
+    // a tick that comes before the chain's due time is a stray (queued for an older chain); a late
+    // one is the chain's own tick, delayed while the chunk was unloaded or out of simulation range
+    if (it->second > now + 1) return false;
     pending.erase(it);
     return true;
 }
@@ -357,8 +365,10 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     auto const& nb = ev.newBlock();
     // a block that just became weathering copper starts its tick chain (the chain itself
     // reschedules from the tick hook; a state-only change keeps the pending tick)
-    if (isWeatheringSlab(nb.getTypeName()) && ev.previousBlock().getTypeName() != nb.getTypeName()) {
-        scheduleWeathering(region, ev.pos());
+    if (ev.previousBlock().getTypeName() != nb.getTypeName()) {
+        if (isWeatheringSlab(nb.getTypeName())) scheduleWeathering(region, ev.pos(), true);
+        else if (isWeatheringSlab(ev.previousBlock().getTypeName()))
+            st().pending.erase(game::globalPos(region, ev.pos())); // broken / waxed / oxidized
     }
     // a double vertical slab holds no water (Quark: WATERLOGGED false when merged)
     if (!isVerticalSlab(nb) || typeOf(nb) != "double") return;
@@ -442,7 +452,8 @@ void clearCopperOnLightning(BlockSource& region, BlockPos const& strike) {
 
 namespace {
 
-int gCopperTicks = 0;
+int  gCopperTicks = 0;
+bool gInstalled   = false;
 
 // ---- hooks -------------------------------------------------------------------------------------
 
@@ -464,9 +475,13 @@ LL_TYPE_INSTANCE_HOOK(
     if (!c) return result;
     if (!*c) return WallConnectionType::None;
     if (result != WallConnectionType::None) return result;
+    // tall under a solid block, or under a wall that connects the same way (vanilla / Lepton walls)
     auto const& above = region.getBlock(shapes::neighbor(pos, "up"));
-    return (!above.isAir() && above.mCachedComponentData->mIsSolid) ? WallConnectionType::Tall
-                                                                     : WallConnectionType::Short;
+    if (above.isAir()) return WallConnectionType::Short;
+    if (above.mCachedComponentData->mIsSolid) return WallConnectionType::Tall;
+    auto up = bs::getString(above, "wall_connection_type_" + std::string(dir));
+    if (!up) up = bs::getString(above, "lepton:" + std::string(dir));
+    return (up && *up != "none") ? WallConnectionType::Tall : WallConnectionType::Short;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -559,17 +574,21 @@ public:
         QueuedTickHook::hook();
         FuelHook::hook();
         LightningHook::hook();
+        gInstalled = true;
         if (ll::service::getLevel()) reapplyRecipes(); // BDS: the world is already loaded
         static bool registered = false;
         if (!registered) {
+            // the world callbacks can't be unregistered: they do nothing while uninstalled
             registered = true;
-            game::db::onWorldReady([] { reapplyRecipes(); });
+            game::db::onWorldReady([] {
+                if (gInstalled) reapplyRecipes();
+            });
             game::db::onWorldClosed([] {
                 st() = State{};
                 resetRecipes();
             });
             lp::config::onReload([] {
-                if (ll::service::getLevel()) reapplyRecipes();
+                if (gInstalled && ll::service::getLevel()) reapplyRecipes();
             });
         }
     }
@@ -582,6 +601,8 @@ public:
         QueuedTickHook::unhook();
         FuelHook::unhook();
         LightningHook::unhook();
+        gInstalled = false;
+        restoreRecipes();
         st() = State{};
     }
 

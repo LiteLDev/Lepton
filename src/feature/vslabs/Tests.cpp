@@ -1,5 +1,6 @@
 // U1 vslabs selftests (dx 100..199).
 
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -397,6 +398,13 @@ LP_REGISTER_SELFTEST("vslabs.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
     if (!viewer) co_return;
     auto uid  = viewer->getOrCreateUniqueID();
     auto view = [&](float dx, float dy, float dz, float pitch, float yaw) {
+        // an invisible floor, so the viewer doesn't fall from the viewpoint while the screenshot waits
+        put(ctx,
+            off(base,
+                static_cast<int>(std::floor(dx)),
+                static_cast<int>(std::floor(dy)) - 1,
+                static_cast<int>(std::floor(dz))),
+            "minecraft:barrier");
         if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
             v->teleport(
                 Vec3{static_cast<float>(base.x) + dx, static_cast<float>(base.y) + dy, static_cast<float>(base.z) + dz},

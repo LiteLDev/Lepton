@@ -182,7 +182,7 @@ type `t` seen from a neighbour on its face `f`:
 waxed twin (`waxed_…`).
 
 - **Weathering** (Java `WeatheringCopper` + `ChangeOverTimeBlock#changeOverTime`): the non-waxed,
-  non-oxidized slabs carry `minecraft:tick` with an interval uniform in [1, 8191] ticks (on average one
+  non-oxidized slabs carry their own chain of queued block ticks (`BlockSource::addToTickingQueue`, rescheduled after each tick and restarted whenever the block changes type) with an interval uniform in [1, 8191] ticks (on average one
   tick per 4096 game ticks = one Bedrock random tick at `randomTickSpeed` 1). A native hook on
   `Block::queuedTick` turns each tick into `randomTickSpeed` random-tick attempts (gamerule read live; 0
   disables weathering). An attempt: with chance 0.05688889, count every weathering copper block (vanilla
@@ -269,7 +269,7 @@ names `tag.item.quark.vertical_slabs` ("Vertical Slabs") and `tag.item.quark.woo
   fences also connect to the sides (one rule per block covers every connection type; Java fences only
   see the full back face). Changing that would need a client-side renderer change for every client,
   vanilla ones included.
-- **Random ticks**: custom blocks get no random ticks on Bedrock without scripting; `minecraft:tick` with
+- **Random ticks**: custom blocks get no random ticks on Bedrock without scripting; a native queued-tick chain with
   a [1, 8191] interval reproduces the average random tick rate (the distribution is uniform per block
   instead of geometric).
 - **Lightning**: vanilla copper next to Lepton slabs is cleared by the game's own random walk, Lepton
@@ -279,6 +279,14 @@ names `tag.item.quark.vertical_slabs` ("Vertical Slabs") and `tag.item.quark.woo
 - **Recipe priority**: vanilla Bedrock resolves a grid that matches two recipes by `priority` (lower
   first). SlabsToBlocks uses 50, vanilla recipes 0, so a vanilla 2-slab recipe wins as in Quark.
 - **SlabToBlockRecipe "locked" check** (any other recipe matching the grid wins) is that priority rule.
+- **Disabled recipes and network ids**: a recipe taken out while its module is off is removed from
+  the recipe lists, the output index and the recipe book (and clients get a fresh recipe list), but not
+  from the game's network-id index (`Recipes::mRecipesByNetId`, an `unordered_map` whose hash function
+  lives in the game binary and can't be called safely from the mod). A modified client that still
+  sends the old network id could craft it until the next restart; vanilla clients can't.
+- **Config changes and placed blocks**: like in Quark, walls and panes already standing next to a
+  vertical slab keep their connection after `allowSideConnections` changes until a neighbour updates
+  them.
 - **1.26 slabs** (pale oak, resin brick, poplar, cinnabar, sulfur, concrete, wool): not in Quark 4.1-488 (MC 1.21.1); added
   under the module's rule "every vanilla slab".
 

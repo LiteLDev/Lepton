@@ -78,7 +78,7 @@ void setTickDelayMax(int ticks);
 void applyRecipes(Recipes& recipes);
 /// applyRecipes on the current level and resends the recipes to every player.
 void reapplyRecipes();
-/// Ids of the SlabsToBlocks recipes currently active ("lepton:slabs_to_blocks/<slab path>").
+/// Ids of the SlabsToBlocks recipes currently active ("lepton:slabs_to_blocks_<slab path>").
 [[nodiscard]] std::vector<std::string> slabsToBlocksRecipes();
 /// The SlabsToBlocks table: slab item id -> full block (id, aux).
 [[nodiscard]] std::vector<std::pair<std::string, std::string>> slabsToBlocksTable();
@@ -86,5 +86,7 @@ void reapplyRecipes();
 [[nodiscard]] bool hasRecipe(Recipes const& recipes, std::string_view id);
 /// Forgets per-world recipe state (world closed).
 void resetRecipes();
+/// Puts every recipe taken out by applyRecipes back (module uninstalled).
+void restoreRecipes();
 
 } // namespace lp::feature::vslabs

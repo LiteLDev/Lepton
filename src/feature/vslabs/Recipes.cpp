@@ -164,7 +164,8 @@ std::vector<StbEntry> crawl(Recipes const& recipes) {
             if (a.empty() || a == "minecraft:air" || nameOf(ings[1]) != a || nameOf(ings[2]) != a) continue;
             if (ings[1].getAuxValue() != ings[0].getAuxValue() || ings[2].getAuxValue() != ings[0].getAuxValue())
                 continue;
-            int  aux = std::max<int>(0, ings[0].getAuxValue());
+            int aux = ings[0].getAuxValue();
+            if (aux < 0 || aux == 0x7fff) aux = 0; // any data value: the block's default
             auto pre = slab.substr(slab.find(':') + 1);
             auto it  = found.find(slab);
             if (it != found.end()) {
@@ -307,5 +308,14 @@ std::vector<std::pair<std::string, std::string>> slabsToBlocksTable() {
 }
 
 void resetRecipes() { rs() = RecipeState{}; }
+
+void restoreRecipes() {
+    auto& s     = rs();
+    auto  level = ll::service::getLevel();
+    if (level && s.owner == &level->getRecipes()) {
+        for (auto const& r : s.removed) putBack(level->getRecipes(), r);
+    }
+    s.removed.clear();
+}
 
 } // namespace lp::feature::vslabs
