@@ -23,6 +23,7 @@
 
 #include "mc/client/game/ClientInstance.h"
 #include "mc/client/gui/GuiData.h"
+#include "mc/client/gui/screens/interfaces/ISceneStack.h"
 #include "mc/client/player/LocalPlayer.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
@@ -91,7 +92,11 @@ float       gHotbarHeight = 0; ///< 0..1
 Clock::time_point gLastHud{};
 Clock::time_point gLastShare{};
 bool        gReported = false;
-std::string gReportedFor; ///< screen whose button positions were logged
+struct ReportState {
+    int  lastFrames = 0;
+    bool reported   = false;
+};
+std::map<std::string, ReportState> gReports; ///< per screen: button positions logged since it opened
 
 struct Card {
     ItemStack         item;
@@ -99,6 +104,13 @@ struct Card {
     Clock::time_point until;
 };
 std::optional<Card> gCard;
+
+struct PendingOpen {
+    inv::SlotInteractRequest request;
+    Clock::time_point        since;
+    Clock::time_point        hudSince{}; ///< since when the HUD is on top again
+};
+std::optional<PendingOpen> gPendingOpen; ///< render thread: shulker box to open once the inventory closed
 
 void post(std::function<void()> fn) {
     std::lock_guard lock(gMutex);
@@ -300,10 +312,9 @@ std::string hintText(std::string const& action) {
 
 void overlay(Overlay& o, ScreenInfo const& s) {
     runQueue();
-    if (s.name == "hud_screen" || s.name.find("custom_screen") != std::string::npos) {
-        gReportedFor.clear();
-        return;
-    }
+    // The hook runs for every layer rendered in a frame (the HUD and other always-on layers too):
+    // only the top screen gets buttons and is published to the input handlers.
+    if (s.name == "hud_screen" || s.name.find("custom_screen") != std::string::npos || s.name != topScreen()) return;
     auto const& c = cfg();
     auto&       dc = o.draw();
 
@@ -326,7 +337,6 @@ void overlay(Overlay& o, ScreenInfo const& s) {
     bool containerScreen = !inventoryScreen && static_cast<int>(containerIdx.size()) >= c.chestButtonSlotTarget
                         && containerTopRight && containerFirst && playerTopRight;
     if (!inventoryScreen && !containerScreen) {
-        gReportedFor.clear();
         std::lock_guard lock(gMutex);
         gFrame = Frame{s.name, s.slots, false, {}, true, {}};
         return;
@@ -450,11 +460,16 @@ void overlay(Overlay& o, ScreenInfo const& s) {
         log().info("inventory: overlay on {} ({} slots, container={})", s.name, s.slots.size(), containerScreen);
     }
     // One line per screen with the button centres (fractions of the screen) for e2e scenarios.
-    auto&              reportedFor = gReportedFor;
+    // Reported once per opening of a screen (frames restarts at 1 when it opens again).
+    auto& rs = gReports[s.name];
+    if (s.frames < rs.lastFrames) rs.reported = false;
+    rs.lastFrames = s.frames;
+    bool report   = s.settled && !rs.reported;
+    if (report) rs.reported = true;
     auto               fx = [&](Rect const& r) { return (r.x + r.w / 2) / s.size.x; };
     auto               fy = [&](Rect const& r) { return (r.y + r.h / 2) / s.size.y; };
-    if (inventoryScreen && playerTopRight && reportedFor != s.name) {
-        reportedFor = s.name;
+
+    if (report && inventoryScreen && playerTopRight) {
         auto r      = at(playerTopRight, 6, -13);
         std::string shulker;
         for (auto const& slot : s.slots)
@@ -464,8 +479,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
             }
         log().info("inventory: player buttons on {}: sort at {:.4f},{:.4f}{}", s.name, fx(r), fy(r), shulker);
     }
-    if (containerScreen && reportedFor != s.name) {
-        reportedFor = s.name;
+    if (report && containerScreen) {
         auto r      = at(containerTopRight, 6, -13);
         auto fb     = at(containerTopRight, -6, -13);
         // Player part, right to left: sort inventory (when enabled), insert, extract.
@@ -596,6 +610,14 @@ void onMouse(ll::event::MouseInputEvent& ev) {
         auto what = hovered.action;
         if (!what.empty()) {
             if (down) post([s = *slot, what] {
+                if (what == "open") {
+                    // The box's chest screen replaces the inventory screen, which only the client can
+                    // close: close it first and ask for the box once the HUD is back (so the close
+                    // reaches the server before the box screen opens).
+                    if (auto* c = client::currentClient()) c->getClientSceneStack()->schedulePopScreen(1);
+                    gPendingOpen = PendingOpen{inv::SlotInteractRequest{s.collection, s.index}, Clock::now()};
+                    return;
+                }
                 net::sendToServer(inv::SlotInteractRequest{s.collection, s.index});
                 log().info("inventory: interaction '{}' requested", what);
             });
@@ -656,6 +678,25 @@ void hud(DrawContext& dc) {
     float dt = gLastHud.time_since_epoch().count() ? std::chrono::duration<float>(now - gLastHud).count() : 0.f;
     gLastHud = now;
     auto const& c = cfg();
+    if (gPendingOpen) {
+        // The HUD must be back for a moment: a screen opened while the inventory is still
+        // transitioning out is dropped by the game.
+        if (topScreen() != "hud_screen") gPendingOpen->hudSince = {};
+        else if (gPendingOpen->hudSince == Clock::time_point{}) gPendingOpen->hudSince = now;
+        if (gPendingOpen->hudSince != Clock::time_point{} && now - gPendingOpen->hudSince > std::chrono::milliseconds(300)) {
+            // A popped inventory screen can leave its container manager behind, and the game
+            // ignores a new container screen while one exists.
+            if (auto* p = client::currentPlayer(); p && p->mContainerManager.get()) {
+                log().info("inventory: closing the leftover container manager");
+                p->deleteContainerManager();
+            }
+            net::sendToServer(gPendingOpen->request);
+            log().info("inventory: interaction 'open' requested");
+            gPendingOpen.reset();
+        } else if (now - gPendingOpen->since > std::chrono::seconds(3)) {
+            gPendingOpen.reset();
+        }
+    }
     if (gHotbarOpen && spectator()) gHotbarOpen = false;
     float step = static_cast<float>(dt * 20.0 / std::max(0.1, c.animationTime));
     gHotbarHeight = std::clamp(gHotbarHeight + (gHotbarOpen ? step : -step), 0.f, 1.f);

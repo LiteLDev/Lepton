@@ -22,7 +22,6 @@
 #include "mc/deps/shared_types/legacy/LevelSoundEvent.h"
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
 #include "mc/platform/UUID.h"
-#include "mc/server/ServerPlayer.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Inventory.h"
@@ -87,6 +86,8 @@ struct HeldSession {
     bool            seenOpen = false;
     int             wait     = 0; ///< ticks left to get the screen open
     bool            opening  = true;
+    int             delay    = 0;   ///< ticks to wait after the inventory screen closed
+    int             budget   = 100; ///< ticks left to get the screen open
 };
 std::map<std::string, HeldSession>& heldSessions() {
     static std::map<std::string, HeldSession> m;
@@ -481,7 +482,7 @@ std::string slotInteract(Player& player, std::string const& collection, int slot
     }
     if (done.empty() && c.enableShulkerBoxInteraction && isShulkerBox(at) && at.mCount == 1) {
         if (isEmpty(cursor)) {
-            if (c.allowOpeningShulkerBoxes && ref.player && onlyInventoryOpen(player) && openHeldShulker(player, ref.slot))
+            if (c.allowOpeningShulkerBoxes && ref.player && onlyInventoryOpen(player) && openHeldShulker(player, ref.slot, 4))
                 done = "open";
         } else if (isShulkerBox(cursor)) {
             if (dumpShulker(at, cursor) > 0) {
@@ -546,7 +547,7 @@ bool scrollBundle(Player& player, std::string const& collection, int slot, doubl
     return true;
 }
 
-bool openHeldShulker(Player& player, int slot) {
+bool openHeldShulker(Player& player, int slot, int delayTicks) {
     auto const& c = cfg();
     if (!c.enableExpandedItemInteractions || !c.enableShulkerBoxInteraction || !c.allowOpeningShulkerBoxes) return false;
     if (slot < 0 || slot >= inv::kPlayerSlots) return false;
@@ -556,19 +557,20 @@ bool openHeldShulker(Player& player, int slot) {
     ItemStack box = pinv.getItem(slot);
     if (!isShulkerBox(box) || box.mCount != 1) return false;
 
-    auto head = player.getFeetBlockPos();
-    head.y += 1;
-    auto pos = game::globalPos(player.getDimensionBlockSource(), head);
+    auto pos = game::globalPos(player.getDimensionBlockSource(), player.getFeetBlockPos());
     while (game::vc::viewers(pos) > 0 || heldPosInUse(pos)) ++pos.y;
 
     HeldSession s;
     s.slot = slot;
     s.pos  = pos;
     s.box  = box;
-    s.wait = 20;
+    s.wait  = 20;
+    s.delay = std::max(0, delayTicks);
     // Right-clicked in the inventory screen: close it, the chest screen replaces it (tickHeld
     // retries vc::open until the client has closed the inventory).
-    if (player.mContainerManager.get()) static_cast<ServerPlayer&>(player).initiateContainerClose();
+    // Right-clicked in the inventory screen: the mod client closes it itself (Bedrock clients
+    // ignore a server close of their own inventory screen); tickHeld opens the box screen once
+    // the inventory is closed.
     pinv.setItem(slot, ItemStack{});
     syncPlayer(player);
     saveHeld(uuid, s);
@@ -632,10 +634,15 @@ void tickHeld() {
             continue;
         }
         if (s.opening) {
-            if (game::vc::open(*p, s.pos, heldSpec(uuid, *p, s.box))) {
+            if (--s.budget <= 0) {
+                done.push_back(uuid); // the screen never opened: give the box back
+            } else if (p->mContainerManager.get()) {
+                s.delay = 4; // a few ticks after the close, so its echo cannot close the new screen
+            } else if (s.delay > 0) {
+                --s.delay;
+            } else if (game::vc::open(*p, s.pos, heldSpec(uuid, *p, s.box))) {
                 s.opening = false;
-            } else if (--s.wait <= 0) {
-                done.push_back(uuid);
+                s.wait    = 20;
             }
             continue;
         }
