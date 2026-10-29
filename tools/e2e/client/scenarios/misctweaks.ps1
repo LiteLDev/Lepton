@@ -35,7 +35,7 @@ Center-Player
 # AdjustableChat: the chat lines move 60 right, 40 up.
 if (-not $vanilla) {
     $m = Get-LogMark
-    Invoke-Chat 'misctweaks: this chat line is shifted'
+    Invoke-Chat '/say misctweaks: this chat line is shifted'
     Wait-LogLine 'misctweaks: chat panel shifted by 60,-40' 15 | Out-Null
     Start-Sleep -Milliseconds 600
     Save-Screenshot 'chat-shift' | Out-Null
@@ -49,7 +49,7 @@ if ($local) {
     Close-Screen
 }
 
-# NarratorReadout: look at a block and read it out (N: full readout, B: short, as Quark binds them).
+# NarratorReadout: look at a block and read it out (N: full readout, U: short, as Quark binds them).
 if (-not $vanilla) {
     Invoke-Chat '/setblock ~ ~ ~2 stone'
     Invoke-Chat '/setblock ~ ~1 ~2 stone'
@@ -60,7 +60,7 @@ if (-not $vanilla) {
     Wait-LogLine "misctweaks: narrator \(full\) 'Looking at .*Health \d+, Food \d+'" 10 -Since $m | Out-Null
     Start-Sleep -Milliseconds 700
     $m = Get-LogMark
-    Press-Key B
+    Press-Key U
     Wait-LogLine "misctweaks: narrator 'Looking at [^,]+'" 10 -Since $m | Out-Null
     Invoke-Chat '/setblock ~ ~1 ~2 air'
     Invoke-Chat '/setblock ~ ~ ~2 air'
@@ -71,7 +71,7 @@ Invoke-Chat '/replaceitem entity @s slot.hotbar 0 shield'
 Focus-Game
 Press-Key 1
 Invoke-Chat '/summon armor_stand ~ ~ ~2'
-Invoke-Chat '/tp @s ~ ~ ~ facing ~ ~1 ~2'
+Center-Player 17   # eyes at +1.62, the stand's body at +1, 2 blocks south
 Start-Sleep -Milliseconds 800
 $m = Get-LogMark
 Use-Item
@@ -93,13 +93,14 @@ if ($local) {
     Invoke-Chat '/enchant @s mending'
     Invoke-Chat '/setblock ~ ~ ~2 stone'
     Invoke-Chat '/setblock ~ ~1 ~2 anvil'
-    Invoke-Chat '/tp @s ~ ~ ~ facing ~ ~1.4 ~2'
+    Center-Player 6    # the anvil on the stone: +1.4, 2 blocks south
     Start-Sleep -Milliseconds 800
 
-    function Use-Anvil([int]$a, [int]$b, [string]$shot) {
+    function Use-Anvil([int]$a, [int]$b, [string]$shot, [int]$taken, [int]$peek = -1) {
         $m = Get-LogMark
         Use-Item
-        Wait-LogLine 'misctweaks: anvil slot' 15 -Since $m | Out-Null
+        # The first click after a screen closed can go to recapturing the mouse: click again if needed.
+        try { Wait-LogLine 'misctweaks: anvil slot' 6 -Since $m | Out-Null } catch { Use-Item; Wait-LogLine 'misctweaks: anvil slot' 15 -Since $m | Out-Null }
         Start-Sleep -Milliseconds 500
         $lines = Get-LeviLog -Since $m | Where-Object { $_ -match 'misctweaks: anvil slot' }
         $slot = @{}
@@ -108,6 +109,14 @@ if ($local) {
         $materialKey = $slot.Keys | Where-Object { $_ -match 'material' } | Select-Object -First 1
         $resultKey = $slot.Keys | Where-Object { $_ -match 'result' } | Select-Object -First 1
         if (-not ($inputKey -and $materialKey -and $resultKey -and $slot["hotbar_items:$a"])) { throw "anvil slots not found: $($slot.Keys -join ', ')" }
+        if ($peek -ge 0) {
+            # The item taken from the last anvil, as the server sent it back (no Mending).
+            Move-Mouse 0.5 0.15 -Relative
+            Start-Sleep -Milliseconds 300
+            Move-Mouse $slot["hotbar_items:$peek"][0] $slot["hotbar_items:$peek"][1] -Relative
+            Start-Sleep -Milliseconds 800
+            Save-Screenshot "$shot-peek" | Out-Null
+        }
         Click $slot["hotbar_items:$a"][0] $slot["hotbar_items:$a"][1] -Relative
         Click $slot[$inputKey][0] $slot[$inputKey][1] -Relative
         Click $slot["hotbar_items:$b"][0] $slot["hotbar_items:$b"][1] -Relative
@@ -119,24 +128,24 @@ if ($local) {
         if (-not $vanilla) {
             # The readout of a hovered slot: the item's tooltip (first line).
             $r = Get-LogMark
-            Press-Key B
+            Press-Key U
             Wait-LogLine "misctweaks: narrator '(?!No item)[^']+'" 10 -Since $r | Out-Null
         }
         $t = Get-LogMark
+        # A click on the result moves it into the first free hotbar slot ($taken): hover it.
         Click $slot[$resultKey][0] $slot[$resultKey][1] -Relative
-        Click $slot["hotbar_items:$a"][0] $slot["hotbar_items:$a"][1] -Relative
         Start-Sleep -Milliseconds 600
-        Move-Mouse $slot["hotbar_items:$a"][0] $slot["hotbar_items:$a"][1] -Relative
+        Move-Mouse $slot["hotbar_items:$taken"][0] $slot["hotbar_items:$taken"][1] -Relative
         Start-Sleep -Milliseconds 800
         return $t
     }
 
-    $t = Use-Anvil 0 1 'anvil-mending'
+    $t = Use-Anvil 0 1 'anvil-mending' 0
     Wait-LogLine 'misctweaks: anvil removed Mending for' 10 -Since $t | Out-Null
     Save-Screenshot 'anvil-taken' | Out-Null
     Close-Screen
-    Start-Sleep -Milliseconds 500
-    Use-Anvil 2 3 'anvil-iron' | Out-Null
+    Start-Sleep -Milliseconds 1500
+    Use-Anvil 2 3 'anvil-iron' 1 0 | Out-Null
     Save-Screenshot 'anvil-repaired' | Out-Null
     Close-Screen
     Invoke-Chat '/setblock ~ ~1 ~2 air'

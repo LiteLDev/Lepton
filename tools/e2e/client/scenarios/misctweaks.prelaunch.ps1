@@ -12,7 +12,7 @@ if ($script:Mode -eq 'remote-vanilla') { return } # no client mod: nothing to co
 
 # The deployed mod's config (local worlds use it on both sides; in remote-mod only the client
 # parts apply): GameNerfs on (the overworld allowed for elytra), the chat shifted, the narrator
-# readout on with keys N (readout) and B (full readout), no recipe book.
+# readout on with keys N (readout) and U (full readout), no recipe book.
 $cfgDir = Join-Path (Join-Path $script:ModsDir $script:ModName) 'config'
 New-Item -ItemType Directory -Force $cfgDir | Out-Null
 @'
@@ -72,5 +72,5 @@ New-Item -ItemType Directory -Force $cfgDir | Out-Null
   "shader": "none"
 }
 '@ | Set-Content -Path (Join-Path $cfgDir 'misctweaks.json') -Encoding UTF8
-'{ "version": 1, "keys": { "narrator_readout": [78], "narrator_full_readout": [66] } }' |
+'{ "version": 1, "keys": { "narrator_readout": [78], "narrator_full_readout": [85] } }' |
     Set-Content -Path (Join-Path $cfgDir 'keybinds.json') -Encoding UTF8
