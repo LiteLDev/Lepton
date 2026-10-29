@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:trapped_bamboo_chest",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

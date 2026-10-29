@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:acacia_chest_wood_stripped_acacia_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:stripped_acacia_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stripped_acacia_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:acacia_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:deepslate_smoker"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " # ",
+      "#X#",
+      " # "
+    ],
+    "key": {
+      "#": {
+        "tag": "minecraft:logs"
+      },
+      "X": {
+        "item": "lepton:deepslate_furnace"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:deepslate_furnace"
+      }
+    ],
+    "result": {
+      "item": "minecraft:smoker",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:bamboo_chest_wood_stripped_bamboo_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:stripped_bamboo_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stripped_bamboo_block"
+      }
+    ],
+    "result": {
+      "item": "lepton:bamboo_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}
