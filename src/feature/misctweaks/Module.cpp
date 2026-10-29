@@ -15,6 +15,8 @@ namespace {
 
 class MiscTweaksModule {
 public:
+    /// Before the world exists: the biome tables are built when it loads.
+    void load() { installClimate(); }
     void install() {
         installElytra();
         installNoteBlocks();

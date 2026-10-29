@@ -62,10 +62,10 @@ namespace ent = lp::game::entities;
 using lp::game::makeItem;
 using ArmorSlot = SharedTypes::Legacy::ArmorSlot;
 
-/// Changes the unit's config for one test and restores it afterwards.
+/// Runs a test with the default config (plus its own changes) and restores the config afterwards.
 class ConfigScope {
 public:
-    ConfigScope() : mSaved(lp::config::get<MiscTweaksConfig>()) {}
+    ConfigScope() : mSaved(lp::config::get<MiscTweaksConfig>()) { lp::config::mut<MiscTweaksConfig>() = MiscTweaksConfig{}; }
     ~ConfigScope() { lp::config::mut<MiscTweaksConfig>() = mSaved; }
     MiscTweaksConfig* operator->() { return &lp::config::mut<MiscTweaksConfig>(); }
 
@@ -135,6 +135,7 @@ LP_REGISTER_SELFTEST("misctweaks.config", [](Context& ctx) {
 });
 
 LP_REGISTER_SELFTEST("misctweaks.elytra_rocket", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigScope cfg;
     auto pos = ctx.testPos(2700);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     auto& p = ctx.spawnPlayer("lp_rocket");
@@ -192,6 +193,7 @@ LP_REGISTER_SELFTEST("misctweaks.dimension_elytra", [](Context& ctx) -> ll::coro
 });
 
 LP_REGISTER_SELFTEST("misctweaks.campfire_force", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigScope cfg;
     auto pos = ctx.testPos(2705);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     auto&    region = ctx.player().getDimensionBlockSource();
@@ -218,6 +220,7 @@ LP_REGISTER_SELFTEST("misctweaks.campfire_force", [](Context& ctx) -> ll::coro::
 });
 
 LP_REGISTER_SELFTEST("misctweaks.note_amethyst", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigScope cfg;
     auto pos = ctx.testPos(2710);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     auto& p      = ctx.player();
@@ -249,10 +252,12 @@ LP_REGISTER_SELFTEST("misctweaks.note_amethyst", [](Context& ctx) -> ll::coro::C
 });
 
 LP_REGISTER_SELFTEST("misctweaks.recipe_unlock", [](Context& ctx) {
+    ConfigScope cfg;
     ctx.check(mt::unlockAllRecipes(ctx.player()) > 0, "recipe give * succeeds for a player");
 });
 
 LP_REGISTER_SELFTEST("misctweaks.armor_stand_shield", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigScope cfg;
     auto pos = ctx.testPos(2715);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     auto& p      = ctx.player();

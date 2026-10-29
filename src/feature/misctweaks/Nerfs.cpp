@@ -392,7 +392,11 @@ LL_TYPE_INSTANCE_HOOK(
     auto level = ll::service::getLevel();
     if (!level) return is;
     BlockPos const spawn = level->getSharedSpawnPos();
-    return !villageSuppressed(chunkPos.x * 16 + 8, chunkPos.z * 16 + 8, spawn.x, spawn.z, c.villageSpawnNerfDistance);
+    int            x = chunkPos.x * 16 + 8, z = chunkPos.z * 16 + 8;
+    if (!villageSuppressed(x, z, spawn.x, spawn.z, c.villageSpawnNerfDistance)) return true;
+    log().info("misctweaks: village at {} {} suppressed (spawn distance {})", x, z,
+               static_cast<int>(std::sqrt(static_cast<double>(x - spawn.x) * (x - spawn.x) + static_cast<double>(z - spawn.z) * (z - spawn.z))));
+    return false;
 }
 
 } // namespace

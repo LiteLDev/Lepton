@@ -64,7 +64,21 @@ LL_TYPE_INSTANCE_HOOK(
 
 } // namespace
 
-void installClimate() { ParameterListCtorHook::hook(); }
-void uninstallClimate() { ParameterListCtorHook::unhook(); }
+namespace {
+bool gClimateHooked = false;
+} // namespace
+
+// Installed at mod load (MiscTweaksModule::load): BDS builds the biome tables of its world before
+// mods are enabled.
+void installClimate() {
+    if (gClimateHooked) return;
+    ParameterListCtorHook::hook();
+    gClimateHooked = true;
+}
+void uninstallClimate() {
+    if (!gClimateHooked) return;
+    ParameterListCtorHook::unhook();
+    gClimateHooked = false;
+}
 
 } // namespace lp::feature::misctweaks
