@@ -423,6 +423,25 @@ LP_REGISTER_SELFTEST("storage.stool_piston", [](Context& ctx) -> ll::coro::CoroT
     co_await ctx.ticks(2);
 });
 
+LP_REGISTER_SELFTEST("storage.stool_fall", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto p = ctx.testPos(824);
+    ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
+    clearBox(ctx, p, 1, 16, 1);
+    clearBox(ctx, off(p, 3, 0, 0), 1, 16, 1);
+    ctx.require(put(ctx, p, "lepton:orange_stool"), "stool");
+    auto& onStool = ctx.player();
+    auto& onFloor = ctx.spawnPlayer("storage_fall_ref");
+    co_await ctx.ticks(5);
+    int h0 = onStool.getHealth(), r0 = onFloor.getHealth();
+    onStool.teleport(Vec3{p.x + 0.5f, p.y + 13.f, p.z + 0.5f}, DimensionType(p.dim));
+    onFloor.teleport(Vec3{p.x + 3.5f, p.y + 13.f, p.z + 0.5f}, DimensionType(p.dim));
+    co_await ctx.ticks(80);
+    int lost = h0 - onStool.getHealth(), ref = r0 - onFloor.getHealth();
+    ctx.info("fall damage: on the stool " + std::to_string(lost) + ", on the ground " + std::to_string(ref));
+    ctx.check(ref >= 5, "the reference fall hurts");
+    ctx.check(lost < ref && lost <= (ref + 1) / 2, "a stool halves the fall distance");
+});
+
 LP_REGISTER_SELFTEST("storage.stool_interact", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto p = ctx.testPos(822);
     p.y += 1;
@@ -485,6 +504,14 @@ LP_REGISTER_SELFTEST("storage.rope_player", [](Context& ctx) -> ll::coro::CoroTa
     sp->simulateUseItemOnBlock(stick, bp(off(p, 0, 5, 0)), Facing::South, Vec3{0.5f, 0.5f, 1.f});
     co_await ctx.ticks(3);
     ctx.check(idAt(ctx, off(p, 0, 4, 0)) == "minecraft:air", "using another item pulls it up");
+    co_await ctx.ticks(10);
+    // rope can't stand on the ground: placing it on a floor is refused
+    ctx.require(put(ctx, off(p, 1, 0, 0), "minecraft:stone"), "floor");
+    ctx.cleanupBlock(off(p, 1, 1, 0));
+    sp->simulateSetItem(s, true, 0);
+    sp->simulateUseItemOnBlock(s, bp(off(p, 1, 0, 0)), Facing::Up, Vec3{0.5f, 1.f, 0.5f});
+    co_await ctx.ticks(3);
+    ctx.check(idAt(ctx, off(p, 1, 1, 0)) != "lepton:rope", "no rope on the floor");
 });
 
 LP_REGISTER_SELFTEST("storage.rope_move_chest", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -639,58 +666,69 @@ LP_REGISTER_SELFTEST("storage.potting", [](Context& ctx) -> ll::coro::CoroTask<>
 });
 
 // ---- gallery (client e2e screenshots) -----------------------------------------------------------
+// Every block of the unit in rows (x = dx 870..894). With a real player online, the player is moved
+// in front of each part (views logged as "STORAGE GALLERY view <name>", 100 ticks each) while the
+// test's simulated player sits on a stool.
 
 LP_REGISTER_SELFTEST("storage.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto o = ctx.testPos(870);
-    o.z -= 6;
     ctx.require(co_await ctx.ensureLoaded(o), "test area loaded");
-    auto& r = regionOf(ctx);
-    clearBox(ctx, off(o, -1, 0, -1), 26, 6, 9);
-    for (int x = -1; x < 25; ++x)
-        for (int z = -1; z < 8; ++z) put(ctx, off(o, x, -1, z), "minecraft:grass_block");
-    // row 0: compressed blocks
-    int x = 0;
-    for (auto id : st::contentIds()) {
-        std::string s(id);
-        if (s.ends_with("_stool") || s.ends_with("_shard") || s.starts_with("lepton:potted_") || s == "lepton:rope" || s == "lepton:cut_vine"
-            || s.starts_with("lepton:dirty_glass"))
-            continue;
-        put(ctx, off(o, x++, 0, 0), s);
-    }
-    // row 1: stools (one with a planks table top, one sat on)
-    x = 0;
-    for (auto id : st::contentIds()) {
-        std::string s(id);
-        if (s.ends_with("_stool")) put(ctx, off(o, x++, 0, 2), s);
-    }
-    put(ctx, off(o, 15, 1, 2), "minecraft:oak_planks");
-    // row 2: rope, cut vine, dirty glass, potted plants
-    for (int y = 1; y <= 4; ++y) put(ctx, off(o, 0, y, 7), "minecraft:stone");
-    put(ctx, off(o, 0, 4, 6), "minecraft:stone");
-    put(ctx, off(o, 0, 3, 6), "lepton:rope");
-    put(ctx, off(o, 0, 2, 6), "lepton:rope");
-    put(ctx, off(o, 0, 1, 6), "lepton:rope");
-    put(ctx, off(o, 1, 4, 6), "lepton:cut_vine", {{"lepton:north", true}});
-    put(ctx, off(o, 1, 3, 6), "lepton:cut_vine", {{"lepton:north", true}});
-    for (int y = 1; y <= 4; ++y) put(ctx, off(o, 1, y, 7), "minecraft:stone");
-    put(ctx, off(o, 2, 0, 5), "lepton:dirty_glass");
-    put(ctx, off(o, 3, 0, 5), "lepton:dirty_glass_pane", {{"lepton:east", true}});
-    put(ctx, off(o, 4, 0, 5), "lepton:dirty_glass_pane", {{"lepton:west", true}});
-    x = 6;
-    for (auto id : st::contentIds()) {
-        std::string s(id);
-        if (s.starts_with("lepton:potted_")) put(ctx, off(o, x++, 0, 5), s);
-    }
-    auto view = [&](char const* name, GP from, float yaw, float pitch) -> ll::coro::CoroTask<> {
-        ctx.player().teleport(Vec3{from.x + 0.5f, static_cast<float>(from.y), from.z + 0.5f}, DimensionType(o.dim), Vec2{pitch, yaw});
-        lp::log().info("STORAGE GALLERY view {}", name);
-        co_await ctx.ticks(100);
+    clearBox(ctx, off(o, 0, 0, 0), 25, 6, 6);
+    int x = 0, placed = 0;
+    auto place = [&](GP p, std::string_view id, bs::Changes const& ch = {}) {
+        if (put(ctx, p, id, ch)) ++placed;
+        else ctx.check(false, "placed " + std::string(id));
     };
-    co_await view("compressed-1", off(o, 4, 1, -4), 0.f, 20.f);
-    co_await view("compressed-2", off(o, 14, 1, -4), 0.f, 20.f);
-    co_await view("stools", off(o, 8, 2, -2), 0.f, 30.f);
-    co_await view("rope-vine", off(o, 2, 2, 2), 0.f, 10.f);
-    co_await view("potted-1", off(o, 10, 1, 2), 0.f, 35.f);
-    co_await view("potted-2", off(o, 22, 1, 2), 0.f, 35.f);
-    (void)r;
+    for (auto id : st::contentIds()) { // z 0: compressed blocks
+        std::string s(id);
+        if (s.ends_with("_stool") || s.ends_with("_shard") || s.starts_with("lepton:potted_") || s == "lepton:rope"
+            || s == "lepton:cut_vine" || s.starts_with("lepton:dirty_glass"))
+            continue;
+        place(off(o, x++, 0, 0), s);
+    }
+    place(off(o, 20, 0, 0), "lepton:dirty_glass");
+    place(off(o, 21, 0, 0), "lepton:dirty_glass_pane", {{"lepton:east", true}, {"lepton:west", true}});
+    place(off(o, 22, 0, 0), "lepton:dirty_glass_pane", {{"lepton:west", true}});
+    x = 0;
+    for (auto id : st::contentIds()) // z 2: stools, the last one a table
+        if (std::string_view(id).ends_with("_stool")) place(off(o, x++, 0, 2), id);
+    place(off(o, 15, 1, 2), "minecraft:oak_planks");
+    lp::feature::storage::stools::fixState(regionOf(ctx), bp(off(o, 15, 0, 2)));
+    x = 0;
+    for (auto id : st::contentIds()) // z 4: potted plants
+        if (std::string_view(id).starts_with("lepton:potted_")) place(off(o, x++, 0, 4), id);
+    // rope column under a stone beam (x 18..20, z 2) and cut vines on a stone wall (x 22)
+    for (int bx = 18; bx <= 20; ++bx) place(off(o, bx, 4, 2), "minecraft:stone");
+    for (int y = 1; y <= 3; ++y) place(off(o, 19, y, 2), "lepton:rope");
+    for (int y = 1; y <= 4; ++y) place(off(o, 22, y, 2), "minecraft:stone");
+    for (int y = 2; y <= 4; ++y) place(off(o, 22, y, 3), "lepton:cut_vine", {{"lepton:north", true}});
+    ctx.info("STORAGE GALLERY placed " + std::to_string(placed));
+
+    // the test player sits on a stool (x 5: the ids are sorted, so the green one)
+    GP sitAt = off(o, 5, 0, 2);
+    st::stools::sit(ctx.player(), regionOf(ctx), bp(sitAt));
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (viewer) {
+        auto uid  = viewer->getOrCreateUniqueID();
+        auto view = [&](std::string const& name, float dx, float dy, float dz, float pitch, float yaw) -> ll::coro::CoroTask<> {
+            if (auto* v = ctx.player().getLevel().getPlayer(uid))
+                v->teleport(Vec3{o.x + dx, o.y + dy, o.z + dz}, DimensionType(o.dim), Vec2{pitch, yaw});
+            ctx.info("STORAGE GALLERY view " + name);
+            co_await ctx.ticks(100);
+        };
+        co_await view("compressed-1", 5.5f, 1.6f, -3.5f, 22.f, 0.f);     // looking south at z 0
+        co_await view("compressed-2", 16.5f, 1.6f, -3.5f, 22.f, 0.f);
+        co_await view("stools", 7.5f, 3.f, -1.5f, 40.f, 0.f);            // over row 0 at the stools
+        co_await view("rope-vine", 20.5f, 2.5f, 7.5f, 10.f, 180.f);      // looking north at the rope / vines
+        co_await view("potted-1", 5.5f, 2.f, 8.5f, 32.f, 180.f);         // the pots from the south
+        co_await view("potted-2", 18.5f, 2.f, 8.5f, 32.f, 180.f);
+    }
+    ctx.player().stopRiding(true, false, false, false);
+    co_await ctx.ticks(2);
+    ctx.info("STORAGE GALLERY done");
 });
