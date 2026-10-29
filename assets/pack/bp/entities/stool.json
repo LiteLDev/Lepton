@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:stool",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "components": {
+      "minecraft:type_family": { "family": ["lepton_stool", "inanimate"] },
+      "minecraft:collision_box": { "width": 0.375, "height": 0.5 },
+      "minecraft:physics": { "has_gravity": false, "has_collision": false },
+      "minecraft:pushable": { "is_pushable": false, "is_pushable_by_piston": false },
+      "minecraft:damage_sensor": { "triggers": { "cause": "all", "deals_damage": "no" } },
+      "minecraft:health": { "value": 1, "max": 1 },
+      "minecraft:fire_immune": {},
+      "minecraft:knockback_resistance": { "value": 1.0 },
+      "minecraft:rideable": {
+        "seat_count": 1,
+        "family_types": ["player"],
+        "interact_text": "action.interact.ride.horse",
+        "pull_in_entities": false,
+        "seats": [{ "position": [0.0, 0.0, 0.0] }]
+      }
+    }
+  }
+}
