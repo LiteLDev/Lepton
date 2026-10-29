@@ -29,6 +29,13 @@ $m = Get-LogMark
 Click $bx $by -Relative
 Wait-LogLine 'ui demo: button clicked' 10 -Since $m | Out-Null
 
+# A button at the right edge: its tooltip flips to the left and stays on the screen.
+$edge = Wait-LogLine 'ui demo: edge button at' 10 -Since $mark
+$ex, $ey = Get-Fraction $edge
+Move-Mouse $ex $ey -Relative
+Start-Sleep -Milliseconds 800
+Save-Screenshot 'edge-tooltip' | Out-Null
+
 # The text field: focus it and type with key presses (E must not close the inventory).
 $field = Wait-LogLine 'ui demo: field at' 10 -Since $mark
 $fx, $fy = Get-Fraction $field
