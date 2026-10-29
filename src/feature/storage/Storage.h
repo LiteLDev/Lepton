@@ -99,6 +99,8 @@ struct StorageConfig {
 [[nodiscard]] bool contentEnabled(std::string_view id);
 /// The recipe should be loaded (our recipes by their gates; vanilla ones this unit replaces).
 [[nodiscard]] bool recipeEnabled(std::string_view recipeId);
+/// A block / item id of this unit.
+[[nodiscard]] bool owns(std::string_view id);
 /// Every block / item id this unit owns.
 [[nodiscard]] std::vector<std::string_view> contentIds();
 /// Every recipe id this unit owns.
@@ -135,6 +137,8 @@ void uninstallCompressed();
 namespace stools {
 /// Seats `player` on the stool at `pos` (Quark StoolBlock#useWithoutItem). False if not possible.
 bool sit(Player& player, BlockSource& region, BlockPos const& pos);
+/// A block changed next to stools (queues their fixState).
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below);
 /// Recomputes `lepton:big` / `lepton:sat_in` of the stool at `pos` (Quark fixState).
 bool fixState(BlockSource& region, BlockPos const& pos);
 /// The seat entity a player rides, if any.
@@ -162,6 +166,10 @@ bool pullUp(BlockSource& region, BlockPos const& pos);
 [[nodiscard]] BlockPos bottomOf(BlockSource& region, BlockPos const& pos);
 /// The dispenser behaviour at `front` (rope in front: pull down; air: place). True on success.
 bool dispenseAt(BlockSource& region, BlockPos const& front);
+/// A block changed next to ropes (queues their survival check).
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below);
+/// Re-reads the PistonsMoveTileEntities rules (U10's config file).
+void reloadRules();
 /// Pops ropes that lost their support (ran from block changes; exposed for tests).
 void checkSurvival(BlockSource& region, BlockPos const& pos);
 void install();
@@ -173,6 +181,8 @@ void uninstall();
 namespace plants {
 /// Shears the vine at `pos` into a cut vine and removes the vines below it.
 bool shearVine(BlockSource& region, BlockPos const& pos);
+/// A block changed next to cut vines (queues their support check).
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below);
 /// Removes unsupported faces of the cut vine at `pos` (removes it with none left).
 bool checkCutVine(BlockSource& region, BlockPos const& pos);
 /// The potted block for a plant item ("" if the item doesn't fit a pot).

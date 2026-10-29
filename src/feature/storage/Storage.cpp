@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/world/BlockChangedEvent.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -181,6 +182,19 @@ void setProperty(std::string_view id, BlockProperty prop, bool on) {
     if (nxt != cur) t.mProperties = static_cast<BlockProperty>(nxt);
 }
 
+// One listener for the block-change driven states of stools, ropes and cut vines.
+void onBlockChanged(ll::event::BlockChangedEvent& ev) {
+    auto& region = ev.blockSource();
+    if (region.getLevel().isClientSide()) return;
+    auto const& pos = ev.pos();
+    auto const& nb  = ev.newBlock();
+    BlockPos    under{pos.x, pos.y - 1, pos.z};
+    auto const& below = pos.y > region.getMinHeight() ? region.getBlock(under) : nb;
+    if (cfg().enableStools) stools::blockChanged(region, pos, nb, below);
+    if (cfg().enableRope) rope::blockChanged(region, pos, nb, below);
+    if (cfg().enableShearVines) plants::blockChanged(region, pos, nb, below);
+}
+
 void onTick(ll::event::ServerLevelTickEvent&) {
     if (deferred().empty()) return;
     auto work = std::move(deferred());
@@ -216,6 +230,8 @@ bool gatesOn(std::string_view keys) {
     }
     return true;
 }
+
+bool owns(std::string_view id) { return contentIndex().contains(id); }
 
 bool contentEnabled(std::string_view id) {
     auto const& m  = contentIndex();
@@ -290,8 +306,10 @@ public:
             config::onReload([] {
                 applyBlockProperties();
                 applyDragonBreath();
+                rope::reloadRules();
             });
             game::db::onWorldReady([] {
+                rope::reloadRules();
                 applyBlockProperties();
                 applyDragonBreath();
                 auto const& c  = cfg();
@@ -317,6 +335,7 @@ public:
         hookAll();
         auto& bus = ll::event::EventBus::getInstance();
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
+        mListeners.push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
 #ifdef LP_CLIENT
         // a client joining a remote server gets the server's blocks at join: apply the block
         // properties (climbing) once they exist

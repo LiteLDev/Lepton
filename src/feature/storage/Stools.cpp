@@ -59,7 +59,6 @@ std::vector<PendingFix>& pendingFixes() {
     return v;
 }
 
-BlockPos below(BlockPos p) { return BlockPos{p.x, p.y - 1, p.z}; }
 BlockPos above(BlockPos p) { return BlockPos{p.x, p.y + 1, p.z}; }
 
 void setStates(BlockSource& region, BlockPos const& pos, bool big, bool satIn) {
@@ -141,14 +140,6 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     });
 }
 
-void onBlockChanged(ll::event::BlockChangedEvent& ev) {
-    auto& region = ev.blockSource();
-    if (region.getLevel().isClientSide()) return;
-    auto const& pos = ev.pos();
-    if (isStool(ev.newBlock())) queueFix(region, pos); // placed: compute its state
-    if (pos.y > region.getMinHeight() && isStool(region.getBlock(below(pos)))) queueFix(region, below(pos));
-}
-
 void onTick(ll::event::ServerLevelTickEvent&) {
     if (!pendingFixes().empty()) {
         auto work = std::move(pendingFixes());
@@ -183,9 +174,9 @@ LL_TYPE_INSTANCE_HOOK(
 constexpr size_t kVtableCopy = 512;
 
 float stoolBounciness(BlockType const*, IConstBlockSource const&, BlockPos const&) { return cfg().enableStools ? 0.66f : 0.f; }
-bool  stoolHasComparator(BlockType const*) { return true; }
+bool  stoolHasComparator(BlockType const*) { return cfg().enableStools; }
 int   stoolComparator(BlockType const*, BlockSource&, BlockPos const&, Block const& block, uchar) {
-    return bs::getBool(block, "lepton:sat_in").value_or(false) ? 15 : 0;
+    return cfg().enableStools && bs::getBool(block, "lepton:sat_in").value_or(false) ? 15 : 0;
 }
 
 void** gOriginalVtable = nullptr;
@@ -255,6 +246,11 @@ bool fixState(BlockSource& region, BlockPos const& pos) {
     return true;
 }
 
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below) {
+    if (isStool(newBlock)) queueFix(region, pos); // placed: compute its state
+    if (isStool(below)) queueFix(region, BlockPos{pos.x, pos.y - 1, pos.z});
+}
+
 void applyTypes() {
     if (cfg().enableStools) patchStoolTypes(true);
 }
@@ -321,19 +317,18 @@ std::vector<ll::event::ListenerPtr>& listeners() {
 void install() {
     auto& bus = ll::event::EventBus::getInstance();
     listeners().push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteract));
-    listeners().push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
     listeners().push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
     StoolFallHook::hook();
     static bool once = false;
     if (!once) {
         once = true;
-        game::db::onWorldReady([] { patchStoolTypes(true); });
+        game::db::onWorldReady([] { applyTypes(); });
         game::db::onWorldClosed([] {
             seats().clear();
             pendingFixes().clear();
         });
     }
-    if (ll::service::getLevel()) patchStoolTypes(true);
+    if (ll::service::getLevel()) applyTypes();
 }
 
 void uninstall() {

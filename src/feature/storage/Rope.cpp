@@ -102,7 +102,12 @@ struct PmteRules {
     std::vector<std::string> namespaces;
 };
 
-PmteRules pmteRules() {
+PmteRules& cachedRules() {
+    static PmteRules r;
+    return r;
+}
+
+PmteRules readRules() {
     PmteRules r;
     auto      j = readOther("redstone");
     if (!j.is_object()) return r;
@@ -160,7 +165,7 @@ void moveBlock(BlockSource& region, BlockPos const& src, BlockPos const& dst) {
     std::optional<CompoundTag> data;
     if (auto* be = region.getBlockEntity(src)) {
         auto const& c = cfg();
-        auto        r = pmteRules();
+        auto const& r = cachedRules();
         if (blacklisted(state, r) || (!c.forceEnableMoveTileEntities && !r.enabled)) return;
         CompoundTag tag;
         auto        ctx = SaveContextFactory::createCloneSaveContext();
@@ -223,10 +228,9 @@ void giveRope(Player& player) {
     giveOrDrop(player, game::makeItem(kRope, 1));
 }
 
-void consumeHeld(Player& player, std::string_view id) {
+void consumeHeld(Player& player, int slot, std::string_view id) {
     if (player.isCreative()) return;
-    auto& inv  = game::inv::playerInventory(player);
-    int   slot = player.getSelectedItemSlot();
+    auto& inv = game::inv::playerInventory(player);
     auto  s    = inv.getItem(slot);
     if (game::itemId(s) != id) return;
     inv.removeItem(slot, 1);
@@ -234,9 +238,8 @@ void consumeHeld(Player& player, std::string_view id) {
 }
 
 /// Replaces one held `from` with `to` (bottles / buckets).
-void exchangeHeld(Player& player, std::string_view from, ItemStack const& to) {
-    auto& inv  = game::inv::playerInventory(player);
-    int   slot = player.getSelectedItemSlot();
+void exchangeHeld(Player& player, int slot, std::string_view from, ItemStack const& to) {
+    auto& inv = game::inv::playerInventory(player);
     auto  s    = inv.getItem(slot);
     if (game::itemId(s) != from) return;
     if (s.mCount <= 1) {
@@ -279,16 +282,17 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     if (action == Action::Up && bottomOf(region, pos) == below(pos)) return; // the clicked rope is the bottom one
     if (action == Action::None) return;
     ev.cancel();
-    auto pid = player.getOrCreateUniqueID().rawID;
-    int  dim = static_cast<int>(region.getDimensionId());
-    defer([pid, dim, pos, action, id] {
+    auto pid  = player.getOrCreateUniqueID().rawID;
+    int  dim  = static_cast<int>(region.getDimensionId());
+    int  slot = player.getSelectedItemSlot();
+    defer([pid, dim, pos, action, id, slot] {
         auto* p = playerById(pid);
         auto* r = game::regionOf(dim);
         if (!p || !r || !isRope(r->getBlock(pos))) return;
         switch (action) {
         case Action::Down:
             if (pullDown(*r, pos)) {
-                consumeHeld(*p, kRope);
+                consumeHeld(*p, slot, kRope);
                 sound(*r, pos, SoundEvent::Place, p, r->getBlock(pos));
             }
             break;
@@ -304,7 +308,7 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
         case Action::Bottle:
             if (waterAt(*r, bottomOf(*r, pos))) {
                 auto water = game::itemFromSnbt(R"({"Name":"minecraft:potion","Count":1b,"Damage":0s})");
-                exchangeHeld(*p, "minecraft:glass_bottle", water);
+                exchangeHeld(*p, slot, "minecraft:glass_bottle", water);
                 sound(*r, pos, SoundEvent::BottleFill, p, r->getBlock(pos));
             }
             break;
@@ -314,7 +318,7 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
             if (!isLiquid(bottom) || bs::getInt(bottom, "liquid_depth").value_or(1) != 0) break;
             bool lava = bottom.getTypeName().ends_with("lava");
             game::clearBlock(*r, at);
-            exchangeHeld(*p, "minecraft:bucket", game::makeItem(lava ? "minecraft:lava_bucket" : "minecraft:water_bucket"));
+            exchangeHeld(*p, slot, "minecraft:bucket", game::makeItem(lava ? "minecraft:lava_bucket" : "minecraft:water_bucket"));
             sound(*r, pos, lava ? SoundEvent::BucketFillLava : SoundEvent::BucketFillWater, p, r->getBlock(pos));
             break;
         }
@@ -345,33 +349,6 @@ void onPlacing(ll::event::PlayerPlacingBlockEvent& ev) {
         if (f >= 0 && f < 6) pos = BlockPos{pos.x + kOff[f][0], pos.y + kOff[f][1], pos.z + kOff[f][2]};
     }
     if (!canHang(region, pos)) ev.cancel();
-}
-
-struct Pending {
-    int      dim;
-    BlockPos pos;
-};
-std::vector<Pending>& pending() {
-    static std::vector<Pending> v;
-    return v;
-}
-
-void onBlockChanged(ll::event::BlockChangedEvent& ev) {
-    auto& region = ev.blockSource();
-    if (region.getLevel().isClientSide()) return;
-    auto const& pos = ev.pos();
-    // the rope below lost (or got) its support; a placed rope is checked too
-    if (isRope(ev.newBlock())) pending().push_back({static_cast<int>(region.getDimensionId()), pos});
-    if (pos.y > region.getMinHeight() && isRope(region.getBlock(below(pos))))
-        pending().push_back({static_cast<int>(region.getDimensionId()), below(pos)});
-}
-
-void onTick(ll::event::ServerLevelTickEvent&) {
-    if (pending().empty()) return;
-    auto work = std::move(pending());
-    pending().clear();
-    for (auto const& p : work)
-        if (auto* r = game::regionOf(p.dim)) checkSurvival(*r, p.pos);
 }
 
 // ---- dispenser --------------------------------------------------------------------------------
@@ -426,6 +403,19 @@ std::vector<ll::event::ListenerPtr>& listeners() {
 } // namespace
 
 // ---- public -----------------------------------------------------------------------------------
+
+void reloadRules() { cachedRules() = readRules(); }
+
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below) {
+    // a placed rope, or the rope below lost (or got) its support
+    int dim = static_cast<int>(region.getDimensionId());
+    for (auto const& [hit, at] : {std::pair{isRope(newBlock), pos}, std::pair{isRope(below), BlockPos{pos.x, pos.y - 1, pos.z}}}) {
+        if (!hit) continue;
+        defer([dim, at] {
+            if (auto* r = game::regionOf(dim)) checkSurvival(*r, at);
+        });
+    }
+}
 
 bool canHang(BlockSource& region, BlockPos const& pos) {
     auto        up = above(pos);
@@ -488,17 +478,15 @@ void install() {
     auto& bus = ll::event::EventBus::getInstance();
     listeners().push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteract));
     listeners().push_back(bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>(onPlacing));
-    listeners().push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
-    listeners().push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
     RopeDispenseHook::hook();
     RopeComponentDispenseHook::hook();
+    reloadRules();
 }
 
 void uninstall() {
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : listeners()) bus.removeListener(l);
     listeners().clear();
-    pending().clear();
     RopeDispenseHook::unhook();
     RopeComponentDispenseHook::unhook();
 }

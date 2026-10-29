@@ -131,13 +131,13 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
         auto potted = pottedFor(id);
         if (potted.empty() || !emptyFlowerPot(region, pos) || player.isSneaking()) return;
         ev.cancel();
-        defer([pid, dim, pos, id] {
+        int slot = player.getSelectedItemSlot();
+        defer([pid, dim, pos, id, slot] {
             auto* p = playerById(pid);
             auto* r = game::regionOf(dim);
             if (!p || !r || !pot(*r, pos, id)) return;
             if (!p->isCreative()) {
-                auto& inv  = game::inv::playerInventory(*p);
-                int   slot = p->getSelectedItemSlot();
+                auto& inv = game::inv::playerInventory(*p);
                 if (game::itemId(inv.getItem(slot)) == id) {
                     inv.removeItem(slot, 1);
                     game::inv::sync(*p);
@@ -161,44 +161,6 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     }
 }
 
-struct Pending {
-    int      dim;
-    BlockPos pos;
-};
-std::vector<Pending>& pending() {
-    static std::vector<Pending> v;
-    return v;
-}
-
-void onBlockChanged(ll::event::BlockChangedEvent& ev) {
-    auto& region = ev.blockSource();
-    if (region.getLevel().isClientSide()) return;
-    auto const& pos = ev.pos();
-    int         dim = static_cast<int>(region.getDimensionId());
-    if (isCutVine(ev.newBlock())) pending().push_back({dim, pos});
-    static constexpr int kNeighbours[6][3] = {
-        {0,  -1, 0 },
-        {0,  1,  0 },
-        {0,  0,  -1},
-        {0,  0,  1 },
-        {-1, 0,  0 },
-        {1,  0,  0 }
-    };
-    for (auto const& n : kNeighbours) {
-        auto p = offset(pos, n[0], n[1], n[2]);
-        if (p.y < region.getMinHeight() || p.y >= region.getMaxHeight()) continue;
-        if (isCutVine(region.getBlock(p))) pending().push_back({dim, p});
-    }
-}
-
-void onTick(ll::event::ServerLevelTickEvent&) {
-    if (pending().empty()) return;
-    auto work = std::move(pending());
-    pending().clear();
-    for (auto const& p : work)
-        if (auto* r = game::regionOf(p.dim)) checkCutVine(*r, p.pos);
-}
-
 std::vector<ll::event::ListenerPtr>& listeners() {
     static std::vector<ll::event::ListenerPtr> v;
     return v;
@@ -207,6 +169,22 @@ std::vector<ll::event::ListenerPtr>& listeners() {
 } // namespace
 
 // ---- public -----------------------------------------------------------------------------------
+
+void blockChanged(BlockSource& region, BlockPos const& pos, Block const& newBlock, Block const& below) {
+    // a cut vine's support is the block on each of its sides and the block above it
+    int  dim   = static_cast<int>(region.getDimensionId());
+    auto queue = [dim](BlockPos at) {
+        defer([dim, at] {
+            if (auto* r = game::regionOf(dim)) checkCutVine(*r, at);
+        });
+    };
+    if (isCutVine(newBlock)) queue(pos);
+    if (isCutVine(below)) queue(offset(pos, 0, -1, 0));
+    for (auto const& d : kSides) {
+        auto p = offset(pos, d.dx, 0, d.dz);
+        if (isCutVine(region.getBlock(p))) queue(p);
+    }
+}
 
 bool shearVine(BlockSource& region, BlockPos const& pos) {
     if (!cfg().enableShearVines) return false;
@@ -278,15 +256,12 @@ std::string unpot(BlockSource& region, BlockPos const& pos) {
 void install() {
     auto& bus = ll::event::EventBus::getInstance();
     listeners().push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteract));
-    listeners().push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
-    listeners().push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
 }
 
 void uninstall() {
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : listeners()) bus.removeListener(l);
     listeners().clear();
-    pending().clear();
 }
 
 } // namespace lp::feature::storage::plants

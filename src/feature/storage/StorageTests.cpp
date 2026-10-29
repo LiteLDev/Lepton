@@ -294,7 +294,7 @@ LP_REGISTER_SELFTEST("storage.charcoal_tool", [](Context& ctx) -> ll::coro::Coro
 });
 
 LP_REGISTER_SELFTEST("storage.beacon", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto base = ctx.testPos(800);
+    auto base = ctx.testPos(801); // the 3x3 base spans dx 800..802
     base.y += 4;
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     clearBox(ctx, off(base, -1, 0, -1), 3, 3, 3);

@@ -243,18 +243,22 @@ LL_TYPE_INSTANCE_HOOK(
     auto& self   = static_cast<BeaconBlockActor&>(reinterpret_cast<IVanillaTickBlockActorComponent*>(this)->getBlockActor());
     bool  client = region.getLevel().isClientSide();
     auto  tick   = region.getLevel().getCurrentTick().tickID;
-    auto  key    = std::make_tuple(static_cast<int>(region.getDimensionId()), self.getPosition().x, self.getPosition().y, self.getPosition().z);
+    auto const& pos = self.getPosition();
+    auto  key    = std::make_tuple(static_cast<int>(region.getDimensionId()), pos.x, pos.y, pos.z);
     auto& known  = raisedLevels();
     if (tick % 20 == 0 || !known.contains(key)) {
         if (known.size() > 4096) known.clear();
-        known[key] = countLevels(region, self.getPosition(), true);
+        // Java: a beacon whose beam is blocked is inactive; crates only matter when they add levels
+        BlockPos up{pos.x, pos.y + 1, pos.z};
+        int      with    = region.canSeeSky(up) ? countLevels(region, pos, true) : 0;
+        int      without = with > 0 ? countLevels(region, pos, false) : 0;
+        known[key]       = with > without ? with : 0;
     }
     int ours = known[key];
-    if (ours <= self.mNumLevels) return;
-    self.mNumLevels = ours; // the game re-measures without crates: keep ours after every tick
+    if (ours <= 0) return;
+    if (self.mNumLevels < ours) self.mNumLevels = ours; // the game re-measures without crates: keep ours
     if (!client && tick % 80 == 0) applyBeaconEffects(self, region, ours);
 }
-
 // ---- glass shards -----------------------------------------------------------------------------
 
 std::uint32_t nextFromIRandom(void* r) { return static_cast<std::uint32_t>(static_cast<IRandom*>(r)->nextInt()); }
@@ -284,8 +288,9 @@ LL_TYPE_INSTANCE_HOOK(
         } catch (...) {}
         if (mined && !pickaxe) return;
     }
-    bool glass = n == "minecraft:glass" || n.ends_with("_stained_glass") || n == "lepton:dirty_glass";
     bool pane  = n == "lepton:dirty_glass_pane";
+    auto shard = pane ? std::string() : shardFor(n);
+    bool glass = !shard.empty() || n == "lepton:dirty_glass";
     if ((!glass && !pane) || region.getLevel().isClientSide()) {
         origin(region, pos, block, random, ctx, actorContext);
         return;
@@ -298,12 +303,7 @@ LL_TYPE_INSTANCE_HOOK(
         origin(region, pos, block, random, ctx, actorContext);
         return;
     }
-    if (pane) return; // Quark: the dirty pane drops only with silk touch
-    auto shard = shardFor(n);
-    if (shard.empty()) {
-        if (n != "lepton:dirty_glass") origin(region, pos, block, random, ctx, actorContext);
-        return;
-    }
+    if (pane || shard.empty()) return; // the pane drops only with silk touch; dirty glass with shards off: nothing
     int   fortune = 0;
     float radius  = 0.f;
     try {
@@ -332,12 +332,10 @@ std::optional<int> fuelTicks(std::string_view id) {
     if (id == "lepton:blaze_lantern") return on(id) * std::max(0, c.blazeLanternFuelTime);
     if (id == "lepton:stick_block") return on(id) * std::max(0, c.stickBlockFuelTime);
     // Zeta: every Quark block with a wood sound burns for 300 ticks (bundles, crates, stools)
-    if (id == "lepton:sugar_cane_block" || id == "lepton:cactus_block" || id == "lepton:chorus_fruit_block"
-        || id.ends_with("_crate") || id.ends_with("_stool")) {
-        auto const ids = contentIds();
-        if (std::find(ids.begin(), ids.end(), id) == ids.end()) return std::nullopt;
+    if ((id == "lepton:sugar_cane_block" || id == "lepton:cactus_block" || id == "lepton:chorus_fruit_block"
+         || id.ends_with("_crate") || id.ends_with("_stool"))
+        && owns(id))
         return on(id) * 300;
-    }
     return std::nullopt;
 }
 
@@ -369,7 +367,10 @@ std::string shardFor(std::string_view blockId) {
     constexpr std::string_view kPrefix = "minecraft:", kSuffix = "_stained_glass";
     if (blockId.starts_with(kPrefix) && blockId.ends_with(kSuffix)) {
         auto color = blockId.substr(kPrefix.size(), blockId.size() - kPrefix.size() - kSuffix.size());
-        return "lepton:" + std::string(color) + "_shard";
+        static constexpr std::string_view kDyes[] = {"white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+            "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"};
+        for (auto d : kDyes)
+            if (d == color) return "lepton:" + std::string(color) + "_shard"; // not hard_*_stained_glass
     }
     return {};
 }
