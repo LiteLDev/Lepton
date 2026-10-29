@@ -295,21 +295,23 @@ bool packChest(Player& player, BlockSource& region, BlockPos const& pos) {
     std::vector<ItemStack> items;
     std::vector<ItemStack> leftover;
     std::string            customName;
-    if (nameOf(block).starts_with("minecraft:")) {
+    Container*             container = nullptr;
+    bool const             vanilla   = nameOf(block).starts_with("minecraft:");
+    if (vanilla) {
         auto* be = region.getBlockEntity(pos);
         if (!be) return false;
-        auto* container = static_cast<ChestBlockActor*>(be)->getContainer();
+        auto* chest = static_cast<ChestBlockActor*>(be);
+        container   = chest->getContainer();
         if (!container || container->getContainerSize() != 27) return false; // double chests stay
+        // A chest that was never opened still holds its loot table: roll it first (as opening would).
+        if (!chest->mLootTable->empty())
+            chest->unPackLootTable(player.getLevel(), *container, region.getDimensionId(), &player);
         auto        ctx = SaveContextFactory::createCloneSaveContext();
         CompoundTag saved;
         if (be->save(saved, *ctx) && saved.contains("CustomName")) customName = saved.at("CustomName").get<StringTag>();
-        for (int i = 0; i < 27; ++i) {
-            items.push_back(container->getItem(i));
-            container->setItem(i, ItemStack{});
-        }
+        for (int i = 0; i < 27; ++i) items.push_back(container->getItem(i));
     } else {
-        items = game::vc::takeAll(game::globalPos(region, pos));
-        items.resize(27);
+        items = game::vc::items(game::globalPos(region, pos), 27);
     }
     // Shulker boxes don't go into shulker boxes (Java canPlaceItemThroughFace): they spill.
     for (auto& s : items) {
@@ -318,8 +320,14 @@ bool packChest(Player& player, BlockSource& region, BlockPos const& pos) {
             s = ItemStack{};
         }
     }
-    auto box = shulkerBoxWith(items, customName);
-    if (game::isEmpty(box)) return false;
+    auto box = shulkerBoxWith(items, customName, &leftover);
+    if (game::isEmpty(box)) return false; // nothing changed
+    // Only now empty the chest: the box holds everything that wasn't spilled.
+    if (vanilla) {
+        for (int i = 0; i < 27; ++i) container->setItem(i, ItemStack{});
+    } else {
+        (void)game::vc::takeAll(game::globalPos(region, pos));
+    }
 
     game::clearBlock(region, pos);
     Vec3 center{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f, static_cast<float>(pos.z) + 0.5f};
@@ -346,7 +354,7 @@ bool packChest(Player& player, BlockSource& region, BlockPos const& pos) {
     return true;
 }
 
-ItemStack shulkerBoxWith(std::vector<ItemStack> const& items, std::string const& customName) {
+ItemStack shulkerBoxWith(std::vector<ItemStack> const& items, std::string const& customName, std::vector<ItemStack>* rejected) {
     auto box = game::makeItem("minecraft:undyed_shulker_box");
     if (game::isEmpty(box)) return box;
     auto ctx  = SaveContextFactory::createCloneSaveContext();
@@ -354,7 +362,10 @@ ItemStack shulkerBoxWith(std::vector<ItemStack> const& items, std::string const&
     for (int i = 0; i < static_cast<int>(items.size()); ++i) {
         if (game::isEmpty(items[i])) continue;
         auto tag = items[i].save(*ctx);
-        if (!tag) continue;
+        if (!tag) {
+            if (rejected) rejected->push_back(items[i]); // can't be stored: spilled instead of lost
+            continue;
+        }
         tag->putByte("Slot", static_cast<uchar>(i));
         list->add(std::move(tag));
     }

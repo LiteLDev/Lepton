@@ -77,14 +77,15 @@ struct MobTweaksConfig {
 /// Enchantment string id ("fortune", "silk_touch") -> Bedrock Enchant::Type value.
 using BakedEnchants = std::map<int, int>; ///< enchant type -> level
 
-/// Baked enchantments of an item (GoldToolsHaveFortune), keyed by item full name.
-[[nodiscard]] std::unordered_map<std::string, BakedEnchants> const& bakedEnchantments();
+/// Baked enchantments of an item (GoldToolsHaveFortune), keyed by item full name (a copy: the lists
+/// are read from the client thread too).
+[[nodiscard]] std::unordered_map<std::string, BakedEnchants> bakedEnchantments();
 /// The baked level of `type` on `stack` (0 when none or the module is off). Cheap: hot path.
 [[nodiscard]] int bakedLevel(int enchantType, ItemStackBase const& stack);
 
 /// DiamondRepair: item -> allowed repair items ("minecraft:diamond", ...).
-[[nodiscard]] std::unordered_map<std::string, std::vector<std::string>> const& repairChanges();
-[[nodiscard]] std::vector<std::string> const&                                   unrepairableItems();
+[[nodiscard]] std::unordered_map<std::string, std::vector<std::string>> repairChanges();
+[[nodiscard]] std::vector<std::string>                                   unrepairableItems();
 /// nullopt: vanilla decides; otherwise the DiamondRepair answer for `item` repaired with `repair`.
 [[nodiscard]] std::optional<bool> repairOverride(std::string const& item, std::string const& repair);
 

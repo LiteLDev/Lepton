@@ -164,7 +164,7 @@ LP_REGISTER_SELFTEST("mobtweaks.config", [](Context& ctx) {
     auto r = parseRepairEntry("minecraft:diamond_sword=minecraft:diamond,minecraft:emerald");
     ctx.check(r && r->second.size() == 2 && r->second[1] == "minecraft:emerald", "item=a,b parses");
 
-    auto const& baked = bakedEnchantments();
+    auto const baked = bakedEnchantments();
     auto        pick  = baked.find("minecraft:golden_pickaxe");
     ctx.require(pick != baked.end(), "golden pickaxe has baked enchantments");
     ctx.check(pick->second.at(static_cast<int>(Enchant::Type::Fortune)) == 2, "golden pickaxe: Fortune II");
@@ -180,10 +180,10 @@ LP_REGISTER_SELFTEST("mobtweaks.config", [](Context& ctx) {
     mutCfg().fortuneLevel     = 0;
     mutCfg().itemEnchantments = {"minecraft:stick+minecraft:knockback@3"};
     rebuildCaches();
-    ctx.check(!bakedEnchantments().contains("minecraft:golden_pickaxe"), "fortuneLevel 0: no baked fortune");
+    auto const after = bakedEnchantments();
+    ctx.check(!after.contains("minecraft:golden_pickaxe"), "fortuneLevel 0: no baked fortune");
     ctx.check(
-        bakedEnchantments().contains("minecraft:stick")
-            && bakedEnchantments().at("minecraft:stick").at(static_cast<int>(Enchant::Type::Knockback)) == 3,
+        after.contains("minecraft:stick") && after.at("minecraft:stick").at(static_cast<int>(Enchant::Type::Knockback)) == 3,
         "itemEnchantments bake into any item"
     );
 });

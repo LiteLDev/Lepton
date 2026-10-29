@@ -43,7 +43,7 @@ int realLevel(ItemStackBase const& stack, int type) {
 void bakedLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
     auto const& c = mt::cfg();
     if (!c.enableGoldToolsHaveFortune || !c.displayBakedEnchantmentsInTooltip) return;
-    auto const& all = mt::bakedEnchantments();
+    auto const all = mt::bakedEnchantments();
     auto        it  = all.find(game::itemId(stack));
     if (it == all.end()) return;
     for (auto const& [type, level] : it->second) {
@@ -68,7 +68,7 @@ void repairLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
             return;
         }
     }
-    auto const& changes = mt::repairChanges();
+    auto const changes = mt::repairChanges();
     auto        it      = changes.find(id);
     if (it == changes.end()) return;
     std::string names;

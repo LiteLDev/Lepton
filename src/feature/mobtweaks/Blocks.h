@@ -21,8 +21,13 @@ inline constexpr char const* kNonDoubleDoorTag = "lepton:non_double_door";
 
 /// Packs the chest at `pos` into a shulker box for `player` (shells in hand, rules of Quark).
 bool packChest(Player& player, BlockSource& region, BlockPos const& pos);
-/// An undyed shulker box item holding `items` (slot = index), optionally named.
-[[nodiscard]] ItemStack shulkerBoxWith(std::vector<ItemStack> const& items, std::string const& customName);
+/// An undyed shulker box item holding `items` (slot = index), optionally named. Stacks that can't be
+/// serialized go to `rejected`.
+[[nodiscard]] ItemStack shulkerBoxWith(
+    std::vector<ItemStack> const& items,
+    std::string const&            customName,
+    std::vector<ItemStack>*       rejected = nullptr
+);
 
 // ---- ImprovedSponges -----------------------------------------------------------------------------
 

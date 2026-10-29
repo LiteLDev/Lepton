@@ -108,7 +108,9 @@ LL_TYPE_INSTANCE_HOOK(SlimeRemoveHook, ll::memory::HookPriority::Normal, Slime, 
     Vec3  center = getPosition();
     int   size   = slimeSizeOf(*this);
     auto  name   = getNameTag();
-    AABB  box{center - Vec3{6, 4, 6}, center + Vec3{6, 4, 6}};
+    // Vanilla children appear within size/4 blocks of the body: a tight box keeps other slimes out.
+    float r = static_cast<float>(size) / 4.0f + 0.75f;
+    AABB  box{center - Vec3{r, 1.0f, r}, center + Vec3{r, 2.0f, r}};
     std::unordered_set<int64_t> before;
     for (auto* a : ent::inBox(getDimensionBlockSource(), box, "minecraft:slime")) before.insert(ent::idOf(*a));
     origin();
@@ -120,7 +122,7 @@ LL_TYPE_INSTANCE_HOOK(SlimeRemoveHook, ll::memory::HookPriority::Normal, Slime, 
             if (before.contains(ent::idOf(*a)) || !a->isAlive()) continue;
             if (replaceWithMagmaCube(*a, std::max(size / 2, 1))) ++converted; // children: half the size
         }
-        // Bedrock did not split a slime that died from magma damage: split it the Java way
+        // No vanilla children (the game skipped the split): split it the Java way
         // (Slime#remove: 2..4 children of half the size around the body).
         if (converted == 0 && size > 1) converted = splitInto(*region, "minecraft:magma_cube", size, center, name);
         if (converted > 0) log().info("mobtweaks: slime of size {} split into {} magma cubes", size, converted);
@@ -160,6 +162,22 @@ void onDieForVexes(Mob& mob) {
         ++count;
     }
     if (count > 0) log().info("mobtweaks: {} vexes died with their master", count);
+}
+
+/// Java checks every vex every tick (owner dead or dying). The death event covers the usual case;
+/// this sweep (every 20 ticks) catches owners that died while the event was missed.
+void sweepVexes() {
+    if (!cfg().enableVexesDieWithTheirMasters) return;
+    for (auto* vex : ent::ofType("minecraft:vex")) {
+        if (vex->isDead() || !vex->isAlive()) continue;
+        auto owner = vex->getOwnerId();
+        if (owner.rawID == -1 || owner.rawID == 0) continue;
+        auto* master = ent::find(owner.rawID);
+        if (master && (master->isDead() || !master->isAlive())) {
+            vex->kill();
+            log().info("mobtweaks: 1 vexes died with their master");
+        }
+    }
 }
 
 // ---- ZombieVillagersOnNormal ---------------------------------------------------------------------
@@ -223,11 +241,19 @@ EndDragonFight* endFight() {
     return fight ? fight.get() : nullptr;
 }
 
+bool isDying(Actor const& dragon) {
+    return dragon.isDead() || dragon.getEntityContext().tryGetComponent<DeathTickingComponent>().has_value();
+}
+
 void sampleFight() {
     auto& dying = dyingDragons();
     if (!dying.empty() && tickNow() % 20 == 0) std::erase_if(dying, [](auto const& e) { return ent::find(e.first) == nullptr; });
     if (!dying.empty()) return;
     auto* fight = endFight();
+    if (fight) {
+        // The fight's own dragon may have started dying this tick, before pollDragons saw it.
+        if (auto* dragon = ent::find(fight->mDragonUUID->rawID); dragon && isDying(*dragon)) return;
+    }
     fightSnapshot() = {tickNow(), fight && fight->mPreviouslyKilled};
 }
 
@@ -237,7 +263,7 @@ void pollDragons() {
     if (!cfg().enableDragonScales) return;
     for (auto* dragon : ent::ofType("minecraft:ender_dragon")) {
         auto death = dragon->getEntityContext().tryGetComponent<DeathTickingComponent>();
-        if (!death) continue;
+        if (!death) continue; // alive: the timer only exists while the death animation runs
         onDragonDying(ent::idOf(*dragon), death->mTicks, static_cast<int>(dragon->getDimensionId()), dragon->getPosition());
     }
 }
@@ -297,12 +323,13 @@ bool zombify(Actor& villager) {
     // villager_v2's own transformation into minecraft:zombie_villager_v2 (keeps profession, trades
     // and level). The event converts with Bedrock's per-difficulty chance (Normal 50%, Hard 100%):
     // evaluate it as on Hard, as Quark always converts on Normal.
-    auto& data  = villager.getLevel().getLevelData();
-    auto  saved = villager.getLevel().getDifficulty();
-    data.setGameDifficulty(SharedTypes::Legacy::Difficulty::Hard);
-    bool ok = ent::triggerEvent(villager, "become_zombie");
-    data.setGameDifficulty(saved);
-    if (!ok) return false;
+    struct HardForNow {
+        LevelData&                      data;
+        SharedTypes::Legacy::Difficulty saved;
+        ~HardForNow() { data.setGameDifficulty(saved); }
+    } hard{villager.getLevel().getLevelData(), villager.getLevel().getDifficulty()};
+    hard.data.setGameDifficulty(SharedTypes::Legacy::Difficulty::Hard);
+    if (!ent::triggerEvent(villager, "become_zombie")) return false;
     log().info("mobtweaks: villager zombified");
     return true;
 }
@@ -352,6 +379,7 @@ public:
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
             sampleFight();
             if (tickNow() % 10 == 0) pollDragons();
+            if (tickNow() % 20 == 5) sweepVexes();
         }));
         VillagerHurtHook::hook();
     }

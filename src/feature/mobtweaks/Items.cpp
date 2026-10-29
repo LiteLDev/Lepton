@@ -287,10 +287,19 @@ int effectiveBakedLevel(int type, ItemStackBase const& stack, int realLevel) {
 
 Item const* tierTool(int harvestLevel, std::string_view kind) {
     static constexpr std::array<std::string_view, 5> kTiers{"wooden", "stone", "iron", "diamond", "netherite"};
-    auto        tier = kTiers[static_cast<size_t>(std::clamp(harvestLevel, 0, 4))];
-    std::string id   = "minecraft:" + std::string(tier) + "_" + std::string(kind);
-    auto        reg  = ItemRegistryManager::getItemRegistry();
-    return reg.lookupByName(HashedString(id)).get();
+    static constexpr std::array<std::string_view, 5> kKinds{"pickaxe", "axe", "shovel", "hoe", "sword"};
+    // Mining hot path: the items are looked up once per world (a weak pointer expires with the
+    // registry of the world that owned it). Server thread and client thread each keep their own.
+    thread_local std::array<std::array<WeakPtr<Item>, 5>, 5> cache;
+    size_t                                                   k = 0;
+    while (k < kKinds.size() && kKinds[k] != kind) ++k;
+    if (k == kKinds.size()) return nullptr;
+    auto  tier = static_cast<size_t>(std::clamp(harvestLevel, 0, 4));
+    auto& slot = cache[tier][k];
+    if (auto* item = slot.get()) return item;
+    std::string id = "minecraft:" + std::string(kTiers[tier]) + "_" + std::string(kind);
+    slot           = ItemRegistryManager::getItemRegistry().lookupByName(HashedString(id));
+    return slot.get();
 }
 
 bool sparesAnvil(ItemStackBase const& material) {

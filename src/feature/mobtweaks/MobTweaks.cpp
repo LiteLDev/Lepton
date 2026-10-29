@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <memory>
 #include <cctype>
 #include <charconv>
 #include <mutex>
@@ -60,24 +61,27 @@ struct BakedSlot {
     int         type  = -1; ///< resolved Enchant::Type, -2 = unknown id
 };
 
+/// Parsed config lists. A snapshot is immutable once published: readers (server thread, client
+/// render thread for tooltips and mining prediction) take a shared_ptr, writers publish a new one.
 struct Caches {
-    std::unordered_map<std::string, BakedEnchants>               baked;     // resolved view (selftests, tooltip)
-    std::unordered_map<uint64_t, std::vector<BakedSlot>>         bakedHash; // item full-name hash -> slots
-    std::unordered_map<std::string, std::vector<std::string>>    repair;
-    std::vector<std::string>                                     unrepairable;
-    std::vector<std::pair<std::string, std::vector<BakedSlot>>>  bakedNamed; // for the resolved view
-    std::atomic<bool>                                            resolved = false;
+    std::unordered_map<std::string, BakedEnchants>              baked;     // resolved view (selftests, tooltip)
+    std::unordered_map<uint64_t, std::vector<BakedSlot>>        bakedHash; // item full-name hash -> slots
+    std::unordered_map<std::string, std::vector<std::string>>   repair;
+    std::vector<std::string>                                    unrepairable;
+    std::vector<std::pair<std::string, std::vector<BakedSlot>>> bakedNamed; // config order
+    bool                                                        resolved = false;
 };
 
-/// Resolution may run on the server thread (world ready) or the client thread (tooltips).
-std::mutex& resolveMutex() {
-    static std::mutex m;
-    return m;
+std::shared_ptr<Caches const>& cachesSlot() {
+    static std::shared_ptr<Caches const> c = std::make_shared<Caches const>();
+    return c;
 }
 
-Caches& caches() {
-    static Caches c;
-    return c;
+std::shared_ptr<Caches const> current() { return std::atomic_load(&cachesSlot()); }
+
+std::mutex& publishMutex() {
+    static std::mutex m;
+    return m;
 }
 
 int resolveEnchant(std::string const& name) {
@@ -86,12 +90,10 @@ int resolveEnchant(std::string const& name) {
     return static_cast<int>(t);
 }
 
-void resolveAll() {
-    auto& c = caches();
-    if (c.resolved.load(std::memory_order_acquire)) return;
-    std::lock_guard lock(resolveMutex());
-    if (c.resolved.load(std::memory_order_relaxed)) return;
-    if (resolveEnchant("fortune") < 0) return; // enchantments not registered yet: retry later
+/// Fills the enchantment types of `c` (false while the game's enchantments aren't registered yet).
+bool resolveInto(Caches& c) {
+    if (c.resolved) return true;
+    if (resolveEnchant("fortune") < 0) return false;
     c.baked.clear();
     c.bakedHash.clear();
     for (auto& [item, slots] : c.bakedNamed) {
@@ -105,7 +107,18 @@ void resolveAll() {
         }
         c.bakedHash[HashedString(item).getHash()] = slots;
     }
-    c.resolved.store(true, std::memory_order_release);
+    c.resolved = true;
+    return true;
+}
+
+/// Resolves the published snapshot if it isn't yet (config loaded before the enchantments existed).
+void resolveAll() {
+    if (current()->resolved) return;
+    std::lock_guard lock(publishMutex());
+    auto cur = current();
+    if (cur->resolved) return;
+    auto next = std::make_shared<Caches>(*cur);
+    if (resolveInto(*next)) std::atomic_store(&cachesSlot(), std::shared_ptr<Caches const>(std::move(next)));
 }
 
 } // namespace
@@ -140,29 +153,19 @@ std::optional<std::pair<std::string, std::vector<std::string>>> parseRepairEntry
 }
 
 void rebuildCaches() {
-    auto&       c = caches();
-    auto const& k = cfg();
-    {
-        std::lock_guard lock(resolveMutex());
-        c.resolved.store(false);
-        c.baked.clear();
-        c.bakedHash.clear();
-        c.repair.clear();
-        c.unrepairable.clear();
-        c.bakedNamed.clear();
-    }
+    auto const& k    = cfg();
+    auto        next = std::make_shared<Caches>();
 
-    std::vector<std::pair<std::string, std::vector<BakedSlot>>> named;
     auto slotsOf = [&](std::string const& item) -> std::vector<BakedSlot>& {
-        for (auto& [n, s] : named)
-            if (n == item) return s;
-        named.emplace_back(item, std::vector<BakedSlot>{});
-        return named.back().second;
+        for (auto& [n, sl] : next->bakedNamed)
+            if (n == item) return sl;
+        next->bakedNamed.emplace_back(item, std::vector<BakedSlot>{});
+        return next->bakedNamed.back().second;
     };
     auto put = [&](std::string const& item, std::string const& ench, int level) {
         auto& slots = slotsOf(item);
-        for (auto const& s : slots)
-            if (s.name == ench) return; // computeIfAbsent: the first value stays
+        for (auto const& sl : slots)
+            if (sl.name == ench) return; // computeIfAbsent: the first value stays
         slots.push_back(BakedSlot{ench, level});
     };
     for (auto const& e : k.itemEnchantments) {
@@ -175,12 +178,9 @@ void rebuildCaches() {
             put(id, "fortune", k.fortuneLevel);
         put("minecraft:golden_sword", "looting", k.fortuneLevel);
     }
-    c.bakedNamed = std::move(named);
-    resolveAll();
-
     for (auto const& e : k.repairChangesList) {
         if (auto p = parseRepairEntry(e)) {
-            auto& list = c.repair[p->first];
+            auto& list = next->repair[p->first];
             for (auto& r : p->second)
                 if (std::find(list.begin(), list.end(), r) == list.end()) list.push_back(r);
         } else {
@@ -189,36 +189,39 @@ void rebuildCaches() {
     }
     for (auto const& e : k.unrepairableItemsList) {
         auto id = withNamespace(e);
-        if (!id.empty()) c.unrepairable.push_back(id);
+        if (!id.empty()) next->unrepairable.push_back(id);
     }
+    resolveInto(*next);
+    std::lock_guard lock(publishMutex());
+    std::atomic_store(&cachesSlot(), std::shared_ptr<Caches const>(std::move(next)));
 }
 
-std::unordered_map<std::string, BakedEnchants> const& bakedEnchantments() {
+std::unordered_map<std::string, BakedEnchants> bakedEnchantments() {
     resolveAll();
-    return caches().baked;
+    return current()->baked;
 }
 
 int bakedLevel(int enchantType, ItemStackBase const& stack) {
     if (!cfg().enableGoldToolsHaveFortune) return 0;
     auto* item = stack.mItem.get();
     if (!item) return 0;
-    auto& c = caches();
-    if (!c.resolved.load(std::memory_order_acquire)) return 0; // resolved on config load / world ready
-    auto it = c.bakedHash.find(item->mFullName->getHash());
-    if (it == c.bakedHash.end()) return 0;
-    for (auto const& s : it->second)
-        if (s.type == enchantType) return s.level;
+    auto c = current();
+    if (!c->resolved) return 0; // resolved on config load / world ready
+    auto it = c->bakedHash.find(item->mFullName->getHash());
+    if (it == c->bakedHash.end()) return 0;
+    for (auto const& sl : it->second)
+        if (sl.type == enchantType) return sl.level;
     return 0;
 }
 
-std::unordered_map<std::string, std::vector<std::string>> const& repairChanges() { return caches().repair; }
-std::vector<std::string> const&                                   unrepairableItems() { return caches().unrepairable; }
+std::unordered_map<std::string, std::vector<std::string>> repairChanges() { return current()->repair; }
+std::vector<std::string>                                   unrepairableItems() { return current()->unrepairable; }
 
 std::optional<bool> repairOverride(std::string const& item, std::string const& repair) {
     if (!cfg().enableDiamondRepair) return std::nullopt;
-    auto const& c = caches();
-    if (std::find(c.unrepairable.begin(), c.unrepairable.end(), item) != c.unrepairable.end()) return false;
-    if (auto it = c.repair.find(item); it != c.repair.end())
+    auto c = current();
+    if (std::find(c->unrepairable.begin(), c->unrepairable.end(), item) != c->unrepairable.end()) return false;
+    if (auto it = c->repair.find(item); it != c->repair.end())
         return std::find(it->second.begin(), it->second.end(), repair) != it->second.end();
     return std::nullopt;
 }

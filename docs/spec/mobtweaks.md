@@ -115,29 +115,42 @@ All mechanics run on the server thread and check their `enable<Module>` key on e
   max(0, distance - heightReduction)`; slime with `enableSlimeFallDamageRemoval` ⇒ if `distance > 2`
   set the vertical velocity to -2, then `distance = 0`.
 - **SlimesToMagmaCubes** — `MobDieEvent`: a `minecraft:slime` whose damage cause is `magma` is
-  remembered. Hook `Slime::remove()`: after the vanilla split of a remembered slime, every slime it
-  just spawned is replaced by a `minecraft:magma_cube` of the same size at the same position (name tag
-  and persistence copied). Natural slime splitting is otherwise untouched.
+  remembered. Hook `Slime::remove()`: one tick after the vanilla split of a remembered slime, every
+  slime that appeared within `size/4 + 0.75` blocks of its body (its children) is replaced by a
+  `minecraft:magma_cube` of half the parent's size at the same position (name tag copied); if the
+  game spawned no children, the Java split is done directly (2-4 cubes of half the size at
+  `((l%2)-0.5)*size/4, +0.5, ((l/2)-0.5)*size/4`). Sizes come from the definitions' own events
+  (`spawn_small` / `spawn_medium` / `spawn_large`: health 1 / 4 / 16 like Java's size²). Logged as
+  `mobtweaks: slime of size <n> split into <k> magma cubes`. Other slime deaths are untouched.
 - **SnowGolemPlayerHeads** — `MobDieEvent`: `minecraft:snow_golem` with a non-empty name tag, not
   sheared (still wears the pumpkin), damage source entity (or its owner, for potions) a
   `minecraft:witch` ⇒ spawn a `minecraft:player_head` item at the golem's position named
   "&lt;name&gt;'s Head". Logged as `mobtweaks: snow golem head <name>`.
 - **VexesDieWithTheirMasters** — `MobDieEvent` of any mob: every loaded `minecraft:vex` whose owner
-  id is the dying mob is killed. A sweep every 20 ticks also kills vexes whose owner is dead/gone
-  dying while the vex was unloaded is not covered by Java either (the owner reference is null).
-- **ZombieVillagersOnNormal** — `ActorHurtEvent` on a villager (`minecraft:villager_v2` /
-  `minecraft:villager`) on Normal difficulty whose damage would kill it and whose attacker is a
-  zombie-family mob (`zombie`, `husk`, `drowned`, `zombie_villager(_v2)`, Java's `Zombie` subclasses
-  incl. `zombie_pigman`): the hit is cancelled and the villager runs its vanilla
-  `minecraft:become_zombie` transformation (the same transformation Bedrock uses on Hard, keeping
-  profession, trades and level), plus the infection sound. Logged as `mobtweaks: villager zombified`.
-- **DragonScales** — hook `EnderDragon::die()`: when the dragon was a respawned one
-  (`mDragonKilledPreviously`, or the End fight's `mPreviouslyKilled` for a dragon in the End), 100
-  ticks later a `lepton:dragon_scale` item spawns at the dragon's (last known) position. Logged as
-  `mobtweaks: dragon scale dropped`. The recipe is a behaviour-pack shapeless recipe; hook
-  `CraftHandlerCrafting::handleConsumedItem`: for `lepton:elytra_duplication` the consumed elytra is
-  given back to the player after the craft (inventory, else dropped); with the module disabled the
-  craft request is rejected.
+  id is the dying mob is killed (`kill()`: normal death with drops). A sweep every 20 ticks also
+  kills vexes whose loaded owner is dead or dying (Java checks every tick); an unloaded owner is
+  ignored, as Java's null owner. Logged as `mobtweaks: <n> vexes died with their master`.
+- **ZombieVillagersOnNormal** — hook `Mob::_hurt`: a villager (`minecraft:villager_v2` /
+  `minecraft:villager`) on Normal difficulty taking a killing blow (damage >= health) from a
+  zombie-family mob (Bedrock's ZombieMonster types: `zombie`, `husk`, `drowned`,
+  `zombie_villager(_v2)` = Java's `Zombie` subclasses except the zombified piglin, which Bedrock
+  never lets convert villagers) takes no damage and runs its definition's `become_zombie` event
+  instead: the vanilla transformation into `minecraft:zombie_villager_v2` keeping profession, trades
+  and level. That event rolls Bedrock's per-difficulty chance (Normal 50%, Hard 100%, measured in
+  game), so it is evaluated with the level difficulty set to Hard for the duration of the call (the
+  level data only; nothing is sent to clients). Logged as `mobtweaks: villager zombified`.
+- **DragonScales** — the Bedrock ender dragon is an ECS mob (no `EnderDragon::die` call): its death
+  animation is the `DeathTickingComponent` timer (0..200, Java's `dragonDeathTime`). Every 10 ticks
+  the loaded `minecraft:ender_dragon`s are checked; a dragon whose timer runs is "dying". At the
+  first sighting the scale is decided: the dragon is in the End and the End fight's
+  `mPreviouslyKilled` was set **before** this death started (sampled every tick while no dragon is
+  dying, so a first dragon that sets the flag when it dies never counts; Java reads it at tick 100,
+  before the dying dragon sets it at tick 200). Then the scale spawns when the timer reaches 100, at
+  the dragon's position. Logged as `mobtweaks: dragon scale dropped`. The recipe is a behaviour-pack
+  shapeless recipe; hook `CraftHandlerCrafting::handleConsumedItem`: for `lepton:elytra_duplication`
+  the consumed elytra is remembered and given back to the player when the craft request succeeded
+  (`CraftHandlerBase::postRequest`; inventory, else dropped; logged as `mobtweaks: elytra
+  duplicated`); with the module disabled the craft request is rejected.
 - **GoldToolsHaveFortune** — baked map item → {enchantment → level} rebuilt on every config load:
   `itemEnchantments` entries first, then (when `fortuneLevel > 0`) Looting for `golden_sword` and
   Fortune for `golden_pickaxe/axe/shovel/hoe` unless already set. Hooks
@@ -151,14 +164,16 @@ All mechanics run on the server thread and check their `enable<Module>` key on e
 - **NoDurabilityOnCosmetics** — hook `AnvilContainerScreenValidator::getCraftResult` to note,
   per player, whether the anvil's material slot is empty or holds a cosmetic item; hook
   `AnvilBlock::tryApplyCraftingDamage` to skip the damage for such a craft.
-- **ShulkerPacking** — `PlayerInteractBlockEvent` (sneaking): main hand and off-hand shulker
-  shells. The off-hand of Bedrock does not accept shulker shells, so Lepton allows them there
-  (`Item` off-hand flag, server and client mod) and, for vanilla clients that refuse the off-hand,
+- **ShulkerPacking** — `PlayerInteractBlockEvent` (sneaking, high priority): main hand and off-hand
+  shulker shells. The off-hand of Bedrock does not accept shulker shells, so Lepton allows them there
+  (the item's off-hand flag, set on world load) and, for vanilla clients that refuse the off-hand,
   also accepts **two or more shells in the main hand** (two are used). The event is cancelled and the
-  packing happens on the next tick: chest contents (27 slots; a paired double chest is refused like
-  Java's container-size check) go into an `minecraft:undyed_shulker_box` item (`Items` list in its
-  user data), the chest's custom name becomes the item's name, the chest is removed without drops.
-  Logged as `mobtweaks: packed chest`.
+  packing happens on the next tick: an unrolled loot table is rolled first (as opening the chest
+  would), the 27 slots (a paired double chest is refused like Java's container-size check) go into a
+  `minecraft:undyed_shulker_box` item (`Items` list in its user data), shulker boxes inside spill on
+  the ground (Java: `canPlaceItemThroughFace`), the chest's custom name becomes the item's name, and
+  only then is the chest emptied and removed without drops. The box goes into the selected hotbar
+  slot when it is empty, else the inventory, else it drops. Logged as `mobtweaks: packed chest`.
 - **MagmaKeepsConcretePowder** — hooks `ConcretePowderBlock::_isTouchingWater` and
   `_tryTouchWater`: false when the block below is `minecraft:magma`.
 - **ImprovedSponges** — hook `SpongeBlock::_performAbsorbWater(region, pos)`, reimplementing Java's
@@ -169,12 +184,15 @@ All mechanics run on the server thread and check their `enable<Module>` key on e
   `PlayerUseItemEvent` with a sponge: ray from the eyes along the view, 4.5 blocks (Java's block
   interaction range); the first water source hit before any other block becomes a sponge (sound,
   one sponge used unless creative), then absorbs.
-- **DoubleDoorOpening** — `PlayerInteractBlockEvent` on a door/gate by a non-sneaking player: its
-  open state is remembered; 2 ticks later, if it changed, the partner (rules in §1) is set to the
-  same state through the block's own code (vanilla `DoorBlock::setToggled` /
-  `FenceGateBlock::_setOpen`, Lepton `shapes::setOpen`), which plays the sound. Iron doors and
-  `lepton:redstone_only` doors never toggle by hand, so they are never paired (Java:
-  `canOpenByHand`).
+- **DoubleDoorOpening** — `PlayerInteractBlockEvent` (high priority: the shapes module cancels the
+  event for Lepton doors, which ends the dispatch) on a door/gate by a non-sneaking player: its state
+  (block, facing, hinge, open) is remembered; 2 ticks later, if it toggled, the partner (rules in §1,
+  compared with the remembered state) is set to the same state: vanilla doors with
+  `DoorBlock::setToggled` (both halves, sound), vanilla gates by their `open_bit` (swinging away from
+  the player like Java, gate sound), Lepton doors/gates with `shapes::setOpen`. Vanilla door facing:
+  `DoorBlock::getDir` is a quarter turn clockwise of Java's FACING (measured: a door placed looking
+  north reports east). Iron doors and `lepton:redstone_only` doors never toggle by hand, so they are
+  never paired (Java: `canOpenByHand`). Logged as `mobtweaks: double door at x y z`.
 
 ## 4. Screens
 
@@ -239,7 +257,12 @@ Item name: `item.lepton:dragon_scale` = "Dragon Scale" (RP `texts.d`).
 - **Elytra duplication**: Bedrock crafting has no remaining items for this recipe, so the original
   elytra goes back to the inventory (dropped when full) instead of staying in the grid.
 - **ShulkerPacking**: additionally accepts two shells in the main hand (vanilla clients cannot put a
-  shulker shell into the off-hand). Lepton chests take part through the `lepton:chest` tag.
+  shulker shell into the off-hand). Lepton chests take part through the `lepton:chest` tag. The
+  "item used" statistic is not increased (Bedrock has no per-item use statistics).
+- **ZombieVillagersOnNormal**: zombified piglins don't convert villagers (Bedrock never lets them,
+  not even on Hard; Java's `ZombifiedPiglin` inherits the zombie rule).
+- **DragonScales**: the scale is decided from the End fight state (a dragon summoned outside the End
+  never drops one, like Java's null dragon fight).
 - **DiamondRepair / harvest level on remote servers**: the anvil preview and mining prediction are
   computed by the client. Vanilla clients on a BDS see the vanilla repair rules in the anvil (the
   server accepts both but the vanilla client never offers a diamond repair); mod clients and local
@@ -263,15 +286,21 @@ Selftests (`/quark selftest "mobtweaks.*"`), dx range 2600..2699:
 | `mobtweaks.snow_golem_head` | 2610 | named golem killed by a witch drops the named head; unnamed / sheared golems don't |
 | `mobtweaks.vexes` | 2615 | an evoker's vexes die with it |
 | `mobtweaks.zombie_villagers` | 2620 | on Normal a villager killed by a zombie becomes a zombie villager |
-| `mobtweaks.dragon_scale` | 2625 | a respawned dragon drops a scale at death tick 100; the elytra recipe exists |
+| `mobtweaks.dragon_scale` | 2625 | the death-tick rule (scale at tick 100 for a respawned dragon, none for a first one); a real dragon's death timer reaches it |
 | `mobtweaks.gold_tools` | 2630 | baked fortune/looting levels, golden pickaxe drops diamonds from diamond ore with fortune |
 | `mobtweaks.diamond_repair` | - | netherite gear repairs with diamonds, not netherite ingots; unrepairable list |
 | `mobtweaks.cosmetic_anvil` | 2635 | rename-only anvil craft never damages the anvil |
 | `mobtweaks.shulker_packing` | 2640 | chest with items + two shells becomes a shulker box item with the items and name |
 | `mobtweaks.magma_concrete` | 2645 | powder over magma next to water stays powder; elsewhere it hardens |
-| `mobtweaks.sponges` | 2650 | a sponge drains more than 65 blocks and up to 10 blocks away; placing on water |
+| `mobtweaks.sponges` | 2650 | in a 13x13 pool a sponge drains every block within 10 (all but the 12 corners, > vanilla's 65); placing on water |
 | `mobtweaks.double_doors` | 2660 | vanilla and Lepton double doors and stacked gates open/close together |
 
 Server e2e: `tools/e2e/server/scenarios/mobtweaks.ps1` runs `mobtweaks.*` and waits for the log
-lines. Client e2e: `tools/e2e/client/scenarios/mobtweaks.ps1` gives the dragon scale and a golden
-pickaxe and screenshots the inventory (item icon, baked "Fortune II" tooltip).
+lines. Client e2e: `tools/e2e/client/scenarios/mobtweaks.ps1` (local world) screenshots the
+inventory with the dragon scale icon (`inventory.png`), the golden pickaxe tooltip with the italic
+baked "Fortune II" line (`tooltip-gold.png`) and the netherite sword tooltip with the repair hint
+(`tooltip-repair.png`), then runs `mobtweaks.*` in the local world.
+
+Not covered by selftests (needs a real client request): the elytra duplication craft (crafting
+table request) and the anvil craft path into `AnvilContainerScreenValidator::getCraftResult`
+(the damage-skip half is tested directly).
