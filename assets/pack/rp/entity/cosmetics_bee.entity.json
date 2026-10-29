@@ -1,0 +1,124 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "minecraft:bee",
+      "materials": {
+        "default": "bee"
+      },
+      "textures": {
+        "default": "textures/entity/bee/bee",
+        "angry": "textures/entity/bee/bee_angry",
+        "nectar": "textures/entity/bee/bee_nectar",
+        "angry_nectar": "textures/entity/bee/bee_angry_nectar",
+        "baby_default": "textures/entity/bee/bee_baby",
+        "baby_angry": "textures/entity/bee/bee_angry_baby",
+        "baby_nectar": "textures/entity/bee/bee_nectar_baby",
+        "baby_angry_nectar": "textures/entity/bee/bee_angry_nectar_baby",
+        "lp_acebee_normal": "textures/entity/lepton/bees/acebee/normal",
+        "lp_acebee_nectar": "textures/entity/lepton/bees/acebee/nectar",
+        "lp_acebee_angry": "textures/entity/lepton/bees/acebee/angry",
+        "lp_acebee_angry_nectar": "textures/entity/lepton/bees/acebee/angry_nectar",
+        "lp_agenbee_normal": "textures/entity/lepton/bees/agenbee/normal",
+        "lp_agenbee_nectar": "textures/entity/lepton/bees/agenbee/nectar",
+        "lp_agenbee_angry": "textures/entity/lepton/bees/agenbee/angry",
+        "lp_agenbee_angry_nectar": "textures/entity/lepton/bees/agenbee/angry_nectar",
+        "lp_arobee_normal": "textures/entity/lepton/bees/arobee/normal",
+        "lp_arobee_nectar": "textures/entity/lepton/bees/arobee/nectar",
+        "lp_arobee_angry": "textures/entity/lepton/bees/arobee/angry",
+        "lp_arobee_angry_nectar": "textures/entity/lepton/bees/arobee/angry_nectar",
+        "lp_beefluid_normal": "textures/entity/lepton/bees/beefluid/normal",
+        "lp_beefluid_nectar": "textures/entity/lepton/bees/beefluid/nectar",
+        "lp_beefluid_angry": "textures/entity/lepton/bees/beefluid/angry",
+        "lp_beefluid_angry_nectar": "textures/entity/lepton/bees/beefluid/angry_nectar",
+        "lp_beesexual_normal": "textures/entity/lepton/bees/beesexual/normal",
+        "lp_beesexual_nectar": "textures/entity/lepton/bees/beesexual/nectar",
+        "lp_beesexual_angry": "textures/entity/lepton/bees/beesexual/angry",
+        "lp_beesexual_angry_nectar": "textures/entity/lepton/bees/beesexual/angry_nectar",
+        "lp_beequeer_normal": "textures/entity/lepton/bees/beequeer/normal",
+        "lp_beequeer_nectar": "textures/entity/lepton/bees/beequeer/nectar",
+        "lp_beequeer_angry": "textures/entity/lepton/bees/beequeer/angry",
+        "lp_beequeer_angry_nectar": "textures/entity/lepton/bees/beequeer/angry_nectar",
+        "lp_enbee_normal": "textures/entity/lepton/bees/enbee/normal",
+        "lp_enbee_nectar": "textures/entity/lepton/bees/enbee/nectar",
+        "lp_enbee_angry": "textures/entity/lepton/bees/enbee/angry",
+        "lp_enbee_angry_nectar": "textures/entity/lepton/bees/enbee/angry_nectar",
+        "lp_gaybee_normal": "textures/entity/lepton/bees/gaybee/normal",
+        "lp_gaybee_nectar": "textures/entity/lepton/bees/gaybee/nectar",
+        "lp_gaybee_angry": "textures/entity/lepton/bees/gaybee/angry",
+        "lp_gaybee_angry_nectar": "textures/entity/lepton/bees/gaybee/angry_nectar",
+        "lp_interbee_normal": "textures/entity/lepton/bees/interbee/normal",
+        "lp_interbee_nectar": "textures/entity/lepton/bees/interbee/nectar",
+        "lp_interbee_angry": "textures/entity/lepton/bees/interbee/angry",
+        "lp_interbee_angry_nectar": "textures/entity/lepton/bees/interbee/angry_nectar",
+        "lp_lesbeean_normal": "textures/entity/lepton/bees/lesbeean/normal",
+        "lp_lesbeean_nectar": "textures/entity/lepton/bees/lesbeean/nectar",
+        "lp_lesbeean_angry": "textures/entity/lepton/bees/lesbeean/angry",
+        "lp_lesbeean_angry_nectar": "textures/entity/lepton/bees/lesbeean/angry_nectar",
+        "lp_panbee_normal": "textures/entity/lepton/bees/panbee/normal",
+        "lp_panbee_nectar": "textures/entity/lepton/bees/panbee/nectar",
+        "lp_panbee_angry": "textures/entity/lepton/bees/panbee/angry",
+        "lp_panbee_angry_nectar": "textures/entity/lepton/bees/panbee/angry_nectar",
+        "lp_polysexbee_normal": "textures/entity/lepton/bees/polysexbee/normal",
+        "lp_polysexbee_nectar": "textures/entity/lepton/bees/polysexbee/nectar",
+        "lp_polysexbee_angry": "textures/entity/lepton/bees/polysexbee/angry",
+        "lp_polysexbee_angry_nectar": "textures/entity/lepton/bees/polysexbee/angry_nectar",
+        "lp_transbee_normal": "textures/entity/lepton/bees/transbee/normal",
+        "lp_transbee_nectar": "textures/entity/lepton/bees/transbee/nectar",
+        "lp_transbee_angry": "textures/entity/lepton/bees/transbee/angry",
+        "lp_transbee_angry_nectar": "textures/entity/lepton/bees/transbee/angry_nectar",
+        "lp_helen_normal": "textures/entity/lepton/bees/helen/normal",
+        "lp_helen_nectar": "textures/entity/lepton/bees/helen/nectar",
+        "lp_helen_angry": "textures/entity/lepton/bees/helen/angry",
+        "lp_helen_angry_nectar": "textures/entity/lepton/bees/helen/angry_nectar",
+        "lp_mlbeem_normal": "textures/entity/lepton/bees/mlbeem/normal",
+        "lp_mlbeem_nectar": "textures/entity/lepton/bees/mlbeem/nectar",
+        "lp_mlbeem_angry": "textures/entity/lepton/bees/mlbeem/angry",
+        "lp_mlbeem_angry_nectar": "textures/entity/lepton/bees/mlbeem/angry_nectar",
+        "lp_polyamorbee_normal": "textures/entity/lepton/bees/polyamorbee/normal",
+        "lp_polyamorbee_nectar": "textures/entity/lepton/bees/polyamorbee/nectar",
+        "lp_polyamorbee_angry": "textures/entity/lepton/bees/polyamorbee/angry",
+        "lp_polyamorbee_angry_nectar": "textures/entity/lepton/bees/polyamorbee/angry_nectar",
+        "lp_salmacibee_normal": "textures/entity/lepton/bees/salmacibee/normal",
+        "lp_salmacibee_nectar": "textures/entity/lepton/bees/salmacibee/nectar",
+        "lp_salmacibee_angry": "textures/entity/lepton/bees/salmacibee/angry",
+        "lp_salmacibee_angry_nectar": "textures/entity/lepton/bees/salmacibee/angry_nectar"
+      },
+      "geometry": {
+        "default": "geometry.bee",
+        "baby": "geometry.bee.baby"
+      },
+      "animations": {
+        "flying": "animation.bee.flying",
+        "drip": "controller.animation.bee.drip",
+        "controller_bee_sting": "controller.animation.bee.sting",
+        "bee_sting": "animation.bee.sting",
+        "bee_no_stinger": "animation.bee.no_stinger",
+        "bee_fly_bobbing": "animation.bee.fly.bobbing",
+        "bee_root_controller": "controller.animation.bee.root"
+      },
+      "particle_effects": {
+        "nectar_dripping": "minecraft:nectar_drip_particle"
+      },
+      "scripts": {
+        "animate": [
+          "bee_root_controller",
+          {
+            "bee_no_stinger": "query.mark_variant == 1"
+          }
+        ],
+        "scale": "query.is_baby ? 2.0 : 1.0",
+        "pre_animation": [
+          "v.lp_skin = math.mod(query.skin_id, 32);",
+          "v.lp_state = query.property('minecraft:has_nectar') + query.is_angry * 2;"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lepton.bee"
+      ],
+      "spawn_egg": {
+        "texture": "spawn_egg_bee"
+      }
+    }
+  }
+}

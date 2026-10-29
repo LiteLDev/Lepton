@@ -1,0 +1,74 @@
+{
+  "lepton_cosmetics_bucket_axolotl_lucy": {
+    "textures": "textures/lepton/cosmetics/buckets/axolotl_lucy"
+  },
+  "lepton_cosmetics_bucket_axolotl_wild": {
+    "textures": "textures/lepton/cosmetics/buckets/axolotl_wild"
+  },
+  "lepton_cosmetics_bucket_axolotl_gold": {
+    "textures": "textures/lepton/cosmetics/buckets/axolotl_gold"
+  },
+  "lepton_cosmetics_bucket_axolotl_cyan": {
+    "textures": "textures/lepton/cosmetics/buckets/axolotl_cyan"
+  },
+  "lepton_cosmetics_bucket_axolotl_blue": {
+    "textures": "textures/lepton/cosmetics/buckets/axolotl_blue"
+  },
+  "lepton_cosmetics_bucket_crab_red": {
+    "textures": "textures/lepton/cosmetics/buckets/crab_red"
+  },
+  "lepton_cosmetics_bucket_crab_blue": {
+    "textures": "textures/lepton/cosmetics/buckets/crab_blue"
+  },
+  "lepton_cosmetics_bucket_crab_green": {
+    "textures": "textures/lepton/cosmetics/buckets/crab_green"
+  },
+  "lepton_cosmetics_bucket_slime_shiny": {
+    "textures": "textures/lepton/cosmetics/buckets/slime_shiny"
+  },
+  "lepton_cosmetics_bucket_tropical_bucket": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_bucket"
+  },
+  "lepton_cosmetics_bucket_tropical_a": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a"
+  },
+  "lepton_cosmetics_bucket_tropical_a_1": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_1"
+  },
+  "lepton_cosmetics_bucket_tropical_a_2": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_2"
+  },
+  "lepton_cosmetics_bucket_tropical_a_3": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_3"
+  },
+  "lepton_cosmetics_bucket_tropical_a_4": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_4"
+  },
+  "lepton_cosmetics_bucket_tropical_a_5": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_5"
+  },
+  "lepton_cosmetics_bucket_tropical_a_6": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_a_6"
+  },
+  "lepton_cosmetics_bucket_tropical_b": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b"
+  },
+  "lepton_cosmetics_bucket_tropical_b_1": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_1"
+  },
+  "lepton_cosmetics_bucket_tropical_b_2": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_2"
+  },
+  "lepton_cosmetics_bucket_tropical_b_3": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_3"
+  },
+  "lepton_cosmetics_bucket_tropical_b_4": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_4"
+  },
+  "lepton_cosmetics_bucket_tropical_b_5": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_5"
+  },
+  "lepton_cosmetics_bucket_tropical_b_6": {
+    "textures": "textures/lepton/cosmetics/buckets/tropical_b_6"
+  }
+}
