@@ -6,8 +6,12 @@
 #include <algorithm>
 #include <cctype>
 #include <mutex>
+#include <unordered_map>
 
+#include "ll/api/chrono/GameChrono.h"
 #include "ll/api/command/CommandHandle.h"
+#include "ll/api/coro/CoroTask.h"
+#include "ll/api/thread/ServerThreadExecutor.h"
 #include "ll/api/service/Bedrock.h"
 
 #include "mc/legacy/ActorRuntimeID.h"
@@ -19,6 +23,8 @@
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/Tick.h"
+#include "mc/legacy/ActorUniqueID.h"
 
 #include "feature/emotes/Builtins.h"
 #include "feature/emotes/EmoteScript.h"
@@ -67,7 +73,8 @@ void sendAnimation(Player& player, std::string const& animation) {
         anim.mStopExpressionVersion  = MolangVersion::Latest;
         anim.mController             = std::string(script::kController);
         anim.mBlendOutTime           = 0.f;
-        pkt->sendTo(static_cast<Actor const&>(player));
+        // Everyone who sees the player, then the player itself (exactly once).
+        pkt->sendTo(static_cast<Actor const&>(player), player);
         if (!player.isSimulatedPlayer()) pkt->sendTo(player);
     }
     std::lock_guard lock(gSentMutex);
@@ -82,6 +89,34 @@ void sendList(Player& player) {
     if (list.enabled) list.emotes = availableFor(player);
     list.tier = tierOf(player);
     net::sendToClient(player, list);
+}
+
+/// After the handshake: on the next tick, so the welcome stays the first message.
+void sendListLater(Player& player) {
+    auto id = player.getOrCreateUniqueID().rawID;
+    ll::coro::keepThis([id]() -> ll::coro::CoroTask<> {
+        co_await ll::chrono::ticks(1);
+        auto level = ll::service::getLevel();
+        if (!level) co_return;
+        ActorUniqueID uid;
+        uid.rawID = id;
+        if (auto* p = level->getPlayer(uid)) sendList(*p);
+    }).launch(ll::thread::ServerThreadExecutor::getDefault());
+}
+
+/// Requests from one client are accepted at most every 5 ticks (Quark has no limit; this only
+/// stops a modified client from flooding every other client with emotes).
+std::unordered_map<std::int64_t, std::uint64_t> gLastRequest;
+
+bool throttled(Player const& p) {
+    auto level = ll::service::getLevel();
+    if (!level) return false;
+    auto now  = level->getCurrentTick().tickID;
+    auto id   = p.getOrCreateUniqueID().rawID;
+    auto it   = gLastRequest.find(id);
+    if (it != gLastRequest.end() && now - it->second < 5) return true;
+    gLastRequest[id] = now;
+    return false;
 }
 
 } // namespace
@@ -187,14 +222,14 @@ std::string resultMessage(Player const& p, PlayResult r, std::string const& emot
 LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload().text("emote").execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* p = commands::playerOf(origin);
-        if (!p) return output.error("Only players can use emotes.");
+        if (!p) return output.error(tr("lp.emotes.players_only", "Only players can use emotes."));
         openEmoteForm(*p);
         output.success("");
     });
     cmd.overload<EmoteCommandParams>().text("emote").required("name").execute(
         [](CommandOrigin const& origin, CommandOutput& output, EmoteCommandParams const& params) {
             auto* p = commands::playerOf(origin);
-            if (!p) return output.error("Only players can use emotes.");
+            if (!p) return output.error(tr("lp.emotes.players_only", "Only players can use emotes."));
             auto r = playEmote(*p, params.name);
             if (r == PlayResult::Played) return output.success("");
             output.error(resultMessage(*p, r, params.name));
@@ -206,7 +241,7 @@ class EmotesModule {
 public:
     void install() {
         mRequest = net::onServer<EmoteRequest>([](Player& p, EmoteRequest const& m) {
-            if (m.emote.size() > 80) return;
+            if (m.emote.size() > 80 || throttled(p)) return;
             auto r = playEmote(p, m.emote);
             if (r != PlayResult::Played) log().debug("emotes: refused {} for {} ({})", m.emote, p.getRealName(), static_cast<int>(r));
         });
@@ -215,7 +250,7 @@ public:
         if (!once) {
             once = true;
             net::onClientModJoined([this](Player& p) {
-                if (mInstalled) sendList(p);
+                if (mInstalled) sendListLater(p);
             });
             config::onReload([this] {
                 if (!mInstalled) return;

@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/entity/MobDieEvent.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -238,6 +239,7 @@ LL_TYPE_INSTANCE_HOOK(PetHook, ll::memory::HookPriority::Normal, Player, &Player
 
 struct DogState {
     bool leaping       = false;
+    int  leapTicks     = 0; ///< ticks since the hop started (it lifts off a tick later)
     int  rebuildPath   = 0;
     int  whineCooldown = 10;
     bool nuzzling      = false;
@@ -252,28 +254,25 @@ Player* ownerOf(Actor const& dog) {
 }
 
 void tickDog(Actor& dog) {
-    auto  id    = idOf(dog);
-    auto& state = gDogs[id];
+    auto id = idOf(dog);
     if (!dog.isTame()) {
+        if (gSeenUntamed.size() > 4096) gSeenUntamed.clear(); // wild wolves that unloaded
         gSeenUntamed.insert(id);
         return;
     }
     if (gSeenUntamed.erase(id)) setPetTime(dog); // Quark: AnimalTameEvent
-    if (!needsPets(dog)) {
-        state = {};
-        return;
-    }
-    Player* owner = ownerOf(dog);
+    Player* owner = needsPets(dog) ? ownerOf(dog) : nullptr;
     if (!owner || owner->getDimensionId() != dog.getDimensionId()) {
-        state = {};
+        gDogs.erase(id);
         return;
     }
+    auto& state = gDogs[id];
     float dist2 = dog.distanceToSqr(*owner);
 
     // WantLoveGoal (priority 20): between 2 and 4 blocks, on the ground, 1 in 5 chance: a hop
     // towards the owner; runs until the dog lands.
     if (state.leaping) {
-        if (dog.isOnGround()) state.leaping = false;
+        if (++state.leapTicks >= 2 && dog.isOnGround()) state.leaping = false;
         else return;
     }
     if (dist2 >= 4 && dist2 <= 16 && dog.isOnGround() && std::uniform_int_distribution<int>(0, 4)(rng()) == 0) {
@@ -289,6 +288,7 @@ void tickDog(Actor& dog) {
         motion.y += 0.2f;
         dog.mBuiltInComponents->mStateVectorComponent->mPosDelta = motion;
         state.leaping                                            = true;
+        state.leapTicks                                          = 0;
         log().debug("pat: a dog leaps at {}", owner->getRealName());
         return;
     }
@@ -316,9 +316,20 @@ void tickDog(Actor& dog) {
 
 void onTick(ll::event::ServerLevelTickEvent&) {
     if (!cfg().enablePatTheDogs || cfg().dogsWantLove <= 0) return;
-    for (char const* type : {"minecraft:wolf", "lepton:foxhound"})
-        for (auto* dog : game::entities::ofType(type))
-            if (dog && dog->isAlive()) tickDog(*dog);
+    auto level = ll::service::getLevel();
+    if (!level) return;
+    for (auto* a : level->getRuntimeActorList())
+        if (a && isDog(a->getTypeName()) && a->isAlive()) tickDog(*a);
+}
+
+/// A dead dog's records go away (Quark keeps them on the entity, which is gone too).
+void onDeath(ll::event::MobDieEvent& ev) {
+    auto& mob = ev.self();
+    if (!isDog(mob.getTypeName())) return;
+    auto id = idOf(mob);
+    gDogs.erase(id);
+    gSeenUntamed.erase(id);
+    if (gPetTimes.erase(id)) gDirty = true;
 }
 
 } // namespace
@@ -327,7 +338,8 @@ class PatTheDogsModule {
 public:
     void install() {
         PetHook::hook();
-        mTick = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onTick);
+        mTick  = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onTick);
+        mDeath = ll::event::EventBus::getInstance().emplaceListener<ll::event::MobDieEvent>(onDeath);
         static bool once = false;
         if (!once) {
             once = true;
@@ -345,11 +357,12 @@ public:
     void uninstall() {
         PetHook::unhook();
         ll::event::EventBus::getInstance().removeListener(mTick);
+        ll::event::EventBus::getInstance().removeListener(mDeath);
         saveTimes();
     }
 
 private:
-    ll::event::ListenerPtr mTick;
+    ll::event::ListenerPtr mTick, mDeath;
 };
 
 namespace testing {

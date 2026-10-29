@@ -507,17 +507,28 @@ void Sampler::visit(State& s, float local, bool mirrored) {
     };
 
     // Iteration starts and the completion, when crossed going forward.
-    if (!mirrored && local > s.prevLocal) {
-        for (int k = 0; k <= std::max(n.repeatCount, 0); ++k) {
+    // A local time below the previous one going forward means a parent restarted this node (a
+    // repeat, or a forward iteration after a yoyo): its edges are crossed again.
+    float prev = local < s.prevLocal ? -1e30f : s.prevLocal;
+    if (!mirrored && local > prev) {
+        int last = std::max(n.repeatCount, 0);
+        // Only the iterations whose start lies in (prev, local]: never loop over huge repeat counts.
+        int kFrom = 0, kTo = last;
+        if (period > 0) {
+            kFrom = prev < n.delay ? 0 : static_cast<int>(std::min<double>(last + 1.0, std::floor((prev - n.delay) / period) + 1));
+            kTo   = static_cast<int>(std::min<double>(last, std::floor((local - n.delay) / period)));
+        } else {
+            kTo = 0;
+        }
+        for (int k = kFrom; k <= kTo; ++k) {
             float edge = n.delay + static_cast<float>(k) * period;
-            if (s.prevLocal < edge && edge <= local) {
+            if (prev < edge && edge <= local) {
                 if (n.endAllOnStart) mEvents.push_back({SoundEvent::What::StopAll, -1});
                 fireCues(n.onStart);
             }
-            if (period <= 0) break;
         }
     }
-    bool completing = !mirrored && s.prevLocal < full && full <= local;
+    bool completing = !mirrored && prev < full && full <= local;
     s.prevLocal     = local;
 
     // Position inside the node: iteration k, time w in it (clamped to the iteration's end
@@ -648,7 +659,7 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
     constexpr float kDeg = 180.f / kPi;
     float           total = emote.totalMs();
     nlohmann::ordered_json anim;
-    anim["animation_length"] = std::max(0.05, round3(total / 1000.0));
+    anim["animation_length"] = std::max(0.05, round3(std::min(total, 3600000.f) / 1000.0));
     anim["blend_weight"]     = std::string(kBlendWeight);
     auto& bones              = anim["bones"] = nlohmann::ordered_json::object();
     if (!emote.root) return anim;
@@ -656,9 +667,14 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
     bool bodyUsed = emote.usesPart(Body);
     std::array<std::vector<BoneSample>, kParts> samples;
     Sampler                                     sampler(emote);
-    std::vector<float>                          times;
-    for (float t = 0; t < total; t += stepMs) times.push_back(t);
-    times.push_back(total);
+    // Baked animations are capped at an hour (Quark's longest emote, T-Pose, is ten minutes).
+    constexpr double kMaxMs = 3600000.0;
+    double           span   = std::min<double>(total, kMaxMs);
+    std::vector<float> times;
+    auto               steps = static_cast<size_t>(std::ceil(span / std::max(stepMs, 1.f)));
+    times.reserve(steps + 1);
+    for (size_t i = 0; i < steps; ++i) times.push_back(static_cast<float>(static_cast<double>(i) * stepMs));
+    times.push_back(static_cast<float>(span));
     for (float t : times) {
         auto const& v = sampler.advance(t);
         std::array<float, 3> bodyB{};

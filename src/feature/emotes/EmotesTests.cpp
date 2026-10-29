@@ -27,9 +27,11 @@ using lp::selftest::Context;
 namespace em  = lp::feature::emotes;
 namespace pat = lp::feature::emotes::pat;
 
-/// Restores config/emotes.json values changed by a test.
+/// Runs a test with Quark's defaults (whatever config/emotes.json says) and restores the
+/// configured values afterwards.
 struct ConfigGuard {
     em::EmotesConfig saved = lp::config::get<em::EmotesConfig>();
+    ConfigGuard() { lp::config::mut<em::EmotesConfig>() = em::EmotesConfig{}; }
     ~ConfigGuard() { lp::config::mut<em::EmotesConfig>() = saved; }
     em::EmotesConfig& operator*() { return lp::config::mut<em::EmotesConfig>(); }
     em::EmotesConfig* operator->() { return &lp::config::mut<em::EmotesConfig>(); }
@@ -109,15 +111,21 @@ LP_REGISTER_SELFTEST("emotes.validation", [](Context& ctx) {
     ctx.check(em::playEmote(p, "yes") == em::PlayResult::Disabled, "a disabled module plays nothing");
 });
 
-LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) {
+LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) -> ll::coro::CoroTask<> {
     ConfigGuard cfg;
     auto&       p = ctx.player();
     lp::net::testing::setClientMod(p, true);
     (void)em::testing::takeSentAnimations();
     lp::net::testing::receiveFromClient(p, em::EmoteRequest{"yes"});
     ctx.check(sentTo(p, "animation.lepton.emote.yes"), "a client request plays the emote");
+    lp::net::testing::receiveFromClient(p, em::EmoteRequest{"no"});
+    ctx.check(em::testing::takeSentAnimations().empty(), "requests within 5 ticks are dropped");
+    co_await ctx.ticks(6);
     lp::net::testing::receiveFromClient(p, em::EmoteRequest{"tpose"});
     ctx.check(em::testing::takeSentAnimations().empty(), "a client can't bypass the tier");
+    co_await ctx.ticks(6);
+    lp::net::testing::receiveFromClient(p, em::EmoteRequest{"no"});
+    ctx.check(sentTo(p, "animation.lepton.emote.no"), "later requests play again");
     lp::net::testing::setClientMod(p, false);
 });
 

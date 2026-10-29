@@ -139,6 +139,29 @@ TEST(EmoteScript, TimelineYoyoAndRepeat) {
     EXPECT_NEAR(t.advance(400)[0].b, 2, 1e-5);
 }
 
+TEST(EmoteScript, RepeatedSectionsReplayTheirStartSounds) {
+    auto r = es::compile("use head\nanimation sequence\nsection sequence\nsound instant emote a\nmove head_x 200 1\n"
+                         "repeat 3 0\nend\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    es::Sampler s(r.emote);
+    int         plays = 0;
+    for (float t = 0; t <= 800; t += 50) {
+        s.advance(t);
+        for (auto const& e : s.takeSoundEvents()) plays += e.what == es::Sampler::SoundEvent::What::Play;
+    }
+    EXPECT_EQ(plays, 4);
+}
+
+TEST(EmoteScript, HugeScriptsStayBounded) {
+    auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 repeat 2000000000 0\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    auto anim = es::bakeAnimation(r.emote); // capped at an hour of animation
+    EXPECT_DOUBLE_EQ(anim["animation_length"].get<double>(), 3600.0);
+    es::Sampler s(r.emote);
+    s.advance(1e9f);
+    SUCCEED();
+}
+
 TEST(EmoteScript, UnitScalesTimes) {
     auto r = es::compile("use head\nunit 2\nanimation sequence\nmove head_x 100 1 delay 10\npause 50\nend\n");
     ASSERT_TRUE(r.ok) << r.error;

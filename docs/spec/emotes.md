@@ -36,6 +36,9 @@ None. Resource-pack content:
   unknown or too-high-tier emotes): `enableEmotes`; a built-in default emote must be in
   `enabledEmotes`; a patreon emote needs the player's tier >= the emote's tier; `custom:<name>`
   (name of letters, digits, `_`, `-`, `.`, max 64) is relayed as is (Quark relays anything).
+- **Rate limit** (Lepton): a client's `emotes:request` is accepted at most every 5 ticks, so a
+  modified client cannot flood the other clients (Quark has no limit; the command and form are
+  not limited).
 - **Tiers** (Quark `ContributorRewardHandler`: the patron list downloaded from Quark's GitHub,
   by Java account name): `emoteTiers` maps a lower-case player name or XUID to a tier; everyone
   else has `defaultEmoteTier` (0, like a non-patron).
@@ -77,7 +80,8 @@ None. Resource-pack content:
 - **Sounds** (mod clients, custom emotes): `sound instant|continuous section|emote <sound>
   [volume (max 1.5)] [pitch]` plays when the statement before it in its section completes (or
   when the section starts); `section` sounds end when their section completes; `sound stop` ends
-  all; a new `animation` start ends all; continuous sounds loop. Sounds are played at the player's
+  all; a new `animation` start ends all; continuous sounds are replayed every second until they
+  end (the client sound interface usable from the mod has no loop call). Sounds are played at the player's
   position by each mod client that runs the emote.
 - **Custom emotes** (client mod): every name in `customEmotes` is read from
   `config/quark_emotes/<name>.emote` (the folder is created) at game start, compiled, and baked
@@ -191,7 +195,8 @@ decides the rest (enabled emotes and tiers are sent to mod clients).
   facing (Quark rotates around world axes before the body yaw).
 - **Standing pose**: hidden with `blend_weight` (Quark pauses its updates); the stop on swing/hurt
   is evaluated by each client.
-- **Emote sounds** are fixed at the position where they start (Quark moves them with the player)
+- **Emote sounds** are fixed at the position where they start (Quark moves them with the player),
+  continuous ones are replayed every second (Quark loops the sound itself)
   and use Bedrock sound event names (`minecraft:` prefix stripped); Java sound ids that don't exist
   on Bedrock are silent.
 - **Custom emote icons**: Quark loads `<name>.png` from the emote folder as a resource pack; Lepton's
