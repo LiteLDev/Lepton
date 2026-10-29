@@ -4,6 +4,10 @@
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/world/Container.h"
+#include "mc/deps/shared_types/legacy/ContainerType.h"
+#include "mc/world/containers/ContainerEnumName.h"
+#include "mc/world/containers/FullContainerName.h"
+#include "mc/world/containers/managers/models/ContainerManagerModel.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
@@ -161,6 +165,44 @@ LP_REGISTER_SELFTEST("game.vc.storage", [](Context& ctx) {
     ctx.check(taken.size() == 2 && !vc::hasItems(pos), "takeAll empties the container");
     vc::flush();
     ctx.check(!lp::game::db::load("lp:vc:" + pos.key()), "an empty container leaves no DB entry");
+});
+
+// Screen::Dispenser: a 3x3 screen served by the chest model of the helper (the game's dispenser
+// model needs a dispenser block). Items move through the model like a client's item requests.
+LP_REGISTER_SELFTEST("game.vc.dispenser", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(15, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    ctx.require(ctx.setBlock(pos, "minecraft:stone"), "container block placed");
+    auto& p = ctx.player();
+    co_await ctx.ticks(2);
+    vc::takeAll(pos);
+    vc::setItems(pos, {makeItem("minecraft:apple", 2)});
+    vc::Spec spec;
+    spec.screen        = vc::Screen::Dispenser;
+    spec.titleFallback = "Probe";
+    ctx.require(vc::open(p, pos, spec), "dispenser screen requested");
+    co_await ctx.ticks(6);
+    auto const& model = p.mContainerManager.get();
+    ctx.require(model != nullptr, "the player has a container manager");
+    ctx.check(model->getContainerType() == SharedTypes::Legacy::ContainerType::Dispenser, "it is a dispenser screen");
+    auto* live = vc::liveContainer(pos);
+    ctx.require(live && live->getContainerSize() == 9, "nine slots");
+    FullContainerName level{};
+    level.mName = ContainerEnumName::LevelEntityContainer;
+    ctx.check(lp::game::itemId(model->getFullContainerSlot(0, level)) == "minecraft:apple", "the screen shows the stored items");
+    // Move an item from the player into the container: the screen (model) sees it in the slot.
+    auto& pinv = inv::playerInventory(p);
+    pinv.setItem(0, makeItem("minecraft:stick", 5));
+    ctx.check(inv::transferSlot(pinv, 0, *live, {8, 9}) == 5, "an item moved into the last slot");
+    co_await ctx.ticks(2);
+    ctx.check(lp::game::itemId(model->getFullContainerSlot(8, level)) == "minecraft:stick", "the screen shows the moved item");
+    ctx.check(lp::game::itemId(vc::items(pos, 9)[8]) == "minecraft:stick", "the container keeps it");
+    vc::closeAll(pos);
+    co_await ctx.ticks(2);
+    ctx.check(p.mContainerManager.get() == nullptr && vc::viewers(pos) == 0, "closeAll closes the screen");
+    ctx.check(vc::items(pos, 9)[8].mCount == 5, "contents persist");
+    vc::takeAll(pos);
+    ctx.cleanupBlock(pos);
 });
 
 LP_REGISTER_SELFTEST("game.vc.open", [](Context& ctx) -> ll::coro::CoroTask<> {
