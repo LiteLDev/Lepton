@@ -74,7 +74,7 @@ LL_TYPE_INSTANCE_HOOK(
     if (type == kTorchArrow && cfg().enableTorchArrow && !owner.isClientSide()) {
         if (hit.mType == HitResultType::Tile) {
             if (placeTorch(owner, hit.mBlock, hit.mFacing)) {
-                log().info("throwables: torch arrow placed a torch");
+                log().info("throwables: torch arrow placed a torch at {} {} {}", hit.mBlock.x, hit.mBlock.y, hit.mBlock.z);
                 ent::despawn(owner);
                 return;
             }

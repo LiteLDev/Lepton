@@ -37,6 +37,7 @@
 #include "mc/world/phys/HitResult.h"
 #include "mc/deps/shared_types/legacy/actor/ActorDamageCause.h"
 #include "mc/deps/nbt/CompoundTag.h"
+#include "mc/deps/shared_types/legacy/LevelEvent.h"
 #include "mc/world/actor/ActorHurtResult.h"
 #include "mc/world/level/Spawner.h"
 
@@ -239,7 +240,18 @@ void hitBlock(Rang& r, Actor& self, BlockSource& region, BlockPos const& pos, in
     owner->setSelectedItem(use);
     bool broken = false;
     if (owner->mGameMode.get()) broken = owner->mGameMode->destroyBlock(pos, static_cast<uchar>(face));
+    if (!broken && !isCreative(*owner) && &region.getBlock(pos) == &block) {
+        // The survival game mode only finishes breaks it started itself: break it as the player would.
+        block.playerDestroy(*owner, pos);
+        game::clearBlock(region, pos);
+        Vec3 c{pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f};
+        region.getLevel().broadcastLevelEvent(
+            SharedTypes::Legacy::LevelEvent::ParticlesDestroyBlock, c, static_cast<int>(block.mNetworkId), nullptr
+        );
+        broken = true;
+    }
     owner->setSelectedItem(prev);
+    log().debug("throwables: pickarang hit {} (broken: {})", block.getTypeName(), broken);
     if (!broken) {
         clank(r, self, &region, &pos);
         return;
@@ -492,7 +504,10 @@ bool onUse(Player& player, ItemStack& item) {
     Vec3  eye    = player.getEyePos();
     Vec3  spawnAt{eye.x, eye.y - 0.2f, eye.z};
     auto* self = ent::spawn(region, flame ? "lepton:flamerang" : "lepton:pickarang", spawnAt);
-    if (!self) return true;
+    if (!self) {
+        log().warn("throwables: could not spawn the {}", flame ? "flamerang" : "pickarang");
+        return true;
+    }
 
     Rang r;
     r.id    = ent::idOf(*self);

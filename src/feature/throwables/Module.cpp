@@ -167,11 +167,19 @@ bool throwRang(Player& player, ItemStack& item) {
     return pickarang::onUse(player, item);
 }
 
-void onUseItem(ll::event::PlayerUseItemEvent& ev) {
-    auto& player = ev.self();
-    if (player.isClientSide()) return;
-    auto& item = ev.item();
-    if (throwRang(player, item) || cloud::onUse(player, item)) ev.cancel();
+// Using an item in the air (client use packets and SimulatedPlayers both end up here).
+LL_TYPE_INSTANCE_HOOK(
+    ThrowablesUseItemHook,
+    ll::memory::HookPriority::Normal,
+    GameMode,
+    &GameMode::$useItem,
+    bool,
+    ItemStack& item,
+    ::HandSlot handSlot
+) {
+    Player& player = this->mPlayer;
+    if (!player.isClientSide() && (throwRang(player, item) || cloud::onUse(player, item))) return true;
+    return origin(item, handSlot);
 }
 
 void onInteractBlock(ll::event::PlayerInteractBlockEvent& ev) {
@@ -214,11 +222,11 @@ public:
     void install() {
         hookEarly();
         ThrowablesInteractHook::hook();
+        ThrowablesUseItemHook::hook();
         pickarang::install();
         torcharrow::install();
         parroteggs::install();
         auto& bus = ll::event::EventBus::getInstance();
-        mListeners.push_back(bus.emplaceListener<ll::event::PlayerUseItemEvent>(onUseItem));
         mListeners.push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteractBlock));
         mListeners.push_back(bus.emplaceListener<ll::event::PlayerPlacedBlockEvent>(onPlaced));
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
@@ -262,6 +270,7 @@ public:
         torcharrow::uninstall();
         parroteggs::uninstall();
         ThrowablesInteractHook::unhook();
+        ThrowablesUseItemHook::unhook();
         if (mEarly) {
             ThrowablesLoadRecipeHook::unhook();
             ThrowablesCreativeHook::unhook();

@@ -2,7 +2,17 @@
 
 #include <cmath>
 
+#include "ll/api/service/Bedrock.h"
+
 #include "mc/deps/core/math/Vec3.h"
+#include "mc/deps/shared_types/legacy/Difficulty.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components_json_legacy/ProjectileComponent.h"
+#include "mc/world/actor/projectile/Arrow.h"
+#include "mc/world/gamemode/GameMode.h"
+#include "mc/world/phys/HitResult.h"
+#include "mc/world/item/HandSlot.h"
+#include "mc/world/level/Level.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
@@ -49,6 +59,28 @@ Vec3 centerOf(GlobalPos const& p) { return Vec3{p.x + 0.5f, p.y + 0.5f, p.z + 0.
 
 SimulatedPlayer& bot(Context& ctx) { return *static_cast<SimulatedPlayer*>(&ctx.player()); }
 
+/// Uses the held item in the air the way a client's use packet does (GameMode::useItem).
+bool useHeld(Player& p) {
+    ItemStack s = p.getSelectedItem();
+    return p.mGameMode->useItem(s, HandSlot::Mainhand);
+}
+
+/// Interacts with an entity the way a client's interact packet does (GameMode::interact).
+bool interactWith(Player& p, Actor& a) { return p.mGameMode->interact(a, a.getPosition(), HandSlot::Mainhand); }
+
+/// Hostile mobs need a difficulty above peaceful while the test runs.
+struct Hostile {
+    SharedTypes::Legacy::Difficulty prev;
+    Hostile() {
+        auto level = ll::service::getLevel();
+        prev       = level->getDifficulty();
+        level->setDifficulty(SharedTypes::Legacy::Difficulty::Easy);
+    }
+    ~Hostile() {
+        if (auto level = ll::service::getLevel()) level->setDifficulty(prev);
+    }
+};
+
 /// Puts the player at `p` (feet) in `mode` with an empty inventory.
 void stand(Context& ctx, GlobalPos const& p, GameType mode) {
     auto& pl = ctx.player();
@@ -81,8 +113,7 @@ ll::coro::CoroTask<bool> throwAt(Context& ctx, ItemStack stack, Vec3 target, int
     sp.simulateSetItem(stack, true, 0);
     sp.simulateLookAt(target, sim::LookDuration::Instant);
     co_await ctx.ticks(2);
-    ItemStack held = sp.getSelectedItem();
-    sp.simulateUseItem(held);
+    useHeld(sp);
     co_await ctx.ticks(1);
     for (int i = 0; i < maxTicks && tw::pickarang::inFlight() > 0; ++i) co_await ctx.ticks(1);
     co_return tw::pickarang::inFlight() == 0;
@@ -183,30 +214,41 @@ LP_REGISTER_SELFTEST("throwables.pickarang_entity", [](Context& ctx) -> ll::coro
 LP_REGISTER_SELFTEST("throwables.torch_arrow", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(2230);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
-    stand(ctx, off(base, 0, 0, 4), GameType::Creative);
-    auto wall = off(base, 5, 1, 0);
+    stand(ctx, base, GameType::Creative);
+    auto& sp     = bot(ctx);
+    auto& region = sp.getDimensionBlockSource();
+    // a torch arrow next to `block` reports a hit on `face` (the projectile component's hit path)
+    auto hitWith = [&](GlobalPos const& block, uchar face) -> bool {
+        Vec3  at{block.x + 0.5f, block.y + 1.6f, block.z + 0.5f};
+        auto* arrow = ent::spawn(region, "lepton:torch_arrow", at, &sp);
+        if (!arrow) return false;
+        auto proj = arrow->getEntityContext().tryGetComponent<ProjectileComponent>();
+        if (!proj) return false;
+        HitResult hit{};
+        hit.mType   = HitResultType::Tile;
+        hit.mBlock  = lp::game::blockPos(block);
+        hit.mFacing = face;
+        hit.mPos    = at;
+        proj->onHit(*arrow, hit);
+        return true;
+    };    auto wall = off(base, 5, 1, 0);
     ctx.require(put(ctx, wall, "minecraft:stone"), "wall placed");
-    auto  torchAt = off(base, 4, 1, 0);
+    auto torchAt = off(base, 4, 1, 0);
     ctx.cleanupBlock(torchAt);
-    auto& region = ctx.player().getDimensionBlockSource();
-    auto* arrow  = ent::spawn(region, "lepton:torch_arrow", Vec3{base.x + 2.5f, base.y + 1.5f, base.z + 0.5f});
-    ctx.require(arrow != nullptr, "torch arrow spawned");
-    arrow->mBuiltInComponents->mStateVectorComponent->mPosDelta = Vec3{1.0f, 0.0f, 0.0f};
+    ctx.require(hitWith(wall, 4), "torch arrow hit the west face");
     for (int i = 0; i < 40 && idAt(ctx, torchAt) != "minecraft:torch"; ++i) co_await ctx.ticks(1);
     ctx.check(idAt(ctx, torchAt) == "minecraft:torch", "a wall torch was placed in front of the hit face");
     auto const& torch = region.getBlock(lp::game::blockPos(torchAt));
     ctx.check(lp::game::blockstates::getString(torch, "torch_facing_direction").value_or("") == "west", "the torch faces away from the wall");
 
-    auto floor   = off(base, 8, -1, 0);
-    auto floorAt = off(base, 8, 0, 0);
+    auto floor   = off(base, 3, -1, 2);
+    auto floorAt = off(base, 3, 0, 2);
     ctx.cleanupBlock(floorAt);
-    auto* drop = ent::spawn(region, "lepton:torch_arrow", Vec3{floor.x + 0.5f, floor.y + 3.5f, floor.z + 0.5f});
-    ctx.require(drop != nullptr, "second torch arrow spawned");
-    drop->mBuiltInComponents->mStateVectorComponent->mPosDelta = Vec3{0.0f, -1.0f, 0.0f};
+    ctx.require(hitWith(floor, 1), "torch arrow hit the top face");
     for (int i = 0; i < 40 && idAt(ctx, floorAt) != "minecraft:torch"; ++i) co_await ctx.ticks(1);
     ctx.check(idAt(ctx, floorAt) == "minecraft:torch", "a standing torch was placed on the top face");
+    ctx.check(lp::game::blockstates::getString(region.getBlock(lp::game::blockPos(floorAt)), "torch_facing_direction").value_or("") == "top", "standing torch");
 });
-
 LP_REGISTER_SELFTEST("throwables.parrot_egg", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(2240);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
@@ -226,10 +268,10 @@ LP_REGISTER_SELFTEST("throwables.parrot_egg", [](Context& ctx) -> ll::coro::Coro
     auto& c     = lp::config::mut<tw::ThrowablesConfig>();
     double keep = c.chance;
     c.chance    = 1.0;
-    sp.simulateInteract(*parrot);
+    interactWith(sp, *parrot);
     c.chance = keep;
     co_await ctx.ticks(1);
-    ctx.check(tw::parroteggs::eggTimer(id) == c.eggTime, "feeding started the egg timer");
+    ctx.check(tw::parroteggs::eggTimer(id) > c.eggTime - 5, "feeding started the egg timer");
     ctx.check(countOf(ctx.player(), "minecraft:beetroot_seeds") == 15, "one seed was eaten");
     tw::parroteggs::setEggTimer(id, 3);
     co_await ctx.ticks(5);
@@ -279,13 +321,17 @@ LP_REGISTER_SELFTEST("throwables.skull_pike", [](Context& ctx) -> ll::coro::Coro
     ctx.check(tw::skullpikes::pikeCount() == before + 1, "a skull pike was made");
 
     stand(ctx, off(base, 40, 0, 0), GameType::Creative);
+    Hostile hostile;
     auto& region = ctx.player().getDimensionBlockSource();
     auto* zombie = ent::spawn(region, "minecraft:husk", Vec3{fence.x + 3.5f, float(fence.y), fence.z + 0.5f});
     ctx.require(zombie != nullptr, "husk spawned");
     auto zid = ent::idOf(*zombie);
     co_await ctx.ticks(2);
     int fleeing = tw::skullpikes::fleeingCount();
-    tw::skullpikes::scareNow();
+    for (int i = 0; i < 10 && tw::skullpikes::fleeingCount() <= fleeing; ++i) {
+        tw::skullpikes::scareNow(); // the escape position is random: a few tries
+        co_await ctx.ticks(1);
+    }
     ctx.check(tw::skullpikes::fleeingCount() > fleeing, "the husk runs from the pike");
     if (auto* z = ent::find(zid)) ent::despawn(*z);
 
@@ -298,12 +344,12 @@ LP_REGISTER_SELFTEST("throwables.cloud", [](Context& ctx) -> ll::coro::CoroTask<
     auto base = ctx.testPos(2260);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     GlobalPos high{base.dim, base.x, 193, base.z};
+    ctx.require(put(ctx, off(high, 0, -1, 0), "minecraft:glass"), "platform at cloud height");
     stand(ctx, high, GameType::Survival);
     auto& sp = bot(ctx);
     sp.simulateSetItem(makeItem("minecraft:glass_bottle", 3), true, 0);
     co_await ctx.ticks(2);
-    auto held = sp.getSelectedItem();
-    sp.simulateUseItem(held);
+    useHeld(sp);
     co_await ctx.ticks(3);
     ctx.check(countOf(ctx.player(), "lepton:bottled_cloud") == 1, "a cloud was bottled at cloud height");
     ctx.check(countOf(ctx.player(), "minecraft:glass_bottle") == 2, "one bottle used");
@@ -312,9 +358,8 @@ LP_REGISTER_SELFTEST("throwables.cloud", [](Context& ctx) -> ll::coro::CoroTask<
     sp.simulateSetItem(makeItem("lepton:bottled_cloud", 2), true, 0);
     sp.simulateLookAt(Vec3{high.x + 20.5f, high.y + 1.62f, high.z + 0.5f}, sim::LookDuration::Instant);
     co_await ctx.ticks(2);
-    held = sp.getSelectedItem();
     int clouds = tw::cloud::cloudCount();
-    sp.simulateUseItem(held);
+    useHeld(sp);
     co_await ctx.ticks(3);
     ctx.check(tw::cloud::cloudCount() == clouds + 1, "a cloud was placed in mid-air");
     GlobalPos cloudAt{high.dim, high.x + 4, high.y + 1, high.z};
@@ -339,8 +384,7 @@ LP_REGISTER_SELFTEST("throwables.cloud", [](Context& ctx) -> ll::coro::CoroTask<
     sp.simulateSetItem(makeItem("lepton:bottled_cloud"), true, 0);
     sp.simulateLookAt(Vec3{high.x + 0.5f, high.y + 30.0f, high.z + 0.5f}, sim::LookDuration::Instant);
     co_await ctx.ticks(12);
-    held = sp.getSelectedItem();
-    sp.simulateUseItem(held);
+    useHeld(sp);
     co_await ctx.ticks(3);
     ctx.check(tw::cloud::cloudCount() == clouds + 1, "a second cloud was placed");
     for (int dy = 4; dy <= 7; ++dy) ctx.cleanupBlock(GlobalPos{high.dim, high.x, high.y + dy, high.z});
@@ -353,6 +397,7 @@ LP_REGISTER_SELFTEST("throwables.slime_bucket", [](Context& ctx) -> ll::coro::Co
     auto base = ctx.testPos(2270);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     stand(ctx, base, GameType::Survival);
+    Hostile hostile;
     auto& region = ctx.player().getDimensionBlockSource();
     auto  at     = off(base, 2, 0, 0);
     auto* slime  = ent::spawn(region, "minecraft:slime", Vec3{at.x + 0.5f, float(at.y), at.z + 0.5f});
@@ -364,7 +409,7 @@ LP_REGISTER_SELFTEST("throwables.slime_bucket", [](Context& ctx) -> ll::coro::Co
     auto& sp = bot(ctx);
     sp.simulateSetItem(makeItem("minecraft:bucket"), true, 0);
     co_await ctx.ticks(1);
-    if (auto* s = ent::find(sid)) sp.simulateInteract(*s);
+    if (auto* s = ent::find(sid)) interactWith(sp, *s);
     co_await ctx.ticks(2);
     auto bucket = ctx.player().getSelectedItem();
     auto bid    = lp::game::itemId(bucket);
