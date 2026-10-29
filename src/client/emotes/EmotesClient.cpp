@@ -395,8 +395,11 @@ void drawEmoteButton(ui::Overlay& o, MenuEntry const& e, ui::Rect r) {
     else if (e.tier >= 1) drawIcon(dc, "patreon_t1", r.x + 4, r.y + 4);
 }
 
+bool gReportedGrid = false;
+
 void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
     if (!cfg().enableEmotes || !net::serverHasMod() || !gServer.enabled) return;
+    if (s.frames <= 1) gReported = gReportedGrid = false; // positions are logged once per opening
     auto  entries = menuEntries();
     int   W       = static_cast<int>(s.size.x);
     int   H       = static_cast<int>(s.size.y);
@@ -412,7 +415,8 @@ void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
     ui::Rect toggle{static_cast<float>(buttonX + W - 2 - kButtonWidth * kEmotesPerRow), static_cast<float>(buttonY),
                     static_cast<float>(kButtonWidth * kEmotesPerRow), 20};
     o.button(toggle, ctr("quark.gui.button.emotes", "Emotes"), [] {
-        gVisible = !gVisible;
+        gVisible      = !gVisible;
+        gReportedGrid = false;
         log().info("emotes: menu {}", gVisible ? "shown" : "hidden");
     });
 
@@ -456,9 +460,8 @@ void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
         log().info("emotes: chat buttons drawn ({} emotes) toggle at {:.4f},{:.4f}", entries.size(),
                    (toggle.x + toggle.w / 2) / s.size.x, (toggle.y + toggle.h / 2) / s.size.y);
     }
-    static bool reportedGrid = false;
-    if (gVisible && !reportedGrid && !placed.empty() && s.settled) {
-        reportedGrid = true;
+    if (gVisible && !gReportedGrid && !placed.empty() && s.settled) {
+        gReportedGrid = true;
         for (auto const& [e, r] : placed)
             log().info("emotes: button {} at {:.4f},{:.4f}", e->id, (r.x + r.w / 2) / s.size.x, (r.y + r.h / 2) / s.size.y);
     }
