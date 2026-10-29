@@ -21,7 +21,7 @@ Invoke-Chat '/clear @s'
 
 $mark = Get-LogMark
 Invoke-Chat '/quark selftest "gadgets.gallery"'
-foreach ($view in 'grid', 'closeup', 'items', 'abacus', 'quill', 'compass') {
+foreach ($view in 'grid', 'closeup', 'items', 'items_back', 'abacus', 'quill', 'compass') {
     Wait-LogLine "GALLERY view $view" 120 -Since $mark | Out-Null
     Start-Sleep -Seconds 4
     Save-Screenshot $view | Out-Null

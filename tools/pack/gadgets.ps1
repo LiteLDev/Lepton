@@ -44,7 +44,8 @@ $btex = 'textures/blocks/lepton_gadgets'
 
 function Write-Item([string]$Path, [string]$Icon, [hashtable]$Name, $Menu, $Extra) {
     $id = "lepton:$Path"
-    $c = [ordered]@{ 'minecraft:icon' = (Add-ItemTexture "$tex/$Icon"); 'minecraft:max_stack_size' = 1 }
+    # data-driven items show "item.<id>" without a display_name: point it at the texts.d key
+    $c = [ordered]@{ 'minecraft:icon' = (Add-ItemTexture "$tex/$Icon"); 'minecraft:display_name' = [ordered]@{ value = "item.$id.name" }; 'minecraft:max_stack_size' = 1 }
     if ($Extra) { foreach ($k in $Extra.Keys) { $c[$k] = $Extra[$k] } }
     Write-PackJson (Join-Path $script:BP "items/$Path.json") ([ordered]@{
             format_version   = $script:ItemFormat
@@ -234,6 +235,7 @@ Write-PackJson (Join-Path $script:BP 'entities/tiny_potato_item.json') ([ordered
                 properties = [ordered]@{
                     'lepton:face' = [ordered]@{ type = 'int'; range = @(0, 5); default = 1; client_sync = $true }
                     'lepton:kind' = [ordered]@{ type = 'int'; range = @(0, 2); default = 0; client_sync = $true }
+                    'lepton:yaw'  = [ordered]@{ type = 'int'; range = @(0, 3); default = 0; client_sync = $true }
                 }
             }
             components  = [ordered]@{
@@ -271,16 +273,20 @@ Write-PackJson (Join-Path $script:RP 'models/entity/lepton_tiny_potato_item.geo.
 $pf = "q.property('lepton:face')"
 $pk = "q.property('lepton:kind')"
 # Centre heights in px: on top of the 6 px potato, half way up the sides, flat on the ground below.
-$centreY = "($pf == 1 ? 8.5 : ($pf == 0 ? 0.3 : 3.0))"
+$centreY = "($pf == 1 ? 7.4 : ($pf == 0 ? 0.3 : 3.0))"
+# yaw of the pose per side (south = 0); up/down use the potato's facing, passed in lepton:yaw
+$sideYaw = "($pf == 2 ? 180 : ($pf == 4 ? 90 : ($pf == 5 ? -90 : ($pf == 3 ? 0 : q.property('lepton:yaw') * 90))))"
 Write-PackJson (Join-Path $script:RP 'animations/lepton_tiny_potato_item.animation.json') ([ordered]@{
         format_version = '1.8.0'
         animations     = [ordered]@{
             'animation.lepton.tiny_potato_item.pose' = [ordered]@{
                 loop  = $true
                 bones = [ordered]@{
-                    root     = [ordered]@{ position = @(0, "$centreY - 8", 0) }
+                    # the entity keeps yaw 0 (model -z = world south): the side turns the whole pose
+                    root     = [ordered]@{ position = @(0, "$centreY - 8", 0); rotation = @(0, $sideYaw, 0) }
                     face     = [ordered]@{ rotation = @("($pf == 0 ? -90 : 0)", 0, 0) }
-                    holder   = [ordered]@{ position = @(0, 0, "($pf >= 2 ? -2.6 : 0)"); scale = "($pk == 1 ? 0.25 : 0.35)" }
+                    # x/y: undo the hand offset of Bedrock's held-item pose so the item sits centred
+                    holder   = [ordered]@{ position = @(2, 1, "($pf >= 2 ? -2.6 : 0)"); scale = "($pk == 1 ? 0.25 : ($pk == 2 ? 0.6 : 0.35))" }
                     rightArm = [ordered]@{ rotation = @(0, "($pk == 0 ? 90 : 0)", 0) }
                 }
             }

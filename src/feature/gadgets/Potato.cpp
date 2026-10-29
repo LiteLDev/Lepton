@@ -337,15 +337,6 @@ int facingOf(Block const& b) {
     return d == "north" ? 2 : d == "west" ? 4 : d == "east" ? 5 : 3;
 }
 
-float yawFor(int dir) {
-    switch (dir) {
-    case 2: return 180.f;
-    case 4: return 90.f;
-    case 5: return -90.f;
-    default: return 0.f;
-    }
-}
-
 void setIntProperty(Actor& actor, std::string_view name, int value) {
     if (auto p = actor.getEntityContext().tryGetComponent<PropertyComponent>())
         ActorPropertyUtils::tryQueueIntValue(*p, actor, HashedString(name).getHash(), value);
@@ -394,7 +385,8 @@ void syncDisplays(BlockSource& region, GlobalPos const& pos, Tater& t) {
             changed = true;
         }
         a->teleportTo(at, false, 0, 1, false);
-        orient(*a, yawFor(i >= 2 ? i : facing));
+        orient(*a, 0.f); // the pose turns itself (animation): see tools/pack/gadgets.ps1
+        setIntProperty(*a, "lepton:yaw", facing == 3 ? 0 : facing == 4 ? 1 : facing == 2 ? 2 : 3); // x 90 degrees, as the side yaws
         a->setCarriedItem(item);
         setIntProperty(*a, "lepton:face", i);
         setIntProperty(*a, "lepton:kind", kindOf(item));

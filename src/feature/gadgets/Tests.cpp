@@ -546,10 +546,12 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     auto base = ctx.testPos(2360);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto& region = regionOf(ctx);
-    std::vector<GlobalPos> placed;
+    std::vector<GlobalPos>                             placed;
+    std::vector<std::pair<GlobalPos, Block const*>> floors; // restored afterwards (not to air)
     for (int v = 0; v < 25; ++v) {
         auto p = off(base, (v % 5) * 2, 0, (v / 5) * 2);
-        ctx.require(ctx.setBlock(off(p, 0, -1, 0), "minecraft:smooth_stone"), "floor");
+        floors.emplace_back(off(p, 0, -1, 0), &region.getBlock(lp::game::blockPos(off(p, 0, -1, 0))));
+        if (auto const* stone = bs::of("minecraft:smooth_stone")) lp::game::setBlock(region, lp::game::blockPos(off(p, 0, -1, 0)), *stone);
         auto const* b = bs::of(g::kPotato, {{"minecraft:cardinal_direction", "south"}});
         ctx.require(b && lp::game::setBlock(region, lp::game::blockPos(p), *b), "potato placed");
         g::potato::registerAt(p, kNames[v], v == 1);
@@ -601,8 +603,14 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         view(4.5f, 3.0f, 12.5f, 35.f, 180.f); // south of the grid, looking north
         co_await ctx.ticks(120);
         ctx.info("GALLERY view closeup");
-        view(0.5f, 0.0f, 6.5f, 35.f, 180.f); // south of "Dinnerbone" (dx 0, dz 4), looking at it
+        view(0.5f, 0.0f, 5.9f, 45.f, 180.f); // south of "Dinnerbone" (dx 0, dz 4), looking at it
         co_await ctx.ticks(120);
+        ctx.info("GALLERY view items");
+        view(0.5f, 0.0f, 2.1f, 45.f, 180.f); // in front of the default potato (it faces south)
+        co_await ctx.ticks(100);
+        ctx.info("GALLERY view items_back");
+        view(-0.7f, 0.0f, -0.7f, 45.f, -45.f); // north-west of it, looking south-east
+        co_await ctx.ticks(100);
         if (auto* v = viewerRef()) {
             auto abacus = lp::game::makeItem(g::kAbacus);
             g::putInt(abacus, "boundPosX", bound.x);
@@ -611,9 +619,7 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
             lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), abacus);
             lp::game::inv::sync(*v);
         }
-        ctx.info("GALLERY view items");
-        view(1.8f, 0.0f, 1.8f, 37.f, 135.f); // south-east of the default potato, looking at it
-        co_await ctx.ticks(120);
+
         ctx.info("GALLERY view abacus");
         view(14.5f, 1.0f, 10.5f, 25.f, 160.f); // looking at the diamond block
         co_await ctx.ticks(120);
@@ -640,7 +646,9 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         // compasses in the End point at the exit portal (0, 0): stand south-east of it, look north
         if (auto* v = viewerRef()) {
             auto compass = lp::game::makeItem("minecraft:compass");
+            // in the hand and in the next hotbar slot
             lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), compass);
+            lp::game::inv::playerInventory(*v).setItem((v->getSelectedItemSlot() + 1) % 9, compass);
             lp::game::inv::sync(*v);
             v->teleport(Vec3{40.5f, 70.f, 40.5f}, DimensionType(2), Vec2{0.f, 180.f});
         }
@@ -655,6 +663,7 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         co_await ctx.ticks(100);
         if (auto* v = viewerRef()) {
             lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), ItemStack{});
+            lp::game::inv::playerInventory(*v).setItem((v->getSelectedItemSlot() + 1) % 9, ItemStack{});
             lp::game::inv::sync(*v);
             v->teleport(Vec3{base.x + 4.5f, static_cast<float>(base.y), base.z + 12.5f}, DimensionType(base.dim), Vec2{0.f, 180.f});
         }
@@ -664,6 +673,7 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     for (auto const& p : placed) lp::game::clearBlock(region, lp::game::blockPos(p));
     co_await ctx.ticks(3);
     for (auto const& p : placed) clearItemsNear(ctx, p);
+    for (auto const& [p, b] : floors) lp::game::setBlock(region, lp::game::blockPos(p), *b);
 });
 
 LP_REGISTER_SELFTEST("gadgets.potato_comparator", [](Context& ctx) -> ll::coro::CoroTask<> {

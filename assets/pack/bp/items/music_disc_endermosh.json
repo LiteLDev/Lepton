@@ -10,6 +10,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_gadgets_lepton_gadgets_music_disc_endermosh",
+      "minecraft:display_name": {
+        "value": "item.lepton:music_disc_endermosh.name"
+      },
       "minecraft:max_stack_size": 1,
       "minecraft:rarity": "rare",
       "minecraft:record": {

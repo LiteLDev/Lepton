@@ -9,6 +9,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_gadgets_lepton_gadgets_abacus",
+      "minecraft:display_name": {
+        "value": "item.lepton:abacus.name"
+      },
       "minecraft:max_stack_size": 1
     }
   }

@@ -7,7 +7,12 @@
         "root": {
           "position": [
             0,
-            "(q.property('lepton:face') == 1 ? 8.5 : (q.property('lepton:face') == 0 ? 0.3 : 3.0)) - 8",
+            "(q.property('lepton:face') == 1 ? 7.4 : (q.property('lepton:face') == 0 ? 0.3 : 3.0)) - 8",
+            0
+          ],
+          "rotation": [
+            0,
+            "(q.property('lepton:face') == 2 ? 180 : (q.property('lepton:face') == 4 ? 90 : (q.property('lepton:face') == 5 ? -90 : (q.property('lepton:face') == 3 ? 0 : q.property('lepton:yaw') * 90))))",
             0
           ]
         },
@@ -20,11 +25,11 @@
         },
         "holder": {
           "position": [
-            0,
-            0,
+            2,
+            1,
             "(q.property('lepton:face') >= 2 ? -2.6 : 0)"
           ],
-          "scale": "(q.property('lepton:kind') == 1 ? 0.25 : 0.35)"
+          "scale": "(q.property('lepton:kind') == 1 ? 0.25 : (q.property('lepton:kind') == 2 ? 0.6 : 0.35))"
         },
         "rightArm": {
           "rotation": [

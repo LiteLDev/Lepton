@@ -118,9 +118,16 @@ natively when the world loads.
   Names are normalised like Quark (`[^a-z0-9/._-]` -> `_`), so "Kyle Hyde" matches `kyle_hyde`.
 - Drops: the potato item, keeping its name (custom name) and the angry flag, plus the 6 held items.
   Breaking in creative drops only the held items.
-- Comparator output (Java `getRedstoneSignalFromBlockEntity`): not ported. Data-driven blocks can't
-  declare an analog output and `BlockType::hasComparatorSignal` is a folded function shared by many
-  blocks (hooking it would change them all).
+- Comparator output (Java `getRedstoneSignalFromBlockEntity`): `floor(n/6 * 14) + 1` for n > 0 held
+  items, 0 when empty. Data-driven blocks can't declare an analog output and
+  `BlockType::hasComparatorSignal` is folded with other functions, so the tiny potato's BlockType gets
+  its own copy of its virtual table with `hasComparatorSignal` / `getComparatorSignal` replaced
+  (`PotatoComparator.cpp`); vanilla comparators read it like a container and are re-ticked when the
+  held items change.
+- Held items are drawn by one `lepton:tiny_potato_item` display entity per item (holding it like a
+  hand, posed by the `lepton:face` / `lepton:kind` properties: on top, against each side, flat
+  below; blocks smaller, a held potato a little larger, as Quark's renderer). Entity ids live with the
+  potato's data; orphans are removed.
 
 ### 2.3 Textures and sounds
 
@@ -259,8 +266,9 @@ Sound events (`sounds.d/gadgets.json`): `lepton.ambient.<name>` (category record
     daughter/child/children/tomato as Quark's table).
 - Random jump: 1 in 100 per tick for every loaded potato.
 - Jump frames: `t` = 20..1 ticks left -> frame `ceil(t/2)`; frame k shows the potato raised
-  `|sin(k*2/10*pi)| * 0.2` blocks, tilted `sin(...) * 2` degrees and shifted `sin(...) * 0.05` (the
-  geometry of every frame is generated).
+  `|sin(k*2/10*pi)| * 0.2` blocks and shifted `sin(...) * 0.05` along its x (a
+  `minecraft:transformation` per facing and frame; the look is a bone of one geometry chosen by
+  `bone_visibility`).
 - Item: names with a typo of "vazkii" (`vaskii, vazki, voskii, vazkkii, vazkki, vazzki, vaskki,
   vozkii, vazkil, vaskil, vazkill, vaskill, vaski`) in a player's inventory send the next line of
   the "wrong neighbourhood" song (17 lines, red) every 30 ticks, counted in the stack's user data.
@@ -351,13 +359,12 @@ id), `/quark gadgets potato angry` (an angry tiny potato, Java's `is_angry` comp
 - **Creative tab quills** and the `quark:pathfinders_quill` loot function: Bedrock creative items
   can't carry data; replaced by `/quark gadgets quill <biome>`.
 - **Advancements** (`pat_potato`, `pathfinder_map_center`) are not ported (SPEC §8).
-- **Tiny potato held items** are kept, returned and dropped, but not drawn on the potato: custom
-  blocks can't render item stacks and an entity per held item would not stay in sync with the
-  block. **Enchanted names / rune colours** (glint) can't be drawn on a block or on a single
+- **Enchanted names / rune colours** (glint) can't be drawn on a block or on a single
   stack without enchanting it; they still select the variant like Quark. Contributor head equip
   (Quark's patreon reward) is not ported.
-- **Tiny potato tilt**: Bedrock block transformations rotate in 90° steps only, so the 2° tilt is
-  baked into per-frame geometry (`lepton:jump` frames, 2 ticks each) instead of being continuous.
+- **Tiny potato jump**: in 2-tick frames (`lepton:jump`) instead of per-frame interpolation; Quark's
+  extra `sin * 2` degree tilt is left out (block transformations rotate in 90 degree steps, and
+  per-frame geometries with tilted bones made the client draw the block as a plain cube).
 - **Name sounds**: Quark plays voice clips; Lepton plays original jingles under the same triggers
   (no Quark audio may be copied).
 - **Ambience loop** uses a server re-trigger (Bedrock sound definitions can't loop a record).
@@ -389,6 +396,7 @@ Selftests (dx 2300..2399):
 | `gadgets.potato_place` | 2320 | placement, facing, variant from name |
 | `gadgets.potato_slots` | 2330 | put/take items per face, drops on break |
 | `gadgets.potato_jump` | 2340 | jump frames advance and reset |
+| `gadgets.potato_comparator` | 2350 | a comparator reads 8 for 3 items, updates to 10, 0 without the potato |
 | `gadgets.potato_names` | - | name -> variant table, gender table |
 | `gadgets.recipes` | - | tiny potato recipe selection |
 | `gadgets.gallery` | 2360 | every look selected by its name; views for the client screenshots |
