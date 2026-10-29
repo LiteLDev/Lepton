@@ -4,9 +4,10 @@
 //
 // How it works: Bedrock's screens are JSON-UI scenes. Lepton does not edit them; it draws on top
 // of them natively. LeviLamina's `AfterUIRenderEvent` runs after every ScreenView rendered a
-// frame, with its `MinecraftUIRenderContext`; we identify the screen by the name of its visual
-// tree root (`hud_screen`, `inventory_screen`, `small_chest_screen`, `large_chest_screen`, ...,
-// see `ui::screenName`) and call the registered hooks with a `DrawContext` (text, rectangles,
+// frame, with its `MinecraftUIRenderContext`; we identify the screen by the element name of its
+// visual tree root without the JSON-UI namespace (`hud_screen`, `inventory_screen`,
+// `small_chest_screen`, `large_chest_screen`, ...; the game names them `hud.hud_screen`,
+// `crafting.inventory_screen`, ...: `ScreenInfo::qualifiedName`) and call the registered hooks with a `DrawContext` (text, rectangles,
 // item icons in UI coordinates). Mouse and keyboard events (LeviLamina `MouseInputEvent` /
 // `KeyInputEvent`) are routed to the widgets of the top screen first; a click on a widget is
 // cancelled for the game. Custom screens (radial menus, grids) are pushed as an empty JSON-UI
@@ -106,9 +107,15 @@ struct Slot {
 };
 
 struct ScreenInfo {
-    std::string       name; ///< visual tree root name, e.g. "inventory_screen"
+    std::string       name; ///< visual tree root element name, e.g. "inventory_screen"
     Vec               size; ///< UI units
     std::vector<Slot> slots;
+    std::string       qualifiedName; ///< with the JSON-UI namespace, e.g. "crafting.inventory_screen"
+    /// Frames rendered since the screen opened (1 = first frame).
+    int               frames = 0;
+    /// Screens animate in (the inventory slides up): slot rects follow the animation every frame
+    /// and are final once `settled` (unchanged for a few frames). Wait for it for one-shot work.
+    bool              settled = false;
 };
 
 /// Name of the top screen ("hud_screen" when nothing is open).

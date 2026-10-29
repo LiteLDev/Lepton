@@ -3,12 +3,18 @@
 //   /quark debug form        sends a SimpleForm (logs "form test: clicked <button>")
 //   /quark debug container   opens a 27-slot virtual container at the player's position
 
+#include "ll/api/chrono/GameChrono.h"
 #include "ll/api/command/CommandHandle.h"
+#include "ll/api/coro/CoroTask.h"
+#include "ll/api/service/Bedrock.h"
+#include "ll/api/thread/ServerThreadExecutor.h"
 
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/Level.h"
+#include "mc/platform/UUID.h"
 
 #include "game/Blocks.h"
 #include "game/Forms.h"
@@ -46,8 +52,16 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         lp::game::vc::Spec   spec;
         spec.titleKey      = "lp.debug.container.title";
         spec.titleFallback = "Lepton test container";
-        if (lp::game::vc::open(*p, pos, spec)) output.success("Lepton container opened.");
-        else output.error("Could not open the container.");
+        // Typed in the chat: the client rejects a container screen while its chat screen is still
+        // closing, so open it half a second later.
+        auto uuid = p->getUuid();
+        ll::coro::keepThis([uuid, pos, spec]() -> ll::coro::CoroTask<> {
+            co_await ll::chrono::ticks(10);
+            auto level = ll::service::getLevel();
+            auto* pl   = level ? level->getPlayer(uuid) : nullptr;
+            if (pl && !lp::game::vc::open(*pl, pos, spec)) lp::log().warn("debug container: could not open it for {}", pl->getRealName());
+        }).launch(ll::thread::ServerThreadExecutor::getDefault());
+        output.success("Lepton container opening.");
     });
 });
 

@@ -3,6 +3,7 @@
 #include "client/ui/Ui.h"
 
 #include <algorithm>
+#include <chrono>
 #include <deque>
 #include <map>
 #include <mutex>
@@ -27,6 +28,8 @@
 #include "mc/client/gui/screens/ScreenController.h"
 #include "mc/client/gui/screens/ScreenView.h"
 #include "mc/client/gui/screens/UIScene.h"
+#include "mc/client/gui/screens/BaseScreen.h"
+#include "mc/client/gui/screens/DefaultUIScreenSetupCleanupStrategy.h"
 #include "mc/client/gui/screens/interfaces/ISceneStack.h"
 #include "mc/client/gui/screens/models/ClientInstanceModel.h"
 #include "mc/client/renderer/BaseActorRenderContext.h"
@@ -97,6 +100,33 @@ std::shared_ptr<CustomScreen>               gCustom;
 bool                                        gCustomPushed = false;
 int                                         gCustomSeenFrames = 0;
 std::map<std::string, int>                  gSeenFrames; ///< frames rendered per screen name (tree dump after 20)
+struct Shown {
+    int                                   frames = 0;
+    std::chrono::steady_clock::time_point last;
+    float                                 layout = 0; ///< slot layout signature of the last frame
+    int                                   stable = 0; ///< frames the signature did not change
+};
+std::map<std::string, Shown> gShown; ///< frames since each screen was (re)opened
+
+/// Frames `name` has been rendered since it was last opened (1 on the first frame).
+int countFrame(std::string const& name) {
+    auto  now = std::chrono::steady_clock::now();
+    auto& s   = gShown[name];
+    if (s.frames == 0 || now - s.last > std::chrono::milliseconds(300)) s = Shown{};
+    s.last = now;
+    return ++s.frames;
+}
+
+/// Screens animate in (the inventory slides up): the layout has settled once the slot positions
+/// stayed put for a few frames.
+bool settledLayout(std::string const& name, std::vector<Slot> const& slots) {
+    float sig = 0;
+    for (auto const& s : slots) sig += s.rect.x * 3 + s.rect.y * 7 + s.rect.w + s.rect.h;
+    auto& st  = gShown[name];
+    st.stable = st.frames > 1 && sig == st.layout ? st.stable + 1 : 0;
+    st.layout = sig;
+    return st.stable >= 4;
+}
 
 float invGuiScale() {
     auto* c = client::currentClient();
@@ -143,12 +173,18 @@ void collectSlots(UIControl& c, std::vector<Slot>& out, std::set<std::pair<std::
     if (depth > 64) return;
     auto const& size = c.mSize.get();
     if (size.x >= 8 && size.y >= 8 && size.x <= 40 && size.y <= 40) {
-        c.findAllCollectionIndices([&](std::string const& name, int index) {
-            if (name.find("item") == std::string::npos) return;
-            if (!seen.insert({name, index}).second) return;
+        // The callback's index argument is not usable through this binding (it arrives as an
+        // address): take the names from it and ask for each index.
+        std::vector<std::string> names;
+        c.findAllCollectionIndices([&](std::string const& name, int) {
+            if (name.find("item") != std::string::npos) names.push_back(name);
+        });
+        for (auto const& name : names) {
+            int index = c.findCollectionIndex(name);
+            if (index < 0 || !seen.insert({name, index}).second) continue;
             auto p = positionOf(c);
             out.push_back(Slot{name, index, Rect{p.x, p.y, size.x, size.y}});
-        });
+        }
     }
     for (auto const& child : c.mChildren.get())
         if (child) collectSlots(*child, out, seen, depth + 1);
@@ -159,7 +195,7 @@ void dumpControl(UIControl& c, int depth, std::string& out) {
     auto p    = positionOf(c);
     auto size = c.mSize.get();
     std::string idx;
-    c.findAllCollectionIndices([&](std::string const& name, int index) { idx += " [" + name + ":" + std::to_string(index) + "]"; });
+    c.findAllCollectionIndices([&](std::string const& name, int) { idx += " [" + name + ":" + std::to_string(c.findCollectionIndex(name)) + "]"; });
     out += std::string(static_cast<size_t>(depth) * 2, ' ') + c.mName.get() + " @" + std::to_string(static_cast<int>(p.x)) + ","
          + std::to_string(static_cast<int>(p.y)) + " " + std::to_string(static_cast<int>(size.x)) + "x"
          + std::to_string(static_cast<int>(size.y)) + idx + "\n";
@@ -167,7 +203,16 @@ void dumpControl(UIControl& c, int depth, std::string& out) {
         if (child) dumpControl(*child, depth + 1, out);
 }
 
-std::string screenNameOf(ScreenView const& view) {
+/// The game names visual tree roots "<namespace>.<element>" ("crafting.inventory_screen",
+/// "hud.hud_screen"); hooks match the element name ("inventory_screen").
+/// `ClientInstance::getTopScreenName` may add a detail ("world_loading_progress_screen - ...").
+std::string shortScreenName(std::string qualified) {
+    if (auto dash = qualified.find(" - "); dash != std::string::npos) qualified.resize(dash);
+    auto dot = qualified.rfind('.');
+    return dot == std::string::npos ? qualified : qualified.substr(dot + 1);
+}
+
+std::string qualifiedNameOf(ScreenView const& view) {
     auto const& tree = view.mVisualTree.get();
     return tree ? tree->mRootControlName.get() : std::string{};
 }
@@ -289,6 +334,35 @@ void addTooltip(TooltipFn fn) { tooltips().push_back(std::move(fn)); }
 
 std::shared_ptr<CustomScreen> currentScreen() { return gCustom; }
 
+namespace {
+/// The render setup of the game's UI screens. The game's screen factory gives every UI scene a
+/// `DefaultUIScreenSetupCleanupStrategy`; a scene without one is never rendered. That class has
+/// no exported constructor (and its base's vtable is not exported either), so this stand-in has
+/// the same vtable order (deleting destructor, setupScreen, cleanupScreen, getEyeRenderingMode)
+/// and layout, and runs the game's own functions on itself.
+class UiScreenSetupCleanup {
+public:
+    explicit UiScreenSetupCleanup(IClientInstance& client) : mClient(Bedrock::NonOwnerPointer<IClientInstance>(client)) {}
+    virtual ~UiScreenSetupCleanup() = default;
+    virtual void setupScreen(ScreenContext& sc) { vanilla().$setupScreen(sc); }
+    virtual void cleanupScreen(ScreenContext& sc) { vanilla().$cleanupScreen(sc); }
+    virtual EyeRenderingModeBit getEyeRenderingMode() const {
+        return const_cast<UiScreenSetupCleanup*>(this)->vanilla().$getEyeRenderingMode();
+    }
+
+    static std::unique_ptr<AbstractScreenSetupCleanupStrategy> make(IClientInstance& client) {
+        return std::unique_ptr<AbstractScreenSetupCleanupStrategy>(
+            reinterpret_cast<AbstractScreenSetupCleanupStrategy*>(new UiScreenSetupCleanup(client))
+        );
+    }
+
+private:
+    Bedrock::NotNullNonOwnerPtr<IClientInstance> mClient;
+    DefaultUIScreenSetupCleanupStrategy& vanilla() { return *reinterpret_cast<DefaultUIScreenSetupCleanupStrategy*>(this); }
+};
+static_assert(sizeof(UiScreenSetupCleanup) == sizeof(DefaultUIScreenSetupCleanupStrategy));
+} // namespace
+
 bool openScreen(std::shared_ptr<CustomScreen> screen) {
     auto* c = client::currentClient();
     if (!c || !client::inLevel() || !screen) return false;
@@ -299,6 +373,7 @@ bool openScreen(std::shared_ptr<CustomScreen> screen) {
             log().error("ui: the scene {} could not be created (resource pack missing?)", kCustomScreenName);
             return false;
         }
+        scene->setScreenSetupCleanup(UiScreenSetupCleanup::make(*c));
         if (gCustom) gCustom->onClose();
         gCustom           = std::move(screen);
         gCustomPushed     = true;
@@ -367,8 +442,9 @@ void processInput(std::deque<InputEvent> events) {
 }
 
 void onRender(ll::event::AfterUIRenderEvent& ev) {
-    auto& view = ev.screenView();
-    auto  name = screenNameOf(view);
+    auto& view      = ev.screenView();
+    auto  qualified = qualifiedNameOf(view);
+    auto  name      = shortScreenName(qualified);
     if (name.empty()) return;
 
     std::deque<InputEvent> events;
@@ -392,10 +468,11 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     std::vector<Region>                regions;
     std::vector<std::function<void()>> callbacks;
 
+    int frames = countFrame(name);
     if (++gSeenFrames[name] == 20) { // after the layout settled
         std::string tree;
         if (auto const& t = view.mVisualTree.get(); t && t->mRootControl.get()) dumpControl(*t->mRootControl.get(), 0, tree);
-        log().debug("ui: screen {} (top: {}) control tree:\n{}", name, c->getTopScreenName(), tree);
+        log().debug("ui: screen {} (top: {}) control tree:\n{}", qualified, c->getTopScreenName(), tree);
     }
 
     try {
@@ -407,7 +484,7 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
                 gCustom->render(dc, mouse);
             }
         } else {
-            ScreenInfo info{name, dc.screenSize(), {}};
+            ScreenInfo info{name, dc.screenSize(), {}, qualified, frames, false};
             bool       slotsDone = false;
             for (auto const& [glob, fn] : overlays()) {
                 if (!core::globMatch(glob, name)) continue;
@@ -415,7 +492,8 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
                     std::set<std::pair<std::string, int>> seen;
                     if (auto const& t = view.mVisualTree.get(); t && t->mRootControl.get())
                         collectSlots(*t->mRootControl.get(), info.slots, seen, 0);
-                    slotsDone = true;
+                    info.settled = settledLayout(name, info.slots);
+                    slotsDone    = true;
                 }
                 Overlay::Impl oimpl{dc, regions, callbacks, mouse, focused};
                 Overlay       o(oimpl);
@@ -432,12 +510,13 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     else if (gCustom && isHud && gCustomSeenFrames > 0 && !isCustomScreenName(c->getClientSceneStack()->getScreenName()))
         closeCustom(false);
 
-    // The HUD renders first in every frame, also below open screens: it only becomes the "top
-    // screen" when no menu is shown, so input never sees a half-updated state.
-    bool hudOnTop = isHud && !c->isShowingMenu();
+    // Every layer renders each frame: the HUD first (also below open screens), then the open
+    // screens, then always-on layers (debug_screen, toast_screen, ...). Only the top screen's
+    // widgets take input; the HUD is the top screen when no menu is shown.
+    bool onTop = isHud ? !c->isShowingMenu() : isCustom || name == shortScreenName(c->getTopScreenName());
+    if (!onTop) return;
     if (!isHud) gCallbacks = std::move(callbacks);
     std::lock_guard lock(gInputMutex);
-    if (isHud && !hudOnTop) return;
     gTopScreen   = name;
     gCustomOnTop = isCustom && gCustom != nullptr;
     if (isHud) gRegions.clear();
@@ -453,14 +532,19 @@ void onMouse(ll::event::MouseInputEvent& ev) {
     gMouse = pos;
     if (action < 1 || action > 3) return; // move / wheel
     if (gTopScreen == "hud_screen" && !gCustomOnTop) return;
+    // Releases always reach the game: it may have seen the press (before a screen opened), and a
+    // swallowed release leaves the button held down for it.
     if (gCustomOnTop) {
-        if (down) gEvents.push_back(InputEvent{InputEvent::Kind::CustomClick, -1, {}, pos, action - 1});
-        ev.cancel();
+        if (down) {
+            gEvents.push_back(InputEvent{InputEvent::Kind::CustomClick, -1, {}, pos, action - 1});
+            ev.cancel();
+        }
         return;
     }
     for (auto const& r : gRegions) {
         if (!r.rect.contains(pos.x, pos.y)) continue;
-        if (down && action == 1) {
+        if (!down) return;
+        if (action == 1) {
             if (r.widget >= 0) {
                 gEvents.push_back(InputEvent{InputEvent::Kind::Click, r.widget});
                 gFocusedField.clear();
@@ -479,21 +563,22 @@ void onKey(ll::event::KeyInputEvent& ev) {
     bool down = ev.isDown();
     std::lock_guard lock(gInputMutex);
     if (key == Key::Shift) gShiftDown = down;
+    // Releases always reach the game (see onMouse): the key that opened a custom screen is
+    // released while it is open, and the game must see that or it never fires that key again.
+    if (!down) return;
     if (gCustomOnTop) {
-        if (down) gEvents.push_back(InputEvent{InputEvent::Kind::CustomKey, -1, {}, {}, 0, key});
+        gEvents.push_back(InputEvent{InputEvent::Kind::CustomKey, -1, {}, {}, 0, key});
         ev.cancel();
         return;
     }
     if (gFocusedField.empty() || gTopScreen == "hud_screen") return;
     if (key == Key::Escape || key == Key::Enter) {
-        if (down) gFocusedField.clear();
+        gFocusedField.clear();
         ev.cancel();
         return;
     }
-    if (down) {
-        if (char ch = keyToChar(key, gShiftDown)) gEvents.push_back(InputEvent{InputEvent::Kind::FieldChar, -1, gFocusedField, {}, 0, key, ch});
-        else gEvents.push_back(InputEvent{InputEvent::Kind::FieldKey, -1, gFocusedField, {}, 0, key});
-    }
+    if (char ch = keyToChar(key, gShiftDown)) gEvents.push_back(InputEvent{InputEvent::Kind::FieldChar, -1, gFocusedField, {}, 0, key, ch});
+    else gEvents.push_back(InputEvent{InputEvent::Kind::FieldKey, -1, gFocusedField, {}, 0, key});
     if (key != Key::Shift) ev.cancel(); // typing must not trigger game keys (E closes the inventory)
 }
 
