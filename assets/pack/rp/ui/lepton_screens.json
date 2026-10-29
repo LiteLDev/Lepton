@@ -6,12 +6,14 @@
     "size": ["100%", "100%"]
   },
 
-  "custom_screen@common.base_screen": {
-    "$screen_content": "lepton.custom_screen_content",
+  "custom_screen": {
+    "type": "screen",
+    "size": ["100%", "100%"],
     "is_showing_menu": true,
     "should_steal_mouse": false,
     "render_game_behind": true,
     "absorbs_input": true,
-    "close_on_player_hurt": true
+    "close_on_player_hurt": true,
+    "controls": [ { "content@lepton.custom_screen_content": {} } ]
   }
 }
