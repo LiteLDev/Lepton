@@ -101,6 +101,8 @@ textures of their slab (the game's own texture files, so resource packs apply to
 | `sulfur_vertical_slab` | `sulfur_slab` | sulfur | sulfur | 1.5 / 6 | pickaxe |
 | `polished_sulfur_vertical_slab` | `polished_sulfur_slab` | polished_sulfur, sulfur | sulfur | 1.5 / 6 | pickaxe |
 | `sulfur_brick_vertical_slab` | `sulfur_brick_slab` | sulfur_bricks, polished_sulfur, sulfur | sulfur | 1.5 / 6 | pickaxe |
+| `<colour>_concrete_vertical_slab` (16 dye colours) | `<colour>_concrete_slab` | - | stone | 1.8 / 1.8 | pickaxe |
+| `<colour>_wool_vertical_slab` (16 dye colours) | `<colour>_wool_slab` | - | cloth | 0.8 / 0.8 | none, flammable (catch 30, destroy 60) |
 | `cut_copper_vertical_slab` | `cut_copper_slab` | cut_copper; copper_block -> 8 | copper | 3 / 6 | pickaxe, weathers |
 | `exposed_cut_copper_vertical_slab` | `exposed_cut_copper_slab` | exposed_cut_copper; exposed_copper -> 8 | copper | 3 / 6 | pickaxe, weathers |
 | `weathered_cut_copper_vertical_slab` | `weathered_cut_copper_slab` | weathered_cut_copper; weathered_copper -> 8 | copper | 3 / 6 | pickaxe, weathers |
@@ -109,7 +111,7 @@ textures of their slab (the game's own texture files, so resource packs apply to
 
 Ids are Quark's paths (Java `stone_slab` = Bedrock `normal_stone_slab`, so `lepton:stone_vertical_slab`
 is made from `minecraft:normal_stone_slab`). Quark 4.1-488 lists the slabs of MC 1.21.1; the slabs that
-Bedrock 1.26.51 has in addition (pale oak, resin brick, poplar, cinnabar x3, sulfur x3) follow the same
+Bedrock 1.26.51 has in addition (pale oak, resin brick, poplar, cinnabar x3, sulfur x3, 16 concrete and 16 wool slabs) follow the same
 rule ("a vertical slab for every vanilla slab") with names in Quark's style. The stonecutter recipes are
 Quark's (it also cuts polished tuff from tuff; Quark's `quark:polished_tuff` input is the vanilla
 `polished_tuff` here); for the 1.26 stones they mirror vanilla's stonecutter chain (base -> polished ->
@@ -213,8 +215,9 @@ At world load (`db::onWorldReady`), and again on `/quark reload`, U1 walks the l
 (`Recipes::mRecipes`) like Quark's `ZRecipeCrawl` visitor: a shaped `crafting_table` recipe, 3 wide and 1
 high, whose three ingredients are the same item (same aux) and whose result is a slab (vanilla
 `isSlabBlock` or a `lepton:slab` block; vertical slabs excluded) gives the entry slab -> ingredient. When
-several recipes make one slab, the ingredient whose name is closest to the slab's wins (e.g. purpur
-block, not purpur pillar). Each entry becomes a shapeless recipe "2 slabs -> 1 block" loaded through the
+several recipes make one slab, the ingredient whose name is closest to the slab's wins (longest common
+prefix, then the shorter name: purpur block, not purpur pillar, as Quark takes the first item of Java's
+`[purpur_block, purpur_pillar]` ingredient). Each entry becomes a shapeless recipe "2 slabs -> 1 block" loaded through the
 game's own JSON recipe loader (`Recipes::_loadRecipe`, `priority` 50 so the vanilla 2-slab recipes such
 as chiseled quartz / chiseled stone bricks / chiseled tuff, priority 0, take precedence like Quark's
 `checkForOtherRecipes`). Slabs in `bannedSlabs` (item ids) get no recipe.
@@ -276,7 +279,7 @@ names `tag.item.quark.vertical_slabs` ("Vertical Slabs") and `tag.item.quark.woo
 - **Recipe priority**: vanilla Bedrock resolves a grid that matches two recipes by `priority` (lower
   first). SlabsToBlocks uses 50, vanilla recipes 0, so a vanilla 2-slab recipe wins as in Quark.
 - **SlabToBlockRecipe "locked" check** (any other recipe matching the grid wins) is that priority rule.
-- **1.26 slabs** (pale oak, resin brick, poplar, cinnabar, sulfur): not in Quark 4.1-488 (MC 1.21.1); added
+- **1.26 slabs** (pale oak, resin brick, poplar, cinnabar, sulfur, concrete, wool): not in Quark 4.1-488 (MC 1.21.1); added
   under the module's rule "every vanilla slab".
 
 ## 8. Tests

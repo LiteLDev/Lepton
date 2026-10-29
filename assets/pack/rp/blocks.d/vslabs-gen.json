@@ -14,11 +14,29 @@
   "lepton:birch_vertical_slab": {
     "sound": "wood"
   },
+  "lepton:black_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:black_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:blackstone_vertical_slab": {
     "sound": "stone"
   },
+  "lepton:blue_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:blue_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:brick_vertical_slab": {
     "sound": "stone"
+  },
+  "lepton:brown_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:brown_wool_vertical_slab": {
+    "sound": "cloth"
   },
   "lepton:cherry_vertical_slab": {
     "sound": "cherry_wood"
@@ -47,6 +65,12 @@
   "lepton:cut_sandstone_vertical_slab": {
     "sound": "stone"
   },
+  "lepton:cyan_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:cyan_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:dark_oak_vertical_slab": {
     "sound": "wood"
   },
@@ -71,8 +95,44 @@
   "lepton:granite_vertical_slab": {
     "sound": "stone"
   },
+  "lepton:gray_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:gray_wool_vertical_slab": {
+    "sound": "cloth"
+  },
+  "lepton:green_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:green_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:jungle_vertical_slab": {
     "sound": "wood"
+  },
+  "lepton:light_blue_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:light_blue_wool_vertical_slab": {
+    "sound": "cloth"
+  },
+  "lepton:light_gray_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:light_gray_wool_vertical_slab": {
+    "sound": "cloth"
+  },
+  "lepton:lime_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:lime_wool_vertical_slab": {
+    "sound": "cloth"
+  },
+  "lepton:magenta_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:magenta_wool_vertical_slab": {
+    "sound": "cloth"
   },
   "lepton:mangrove_vertical_slab": {
     "sound": "wood"
@@ -92,11 +152,23 @@
   "lepton:oak_vertical_slab": {
     "sound": "wood"
   },
+  "lepton:orange_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:orange_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:oxidized_cut_copper_vertical_slab": {
     "sound": "copper"
   },
   "lepton:pale_oak_vertical_slab": {
     "sound": "wood"
+  },
+  "lepton:pink_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:pink_wool_vertical_slab": {
+    "sound": "cloth"
   },
   "lepton:polished_andesite_vertical_slab": {
     "sound": "stone"
@@ -134,10 +206,19 @@
   "lepton:prismarine_vertical_slab": {
     "sound": "stone"
   },
+  "lepton:purple_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:purple_wool_vertical_slab": {
+    "sound": "cloth"
+  },
   "lepton:purpur_vertical_slab": {
     "sound": "stone"
   },
   "lepton:quartz_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:red_concrete_vertical_slab": {
     "sound": "stone"
   },
   "lepton:red_nether_brick_vertical_slab": {
@@ -145,6 +226,9 @@
   },
   "lepton:red_sandstone_vertical_slab": {
     "sound": "stone"
+  },
+  "lepton:red_wool_vertical_slab": {
+    "sound": "cloth"
   },
   "lepton:resin_brick_vertical_slab": {
     "sound": "resin_brick"
@@ -202,5 +286,17 @@
   },
   "lepton:weathered_cut_copper_vertical_slab": {
     "sound": "copper"
+  },
+  "lepton:white_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:white_wool_vertical_slab": {
+    "sound": "cloth"
+  },
+  "lepton:yellow_concrete_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:yellow_wool_vertical_slab": {
+    "sound": "cloth"
   }
 }

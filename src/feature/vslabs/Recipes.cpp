@@ -168,9 +168,13 @@ std::vector<StbEntry> crawl(Recipes const& recipes) {
             auto pre = slab.substr(slab.find(':') + 1);
             auto it  = found.find(slab);
             if (it != found.end()) {
-                // several recipes make this slab: keep the block whose name is closest to the slab's
-                auto cur = it->second.block.substr(it->second.block.find(':') + 1);
-                if (commonPrefix(cur, pre) >= commonPrefix(a.substr(a.find(':') + 1), pre)) continue;
+                // several recipes make this slab: keep the block whose name is closest to the slab's,
+                // then the shorter name (purpur_block, not purpur_pillar; Quark takes the first
+                // item of Java's [purpur_block, purpur_pillar] ingredient)
+                auto   cur = it->second.block.substr(it->second.block.find(':') + 1);
+                auto   cand = a.substr(a.find(':') + 1);
+                size_t pc = commonPrefix(cur, pre), pn = commonPrefix(cand, pre);
+                if (pc > pn || (pc == pn && cur.size() <= cand.size())) continue;
             }
             auto path    = slab.substr(slab.find(':') + 1);
             found[slab] = StbEntry{slab, a, aux, std::string(kStbPrefix) + (slab.starts_with("minecraft:") ? "" : slab.substr(0, slab.find(':')) + "_") + path};

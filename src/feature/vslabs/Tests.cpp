@@ -53,6 +53,12 @@ std::vector<std::string> const& allIds() {
               "polished_sulfur", "sulfur_brick"}) {
             v.push_back(std::string("lepton:") + m + "_vertical_slab");
         }
+        for (auto kind : {"_concrete", "_wool"}) {
+            for (auto c : {"white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray",
+                           "cyan", "purple", "blue", "brown", "green", "red", "black"}) {
+                v.push_back(std::string("lepton:") + c + kind + "_vertical_slab");
+            }
+        }
         for (int age = 0; age < 4; ++age) {
             v.push_back(vs::copperSlabId(age, false));
             v.push_back(vs::copperSlabId(age, true));
@@ -287,6 +293,7 @@ LP_REGISTER_SELFTEST("vslabs.fuel", [](Context& ctx) {
     ctx.check(slab > 0.f, "oak slabs burn");
     ctx.check(burn("lepton:oak_vertical_slab") == slab, "a wooden vertical slab burns like its slab: " + std::to_string(burn("lepton:oak_vertical_slab")));
     ctx.check(burn("lepton:crimson_vertical_slab") <= 0.f, "nether wood vertical slabs don't burn");
+    ctx.check(burn("lepton:red_wool_vertical_slab") == burn("minecraft:red_wool_slab"), "wool vertical slabs burn like wool slabs");
     ctx.check(burn("lepton:stone_vertical_slab") <= 0.f, "stone vertical slabs don't burn");
 });
 
@@ -308,8 +315,19 @@ LP_REGISTER_SELFTEST("vslabs.recipes", [](Context& ctx) {
     ctx.check(has("minecraft:oak_slab", "minecraft:oak_planks"), "oak slabs -> oak planks");
     ctx.check(has("minecraft:normal_stone_slab", "minecraft:stone"), "stone slabs -> stone");
     ctx.check(has("minecraft:stone_brick_slab", "minecraft:stone_bricks"), "stone brick slabs -> stone bricks");
+    ctx.check(has("minecraft:purpur_slab", "minecraft:purpur_block"), "purpur slabs -> purpur block (not the pillar)");
+    ctx.check(has("minecraft:quartz_slab", "minecraft:quartz_block"), "quartz slabs -> quartz block");
+    ctx.check(has("minecraft:light_gray_wool_slab", "minecraft:light_gray_wool"), "wool slabs -> wool");
+    ctx.check(has("minecraft:white_concrete_slab", "minecraft:white_concrete"), "concrete slabs -> concrete");
     ctx.info("slabs-to-blocks recipes: " + std::to_string(table.size()));
-    ctx.check(table.size() >= 50, "a recipe for every vanilla slab");
+    ctx.check(table.size() >= 100, "a recipe for every vanilla slab");
+    // every vanilla slab with a crafting recipe has a vertical slab (Quark: one per vanilla slab)
+    for (auto const& [s, b] : table) {
+        if (!s.starts_with("minecraft:")) continue;
+        auto path = s.substr(10, s.size() - 10 - 5); // minecraft:<path>_slab
+        auto vid  = "lepton:" + (path == "normal_stone" ? std::string("stone") : path) + "_vertical_slab";
+        ctx.check(vs::isVerticalSlabId(vid), s + " has a vertical slab " + vid);
+    }
     ctx.check(vs::hasRecipe(recipes, "lepton:slabs_to_blocks_oak_slab"), "oak recipe present");
 
     lp::config::mut<vs::Config>().bannedSlabs = {"minecraft:oak_slab"};
@@ -388,7 +406,7 @@ LP_REGISTER_SELFTEST("vslabs.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
         }
     };
     ctx.info("VSLABS view rows");
-    view(9.f, 6.f, 12.f, 30.f, 180.f); // south, above, looking north over the rows
+    view(9.f, 9.f, 8.f, 30.f, 180.f); // south, above, looking north over the six rows
     co_await ctx.ticks(150);
     ctx.info("VSLABS view connections");
     view(5.5f, 2.5f, 9.f, 25.f, 180.f);

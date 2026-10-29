@@ -110,6 +110,38 @@ foreach ($c in $copper) {
         P = $copperP; Color = $c.Color; Cut = @("waxed_$cut"); Cut8 = @($c.Waxed) }
 }
 
+# Concrete and wool: Bedrock 1.26 has a slab of every dye colour of both (same rule: every vanilla
+# slab). Textures are the vanilla slabs' ("silver" is light gray in the texture file names).
+$dyes = @(
+    @{ Id = 'white'; Tex = 'white'; En = 'White'; Zh = '白色'; Color = '#ffffff' }
+    @{ Id = 'orange'; Tex = 'orange'; En = 'Orange'; Zh = '橙色'; Color = '#d87f33' }
+    @{ Id = 'magenta'; Tex = 'magenta'; En = 'Magenta'; Zh = '品红色'; Color = '#b24cd8' }
+    @{ Id = 'light_blue'; Tex = 'light_blue'; En = 'Light Blue'; Zh = '淡蓝色'; Color = '#6699d8' }
+    @{ Id = 'yellow'; Tex = 'yellow'; En = 'Yellow'; Zh = '黄色'; Color = '#e5e533' }
+    @{ Id = 'lime'; Tex = 'lime'; En = 'Lime'; Zh = '黄绿色'; Color = '#7fcc19' }
+    @{ Id = 'pink'; Tex = 'pink'; En = 'Pink'; Zh = '粉红色'; Color = '#f27fa5' }
+    @{ Id = 'gray'; Tex = 'gray'; En = 'Gray'; Zh = '灰色'; Color = '#4c4c4c' }
+    @{ Id = 'light_gray'; Tex = 'silver'; En = 'Light Gray'; Zh = '淡灰色'; Color = '#999999' }
+    @{ Id = 'cyan'; Tex = 'cyan'; En = 'Cyan'; Zh = '青色'; Color = '#4c7f99' }
+    @{ Id = 'purple'; Tex = 'purple'; En = 'Purple'; Zh = '紫色'; Color = '#7f3fb2' }
+    @{ Id = 'blue'; Tex = 'blue'; En = 'Blue'; Zh = '蓝色'; Color = '#334cb2' }
+    @{ Id = 'brown'; Tex = 'brown'; En = 'Brown'; Zh = '棕色'; Color = '#664c33' }
+    @{ Id = 'green'; Tex = 'green'; En = 'Green'; Zh = '绿色'; Color = '#667f33' }
+    @{ Id = 'red'; Tex = 'red'; En = 'Red'; Zh = '红色'; Color = '#993333' }
+    @{ Id = 'black'; Tex = 'black'; En = 'Black'; Zh = '黑色'; Color = '#191919' }
+)
+$concreteP = @{ Sound = 'stone'; Hardness = 1.8; Resistance = 1.8; Tool = 'pickaxe' }
+$woolP = @{ Sound = 'cloth'; Hardness = 0.8; Resistance = 0.8; Tool = '' }
+foreach ($d in $dyes) {
+    $materials += @{ Path = "$($d.Id)_concrete"; Slab = "$($d.Id)_concrete_slab"; Tex = "textures/blocks/concrete_$($d.Tex)"
+        En = "$($d.En) Concrete"; Zh = "$($d.Zh)混凝土"; P = $concreteP; Color = $d.Color }
+}
+foreach ($d in $dyes) {
+    # wool catches fire like wool (catch 30, destroy 60)
+    $materials += @{ Path = "$($d.Id)_wool"; Slab = "$($d.Id)_wool_slab"; Tex = "textures/blocks/wool_colored_$($d.Tex)"
+        En = "$($d.En) Wool"; Zh = "$($d.Zh)羊毛"; P = $woolP; Color = $d.Color; Fire = @(30, 60) }
+}
+
 $sides = @{ north = @('south', 'east', 'west'); south = @('north', 'east', 'west'); west = @('east', 'north', 'south'); east = @('west', 'north', 'south') }
 
 foreach ($m in $materials) {
@@ -131,6 +163,7 @@ foreach ($m in $materials) {
     $json = Get-Content $file -Raw | ConvertFrom-Json -AsHashtable -Depth 100
     $blk = $json['minecraft:block']
     $c = $blk.components
+    if ($m.Fire) { $c['minecraft:flammable'] = [ordered]@{ catch_chance_modifier = $m.Fire[0]; destroy_chance_modifier = $m.Fire[1] } }
     $c['minecraft:liquid_detection'] = [ordered]@{ detection_rules = @([ordered]@{ liquid_type = 'water'; can_contain_liquid = $true; on_liquid_touches = 'no_reaction' }) }
     $sorted = [ordered]@{}
     foreach ($k in ($c.Keys | Sort-Object { $_ } -CaseSensitive)) { $sorted[$k] = $c[$k] }
