@@ -154,7 +154,7 @@ public:
         bus.removeListener(mTick);
         bus.removeListener(mKey);
         AutoJumpHook::unhook();
-        gAutorun = false;
+        if (gAutorun.exchange(false)) setForward(false); // do not leave the forced forward flag behind
     }
 
 private:

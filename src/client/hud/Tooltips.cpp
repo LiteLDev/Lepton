@@ -151,14 +151,27 @@ std::string gameText(std::string const& key) {
     }
 }
 
-/// Reserved lines for a component of `w` x `h` UI units; the first one gets a unique marker.
+constexpr char kHex[] = "0123456789abcdef";
+
+/// Invisible format codes that identify the stack the tooltip is built for (a hash of the item and
+/// its data), so two items with the same text (two shulker boxes, two maps) never share a layout.
+std::string gStackCodes;
+
+std::string stackCodes(ItemStackBase const& stack) {
+    auto        h = static_cast<uint32_t>(std::hash<std::string>{}(game::itemToSnbt(stack)));
+    std::string out;
+    for (int i = 7; i >= 0; --i) out += std::string("\xC2\xA7") + kHex[(h >> (i * 4)) & 15];
+    return out;
+}
+
+/// Reserved lines for a component of `w` x `h` UI units; the first one gets a marker that is unique
+/// in the tooltip (component id) and names the stack.
 std::vector<std::string> reserve(Component& c, int id, float w, float h) {
-    static constexpr char kHex[] = "0123456789abcdef";
     c.height                     = h;
     c.lines                      = std::max(1, static_cast<int>(std::ceil(h / gLineHeight)));
     int         spaces           = std::max(1, static_cast<int>(std::ceil(w / std::max(1.f, width(" ")))));
     std::string pad(static_cast<size_t>(spaces), ' ');
-    c.marker = std::string("\xC2\xA7r\xC2\xA7") + kHex[(id >> 4) & 15] + "\xC2\xA7" + kHex[id & 15] + "\xC2\xA7r";
+    c.marker = std::string("\xC2\xA7r\xC2\xA7") + kHex[(id >> 4) & 15] + "\xC2\xA7" + kHex[id & 15] + gStackCodes + "\xC2\xA7r";
     std::vector<std::string> out{c.marker + pad};
     for (int i = 1; i < c.lines; ++i) out.push_back("\xC2\xA7r" + pad);
     return out;
@@ -241,8 +254,9 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
     auto lines = split(text);
     if (lines.empty()) return text;
     bool shift = gShift.load();
-    layout     = std::make_shared<Layout>();
-    int  id    = static_cast<int>(gLayouts.size() * 7 + 1) & 0xff;
+    layout      = std::make_shared<Layout>();
+    gStackCodes = stackCodes(stack);
+    int id      = 1; // component ids: unique within this tooltip, stable across rebuilds
 
     std::vector<std::string> insert; // the block inserted at line 1 (top-down order)
     // Quark's order (each inserts at 1): attributes, food + saturation, shulker, map => from the top:
@@ -264,13 +278,26 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
         if (!items.empty()) {
             // Drop the vanilla contents lines (every line after the name that names an item inside, and
             // the "and N more..." line).
+            // A content line is "<name>" or "<name> x<count>"; the "more" line directly follows them.
+            auto isContentLine = [&](std::string const& plain) {
+                for (auto const& is : items) {
+                    auto name = is.getName();
+                    if (name.empty() || plain.compare(0, name.size(), name) != 0) continue;
+                    std::string_view rest = std::string_view(plain).substr(name.size());
+                    if (rest.empty()) return true;
+                    if (rest.size() > 2 && rest.substr(0, 2) == " x"
+                        && std::all_of(rest.begin() + 2, rest.end(), [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); }))
+                        return true;
+                }
+                return false;
+            };
             std::vector<std::string> kept{lines[0]};
+            bool                     afterContent = false;
             for (size_t i = 1; i < lines.size(); ++i) {
                 auto plain   = stripCodes(lines[i]);
-                bool content = false;
-                for (auto const& is : items)
-                    if (!plain.empty() && plain.find(is.getName()) == 0) content = true;
-                if (!content && plain.find("...") != std::string::npos && i + 1 >= lines.size() - 1) content = true;
+                bool content = isContentLine(plain);
+                if (!content && afterContent && plain.find("...") != std::string::npos) content = true;
+                afterContent = content;
                 if (!content) kept.push_back(lines[i]);
             }
             lines = std::move(kept);
@@ -312,10 +339,15 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
     if (conf.attributeTooltips && !shift) {
         // The vanilla modifier lines are replaced only when the component shows the values instead.
         if (auto c = attributeComponent(stack, *player)) {
+            // Bedrock puts an empty line before the modifiers: it goes with them.
             std::vector<std::string> kept;
-            for (size_t i = 0; i < lines.size(); ++i)
-                if (i == 0 || !isAttributeLine(lines[i])) kept.push_back(lines[i]);
-            // Bedrock puts an empty line before the modifiers; drop a trailing empty line left behind.
+            for (size_t i = 0; i < lines.size(); ++i) {
+                if (i > 0 && isAttributeLine(lines[i])) {
+                    if (kept.size() > 1 && stripCodes(kept.back()).empty()) kept.pop_back();
+                    continue;
+                }
+                kept.push_back(lines[i]);
+            }
             while (kept.size() > 1 && stripCodes(kept.back()).empty()) kept.pop_back();
             lines = std::move(kept);
             auto r = reserve(*c, id++, attributeWidth(*c), static_cast<float>(c->groups.size()) * 10.f);
@@ -460,14 +492,19 @@ void drawMap(Painter& p, Component const& c, float x, float y) {
     p.image("textures/lepton/hud/map_background", x + 3 - 3.5f, y + 3 - 3.5f, 71, 71);
     if (!data || data->mPixels.get().size() < 128 * 128) {
         // The client has no data for this map yet (remote servers send it only for held maps):
-        // ask the server with the vanilla MapInfoRequestPacket, at most once a second per map.
-        static std::map<int64, std::chrono::steady_clock::time_point> asked;
-        auto now = std::chrono::steady_clock::now();
-        auto& at = asked[c.mapId.rawID];
-        if (now - at > std::chrono::seconds(1)) {
-            at = now;
+        // ask the server with the vanilla MapInfoRequestPacket, at most once a second and 10 times
+        // per map (a server may not know the map).
+        struct Asked {
+            std::chrono::steady_clock::time_point at;
+            int                                   tries = 0;
+        };
+        static std::map<int64, Asked> asked;
+        auto  now = std::chrono::steady_clock::now();
+        auto& a   = asked[c.mapId.rawID];
+        if (a.tries < 10 && (a.tries == 0 || now - a.at > std::chrono::seconds(1))) {
+            a.at = now;
             level->requestMapInfo(c.mapId, false);
-            log().info("hud: map {} requested from the server", c.mapId.rawID);
+            if (a.tries++ == 0) log().info("hud: map {} requested from the server", c.mapId.rawID);
         }
         return;
     }

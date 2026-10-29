@@ -47,10 +47,12 @@ LP_REGISTER_SELFTEST("hud.tooltip_lines", [](Context& ctx) {
     auto box = lp::game::itemFromSnbt(
         R"({Name:"minecraft:blue_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:5b,Damage:0s,Slot:0b}]}})");
     ctx.require(!lp::game::isEmpty(box), "shulker box created");
-    auto boxText = hud::improvedTooltip(box, "Blue Shulker Box\n" + box.getName() + " x0\nDiamond x5", &n);
+    auto content = lp::game::makeItem("minecraft:diamond").getName() + " x5";
+    auto boxText = hud::improvedTooltip(box, box.getName() + "\n" + content + "\nLore x line", &n);
     if (conf.shulkerTooltips && !conf.shulkerBoxRequireShift) {
         ctx.check(n == 1, "the shulker box gets a preview component");
-        ctx.check(!has(boxText, "Diamond x5"), "the vanilla content line is removed");
+        ctx.check(!has(boxText, content), "the vanilla content line is removed");
+        ctx.check(has(boxText, "Lore x line"), "other lines stay");
     }
 
     // Stone: nothing to add.
