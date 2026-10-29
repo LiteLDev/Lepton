@@ -35,9 +35,20 @@ void scroll(bool down) {
 
 } // namespace
 
+bool gDispenserSeen = false; ///< a dispenser screen (the feeding trough) was logged since the last HUD frame
+
 // Back in the game (no screen) or in another world: no crate is open any more.
 LP_REGISTER_HUD([](ui::DrawContext&) {
-    if (gView.open && gShown && ui::topScreen() == "hud_screen") gView = {};
+    if (ui::topScreen() != "hud_screen") return;
+    if (gView.open && gShown) gView = {};
+    gDispenserSeen = false;
+});
+
+// One log line per dispenser screen shown (the feeding trough's 3x3 screen): e2e scenarios wait for it.
+LP_REGISTER_SCREEN_OVERLAY("*dispenser*", [](ui::Overlay&, ui::ScreenInfo const& s) {
+    if (gDispenserSeen) return;
+    gDispenserSeen = true;
+    log().info("logistics: dispenser screen shown ({}, {} slots)", s.name, s.slots.size());
 });
 
 LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](ui::Overlay& o, ui::ScreenInfo const& s) {
@@ -58,9 +69,9 @@ LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](ui::Overlay& o, ui::ScreenInfo co
     if (!any) return;
     gShown   = true;
     auto& dc = o.draw();
-    // "total/max" above the window, right aligned (Quark draws it on the title line)
+    // "total/max" above the window, right aligned left of the close button (Quark: on the title line)
     auto count = ctr("lp.logistics.crate.count", "{}/{}", gView.total, gView.max);
-    dc.text(count, r.x + r.w - 1, r.y - 10, ui::Color::rgb(0x404040), 1, ui::Align::Right, false);
+    dc.text(count, r.x + r.w - 16, r.y - 10, ui::Color::rgb(0x404040), 1, ui::Align::Right, false);
     // scroll bar: a track right of the window with a thumb and two buttons
     int      rows  = fullRows(gView.stacks);
     float    x     = r.x + r.w + 4;
@@ -75,7 +86,7 @@ LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](ui::Overlay& o, ui::ScreenInfo co
     ui::Rect up{x, r.y, 12, 12}, down{x, r.y + r.h - 12, 12, 12};
     o.button(up, "^", [] { scroll(false); }, ctr("lp.logistics.crate.scroll_up", "Scroll up"));
     o.button(down, "v", [] { scroll(true); }, ctr("lp.logistics.crate.scroll_down", "Scroll down"));
-    if (!gReported) {
+    if (!gReported && s.settled) { // positions are final once the opening animation ended
         gReported = true;
         log().info("crate overlay: drawn on {} ({} items, {} stacks)", s.name, gView.total, gView.stacks);
         log().info("crate overlay: down button at {:.4f},{:.4f}", (down.x + 6) / s.size.x, (down.y + 6) / s.size.y);

@@ -28,11 +28,19 @@ Wait-LogLine 'LOGISTICS aim trough' 30 -Since $mark | Out-Null
 Start-Sleep -Milliseconds 800
 Use-Block
 Wait-LogLine 'LOGISTICS screen trough' 15 -Since $mark | Out-Null
+$problems = @()
+$troughShown = $true
+if (-not $vanilla) {
+    # the client mod logs the dispenser screen it shows
+    try { Wait-LogLine 'logistics: dispenser screen shown' 10 -Since $mark | Out-Null }
+    catch { $troughShown = $false; $problems += 'the trough screen did not show on the client' }
+}
 Start-Sleep -Seconds 2
 Save-Screenshot 'trough' | Out-Null
-Close-Screen
+# without a screen, Esc would open the pause menu: the showcase closes the trough itself then
+if ($troughShown) { Close-Screen }
 
-Wait-LogLine 'LOGISTICS aim crate' 30 -Since $mark | Out-Null
+Wait-LogLine 'LOGISTICS aim crate' 60 -Since $mark | Out-Null
 Start-Sleep -Milliseconds 800
 Use-Block
 if ($vanilla) {
@@ -61,3 +69,4 @@ if ($vanilla) {
 Close-Screen
 $line = Wait-LogLine 'SELFTEST (PASS|FAIL) logistics\.showcase' 60 -Since $mark
 if ($line -match 'FAIL') { throw "showcase selftest failed: $line" }
+if ($problems) { throw ($problems -join '; ') }
