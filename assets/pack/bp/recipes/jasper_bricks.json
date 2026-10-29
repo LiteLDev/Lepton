@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:jasper_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:polished_jasper"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:polished_jasper"
+      }
+    ],
+    "result": {
+      "item": "lepton:jasper_bricks",
+      "count": 4
+    }
+  }
+}

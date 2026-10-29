@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:polished_myalite_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:polished_myalite_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:polished_myalite_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_myalite_vertical_slab",
+      "count": 3
+    }
+  }
+}

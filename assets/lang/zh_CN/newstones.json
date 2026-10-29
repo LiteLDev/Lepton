@@ -1,0 +1,13 @@
+{
+  "quark.jei.hint.limestone": "可在沼泽和海洋中以大型石簇的形式找到。",
+  "quark.jei.hint.jasper": "可在恶地和沙漠中以大型石簇的形式找到。",
+  "quark.jei.hint.shale": "可在寒冷的生物群系中以大型石簇的形式找到。",
+  "quark.jei.hint.myalite": "可在外围末地高地中以大型石簇的形式找到。它会对世界中一种无形的场产生反应，根据放置位置的场强改变颜色。",
+  "quark.jei.hint.permafrost": "可在冰封山峰的顶部附近找到。",
+  "lp.newstones.info.header": "新石材（{}）：",
+  "lp.newstones.info.disabled": "此模块已禁用。",
+  "lp.newstones.sources.none": "{} 个区块内没有石簇中心。",
+  "lp.newstones.sources.line": "{}：{} {} {}（{}）",
+  "lp.newstones.players_only": "只有玩家可以使用此命令。",
+  "lp.newstones.admin_only": "此命令需要管理员权限。"
+}

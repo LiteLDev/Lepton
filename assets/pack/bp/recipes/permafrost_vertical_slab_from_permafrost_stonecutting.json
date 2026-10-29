@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:permafrost_vertical_slab_from_permafrost_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:permafrost"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:permafrost"
+      }
+    ],
+    "result": {
+      "item": "lepton:permafrost_vertical_slab",
+      "count": 2
+    }
+  }
+}

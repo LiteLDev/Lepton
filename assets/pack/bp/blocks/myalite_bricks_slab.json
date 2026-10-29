@@ -1,0 +1,741 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:myalite_bricks_slab",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.slab"
+      },
+      "states": {
+        "lepton:double": [
+          false,
+          true
+        ],
+        "lepton:tint": [
+          8,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:vertical_half"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#7f3fb2",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:slab": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.slab",
+        "bone_visibility": {
+          "bottom": "(q.block_state('minecraft:vertical_half') == 'bottom' || q.block_state('lepton:double') == true)",
+          "top": "(q.block_state('minecraft:vertical_half') == 'top' || q.block_state('lepton:double') == true)"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/myalite_bricks_slab.json",
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      },
+      "tag:lepton:myalite_tinted": {}
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('minecraft:vertical_half') == 'top' && q.block_state('lepton:double') == false)",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:double') == true",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:light_dampening": 15,
+          "minecraft:loot": "loot_tables/blocks/myalite_bricks_slab_double.json"
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 0",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t0",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t1",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 2",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t2",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 3",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t3",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 4",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t4",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 5",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t5",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 6",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t6",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 7",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t7",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 8",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t8",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 9",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t9",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 10",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t10",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 11",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t11",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 12",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t12",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 13",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t13",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 14",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t14",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 15",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_bricks_t15",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

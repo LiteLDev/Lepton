@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:polished_shale_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:polished_shale"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:polished_shale"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_shale_slab",
+      "count": 6
+    }
+  }
+}

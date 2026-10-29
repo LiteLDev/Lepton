@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:chiseled_jasper_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:jasper_bricks_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:jasper_bricks_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:chiseled_jasper_bricks",
+      "count": 1
+    }
+  }
+}

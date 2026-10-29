@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:jasper_bricks_vertical_slab_from_polished_jasper_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:polished_jasper"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:polished_jasper"
+      }
+    ],
+    "result": {
+      "item": "lepton:jasper_bricks_vertical_slab",
+      "count": 2
+    }
+  }
+}
