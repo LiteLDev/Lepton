@@ -1,0 +1,42 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:seed_pouch_warped_fungus"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " S ",
+      "HXH",
+      " H "
+    ],
+    "key": {
+      "H": {
+        "item": "minecraft:leather"
+      },
+      "S": {
+        "item": "minecraft:string"
+      },
+      "X": {
+        "item": "minecraft:warped_fungus"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      },
+      {
+        "item": "minecraft:string"
+      },
+      {
+        "item": "minecraft:warped_fungus"
+      }
+    ],
+    "result": {
+      "item": "lepton:seed_pouch",
+      "count": 1
+    }
+  }
+}

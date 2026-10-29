@@ -1,0 +1,16 @@
+{
+  "item.quark.backpack": "背包",
+  "item.quark.backpack.warning.line_1": "警告",
+  "item.quark.backpack.warning.line_2": "这个背包里有物品，在生存模式下若不装备它，物品将被清空。",
+  "quark.misc.totem_darksouls": "你感到一阵恐惧，之前的留存图腾碎裂了",
+  "lp.backpack.pouch_full_chest": "你尝试存入的容器已满……",
+  "lp.backpack.button.inventory": "物品栏",
+  "lp.backpack.button.inventory_tip": "盔甲与合成",
+  "lp.backpack.button.backpack": "背包",
+  "lp.backpack.button.backpack_tip": "打开背包",
+  "lp.backpack.button.insert": "存入",
+  "lp.backpack.button.insert_tip": "把同种种子存入种子袋",
+  "lp.backpack.button.take": "取出",
+  "lp.backpack.button.take_tip": "从种子袋取出一组",
+  "lp.backpack.pouch_count": "{}/{}"
+}

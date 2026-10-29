@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:backpack_storage",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/blocks/stone"
+      },
+      "geometry": {
+        "default": "geometry.lepton.empty"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.lepton.totem": {
+      "initial_state": "idle",
+      "states": {
+        "idle": {
+          "animations": [
+            "idle"
+          ],
+          "transitions": [
+            {
+              "dying": "q.property('lepton:dying')"
+            }
+          ]
+        },
+        "dying": {
+          "animations": [
+            "dying"
+          ]
+        }
+      }
+    }
+  }
+}

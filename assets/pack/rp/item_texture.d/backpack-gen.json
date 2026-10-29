@@ -1,0 +1,14 @@
+{
+  "lepton_backpack_backpack": {
+    "textures": "textures/items/backpack"
+  },
+  "lepton_backpack_backpack_dyed": {
+    "textures": "textures/items/backpack_dyed"
+  },
+  "lepton_backpack_ravager_hide": {
+    "textures": "textures/items/ravager_hide"
+  },
+  "lepton_backpack_seed_pouch": {
+    "textures": "textures/items/seed_pouch"
+  }
+}

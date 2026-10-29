@@ -1,0 +1,6 @@
+entity.lepton:backpack_storage.name=Backpack
+entity.lepton:totem.name=Totem of Holding
+item.lepton:backpack.name=Backpack
+item.lepton:ravager_hide.name=Ravager Hide
+item.lepton:seed_pouch.name=Seed Pouch
+tile.lepton:bonded_ravager_hide.name=Bonded Ravager Hide

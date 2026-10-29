@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:bonded_ravager_hide"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:ravager_hide"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ravager_hide"
+      }
+    ],
+    "result": {
+      "item": "lepton:bonded_ravager_hide",
+      "count": 1
+    }
+  }
+}

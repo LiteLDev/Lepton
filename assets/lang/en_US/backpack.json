@@ -1,0 +1,16 @@
+{
+  "item.quark.backpack": "Backpack",
+  "item.quark.backpack.warning.line_1": "WARNING",
+  "item.quark.backpack.warning.line_2": "This backpack has items in it, it will be wiped if its not equipped whilst in survival.",
+  "quark.misc.totem_darksouls": "You feel a sense of dread as a previous Totem of Holding shatters",
+  "lp.backpack.pouch_full_chest": "The inventory you are trying to insert into is full...",
+  "lp.backpack.button.inventory": "Inventory",
+  "lp.backpack.button.inventory_tip": "Armor and crafting",
+  "lp.backpack.button.backpack": "Backpack",
+  "lp.backpack.button.backpack_tip": "Open the backpack",
+  "lp.backpack.button.insert": "Insert",
+  "lp.backpack.button.insert_tip": "Put matching seeds into the pouch",
+  "lp.backpack.button.take": "Take",
+  "lp.backpack.button.take_tip": "Take one stack out of the pouch",
+  "lp.backpack.pouch_count": "{}/{}"
+}

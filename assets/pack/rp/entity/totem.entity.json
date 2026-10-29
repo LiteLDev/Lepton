@@ -1,0 +1,33 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:totem",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/totem_of_holding"
+      },
+      "geometry": {
+        "default": "geometry.lepton.totem"
+      },
+      "particle_effects": {
+        "portal": "minecraft:portal_directional"
+      },
+      "animations": {
+        "idle": "animation.lepton.totem.idle",
+        "dying": "animation.lepton.totem.dying",
+        "controller": "controller.animation.lepton.totem"
+      },
+      "scripts": {
+        "animate": [
+          "controller"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}
