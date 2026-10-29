@@ -28,6 +28,7 @@
 #include "mod/Log.h"
 #include "mod/Module.h"
 #include "net/Net.h"
+#include "selftest/SelfTest.h"
 
 namespace lp::client::gadgets {
 
@@ -180,6 +181,16 @@ LP_REGISTER_TOOLTIP([](ItemStackBase const& item, std::vector<std::string>& line
     std::string name = ambientNameOf(id);
     if (name.empty() && id == kEndermosh) name = "endermosh";
     if (!name.empty()) lines.push_back("§7" + ctr("item.quark.music_disc_" + name + ".desc", name));
+});
+
+LP_REGISTER_SELFTEST("gadgets.client_tooltips", [](selftest::Context& ctx) {
+    auto disc = ui::tooltipFor(game::makeItem("lepton:music_disc_rain"));
+    ctx.check(disc.find(ctr("item.quark.music_disc_rain.desc", "Rainy Mood")) != std::string::npos, "ambience discs show their description");
+    auto mosh = ui::tooltipFor(game::makeItem(kEndermosh));
+    ctx.check(mosh.find("Endermosh") != std::string::npos, "Endermosh shows its title");
+    auto quill = ui::tooltipFor(game::makeItem(kQuill));
+    ctx.check(quill.find(ctr("quark.misc.quill_blank", "Blank")) != std::string::npos, "a blank quill says Blank");
+    ctx.info("tooltips: " + disc + " | " + mosh + " | " + quill);
 });
 
 } // namespace lp::client::gadgets

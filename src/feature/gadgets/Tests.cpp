@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/entity/components_json_legacy/EconomyTradeableComponent.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
@@ -523,4 +524,92 @@ LP_REGISTER_SELFTEST("gadgets.recipes", [](Context& ctx) {
     ctx.check(g::hasRecipe("lepton:tiny_potato_heart") == heart, "the heart recipe is active only with the Heart of Diamond");
     ctx.check(g::hasRecipe("lepton:tiny_potato_no_heart") == !heart && g::hasRecipe("lepton:tiny_potato_no_heart_emerald") == !heart,
               "the diamond / emerald recipes otherwise");
+});
+
+// ---- gallery (client e2e screenshots) ----------------------------------------------------------------
+
+// Every tiny potato look in a 5x5 grid, then (with a real player in the world) views for the client
+// scenario: the grid, a close-up with the name label, the abacus HUD + outline and the quill HUD.
+LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    static char const* const kNames[] = {
+        "",         "",            "halloween", "acetater", "agendertater", "arotater",  "aureylian",
+        "bitater",  "bob",         "botater",   "Dinnerbone", "enbytater",  "gaytater",  "taterfluid",
+        "lesbiantater", "graytater", "kingdaddydmac", "pahimar", "pantater", "robotater", "snorps",
+        "tatersus", "tomater",     "transtater", "soaryn",
+    };
+    auto base = ctx.testPos(2360);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto& region = regionOf(ctx);
+    std::vector<GlobalPos> placed;
+    for (int v = 0; v < 25; ++v) {
+        auto p = off(base, (v % 5) * 2, 0, (v / 5) * 2);
+        ctx.require(ctx.setBlock(off(p, 0, -1, 0), "minecraft:smooth_stone"), "floor");
+        auto const* b = bs::of(g::kPotato, {{"minecraft:cardinal_direction", "south"}});
+        ctx.require(b && lp::game::setBlock(region, lp::game::blockPos(p), *b), "potato placed");
+        g::potato::registerAt(p, kNames[v], v == 1);
+        placed.push_back(p);
+    }
+    co_await ctx.ticks(2);
+    int ok = 0;
+    for (int v = 0; v < 25; ++v)
+        if (g::potato::variantOf(region.getBlock(lp::game::blockPos(placed[v]))) == v || v == 2) ++ok; // 2: also the date
+    ctx.check(ok == 25, "every look is selected by its name (" + std::to_string(ok) + "/25)");
+    auto bound  = off(base, 12, -1, 0);
+    auto target = off(base, 12, -1, 8);
+    ctx.require(ctx.setBlock(bound, "minecraft:gold_block") && ctx.setBlock(target, "minecraft:diamond_block"), "abacus blocks");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (viewer) {
+        auto uid  = viewer->getOrCreateUniqueID();
+        auto view = [&](float dx, float dy, float dz, float pitch, float yaw) {
+            if (auto* v = ctx.player().getLevel().getPlayer(uid))
+                v->teleport(Vec3{base.x + dx, base.y + dy, base.z + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
+        };
+        auto viewerRef = [&]() { return ctx.player().getLevel().getPlayer(uid); };
+        ctx.info("GALLERY view grid");
+        view(4.5f, 3.0f, 12.5f, 35.f, 180.f); // south of the grid, looking north
+        co_await ctx.ticks(120);
+        ctx.info("GALLERY view closeup");
+        view(4.5f, 0.6f, 1.6f, 40.f, 180.f); // right above dinnerbone (dx 0, dz 2) looking at it
+        co_await ctx.ticks(120);
+        if (auto* v = viewerRef()) {
+            auto abacus = lp::game::makeItem(g::kAbacus);
+            g::putInt(abacus, "boundPosX", bound.x);
+            g::putInt(abacus, "boundPosY", bound.y);
+            g::putInt(abacus, "boundPosZ", bound.z);
+            lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), abacus);
+            lp::game::inv::sync(*v);
+        }
+        ctx.info("GALLERY view abacus");
+        view(14.5f, 1.0f, 10.5f, 25.f, 160.f); // looking at the diamond block
+        co_await ctx.ticks(120);
+        auto& c           = lp::config::mut<g::GadgetsConfig>();
+        bool  savedMt     = c.multiThreaded;
+        int   savedSpeed  = c.pathfindersQuillSpeed;
+        c.multiThreaded   = false;
+        c.pathfindersQuillSpeed = 1;
+        if (auto* v = viewerRef()) {
+            auto quill = g::pathfinder::makeQuill("minecraft:jungle", 0xFF22B600, v);
+            lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), quill);
+            lp::game::inv::sync(*v);
+            g::pathfinder::onUseItem(*v, v->getSelectedItem());
+        }
+        ctx.info("GALLERY view quill");
+        view(4.5f, 3.0f, 12.5f, 35.f, 180.f);
+        co_await ctx.ticks(120);
+        if (auto* v = viewerRef()) {
+            lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), ItemStack{});
+            lp::game::inv::sync(*v);
+        }
+        c.multiThreaded         = savedMt;
+        c.pathfindersQuillSpeed = savedSpeed;
+        ctx.info("GALLERY done");
+    }
+    for (auto const& p : placed) lp::game::clearBlock(region, lp::game::blockPos(p));
+    co_await ctx.ticks(3);
+    for (auto const& p : placed) clearItemsNear(ctx, p);
 });
