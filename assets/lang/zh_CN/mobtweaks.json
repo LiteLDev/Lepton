@@ -1,0 +1,6 @@
+{
+  "quark.jei.hint.repair_item_changed": "该物品的铁砧修复材料已被修改为{}。",
+  "quark.jei.hint.repair_item_changed_multiple": "该物品的铁砧修复材料已被修改为下列材料之一：{}。",
+  "quark.jei.hint.repair_item_removed": "该物品的铁砧修复材料已被移除，无法在铁砧中修复。",
+  "lp.mobtweaks.player_head": "{}的头"
+}

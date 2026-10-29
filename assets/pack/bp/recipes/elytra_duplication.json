@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:elytra_duplication"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:elytra"
+      },
+      {
+        "item": "lepton:dragon_scale"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:dragon_scale"
+      }
+    ],
+    "result": {
+      "item": "minecraft:elytra",
+      "count": 1
+    }
+  }
+}
