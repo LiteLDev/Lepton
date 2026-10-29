@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:lime_shingles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:lime_terracotta"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:lime_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:lime_shingles",
+      "count": 2
+    }
+  }
+}

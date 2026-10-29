@@ -1,0 +1,206 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:bamboo_mat",
+      "menu_category": {
+        "category": "construction"
+      },
+      "states": {
+        "lepton:facing": [
+          "north",
+          "south",
+          "west",
+          "east",
+          "down"
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.5
+      },
+      "minecraft:map_color": "#e5e533",
+      "tag:lepton:bamboo_mat": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:material_instances": {
+        "up": {
+          "texture": "lepton_palette_palette_bamboo_mat_v",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_bamboo_mat_v",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_bamboo_mat_end",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_bamboo_mat_end",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_bamboo_mat_u",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_bamboo_mat_u",
+          "render_method": "opaque"
+        },
+        "*": {
+          "texture": "lepton_palette_palette_bamboo_mat_v",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:loot": "loot_tables/blocks/bamboo_mat.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:facing') == 'south'",
+        "components": {
+          "minecraft:material_instances": {
+            "up": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 'west'",
+        "components": {
+          "minecraft:material_instances": {
+            "up": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 'east'",
+        "components": {
+          "minecraft:material_instances": {
+            "up": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "lepton_palette_palette_bamboo_mat_u",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 'down'",
+        "components": {
+          "minecraft:material_instances": {
+            "up": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_palette_palette_bamboo_mat_v",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "lepton_palette_palette_bamboo_mat_end",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

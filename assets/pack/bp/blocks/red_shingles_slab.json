@@ -1,0 +1,163 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:red_shingles_slab",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.slab"
+      },
+      "states": {
+        "lepton:double": [
+          false,
+          true
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:vertical_half"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.25
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4.2
+      },
+      "minecraft:map_color": "#8f3d2f",
+      "tag:lepton:shingles": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:slab": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_red_shingles",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.slab",
+        "bone_visibility": {
+          "bottom": "(q.block_state('minecraft:vertical_half') == 'bottom' || q.block_state('lepton:double') == true)",
+          "top": "(q.block_state('minecraft:vertical_half') == 'top' || q.block_state('lepton:double') == true)"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/red_shingles_slab.json",
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      }
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('minecraft:vertical_half') == 'top' && q.block_state('lepton:double') == false)",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:double') == true",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:light_dampening": 15,
+          "minecraft:loot": "loot_tables/blocks/red_shingles_slab_double.json"
+        }
+      }
+    ]
+  }
+}

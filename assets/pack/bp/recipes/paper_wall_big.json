@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:paper_wall_big"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:paper_wall"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:paper_wall"
+      }
+    ],
+    "result": {
+      "item": "lepton:paper_wall_big",
+      "count": 4
+    }
+  }
+}

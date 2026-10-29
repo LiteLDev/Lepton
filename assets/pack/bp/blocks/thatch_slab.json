@@ -1,0 +1,166 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:thatch_slab",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.slab"
+      },
+      "states": {
+        "lepton:double": [
+          false,
+          true
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:vertical_half"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.5
+      },
+      "minecraft:map_color": "#e5e533",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 5,
+        "destroy_chance_modifier": 300
+      },
+      "tag:minecraft:is_hoe_item_destructible": {},
+      "tag:wood": {},
+      "tag:lepton:slab": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_thatch_side",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_thatch_side",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_thatch_side",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_thatch_side",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_thatch_side",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_palette_palette_thatch_top",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_thatch_top",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.slab",
+        "bone_visibility": {
+          "bottom": "(q.block_state('minecraft:vertical_half') == 'bottom' || q.block_state('lepton:double') == true)",
+          "top": "(q.block_state('minecraft:vertical_half') == 'top' || q.block_state('lepton:double') == true)"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/thatch_slab.json",
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      }
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('minecraft:vertical_half') == 'top' && q.block_state('lepton:double') == false)",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              8,
+              -8
+            ],
+            "size": [
+              16,
+              8,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:double') == true",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:light_dampening": 15,
+          "minecraft:loot": "loot_tables/blocks/thatch_slab_double.json"
+        }
+      }
+    ]
+  }
+}

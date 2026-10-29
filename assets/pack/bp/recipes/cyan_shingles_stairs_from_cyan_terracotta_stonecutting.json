@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:cyan_shingles_stairs_from_cyan_terracotta_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:cyan_terracotta"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:cyan_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:cyan_shingles_stairs",
+      "count": 1
+    }
+  }
+}

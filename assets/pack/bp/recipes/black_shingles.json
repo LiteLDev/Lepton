@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:black_shingles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:black_terracotta"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:black_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:black_shingles",
+      "count": 2
+    }
+  }
+}

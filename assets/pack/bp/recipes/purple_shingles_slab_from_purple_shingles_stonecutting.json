@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:purple_shingles_slab_from_purple_shingles_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:purple_shingles"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:purple_shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:purple_shingles_slab",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:light_blue_shingles_slab_from_light_blue_terracotta_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:light_blue_terracotta"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:light_blue_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:light_blue_shingles_slab",
+      "count": 2
+    }
+  }
+}

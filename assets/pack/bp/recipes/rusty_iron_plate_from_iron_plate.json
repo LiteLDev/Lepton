@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:rusty_iron_plate_from_iron_plate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "#W#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:iron_plate"
+      },
+      "W": {
+        "item": "minecraft:water_bucket"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:iron_plate"
+      },
+      {
+        "item": "minecraft:water_bucket"
+      }
+    ],
+    "result": {
+      "item": "lepton:rusty_iron_plate",
+      "count": 8
+    }
+  }
+}

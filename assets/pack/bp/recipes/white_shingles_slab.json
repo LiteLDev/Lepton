@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:white_shingles_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:white_shingles"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:white_shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:white_shingles_slab",
+      "count": 6
+    }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:nether_brick_fence_gate",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.fenceGate"
+      },
+      "states": {
+        "lepton:open": [
+          false,
+          true
+        ],
+        "lepton:in_wall": [
+          false,
+          true
+        ]
+      },
+      "traits": {
+        "minecraft:placement_direction": {
+          "enabled_states": [
+            "minecraft:cardinal_direction"
+          ],
+          "y_rotation_offset": 0
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#700200",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:fence_gate": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_palette_nether_brick",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:connection_rule": {
+        "accepts_connections_from": "only_fences"
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.fence_gate",
+        "bone_visibility": {
+          "closed_x": "(q.block_state('lepton:open') == false && q.block_state('lepton:in_wall') == false && (q.block_state('minecraft:cardinal_direction') == 'north' || q.block_state('minecraft:cardinal_direction') == 'south'))",
+          "closed_z": "(q.block_state('lepton:open') == false && q.block_state('lepton:in_wall') == false && (q.block_state('minecraft:cardinal_direction') == 'east' || q.block_state('minecraft:cardinal_direction') == 'west'))",
+          "open_north": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == false && q.block_state('minecraft:cardinal_direction') == 'north')",
+          "open_south": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == false && q.block_state('minecraft:cardinal_direction') == 'south')",
+          "open_west": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == false && q.block_state('minecraft:cardinal_direction') == 'west')",
+          "open_east": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == false && q.block_state('minecraft:cardinal_direction') == 'east')",
+          "closed_x_wall": "(q.block_state('lepton:open') == false && q.block_state('lepton:in_wall') == true && (q.block_state('minecraft:cardinal_direction') == 'north' || q.block_state('minecraft:cardinal_direction') == 'south'))",
+          "closed_z_wall": "(q.block_state('lepton:open') == false && q.block_state('lepton:in_wall') == true && (q.block_state('minecraft:cardinal_direction') == 'east' || q.block_state('minecraft:cardinal_direction') == 'west'))",
+          "open_north_wall": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == true && q.block_state('minecraft:cardinal_direction') == 'north')",
+          "open_south_wall": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == true && q.block_state('minecraft:cardinal_direction') == 'south')",
+          "open_west_wall": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == true && q.block_state('minecraft:cardinal_direction') == 'west')",
+          "open_east_wall": "(q.block_state('lepton:open') == true && q.block_state('lepton:in_wall') == true && q.block_state('minecraft:cardinal_direction') == 'east')"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/nether_brick_fence_gate.json"
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('lepton:open') == false && (q.block_state('minecraft:cardinal_direction') == 'north' || q.block_state('minecraft:cardinal_direction') == 'south'))",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -2
+            ],
+            "size": [
+              16,
+              16,
+              4
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -2
+            ],
+            "size": [
+              16,
+              16,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:open') == false && (q.block_state('minecraft:cardinal_direction') == 'east' || q.block_state('minecraft:cardinal_direction') == 'west'))",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -2,
+              0,
+              -8
+            ],
+            "size": [
+              4,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -2,
+              0,
+              -8
+            ],
+            "size": [
+              4,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:open') == true && (q.block_state('minecraft:cardinal_direction') == 'north' || q.block_state('minecraft:cardinal_direction') == 'south'))",
+        "components": {
+          "minecraft:collision_box": false,
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -2
+            ],
+            "size": [
+              16,
+              16,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:open') == true && (q.block_state('minecraft:cardinal_direction') == 'east' || q.block_state('minecraft:cardinal_direction') == 'west'))",
+        "components": {
+          "minecraft:collision_box": false,
+          "minecraft:selection_box": {
+            "origin": [
+              -2,
+              0,
+              -8
+            ],
+            "size": [
+              4,
+              16,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

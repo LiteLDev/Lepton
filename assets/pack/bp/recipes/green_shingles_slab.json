@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:green_shingles_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:green_shingles"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:green_shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:green_shingles_slab",
+      "count": 6
+    }
+  }
+}
