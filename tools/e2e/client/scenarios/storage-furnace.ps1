@@ -4,7 +4,6 @@
 # furnace puts fuel into its fuel slot). storage.furnace_report then logs the furnace's slots.
 # Screenshots: furnace-open.png, furnace-after.png.
 if (-not $script:FurnaceHotbarX) { $script:FurnaceHotbarX = 0.5055; $script:FurnaceHotbarY = 0.7306 }
-$vanilla = $script:Mode -eq 'remote-vanilla'
 Invoke-Chat '/clear @s'
 Invoke-Chat '/time set noon'
 Invoke-Chat '/setblock ~ ~ ~2 air'
@@ -30,7 +29,5 @@ $mark = Get-LogMark
 $r = Invoke-SelfTest 'storage.furnace_report'
 $line = Wait-LogLine 'STORAGE FURNACE' 30 -Since $mark
 Write-Step "furnace ($($script:Mode)): $line"
-if ($line -notmatch 'fuel=lepton:charcoal_block') {
-    if ($vanilla) { Write-Step 'vanilla client: the charcoal block did not reach the fuel slot' }
-    else { throw "the charcoal block did not reach the fuel slot: $line" }
-}
+# the fuel blocks' item definitions carry minecraft:fuel, so vanilla clients quick-move them into the fuel slot too
+if ($line -notmatch 'fuel=lepton:charcoal_block') { throw "the charcoal block did not reach the fuel slot ($($script:Mode)): $line" }
