@@ -27,7 +27,8 @@ function Get-Ingredient([string]$I) {
 }
 function Get-Unlock([string[]]$Items) {
     $u = @($Items | Where-Object { -not $_.StartsWith('#') } | Sort-Object -Unique | ForEach-Object { [ordered]@{ item = $_ } })
-    if (-not $u.Count) { $u = @([ordered]@{ context = 'AlwaysUnlocked' }) }
+    # Tag-only recipes unlock by their tag ({"context": "AlwaysUnlocked"} fails to load on 1.26.51).
+    if (-not $u.Count) { $u = @($Items | Sort-Object -Unique | ForEach-Object { [ordered]@{ tag = $_.Substring(1) } }) }
     return $u
 }
 function Add-Shaped([string]$Name, [string[]]$Pattern, [hashtable]$Key, [string]$Result, [int]$Count, [string[]]$Gate, [int]$Priority = 0) {

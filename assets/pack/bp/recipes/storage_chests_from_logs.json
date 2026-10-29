@@ -19,7 +19,7 @@
     },
     "unlock": [
       {
-        "context": "AlwaysUnlocked"
+        "tag": "minecraft:logs"
       }
     ],
     "result": {
