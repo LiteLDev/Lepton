@@ -8,6 +8,7 @@
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/ActorHurtEvent.h"
 #include "ll/api/event/entity/MobDieEvent.h"
+#include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 
@@ -23,7 +24,6 @@
 #include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/Mob.h"
-#include "mc/world/actor/monster/EnderDragon.h"
 #include "mc/world/actor/monster/Slime.h"
 #include "mc/world/actor/provider/ActorAttribute.h"
 #include "mc/world/item/ItemStack.h"
@@ -33,6 +33,8 @@
 #include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/end/EndDragonFight.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components/death/DeathTickingComponent.h"
 #include "mc/world/level/dimension/end/TheEndDimension.h"
 #include "mc/world/phys/AABB.h"
 
@@ -194,25 +196,50 @@ LL_TYPE_INSTANCE_HOOK(
 
 // ---- DragonScales (drop) -------------------------------------------------------------------------
 
-bool previouslyKilled(EnderDragon& dragon) {
-    if (dragon.mDragonKilledPreviously) return true;
-    if (static_cast<int>(dragon.getDimensionId()) != 2) return false;
-    auto& end = static_cast<TheEndDimension&>(dragon.getDimension());
-    auto& fight = end.mDragonFight;
-    return fight && fight->mPreviouslyKilled;
+/// The End fight's "a dragon was killed before" flag, sampled every tick while no dragon is dying
+/// (Java reads it at death tick 100, before the dying dragon itself sets it at tick 200; Bedrock
+/// may set it when the death starts, so the value from before the death is used).
+struct FightSnapshot {
+    uint64_t tick      = 0;
+    bool     previously = false;
+};
+FightSnapshot& fightSnapshot() {
+    static FightSnapshot s;
+    return s;
 }
 
-LL_TYPE_INSTANCE_HOOK(
-    DragonDieHook,
-    ll::memory::HookPriority::Normal,
-    EnderDragon,
-    &EnderDragon::$die,
-    void,
-    ActorDamageSource const& source
-) {
-    bool scale = cfg().enableDragonScales && !isClientSide() && !isDead() && previouslyKilled(*this);
-    if (scale) scheduleDragonScale(*this);
-    origin(source);
+/// Dying dragons: unique id -> drops a scale (decided at the first death tick seen).
+std::unordered_map<int64_t, bool>& dyingDragons() {
+    static std::unordered_map<int64_t, bool> m;
+    return m;
+}
+
+EndDragonFight* endFight() {
+    auto level = ll::service::getLevel();
+    if (!level) return nullptr;
+    auto dim = level->getDimension(2).lock();
+    if (!dim) return nullptr;
+    auto& fight = static_cast<TheEndDimension&>(*dim).mDragonFight;
+    return fight ? fight.get() : nullptr;
+}
+
+void sampleFight() {
+    auto& dying = dyingDragons();
+    if (!dying.empty() && tickNow() % 20 == 0) std::erase_if(dying, [](auto const& e) { return ent::find(e.first) == nullptr; });
+    if (!dying.empty()) return;
+    auto* fight = endFight();
+    fightSnapshot() = {tickNow(), fight && fight->mPreviouslyKilled};
+}
+
+/// Every 10 ticks: dying ender dragons (their ECS death timer) get their scale scheduled for death
+/// tick 100.
+void pollDragons() {
+    if (!cfg().enableDragonScales) return;
+    for (auto* dragon : ent::ofType("minecraft:ender_dragon")) {
+        auto death = dragon->getEntityContext().tryGetComponent<DeathTickingComponent>();
+        if (!death) continue;
+        onDragonDying(ent::idOf(*dragon), death->mTicks, static_cast<int>(dragon->getDimensionId()), dragon->getPosition());
+    }
 }
 
 } // namespace
@@ -280,22 +307,34 @@ bool zombify(Actor& villager) {
     return true;
 }
 
-void scheduleDragonScale(Actor& dragon) {
-    auto id  = ent::idOf(dragon);
-    int  dim = static_cast<int>(dragon.getDimensionId());
-    Vec3 pos = dragon.getPosition();
-    // Java: when the death animation (dragonDeathTime) reaches 100.
-    later(100, [id, dim, pos] {
-        Vec3 at = pos;
-        if (auto* d = ent::find(id)) at = d->getPosition();
-        auto* region = game::regionOf(dim);
-        if (!region) return;
-        auto scale = game::makeItem("lepton:dragon_scale");
-        if (game::isEmpty(scale)) return;
-        ll::service::getLevel()->getSpawner().spawnItem(*region, scale, nullptr, at, 0);
-        log().info("mobtweaks: dragon scale dropped");
+void onDragonDying(int64_t dragonId, int ticks, int dim, Vec3 const& pos) {
+    if (!dyingDragons().emplace(dragonId, true).second) return; // already handled
+    // Java: getDragonFight() != null (the End) && hasPreviouslyKilledDragon()
+    bool respawned = dim == 2 && fightSnapshot().previously;
+    if (testing::forceRespawned().erase(dragonId) > 0) respawned = true;
+    if (!respawned || ticks > kDragonScaleTick) return;
+    later(kDragonScaleTick - ticks, [dragonId, dim, pos] {
+        auto* dragon = ent::find(dragonId);
+        dropDragonScale(dim, dragon ? dragon->getPosition() : pos);
     });
 }
+
+void dropDragonScale(int dim, Vec3 const& pos) {
+    auto* region = game::regionOf(dim);
+    auto  level  = ll::service::getLevel();
+    if (!region || !level) return;
+    auto scale = game::makeItem("lepton:dragon_scale");
+    if (game::isEmpty(scale)) return;
+    level->getSpawner().spawnItem(*region, scale, nullptr, pos, 0);
+    log().info("mobtweaks: dragon scale dropped");
+}
+
+namespace testing {
+std::unordered_set<int64_t>& forceRespawned() {
+    static std::unordered_set<int64_t> s;
+    return s;
+}
+} // namespace testing
 
 class MobsModule {
 public:
@@ -310,7 +349,10 @@ public:
         }));
         FallDamageHook::hook();
         SlimeRemoveHook::hook();
-        DragonDieHook::hook();
+        mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
+            sampleFight();
+            if (tickNow() % 10 == 0) pollDragons();
+        }));
         VillagerHurtHook::hook();
     }
     void uninstall() {
@@ -319,7 +361,7 @@ public:
         mListeners.clear();
         FallDamageHook::unhook();
         SlimeRemoveHook::unhook();
-        DragonDieHook::unhook();
+        dyingDragons().clear();
         VillagerHurtHook::unhook();
         magmaKilled().clear();
     }

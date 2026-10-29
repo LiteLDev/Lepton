@@ -2,7 +2,9 @@
 
 // Mob tweak helpers shared with the selftests (server thread).
 
+#include <cstdint>
 #include <string>
+#include <unordered_set>
 
 class Actor;
 class BlockSource;
@@ -24,7 +26,16 @@ int splitInto(BlockSource& region, std::string const& type, int size, Vec3 const
 bool replaceWithMagmaCube(Actor& slime, int size);
 /// Runs the villager's vanilla zombie transformation (ZombieVillagersOnNormal).
 bool zombify(Actor& villager);
-/// Drops a dragon scale where `dragon` is 100 ticks from now (DragonScales).
-void scheduleDragonScale(Actor& dragon);
+/// DragonScales: an ender dragon `ticks` into its death animation. A dragon dying in the End after
+/// one was killed before drops one scale when the animation reaches tick 100.
+inline constexpr int kDragonScaleTick = 100;
+void onDragonDying(int64_t dragonId, int ticks, int dim, Vec3 const& pos);
+/// Spawns one dragon scale item at `pos`.
+void dropDragonScale(int dim, Vec3 const& pos);
+
+namespace testing {
+/// Dragons (unique ids) treated as respawned dragons when their death starts (selftests).
+std::unordered_set<int64_t>& forceRespawned();
+} // namespace testing
 
 } // namespace lp::feature::mobtweaks

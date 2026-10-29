@@ -21,6 +21,8 @@
 #include "mc/world/actor/HurtParameters.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/item/ItemActor.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components/death/DeathTickingComponent.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/item/Item.h"
@@ -386,16 +388,40 @@ LP_REGISTER_SELFTEST("mobtweaks.dragon_scale", [](Context& ctx) -> ll::coro::Cor
     auto& region = regionOf(ctx);
     stepAway(ctx, pos);
     clearItems(ctx, pos, 4);
-    // The dragon itself can't be fought in a test world: drive the drop with a stand-in mob.
-    auto* standIn = ent::spawn(region, "minecraft:armor_stand", center(pos, 1));
-    ctx.require(standIn, "stand-in spawned");
-    scheduleDragonScale(*standIn);
-    co_await ctx.ticks(90);
+
+    // The death-tick rule: a respawned dragon drops one scale at tick 100, a first dragon none.
+    int64_t again = -2600001, first = -2600002;
+    testing::forceRespawned().insert(again);
+    onDragonDying(again, 1, pos.dim, center(pos, 1));
+    onDragonDying(again, 2, pos.dim, center(pos, 1)); // seen again: nothing new
+    onDragonDying(first, 1, pos.dim, center(pos, 1));
+    co_await ctx.ticks(97);
     ctx.check(droppedCount(ctx, pos, 3, "lepton:dragon_scale") == 0, "no scale before death tick 100");
-    co_await ctx.ticks(15);
-    ctx.check(droppedCount(ctx, pos, 3, "lepton:dragon_scale") == 1, "one scale at death tick 100");
-    ent::despawn(*standIn);
+    co_await ctx.ticks(5);
+    ctx.check(droppedCount(ctx, pos, 3, "lepton:dragon_scale") == 1, "one scale at death tick 100, none for a first dragon");
     clearItems(ctx, pos, 4);
+
+    // A real dragon's death sequence reaches the hook (high above the test area).
+    DifficultyGuard difficulty;
+    auto  sky    = off(pos, 0, 40, 0);
+    auto* dragon = ent::spawn(region, "minecraft:ender_dragon", center(sky));
+    ctx.require(dragon, "dragon spawned");
+    auto id = ent::idOf(*dragon);
+    testing::forceRespawned().insert(id);
+    co_await ctx.ticks(5);
+    if (auto* d = ent::find(id)) d->kill();
+    co_await ctx.ticks(2);
+    if (auto* d = ent::find(id)) {
+        bool dying = d->getEntityContext().tryGetComponent<DeathTickingComponent>().has_value();
+        ctx.info("dragon after kill(): health " + std::to_string(d->getHealth()) + ", death timer " + (dying ? "yes" : "no"));
+    }
+    co_await ctx.ticks(110);
+    ctx.check(droppedCount(ctx, sky, 40, "lepton:dragon_scale") == 1, "the dying dragon dropped a scale");
+    testing::forceRespawned().erase(id);
+    if (auto* d = ent::find(id)) ent::despawn(*d);
+    co_await ctx.ticks(1);
+    clearItems(ctx, sky, 45);
+    clearMobs(ctx, sky, 45, "minecraft:xp_orb");
 });
 
 // ---- GoldToolsHaveFortune ---------------------------------------------------------------------------
