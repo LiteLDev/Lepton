@@ -112,8 +112,10 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
         ++greyed;
     }
     static bool reported = false;
-    if (!reported) {
-        // Positions as fractions of the screen, for the e2e scenario's clicks.
+    if (s.frames == 1) reported = false;
+    if (s.settled && !reported) {
+        // Once per opening, after the layout settled: positions as fractions of the screen, for
+        // the e2e scenario's clicks.
         reported = true;
         log().info("ui demo: inventory overlay drawn ({} slots found, {} greyed)", s.slots.size(), greyed);
         log().info("ui demo: button at {:.4f},{:.4f}", (cx + 112) / s.size.x, (cy - 75) / s.size.y);
