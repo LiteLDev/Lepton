@@ -69,13 +69,23 @@ JavaRandom& runtimeRandom() {
 
 bool onServerThread() { return gServerThread.load() == std::this_thread::get_id(); }
 
+namespace {
+std::shared_ptr<Palette const> buildPalette();
+}
+
 std::shared_ptr<Palette const> palette() {
     auto&           s = paletteSlot();
     std::lock_guard lock(s.mutex);
+    // chunks can generate before the world-ready callback (the client's spawn area): build on first use
+    if (!s.current) {
+        auto p = buildPalette();
+        if (p && !p->logs.empty()) s.current = std::move(p);
+    }
     return s.current;
 }
 
-void rebuildPalette() {
+namespace {
+std::shared_ptr<Palette const> buildPalette() {
     auto p   = std::make_shared<Palette>();
     p->air   = bs::of("minecraft:air");
     p->dirt  = bs::of("minecraft:dirt");
@@ -88,13 +98,49 @@ void rebuildPalette() {
         if (axes[1]) p->logs[id] = axes;
     }
     for (auto const& t : treeTypes()) {
-        if (auto const* b = bs::of(t.leaves, {{"lepton:persistent", false}})) p->leaves[std::string(t.leaves)] = b;
+        if (auto const* b = bs::of(t.leaves, {{"lepton:persistent", false}})) {
+            p->leaves[std::string(t.leaves)] = b;
+            if (!t.ancient) p->blossomLeafTypes[&b->getBlockType()] = "lepton:" + std::string(t.name) + "_leaf";
+        }
     }
     if (auto it = p->logs.find("lepton:azalea_log"); it != p->logs.end()) p->azaleaLog = it->second;
+    return p;
+}
+} // namespace
+
+void rebuildPalette() {
+    auto p = buildPalette();
     if (!p->air || p->logs.empty()) log().warn("newwoods: the behaviour pack blocks are missing; trees can't grow");
     auto&           s = paletteSlot();
     std::lock_guard lock(s.mutex);
     s.current = std::move(p);
+}
+
+// ---- config snapshot for the generation threads -----------------------------------------------------
+
+namespace {
+struct GenConfigSlot {
+    std::mutex                            mutex;
+    std::shared_ptr<NewWoodsConfig const> current;
+};
+GenConfigSlot& genConfigSlot() {
+    static GenConfigSlot s;
+    return s;
+}
+} // namespace
+
+std::shared_ptr<NewWoodsConfig const> genConfig() {
+    auto&           s = genConfigSlot();
+    std::lock_guard lock(s.mutex);
+    if (!s.current) s.current = std::make_shared<NewWoodsConfig const>(config());
+    return s.current;
+}
+
+void publishGenConfig() {
+    auto            next = std::make_shared<NewWoodsConfig const>(config());
+    auto&           s    = genConfigSlot();
+    std::lock_guard lock(s.mutex);
+    s.current = std::move(next);
 }
 
 void clearPalette() {
@@ -326,9 +372,14 @@ public:
         static bool registered = false;
         if (!registered) {
             registered = true;
-            game::db::onWorldReady([] { rebuildPalette(); });
+            game::db::onWorldReady([] {
+                rebuildPalette();
+                publishGenConfig();
+            });
             game::db::onWorldClosed([] { clearPalette(); });
+            config::onReload([] { publishGenConfig(); });
         }
+        publishGenConfig();
         if (ll::service::getLevel()) rebuildPalette();
     }
     void uninstall() {

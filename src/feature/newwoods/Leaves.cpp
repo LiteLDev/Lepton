@@ -8,6 +8,7 @@
 #include <random>
 #include <set>
 #include <thread>
+#include <unordered_map>
 
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -30,6 +31,7 @@
 
 #include "core/GlobalPos.h"
 #include "feature/newwoods/NewWoods.h"
+#include "feature/newwoods/Palette.h"
 #include "feature/newwoods/Runtime.h"
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
@@ -133,31 +135,28 @@ int runLeafChecks() {
         std::lock_guard lock(q.mutex);
         changed.swap(q.changed);
     }
-    int unsupported = 0;
+    // Re-check our leaves around the changes, spreading through our leaves up to 7 steps (a leaf
+    // whose distance rose to 7 is at most 7 leaf-steps from the change; Java's distance update).
+    // The spread goes through our leaves only, so changes in vanilla forests cost nothing.
+    int                                            unsupported = 0;
+    std::map<int, std::set<std::tuple<int, int, int>>> seen; // per dimension, shared by all changes
     for (auto const& g : changed) {
         auto* region = game::regionOf(g.dim);
         if (!region) continue;
-        // re-check the leaves around the change, spreading through unsupported leaves (Java's
-        // distance update), at most 7 steps away
+        auto&                                seenDim = seen[g.dim];
         std::deque<std::pair<BlockPos, int>> todo;
-        std::set<std::tuple<int, int, int>>  seen;
         BlockPos                             origin = game::blockPos(g);
         for (int d = 0; d < 6; ++d) todo.emplace_back(step(origin, d), 1);
-        int budget = 4096;
-        while (!todo.empty() && budget-- > 0) {
+        while (!todo.empty()) {
             auto [p, depth] = todo.front();
             todo.pop_front();
-            if (!seen.insert({p.x, p.y, p.z}).second) continue;
             if (!inWorld(*region, p) || !region->hasChunksAt(p, 0, false)) continue;
             auto const& b = region->getBlock(p);
-            if (!isAnyLeaves(b)) continue;
-            bool ours = isOurLeaves(b);
-            if (ours) {
-                if (leafSupported(*region, p)) continue;
-                if (!persistent(b)) {
-                    scheduleTick(*region, p, b);
-                    ++unsupported;
-                }
+            if (!isOurLeaves(b)) continue;
+            if (!seenDim.insert({p.x, p.y, p.z}).second) continue;
+            if (!persistent(b) && !leafSupported(*region, p)) {
+                scheduleTick(*region, p, b);
+                ++unsupported;
             }
             if (depth < 7)
                 for (int d = 0; d < 6; ++d) todo.emplace_back(step(p, d), depth + 1);
@@ -192,30 +191,41 @@ void sendLeafParticle(Player& player, BlockPos const& pos, std::string const& ef
 void leafParticlesTick(Level& level) {
     auto const& c = config();
     if (!c.enableBlossomTrees || !c.dropLeafParticles) return;
+    auto pal = palette();
+    if (!pal || pal->blossomLeafTypes.empty()) return;
+    // players with no trumpet leaves around are sampled at a tenth of the rate until one shows up
+    // again (each block is still looked at every few seconds), which keeps the server thread cheap
+    static std::unordered_map<int64_t, uint64_t> lastHit;
+    static uint64_t                               tick = 0;
+    ++tick;
     auto& r = runtimeRandom();
     level.forEachPlayer([&](Player& p) {
         if (p.isSimulated()) return true;
         auto&    region = p.getDimensionBlockSource();
         BlockPos base   = p.getFeetBlockPos();
         int      minY = region.getMinHeight(), maxY = region.getMaxHeight();
+        auto     uid    = p.getOrCreateUniqueID().rawID;
+        auto     it     = lastHit.try_emplace(uid, tick).first;
+        int      count  = tick - it->second > 200 ? 67 : 667;
         for (int radius : {16, 32}) {
-            for (int i = 0; i < 667; ++i) {
+            for (int i = 0; i < count; ++i) {
                 BlockPos q{
                     base.x + r.nextInt(radius) - r.nextInt(radius),
                     base.y + r.nextInt(radius) - r.nextInt(radius),
                     base.z + r.nextInt(radius) - r.nextInt(radius)};
                 if (q.y <= minY || q.y >= maxY) continue;
-                auto const& b = region.getBlock(q);
-                if (!isOurLeaves(b)) continue;
-                auto const* tree = treeOfLeaves(b.getTypeName());
-                if (!tree || tree->ancient) continue;
+                auto const& b     = region.getBlock(q);
+                auto        found = pal->blossomLeafTypes.find(&b.getBlockType());
+                if (found == pal->blossomLeafTypes.end()) continue;
+                it->second = tick;
                 if (r.nextInt(5) != 0) continue;
                 if (!region.getBlock(BlockPos{q.x, q.y - 1, q.z}).isAir()) continue;
-                sendLeafParticle(p, q, "lepton:" + std::string(tree->name) + "_leaf");
+                sendLeafParticle(p, q, found->second);
             }
         }
         return true;
     });
+    if (lastHit.size() > 256) lastHit.clear();
 }
 
 // ---- drops ---------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 #include <string_view>
 
 class Block;
+class BlockType;
 
 namespace lp::feature::newwoods {
 
@@ -19,6 +20,7 @@ struct Palette {
     std::map<std::string, std::array<Block const*, 3>, std::less<>> logs;   ///< id -> axis x, y, z
     std::map<std::string, Block const*, std::less<>>              leaves; ///< id -> non-persistent state
     std::array<Block const*, 3>                                  azaleaLog{}; ///< lepton:azalea_log per axis
+    std::map<BlockType const*, std::string>                       blossomLeafTypes; ///< trumpet leaves -> particle
 
     [[nodiscard]] Block const* log(std::string_view id, int axis) const {
         auto it = logs.find(id);

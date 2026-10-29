@@ -17,7 +17,12 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/GameType.h"
+#include "mc/world/level/BlockTickingQueue.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/Tick.h"
+#include "mc/world/level/chunk/LevelChunk.h"
+#include "mc/world/level/storage/GameRule.h"
+#include "mc/world/level/storage/GameRules.h"
 #include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/ComposterBlock.h"
@@ -298,6 +303,45 @@ LP_REGISTER_SELFTEST("newwoods.sapling_bonemeal", [](Context& ctx) -> ll::coro::
     ctx.check(idAt(ctx, p) == "minecraft:dirt", "grass under the trunk became dirt");
 });
 
+// The random-tick chain: a planted sapling gets a block tick and grows on its own (random tick speed
+// raised so the delay is 1 tick: 1 in 7 per tick and stage, light 15 at noon).
+LP_REGISTER_SELFTEST("newwoods.sapling_ticks", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto p = ctx.testPos(740, 400);
+    ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
+    auto const* tree = nw::treeByName("ancient");
+    stepAside(ctx, p, 10);
+    auto& rules = ctx.player().getLevel().getGameRules().mGameRules.get();
+    auto  idx   = static_cast<size_t>(GameRules::GameRulesIndex::RandomTickSpeed);
+    ctx.require(idx < rules.size() && std::holds_alternative<int>(rules[idx].mValue.get()), "random tick speed rule");
+    struct SpeedGuard { // restores the rule even when the test aborts
+        std::vector<GameRule>& rules;
+        size_t                 idx;
+        int                    saved;
+        ~SpeedGuard() { rules[idx].mValue = std::variant<cereal::NullType, bool, int, float>(saved); }
+    } guard{rules, idx, std::get<int>(rules[idx].mValue.get())};
+    rules[idx].mValue = std::variant<cereal::NullType, bool, int, float>(5000);
+    ctx.check(nw::maxRandomTickDelay() == 1, "delay 1 at speed 5000, got " + std::to_string(nw::maxRandomTickDelay()));
+    // planting schedules the first tick (BlockChangedEvent)
+    ctx.require(put(ctx, p, "minecraft:grass_block") && put(ctx, off(p, 0, 1, 0), tree->sapling), "sapling planted");
+    {
+        auto  sp    = lp::game::blockPos(off(p, 0, 1, 0));
+        auto* chunk = regionOf(ctx).getChunkAt(sp);
+        Tick  next{};
+        ctx.check(chunk && chunk->getTickQueue().getNextUpdateForPos(sp, next), "planting scheduled a block tick");
+    }
+    bool grown = false;
+    for (int i = 0; i < 400 && !grown; i += 5) {
+        co_await ctx.ticks(5);
+        grown = idAt(ctx, off(p, 0, 1, 0)) == "lepton:ancient_log";
+    }
+    ctx.info("after the ticks: " + idAt(ctx, off(p, 0, 1, 0)) + " stage "
+             + std::to_string(bs::getInt(at(ctx, off(p, 0, 1, 0)), "lepton:stage").value_or(-1)) + ", light "
+             + std::to_string(nw::saplingLight(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)))) + ", block ticks "
+             + std::to_string(nw::blockTickCount()));
+    collectTree(ctx, off(p, 0, 1, 0), 8, 32);
+    ctx.check(grown, "the sapling grew from its block ticks");
+});
+
 LP_REGISTER_SELFTEST("newwoods.ancient_tree", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto p = ctx.testPos(730, 160);
     ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
@@ -523,7 +567,7 @@ LP_REGISTER_SELFTEST("newwoods.fuel_compost", [](Context& ctx) {
 // leaf carpet, potted sapling), and grown trees (ashen + the five trumpets). With a real player
 // online the player is moved in front of each part ("GALLERY view <name>" lines).
 LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto base = ctx.testPos(790, 60);
+    auto base = ctx.testPos(700, 60);
     ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
     int  placed = 0, wanted = 0;
     auto place  = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
@@ -592,10 +636,10 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     ctx.check(placed == wanted, "placed " + std::to_string(placed) + " / " + std::to_string(wanted) + " gallery blocks");
 
     // grown trees: the ashen tree and the five trumpets in a line
-    auto forest = off(base, 0, 0, 40);
+    auto forest = ctx.testPos(770, 100); // the trees stand in a line along z
     int  grown  = 0, k = 0;
     for (auto const& t : nw::treeTypes()) {
-        auto p = off(forest, 26 * k++, 0, 0);
+        auto p = off(forest, 0, 0, 30 * k++);
         if (!co_await ctx.ensureLoaded(p)) continue;
         if (!plantSapling(ctx, p, t)) continue;
         nw::JavaRandom r(1000 + k);
@@ -634,8 +678,8 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     views.push_back({"trees-rows-a", treeRows[0], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-b", treeRows[2], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-c", treeRows[4], 6.f, 3.f, 4.5f, 25.f, 180.f});
-    views.push_back({"trees-a", forest, 26.f, 8.f, 34.f, 5.f, 180.f});
-    views.push_back({"trees-b", forest, 104.f, 8.f, 34.f, 5.f, 180.f});
+    views.push_back({"trees-a", forest, 28.f, 8.f, 30.5f, 5.f, 90.f}); // east of the line, looking west
+    views.push_back({"trees-b", forest, 28.f, 8.f, 120.5f, 5.f, 90.f});
     for (auto const& v : views) {
         ctx.info("GALLERY view " + v.name);
         for (int t = 0; t < 120; ++t) { // hold the player there (no floor below some views)

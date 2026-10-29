@@ -130,6 +130,10 @@ bool advanceSapling(BlockSource& region, BlockPos const& pos, JavaRandom& random
 bool bonemealSapling(BlockSource& region, BlockPos const& pos, JavaRandom& random);
 /// Schedules the next random-like block tick of a sapling / unsupported leaf.
 void scheduleTick(BlockSource& region, BlockPos const& pos, Block const& block);
+/// The light Java's sapling checks (raw brightness above it, with the sky darkening).
+[[nodiscard]] int saplingLight(BlockSource& region, BlockPos const& pos);
+/// Block ticks our saplings / leaves received (diagnostics).
+[[nodiscard]] uint64_t blockTickCount();
 /// Mean ticks between two random ticks at the world's random tick speed (Java: 4096 / (3 * speed)).
 [[nodiscard]] int maxRandomTickDelay();
 

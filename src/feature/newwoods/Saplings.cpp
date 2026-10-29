@@ -1,6 +1,7 @@
 // U7 newwoods saplings (docs/spec/newwoods.md §3.3): random ticks (block ticks with a random delay),
 // growth, bone meal from players and dispensers.
 
+#include <atomic>
 #include <cmath>
 #include <mutex>
 #include <set>
@@ -9,6 +10,7 @@
 #include "ll/api/service/Bedrock.h"
 
 #include "mc/common/Brightness.h"
+#include "mc/world/level/block/BrightnessPair.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
@@ -55,14 +57,16 @@ int maxRandomTickDelay() {
     return std::max(1, static_cast<int>(std::lround(2.0 * 4096.0 / (3.0 * speed))) - 1);
 }
 
+/// Ticks of a block while random ticks are off (randomtickspeed 0): it only keeps its tick chain alive.
+constexpr int kPollDelay = 200;
+
 void scheduleTick(BlockSource& region, BlockPos const& pos, Block const& block) {
-    int maxDelay = maxRandomTickDelay();
-    if (maxDelay <= 0) return;
     if (auto* chunk = region.getChunkAt(pos)) {
         Tick next{};
         if (chunk->getTickQueue().getNextUpdateForPos(pos, next)) return; // already scheduled
     }
-    region.addToTickingQueue(pos, block, 1 + runtimeRandom().nextInt(maxDelay));
+    int maxDelay = maxRandomTickDelay();
+    region.addToTickingQueue(pos, block, maxDelay > 0 ? 1 + runtimeRandom().nextInt(maxDelay) : kPollDelay);
 }
 
 namespace {
@@ -104,8 +108,7 @@ void saplingRandomTick(BlockSource& region, BlockPos const& pos, JavaRandom& ran
     auto const* tree = treeOfSapling(b.getTypeName());
     if (!tree || !moduleEnabled(tree->module)) return;
     if (!region.hasChunksAt(pos, 1, false)) return; // Java: isAreaLoaded(pos, 1)
-    BlockPos above{pos.x, pos.y + 1, pos.z};
-    int      light = region._getRawBrightness(above, region.getDimension().mSkyDarken, true).mValue;
+    int      light = saplingLight(region, pos);
     if (light >= 9 && random.nextInt(7) == 0) advanceSapling(region, pos, random);
 }
 
@@ -123,6 +126,8 @@ bool bonemealSapling(BlockSource& region, BlockPos const& pos, JavaRandom& rando
 
 namespace {
 
+std::atomic<uint64_t> gBlockTicks = 0;
+
 struct Deferred {
     std::mutex                mutex;
     std::set<core::GlobalPos> ticks;
@@ -133,13 +138,20 @@ Deferred& deferred() {
 }
 
 void blockTick(BlockSource& region, BlockPos const& pos) {
-    auto const& b = region.getBlock(pos);
+    bool        randomTicks = maxRandomTickDelay() > 0;
+    auto const& b           = region.getBlock(pos);
+    // the tick being run may still be in the queue: schedule the next one without the duplicate check
+    auto next = [&](Block const& blk) {
+        int maxDelay = maxRandomTickDelay();
+        region.addToTickingQueue(pos, blk, maxDelay > 0 ? 1 + runtimeRandom().nextInt(maxDelay) : kPollDelay);
+    };
     if (isOurSapling(b)) {
-        saplingRandomTick(region, pos, runtimeRandom());
+        if (randomTicks) saplingRandomTick(region, pos, runtimeRandom());
         auto const& now = region.getBlock(pos);
-        if (isOurSapling(now)) scheduleTick(region, pos, now);
+        if (isOurSapling(now)) next(now);
     } else if (isOurLeaves(b)) {
-        leafTick(region, pos);
+        if (randomTicks) leafTick(region, pos);
+        else if (!leafSupported(region, pos)) next(b); // decays once random ticks are back
     }
 }
 
@@ -155,6 +167,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(region, pos, random);
     if (!isOurSapling(*this) && !isOurLeaves(*this)) return;
+    ++gBlockTicks;
     if (region.getLevel().isClientSide()) return;
     if (!onServerThread()) {
         // ticks that run while chunks load come from worker threads: redo them on the server thread
@@ -222,6 +235,17 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 } // namespace
+
+uint64_t blockTickCount() { return gBlockTicks.load(); }
+
+int saplingLight(BlockSource& region, BlockPos const& pos) {
+    // Java getMaxLocalRawBrightness: max(block light, sky light - sky darkening)
+    BlockPos above{pos.x, pos.y + 1, pos.z};
+    auto     pair  = region.getBrightnessPair(above);
+    int      sky   = static_cast<int>(pair.sky->mValue) - static_cast<int>(region.getDimension().mSkyDarken->mValue);
+    int      block = static_cast<int>(pair.block->mValue);
+    return std::max(0, std::max(sky, block));
+}
 
 void runDeferredTicks() {
     std::set<core::GlobalPos> ticks;

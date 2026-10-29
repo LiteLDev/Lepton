@@ -25,6 +25,7 @@
 #include "mc/world/level/block/AzaleaBlock.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockChangeContext.h"
+#include "mc/world/level/block/BlockType.h"
 #include "mc/world/level/DividedPos2d.h"
 #include "mc/world/level/biome/source/BiomeArea.h"
 #include "mc/world/level/chunk/LevelChunk.h"
@@ -114,21 +115,21 @@ bool isSoil(Block const& b) {
     return kIds.contains(b.getTypeName());
 }
 
-/// Blocks the motion-blocking heightmap looks through (no collision) and water can replace.
-bool isSoftCover(Block const& b) {
+/// Blocks the motion-blocking heightmap looks through and water can replace (Java
+/// BlockState#canBeReplaced(Fluids.WATER)): plants, snow layers, ... (the game's "can be built over").
+bool isSoftCover(BlockSource& region, BlockPos const& pos) {
+    auto const& b = region.getBlock(pos);
     if (b.isAir()) return true;
-    static std::unordered_set<std::string> const kIds{
-        "minecraft:short_grass", "minecraft:tall_grass", "minecraft:fern", "minecraft:large_fern", "minecraft:deadbush",
-        "minecraft:snow_layer", "minecraft:dandelion", "minecraft:poppy", "minecraft:blue_orchid", "minecraft:allium",
-        "minecraft:azure_bluet", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:white_tulip",
-        "minecraft:pink_tulip", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:lily_of_the_valley",
-        "minecraft:sunflower", "minecraft:lilac", "minecraft:rose_bush", "minecraft:peony", "minecraft:sweet_berry_bush",
-        "minecraft:pink_petals", "minecraft:brown_mushroom", "minecraft:red_mushroom"};
-    return kIds.contains(b.getTypeName());
+    if (isAnyLeaves(b) || isLogLike(b)) return false;
+    auto const& n = b.getTypeName();
+    // the motion-blocking heightmap stops at fluids (no trees under water)
+    if (n == "minecraft:water" || n == "minecraft:flowing_water" || n == "minecraft:lava" || n == "minecraft:flowing_lava")
+        return false;
+    if (!region.getExtraBlock(pos).isAir()) return false; // waterlogged plants
+    return b.getBlockType().canBeBuiltOver(b, region, pos);
 }
 
-BlossomTreeConfig const& colourConfig(int colour) {
-    auto const& c = config();
+BlossomTreeConfig const& colourConfig(NewWoodsConfig const& c, int colour) {
     switch (colour) {
     case 0:
         return c.blue;
@@ -181,11 +182,12 @@ BlossomRoll blossomRoll(uint64_t seed, int cx, int cz, int colour, int rarity) {
 }
 
 int generateBlossomChunk(BlockSource& region, int cx, int cz, std::string_view dim, uint64_t seed) {
-    auto const& c = config();
+    auto        cfg = genConfig();
+    auto const& c   = *cfg;
     if (!c.enableBlossomTrees) return 0;
     int placed = 0;
     for (int colour = 0; colour < 5; ++colour) {
-        auto const& tc = colourConfig(colour);
+        auto const& tc = colourConfig(c, colour);
         if (tc.rarity <= 0 || !dimensionAllowed(dim, tc.dimensions)) continue;
         auto const* tree = &treeTypes()[1 + colour];
         JavaRandom  r(chunkSeed(seed, cx, cz, colour));
@@ -197,11 +199,11 @@ int generateBlossomChunk(BlockSource& region, int cx, int cz, std::string_view d
         if (r.nextInt(tc.rarity) != 0) continue;
         ++stats().rolls;
         BlockPos ground{x, top.y - 1, z};
-        while (ground.y > region.getMinHeight() && isSoftCover(region.getBlock(ground))) --ground.y;
+        while (ground.y > region.getMinHeight() && isSoftCover(region, ground)) --ground.y;
         if (!isSoil(region.getBlock(ground))) continue;
         BlockPos up{x, ground.y + 1, z};
         auto const& upBlock = region.getBlock(up);
-        if (!upBlock.isAir() && isSoftCover(upBlock)) {
+        if (!upBlock.isAir() && isSoftCover(region, up)) {
             if (auto pal = palette(); pal && pal->air) {
                 BlockChangeContext ctx{};
                 region.setBlock(up, *pal->air, 2, nullptr, ctx);
@@ -229,7 +231,8 @@ int replaceAzaleaLogs(BlockSource& region, std::vector<BlockPos> const& position
 }
 
 int replaceAzaleaTreesInChunk(BlockSource& region, int cx, int cz) {
-    auto const& c = config();
+    auto cfg = genConfig();
+    auto const& c = *cfg;
     if (!c.enableAzaleaWood || !c.replaceAzaleaTreeLog) return 0;
     auto pal = palette();
     if (!pal || !pal->azaleaLog[1]) return 0;
@@ -304,7 +307,7 @@ std::vector<BlossomCandidate> blossomCandidates(int cx, int cz, int radius) {
     for (int x = cx - radius; x <= cx + radius; ++x) {
         for (int z = cz - radius; z <= cz + radius; ++z) {
             for (int colour = 0; colour < 5; ++colour) {
-                auto const& tc = colourConfig(colour);
+                auto const& tc = colourConfig(config(), colour);
                 if (tc.rarity <= 0 || !dimensionAllowed("minecraft:overworld", tc.dimensions)) continue;
                 auto roll = blossomRoll(seed, x, z, colour, tc.rarity);
                 if (!roll.rarityHit) continue;

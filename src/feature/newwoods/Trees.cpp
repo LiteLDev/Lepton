@@ -35,7 +35,8 @@ bool isAnyLeaves(Block const& b) {
 bool isLogLike(Block const& b) {
     auto const& n = b.getTypeName();
     if (n.ends_with("_log") || n.ends_with("_wood") || n.ends_with("_hyphae")) return true;
-    if (n.ends_with("_stem")) return n != "minecraft:mushroom_stem";
+    if (n.ends_with("_stem"))
+        return n != "minecraft:mushroom_stem" && n != "minecraft:melon_stem" && n != "minecraft:pumpkin_stem";
     return hasTag(b, "log");
 }
 
@@ -47,7 +48,10 @@ bool replaceableByTrees(Block const& b) {
         "minecraft:short_grass", "minecraft:tall_grass", "minecraft:fern", "minecraft:large_fern", "minecraft:deadbush",
         "minecraft:vine", "minecraft:glow_lichen", "minecraft:sunflower", "minecraft:lilac", "minecraft:rose_bush",
         "minecraft:peony", "minecraft:hanging_roots", "minecraft:pitcher_plant", "minecraft:water", "minecraft:flowing_water",
-        "minecraft:seagrass", "minecraft:warped_roots", "minecraft:nether_sprouts", "minecraft:crimson_roots"};
+        "minecraft:seagrass", "minecraft:warped_roots", "minecraft:nether_sprouts", "minecraft:crimson_roots",
+        // added to the tag by later Java versions; they exist in this Bedrock version
+        "minecraft:short_dry_grass", "minecraft:tall_dry_grass", "minecraft:bush", "minecraft:firefly_bush",
+        "minecraft:leaf_litter"};
     return kIds.contains(b.getTypeName());
 }
 
