@@ -170,7 +170,8 @@ vine (`vine_direction_bits` towards the log). Climate = the Bedrock biome's temp
   Bedrock `stone` block tag or a stone-like id (stone, deepslate, tuff, granite, diorite,
   andesite, calcite, cobblestone, ores, basalt, blackstone, netherrack, ...).
 - Every generated or placed box is recorded (world DB `lp:worldsurface:boxes`); the server tick
-  checks the recorded boxes near players. Activation: a non-spectator player whose position is
+  checks the recorded boxes in the chunks within 48 blocks of players (indexed by chunk) and the
+  ones already breaking. Activation: a non-spectator player whose position is
   closer than `activationRange` to the box centre, difficulty not peaceful. Growl:
   `lepton.monster_box.growl` (volume 0.5, pitch 1); 41 ticks later (Java: breakProgress > 40) the
   box is removed with the block-destroy particles and mobs are spawned.
@@ -194,6 +195,11 @@ vine (`vine_direction_bits` towards the log). Climate = the Bedrock biome's temp
   nearest climate point of the vanilla biome Bedrock chose for that cell (the vanilla parameter
   list of `BiomeSource3d`; if it can't be read, when the target lies inside Quark's ranges). This
   is the nearest-point rule Java uses, restricted to the two candidates that matter.
+  Checked in game: Bedrock's sampled depth is Java's (about 0 at the terrain surface, +1/128 per
+  block down), and below the surface Bedrock reports the surface biome (Java's depth-1.0 copy of
+  every surface biome), so Glimmering Weald fills the cells deeper than depth ~1.015 where
+  continentalness and erosion are in range: the bottom ~10-20 blocks of the world under normal
+  terrain, more under high terrain, as in Java.
 - **Features** (in Glimmering Weald cells only, the biome filter): glow shrooms (625 tries:
   uniform y from the bottom to 256, scan down 12 for a solid block below air), extras (200 tries),
   12 extra lapis veins (size 7, y -64..0, replacing stone/deepslate). The vanilla features of the
@@ -213,7 +219,18 @@ vine (`vine_direction_bits` towards the log). Climate = the Bedrock biome's temp
   chance (level 7 then ripens to 8 by the game).
 - **Pots**: see §2.
 - **Lichen growth survival**: needs a sturdy top face below; placing it elsewhere is refused.
-- Ambient particles of glow shrooms, lichen growths and shroom blocks: client mod only (§7).
+- **Ambient particles** (Java's client `animateTick`): every server tick, for each real player,
+  667 random blocks within 16 blocks and 667 within 32 blocks (Java's `ClientLevel.animateTick`
+  triangular distribution) get their animate tick, and the particles are sent to that player only
+  (`SpawnParticleEffectPacket`), so vanilla clients see them too:
+  glow shroom: 1 in 12, block above air -> `lepton:glow_shroom_spore` (end-rod sprite rising
+  0.4..0.8 b/s, drifting ±0.4 b/s) at (x+0.4..0.6, y+0.5..0.6, z+0.4..0.6);
+  lichen growth: `lepton:glow_lichen_spores` (10 mycelium specks in a 5x8x5 box around the
+  block centre) + one `minecraft:mycelium_dust_particle` at the plant;
+  glow shroom block (not the stem): 1 in 10, block below air or a ring -> `lepton:glow_shroom_drip`
+  (end-rod sprite falling 1..2 b/s) at a random point of the bottom face.
+  The three particle definitions are Lepton's own (RP `particles/`), drawn with the vanilla
+  particle atlas sprites.
 
 ### Cherry grove water petals
 As §1, biome filter `biomes` (CompoundBiomeConfig). Water petals: `lepton:water_pink_petals` with
@@ -313,7 +330,7 @@ The subtitle is the RP sound's subtitle (`texts.d`). Block names: §2 (`texts.d`
   Bedrock has no per-player background-music API (the `/music` command is world-wide); not ported.
 - **Advancements** ("Adventuring Time" with the biome): Bedrock has none.
 - Particles of glow shrooms, lichen growths and shroom blocks (client-side `animateTick` in Java)
-  are drawn by the client mod only; monster box flames/smoke are sent by the server, so every
+  are emitted by the server per player (§3), as are the monster box flames/smoke, so every
   client sees them.
 - Monster box growl: Quark's sound file can't be copied; `lepton.monster_box.growl` plays the
   vanilla ravager idle sounds pitched down.
@@ -338,6 +355,8 @@ Selftests (dx 2800..2899), `src/feature/worldsurface/Tests.cpp`:
 | `worldsurface.monster_box_gen` | 2825 | generator places a box on stone below air, not on dirt, not in water |
 | `worldsurface.monster_box_activate` | 2830 | a player next to a box: growl log, box gone after 41 ticks, 5-8 tagged mobs |
 | `worldsurface.huge_glow_shroom` | 2840 | huge shroom on deepslate (stem, cap, rings), single shroom otherwise |
+| `worldsurface.particles` | 2845 | ambient particles: lichen growth always, glow shroom ~1/12 with air above, shroom block ~1/10 with air below, none when covered |
+| `worldsurface.gallery` | 2880 | builds every block (client scenario screenshots; shows them to the first real player) |
 | `worldsurface.glow_extras` | 2850 | extras feature puts lichen/lichen growth next to deepslate |
 | `worldsurface.bonemeal` | 2855 | bone meal on lichen growth spreads; on glow shroom consumes |
 | `worldsurface.shroom_faces` | 2860 | placing two shroom blocks side by side turns the touching faces to pores |
