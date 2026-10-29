@@ -13,6 +13,7 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 
 #include "mc/deps/audio/ServerSoundHandle.h"
@@ -119,13 +120,28 @@ std::shared_ptr<script::Emote> readCustom(std::string const& file) {
     return std::make_shared<script::Emote>(std::move(r.emote));
 }
 
-std::filesystem::path customAnimationFile() {
-    return lp::Mod::getInstance().getSelf().getModDir() / "resource_packs" / "Lepton_RP" / "animations"
-         / "lepton_custom_emotes.animation.json";
+/// Custom emote animations live in their own resource pack: adding or removing a file inside
+/// Lepton_RP while the mod loads makes the game skip the pack files that sort after it (the
+/// built-in emote animations), so Lepton_RP is never touched at runtime.
+std::filesystem::path customPackDir() {
+    return lp::Mod::getInstance().getSelf().getModDir() / "resource_packs" / "Lepton_Custom_Emotes";
 }
 
-/// Loads every `customEmotes` file and bakes their animations into the client's resource pack
-/// (read by the game when it loads its resource packs, after mod load).
+constexpr std::string_view kCustomPackManifest = R"json({
+  "format_version": 2,
+  "header": {
+    "name": "Lepton custom emotes",
+    "description": "Animations of the custom emotes in config/quark_emotes (written by Lepton)",
+    "uuid": "68885aa3-9381-411b-9849-265af939ab73",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 40]
+  },
+  "modules": [{ "type": "resources", "uuid": "0e9d283d-04bd-4806-b269-ee85ba97c627", "version": [1, 0, 0] }]
+}
+)json";
+
+/// Loads every `customEmotes` file and bakes their animations into Lepton's custom emote resource
+/// pack (read by the game when it loads its resource packs, after mod load).
 void loadCustomEmotes() {
     gCustom.clear();
     std::error_code ec;
@@ -142,15 +158,22 @@ void loadCustomEmotes() {
         gCustom[file] = CustomEmote{file, e};
         bake.emplace_back(id, e.get());
     }
-    auto out = customAnimationFile();
-    if (bake.empty()) {
-        std::filesystem::remove(out, ec);
-        return;
+    auto dir = customPackDir();
+    if (bake.empty() && !std::filesystem::exists(dir, ec)) return; // nothing to bake, no pack yet
+    auto anims = dir / "animations";
+    std::filesystem::create_directories(anims, ec);
+    if (!std::filesystem::exists(dir / "manifest.json", ec)) std::ofstream(dir / "manifest.json", std::ios::binary) << kCustomPackManifest;
+    // One file per emote (the game drops large animation files); files of removed emotes go.
+    std::set<std::string> wanted;
+    for (auto const& [id, e] : bake) {
+        auto name = script::animationFileName(id);
+        wanted.insert(name);
+        std::ofstream(anims / name, std::ios::binary) << script::bakeAnimationFile({{id, e}}, false).dump(1) << "\n";
     }
-    std::filesystem::create_directories(out.parent_path(), ec);
-    std::ofstream f(out, std::ios::binary);
-    f << script::bakeAnimationFile(bake, false).dump(1) << "\n";
-    log().info("emotes: {} custom emote(s) baked into {}", bake.size(), out.string());
+    for (auto const& entry : std::filesystem::directory_iterator(anims, ec))
+        if (!wanted.contains(entry.path().filename().string())) std::filesystem::remove(entry.path(), ec);
+    if (bake.empty()) return;
+    log().info("emotes: {} custom emote(s) baked into {}", bake.size(), anims.string());
 }
 
 // ---- server state -----------------------------------------------------------------------------------

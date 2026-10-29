@@ -758,4 +758,12 @@ nlohmann::ordered_json bakeAnimationFile(std::vector<std::pair<std::string, Emot
     return file;
 }
 
+std::string animationFileName(std::string_view emoteId) {
+    std::string id(emoteId);
+    if (id.starts_with("custom:")) id = "custom." + id.substr(7);
+    return "lepton_emote_" + id + ".animation.json";
+}
+
+nlohmann::ordered_json stopAnimationFile() { return bakeAnimationFile({}, true); }
+
 } // namespace lp::feature::emotes::script

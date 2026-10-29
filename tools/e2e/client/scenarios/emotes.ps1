@@ -16,12 +16,19 @@ function Press-VK([int]$vk) {
     [BsE2E.Native]::Key([uint16]$vk, $false); Start-Sleep -Milliseconds 60; [BsE2E.Native]::Key([uint16]$vk, $true)
     Start-Sleep -Milliseconds 400
 }
+# Types the command and takes the screenshot $waitMs after Enter (Invoke-Chat and the log wait take
+# longer than the short emotes last), then checks the log.
 function Play-Emote([string]$name, [int]$waitMs, [string]$shot = $name) {
     $m = Get-LogMark
-    Invoke-Chat "/quark emote $name"
-    Wait-LogLine "emotes: .* plays $name" 15 -Since $m | Out-Null
+    Focus-Game
+    Press-Key T; Start-Sleep -Milliseconds 700
+    Type-Text "/quark emote $name"
+    Assert-GameForeground
+    [BsE2E.Native]::Key([uint16]0x0D, $false); Start-Sleep -Milliseconds 40; [BsE2E.Native]::Key([uint16]0x0D, $true)
     Start-Sleep -Milliseconds $waitMs
     Save-Screenshot $shot | Out-Null
+    Wait-LogLine "emotes: .* plays $name" 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 1500
 }
 
 if (-not $vanilla) { Wait-LogLine 'emotes: \d+ emotes available' 60 | Out-Null }

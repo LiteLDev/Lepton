@@ -23,9 +23,9 @@ None. Resource-pack content:
 
 | File | What |
 |---|---|
-| `assets/pack/rp/animations/lepton_emotes.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>` (+ `animation.lepton.emote.stop`, an empty animation on the emote controller that admins can play with `/playanimation` to cancel an emote). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
+| `assets/pack/rp/animations/lepton_emote_<id>.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>`, one file each (the game silently drops a large animation file: all 18 in one ~480 KB file never loaded), + `lepton_emote_stop` (`animation.lepton.emote.stop`, an empty animation on the emote controller that admins can play with `/playanimation` to cancel an emote). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
 | `assets/pack/rp/textures/lepton/emotes/<id>.png` | 16x16 icons (18 emotes, `custom`, `patreon_t1`, `patreon_t2`), original art by `tools/textures/emotes.ps1`, used by the vanilla-client form. The same pixels are compiled into the client mod (`src/client/emotes/EmoteIcons.inc`). |
-| client only: `mods/Lepton/resource_packs/Lepton_RP/animations/lepton_custom_emotes.animation.json` | Written by the client mod at game start from the custom emote files. |
+| client only: `mods/Lepton/resource_packs/Lepton_Custom_Emotes/` | A resource pack written by the client mod at game start from the custom emote files (`animations/lepton_emote_custom.<name>.animation.json`). Lepton_RP itself is never modified at runtime. |
 
 ## 3. Mechanics
 

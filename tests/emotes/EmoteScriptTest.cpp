@@ -35,14 +35,15 @@ std::filesystem::path repoRoot() {
     return std::filesystem::current_path();
 }
 
-std::filesystem::path animationFile() {
-    return repoRoot() / "assets" / "pack" / "rp" / "animations" / "lepton_emotes.animation.json";
-}
+std::filesystem::path animationDir() { return repoRoot() / "assets" / "pack" / "rp" / "animations"; }
 
-nlohmann::ordered_json bakedBuiltins() {
-    std::vector<std::pair<std::string, es::Emote const*>> list;
-    for (auto const& b : builtinEmotes()) list.emplace_back(std::string(b.id), compiledBuiltin(b.id));
-    return es::bakeAnimationFile(list);
+/// file name -> contents of every committed emote animation file (one per emote + the stop).
+std::map<std::string, nlohmann::ordered_json> bakedBuiltins() {
+    std::map<std::string, nlohmann::ordered_json> files;
+    for (auto const& b : builtinEmotes())
+        files[es::animationFileName(b.id)] = es::bakeAnimationFile({{std::string(b.id), compiledBuiltin(b.id)}}, false);
+    files[std::string(es::kStopAnimationFile)] = es::stopAnimationFile();
+    return files;
 }
 
 constexpr int kRightArmX = es::RightArm * 3 + 0;
@@ -274,15 +275,25 @@ TEST(EmoteScript, BakesRelativeToTheCurrentPose) {
 
 TEST(EmoteScript, CommittedAnimationsAreUpToDate) {
     auto baked = bakedBuiltins();
-    auto path  = animationFile();
-    if (std::getenv("LP_UPDATE_EMOTE_ANIMATIONS")) {
-        std::filesystem::create_directories(path.parent_path());
-        std::ofstream out(path, std::ios::binary);
-        out << baked.dump(2) << "\n";
+    auto dir   = animationDir();
+    bool update = std::getenv("LP_UPDATE_EMOTE_ANIMATIONS") != nullptr;
+    if (update) std::filesystem::create_directories(dir);
+    // No stale emote files (removed emotes, the old single file).
+    for (auto const& entry : std::filesystem::directory_iterator(dir)) {
+        auto name = entry.path().filename().string();
+        if (!name.starts_with("lepton_emote") || baked.contains(name)) continue;
+        if (update) std::filesystem::remove(entry.path());
+        else ADD_FAILURE() << entry.path().string() << " is stale: set LP_UPDATE_EMOTE_ANIMATIONS=1 and rerun";
     }
-    std::ifstream in(path, std::ios::binary);
-    ASSERT_TRUE(in.good()) << "missing " << path.string() << " (set LP_UPDATE_EMOTE_ANIMATIONS=1)";
-    std::stringstream ss;
-    ss << in.rdbuf();
-    EXPECT_EQ(ss.str(), baked.dump(2) + "\n") << path.string() << " is stale: set LP_UPDATE_EMOTE_ANIMATIONS=1 and rerun";
+    for (auto const& [name, json] : baked) {
+        auto path = dir / name;
+        auto text = json.dump(2) + "\n";
+        EXPECT_LT(text.size(), 200u * 1024u) << name << ": keep animation files small, the game drops large ones";
+        if (update) std::ofstream(path, std::ios::binary) << text;
+        std::ifstream in(path, std::ios::binary);
+        ASSERT_TRUE(in.good()) << "missing " << path.string() << " (set LP_UPDATE_EMOTE_ANIMATIONS=1)";
+        std::stringstream ss;
+        ss << in.rdbuf();
+        EXPECT_EQ(ss.str(), text) << path.string() << " is stale: set LP_UPDATE_EMOTE_ANIMATIONS=1 and rerun";
+    }
 }

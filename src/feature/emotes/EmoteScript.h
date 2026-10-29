@@ -168,6 +168,16 @@ private:
 [[nodiscard]] nlohmann::ordered_json
 bakeAnimationFile(std::vector<std::pair<std::string, Emote const*>> const& emotes, bool withStop = true);
 
+/// The resource-pack file of one emote ("wave" -> "lepton_emote_wave.animation.json",
+/// "custom:my_dance" -> "lepton_emote_custom.my_dance.animation.json"). Every emote gets its own
+/// file: the game silently drops an animation file that is too large (all 18 emotes in one
+/// ~480 KB file never load).
+[[nodiscard]] std::string animationFileName(std::string_view emoteId);
+/// The file of `kStopAnimation`.
+inline constexpr std::string_view kStopAnimationFile = "lepton_emote_stop.animation.json";
+/// The stop animation (an empty animation on the emote controller) as a whole file.
+[[nodiscard]] nlohmann::ordered_json stopAnimationFile();
+
 /// Molang that hides the emote outside Quark's "standing" pose and in first person.
 inline constexpr std::string_view kBlendWeight =
     "(variable.is_first_person || query.is_sneaking || query.is_swimming || query.is_sleeping || query.is_gliding) ? 0.0 : 1.0";
