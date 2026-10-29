@@ -724,6 +724,15 @@ LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
         return viewer == nullptr;
     });
     if (viewer) {
+        // the item icons in the viewer's hotbar
+        auto& hotbar = game::inv::playerInventory(*viewer);
+        hotbar.setItem(0, game::makeItem(fr::kGlassFrame, 2));
+        hotbar.setItem(1, game::makeItem(fr::kGlowingGlassFrame, 2));
+        hotbar.setItem(2, dyed(false, 0xB02E26));
+        hotbar.setItem(3, dyed(false, 0x3C44AA));
+        hotbar.setItem(4, dyed(true, 0x5E7C16));
+        hotbar.setItem(5, game::makeItem("minecraft:frame"));
+        game::inv::sync(*viewer);
         auto uid  = viewer->getOrCreateUniqueID();
         auto view = [&](GlobalPos const& at, float dz, float pitch) {
             if (auto* v = sp.getLevel().getPlayer(uid))

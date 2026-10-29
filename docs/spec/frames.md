@@ -118,6 +118,8 @@ untinted), grey dyed frame entity texture.
   item = the frame item, name tag = the item's custom name); emptying or breaking despawns it. The
   block's `lepton:filled` state hides the glass frame model. The 100-tick sweep respawns a missing
   display and despawns orphans.
+- **Comparators**: a comparator reading the frame (through its support, as in Java) gets 0 for an
+  empty frame and rotation + 1 for a filled one; neighbours are updated after every change.
 - **Maps** (`glassItemFramesUpdateMaps`, `glassItemFramesUpdateMapsEveryTick`): every 100 ticks
   (every tick with the second option) a filled, unlocked map in a loaded glass frame is updated at
   the frame's position with `MapItem::blockTick` (what Bedrock's item frames use).
@@ -206,15 +208,28 @@ No mod strings (Quark's only strings are the JEI hints, not ported per SPEC §8;
    for every client. A **map** in a glass frame is drawn as the map item, not the map picture:
    Bedrock draws map pictures only in vanilla item frame blocks and in the first-person hand
    (`ItemFrameRenderer` / map renderer are not reachable from an entity or a custom block). Glow
-   glass frames cannot force full-bright item lighting (held items use the entity's light).
+   glass frames cannot force full-bright item lighting (held items use the entity's light). The
+   poses per kind (sprites and maps flat, tools diagonal like Java, blocks front face, shields
+   upright) were tuned against client screenshots. A **banner** is drawn by Bedrock's held-banner
+   renderer as a small dark model edge-on, not as Quark's large flag: Bedrock renders banner
+   patterns only for banner blocks, worn banners and the first-person hand.
+   The glass frame item shows an upright glass frame in hand (`minecraft:item_visual`).
+   The dyed overlay is tinted with the render controller's `overlay_color` (72% towards the dye
+   colour over a grey frame texture): the multiplying `color` field only works for the warden
+   runtime type on current Bedrock (MCPE-183985), so dark details stay a little lighter than a
+   true multiply.
 3. **More than 6 banner layers** cannot be shown on Bedrock (banner shader limit; minecraft.wiki:
    "Banners can display only up to 6 layers, even if more layers are added using external
    editors"), so the module's limit is capped at 6 (see 3.3); lower limits work as in Quark. The
    banner copy recipe and the tooltip have no 6-layer cap on Bedrock (the tooltip lists every layer),
    so Quark's patches to them have nothing to change.
-4. **Comparators** do not read glass frames: Bedrock comparators read `BlockType::hasComparatorSignal`
-   / `getComparatorSignal`, which custom blocks cannot provide and which is folded code (cannot be
-   hooked safely). Dyed frames are vanilla frames and keep their comparator output.
+4. **Comparators.** Glass frames give Quark's comparator signal (0 empty, rotation + 1 filled), read
+   through the support block like vanilla frames. Custom blocks cannot declare comparator output
+   and `BlockType::hasComparatorSignal` is folded code, so each glass frame block type gets its own
+   copy of its virtual function table with `hasComparatorSignal` / `getComparatorSignal` replaced
+   (`Comparator.cpp`, U10's gravisand technique). The frame's facing is not checked against the
+   comparator (Bedrock passes no usable direction). Dyed frames are vanilla frames and keep their
+   own comparator output.
 5. **Sign editing parity.** Java 1.20+ and Bedrock: using a sign opens the editor for the side you
    face (front or back), dye / glow ink / honeycomb (wax) apply to the sign instead, waxed signs
    cannot be edited, sneak-use places blocks and items against signs. Both behave the same; nothing
@@ -231,7 +246,8 @@ No mod strings (Quark's only strings are the JEI hints, not ported per SPEC §8;
 9. Disabled GlassItemFrame keeps the (unobtainable) items registered (see 3.5).
 
 ## 8. Tests
-Selftests `frames.*`, dx 2400..2499 (14 tests):
+Selftests `frames.*`, dx 2400..2499 (15 tests, incl. `frames.glass_comparator`: direct signal 0 / 1 / 3
+and a real comparator behind the support powering a wire with 3):
 `frames.config`, `frames.sign_rule` (Quark's attachment rule), `frames.recipes` (incl. removal when
 disabled), `frames.glass_use` (real placement, insert, display entity + properties, rotate, punch,
 removal drops), `frames.glass_place_rules` (floor frame, disabled module), `frames.glass_survive`,

@@ -54,6 +54,8 @@ foreach ($b in @(
         @{ Id = 'lepton:glass_item_frame'; En = 'Glass Item Frame'; Zh = '玻璃物品展示框' },
         @{ Id = 'lepton:glowing_glass_item_frame'; En = 'Glow Glass Item Frame'; Zh = '荧光玻璃物品展示框' })) {
     $path = Get-Path $b.Id
+    $itemVis = [ordered]@{}
+    foreach ($f in $faces) { $itemVis[$f] = $f -eq 'south' }
     $vis = [ordered]@{}
     foreach ($f in $faces) { $vis[$f] = "q.block_state('minecraft:block_face') == '$f' && !q.block_state('lepton:filled')" }
     $components = [ordered]@{
@@ -64,6 +66,11 @@ foreach ($b in @(
         'minecraft:selection_box'             = ConvertTo-BoxJson (Get-BoundingBox (Get-FrameBoxes 'up'))
         'minecraft:material_instances'        = $mi
         'minecraft:geometry'                  = [ordered]@{ identifier = $glassGeo; bone_visibility = $vis }
+        # held in a hand / dropped: the frame standing upright, not a full block
+        'minecraft:item_visual'               = [ordered]@{
+            geometry           = [ordered]@{ identifier = $glassGeo; bone_visibility = $itemVis }
+            material_instances = $mi
+        }
         'minecraft:loot'                      = (Write-LootTable $path $b.Id)
         'minecraft:map_color'                 = '#c8e4ec'
         'tag:lepton:glass_item_frame'         = [ordered]@{}
@@ -215,13 +222,19 @@ $P = @{
 $depth = "($($P.kind) == 4 ? 8.0 : ($($P.kind) == 3 ? 8.8 : 7.6))"
 # Scale: Java renders FIXED items at 0.5 x itemRenderScale (shields x 2.667); banners show their
 # flag (0.8 x 0.4 of a banner).
-$itemScale = "($($P.kind) == 3 ? 0.5 : ($($P.kind) == 4 ? 0.5 * $($P.scale) * 2.6667 : 0.5 * $($P.scale)))"
-# Held-item pose of Bedrock's item bone, per kind (sprites are drawn edge-on to the arm).
+# Bedrock's held shield model is about twice Java's FIXED shield, so it gets half the boost.
+$itemScale = "($($P.kind) == 3 ? 0.5 : ($($P.kind) == 4 ? 0.5 * $($P.scale) * 0.6667 : 0.5 * $($P.scale)))"
+# Held-item pose: Bedrock draws a mob's held item with its third-person hand transform; these
+# rotations (found with a pose matrix in the client e2e) turn it face-on like Java's FIXED frame
+# rendering. Sprites and maps lie flat with the arm pointing at the wall, tools are turned back from
+# their diagonal grip, blocks show their front face.
+$k = $P.kind
 $armRot = @(
-    "($($P.kind) == 2 ? 0 : 0)",
-    "($($P.kind) == 2 ? 0 : 90)",
-    "($($P.kind) == 1 ? -45 : 0)"
+    "($k == 1 || $k == 4 ? 0 : -90)",
+    "($k == 1 ? 90 : ($k == 4 ? -90 : ($k == 3 ? -90 : 0)))",
+    "($k == 1 ? -45 : ($k == 4 ? 90 : 0))"
 )
+$itemRot = @(0, "($k == 2 ? 45 : 0)", 0)
 # Sign attachment (Quark: 0.32 scale on the sign face; 1/2 standing in front/behind, 3 wall sign,
 # 4 hanging from a wall, 5/6 hanging in front/behind). Positions in px (Java blocks x 16).
 $onSign = "($($P.sign) > 0)"
@@ -246,10 +259,11 @@ $anim = [ordered]@{
                 sign_offset = [ordered]@{ position = @(0, "($onSign ? $hangY : 0)", "($onSign ? $hangZ - 0.585 * 16 : 0)") }
                 spin        = [ordered]@{ rotation = @(0, 0, "-($spin)") }
                 holder      = [ordered]@{
-                    position = @("($($P.kind) == 4 ? -4 : 0)", 0, $depth)
+                    position = @("($($P.kind) == 2 ? 2 : 0)", "($($P.kind) == 2 ? -2 : 0)", $depth)
                     scale    = $itemScale
                 }
                 rightArm    = [ordered]@{ rotation = $armRot }
+                rightItem   = [ordered]@{ rotation = $itemRot }
             }
         }
     }
@@ -336,11 +350,13 @@ Write-PackJson (Join-Path $RP 'render_controllers/lepton_frames.render_controlle
                 geometry        = 'Geometry.default'
                 materials       = @([ordered]@{ '*' = 'Material.default' })
                 textures        = @('Texture.default')
-                color           = [ordered]@{
+                # The render controller `color` (multiply) only works for the warden runtime type, so
+                # the tint is an overlay: the grey texture is pulled most of the way to the dye colour.
+                overlay_color   = [ordered]@{
                     r = "math.mod(math.floor($c / 65536), 256) / 255"
                     g = "math.mod(math.floor($c / 256), 256) / 255"
                     b = "math.mod($c, 256) / 255"
-                    a = '1.0'
+                    a = '0.72'
                 }
                 part_visibility = @(
                     [ordered]@{ '*' = $false },
@@ -360,7 +376,7 @@ Write-PackJson (Join-Path $RP 'entity/dyed_item_frame.entity.json') ([ordered]@{
         'minecraft:client_entity' = [ordered]@{
             description = [ordered]@{
                 identifier         = 'lepton:dyed_item_frame'
-                materials          = [ordered]@{ default = 'entity_alphatest_change_color' }
+                materials          = [ordered]@{ default = 'entity_alphatest' }
                 textures           = [ordered]@{ default = 'textures/entity/frames/dyed_item_frame' }
                 geometry           = [ordered]@{ default = 'geometry.lepton.dyed_item_frame' }
                 render_controllers = @('controller.render.lepton.dyed_item_frame')
