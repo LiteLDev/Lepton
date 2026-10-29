@@ -67,7 +67,7 @@ struct ConfigGuard {
     ~ConfigGuard() {
         lp::config::mut<ns::NewStonesConfig>() = saved;
         ns::crossUnit()                        = cross;
-        ns::invalidateGenPlan();
+        ns::rebuildGenPlan();
     }
 };
 
@@ -409,7 +409,7 @@ LP_REGISTER_SELFTEST("newstones.air_cluster", [](Context& ctx) -> ll::coro::Coro
 LP_REGISTER_SELFTEST("newstones.permafrost_style", [](Context& ctx) -> ll::coro::CoroTask<> {
     ConfigGuard guard;
     lp::config::mut<ns::NewStonesConfig>().enablePermafrost = true;
-    ns::invalidateGenPlan();
+    ns::rebuildGenPlan();
     auto base = ctx.testPos(330);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto o = off(base, 0, 3, 3); // a 5x5x5 stone box with a 3x2x3 hole in the middle
@@ -417,7 +417,11 @@ LP_REGISTER_SELFTEST("newstones.permafrost_style", [](Context& ctx) -> ll::coro:
         for (int y = 0; y < 5; ++y)
             for (int z = 0; z < 5; ++z) {
                 bool hole = x >= 1 && x <= 3 && z >= 1 && z <= 3 && y >= 2 && y <= 3;
-                ctx.require(put(ctx, off(o, x, y, z), hole ? "minecraft:air" : "minecraft:stone"), "box placed");
+                auto p    = off(o, x, y, z);
+                if (hole) {
+                    ctx.cleanupBlock(p);
+                    lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(p)); // usually air already
+                } else ctx.require(put(ctx, p, "minecraft:stone"), "box placed");
             }
     ns::JavaRandom r(1);
     for (int x = 0; x < 5; ++x)
@@ -426,7 +430,8 @@ LP_REGISTER_SELFTEST("newstones.permafrost_style", [](Context& ctx) -> ll::coro:
     ctx.check(idAt(ctx, off(o, 2, 1, 2)) == "lepton:permafrost", "floor under the hole: " + idAt(ctx, off(o, 2, 1, 2)));
     ctx.check(idAt(ctx, off(o, 2, 4, 2)) == "lepton:permafrost", "ceiling (and top) of the box: " + idAt(ctx, off(o, 2, 4, 2)));
     ctx.check(idAt(ctx, off(o, 0, 2, 2)) == "minecraft:packed_ice", "wall: " + idAt(ctx, off(o, 0, 2, 2)));
-    ctx.check(idAt(ctx, off(o, 0, 0, 0)) == "minecraft:packed_ice", "bottom corner: " + idAt(ctx, off(o, 0, 0, 0)));
+    ctx.check(idAt(ctx, off(o, 0, 2, 0)) == "minecraft:packed_ice", "outer edge: " + idAt(ctx, off(o, 0, 2, 0)));
+    ctx.check(idAt(ctx, off(o, 2, 0, 2)) == "lepton:permafrost", "bottom over air is a ceiling: " + idAt(ctx, off(o, 2, 0, 2)));
     int stone = 0;
     for (int x = 0; x < 5; ++x)
         for (int y = 0; y < 5; ++y)

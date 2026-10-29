@@ -265,7 +265,10 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     if (!isTinted(b.getTypeName())) return;
     auto& region = ev.blockSource();
     if (region.getLevel().isClientSide()) return;
-    if (std::this_thread::get_id() == gServerThread.load()) {
+    // the server thread (or, before its first tick, any thread: the changes of the level load are
+    // fixed on the first tick)
+    auto server = gServerThread.load();
+    if (server == std::thread::id{} || std::this_thread::get_id() == server) {
         if (!retinted(b, ev.pos())) return;
         std::lock_guard lock(gPendingMutex);
         gPending.push_back({game::globalPos(region, ev.pos()).dim, ev.pos()});
@@ -507,9 +510,9 @@ public:
         refreshCrossUnit();
         config::onReload([] {
             refreshCrossUnit();
-            invalidateGenPlan();
+            rebuildGenPlan();
         });
-        game::db::onWorldReady([] { invalidateGenPlan(); });
+        game::db::onWorldReady([] { rebuildGenPlan(); });
         game::db::onWorldClosed([] {
             invalidateGenPlan();
             std::lock_guard lock(gPendingMutex);
@@ -591,7 +594,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         if (!p) return out.error(lp::tr("lp.newstones.players_only", "Only players can use this command."));
         if (!lp::commands::isAdmin(origin))
             return out.error(lp::trFor(*p, "lp.newstones.admin_only", "You need operator permission for this command."));
-        printSources(*p, std::clamp(radius, 1, 32), out);
+        printSources(*p, std::clamp(radius, 1, 16), out);
     };
     cmd.overload().text("newstones").text("sources").execute([sources](CommandOrigin const& o, CommandOutput& out) {
         sources(o, out, 8);

@@ -259,8 +259,11 @@ struct SourceInfo {
 [[nodiscard]] std::vector<SourceInfo> sourcesNear(int dim, int cx, int cz, int radius);
 /// "chunks=.. sources=.. placed=.." counters since start (log line / tests).
 [[nodiscard]] std::string genStats();
-/// Rebuilds the generation plan on next use (config reload, world change).
+/// Rebuilds the generation plan on next use (world closed).
 void invalidateGenPlan();
+/// Rebuilds the generation plan now from the current config (server thread: world ready, config
+/// reload, selftests that change the config).
+void rebuildGenPlan();
 void installWorldGen();
 void uninstallWorldGen();
 

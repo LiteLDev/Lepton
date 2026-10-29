@@ -343,12 +343,12 @@ std::shared_ptr<Plan const> buildPlan() {
     return p;
 }
 
+/// The current plan. It is built on the server thread when the world becomes ready or the config
+/// changes (rebuildGenPlan); world generation threads only build it when none exists yet (BDS
+/// creates the spawn chunks before the mod is enabled, while nothing changes the config).
 std::shared_ptr<Plan const> plan() {
     std::lock_guard lock(gPlanMutex);
-    if (gDirty.load() || !gPlan) {
-        gPlan = buildPlan();
-        gDirty.store(false);
-    }
+    if (gDirty.exchange(false) || !gPlan) gPlan = buildPlan();
     return gPlan;
 }
 
@@ -439,17 +439,31 @@ struct DimQuery {
 };
 
 /// Biome lookups of cluster sources are repeated by every chunk the cluster reaches: cache them.
-std::string cachedBiome(DimQuery const& q, int x, int z) {
-    static std::mutex                                         m;
-    static std::unordered_map<uint64_t, std::string>          cache;
+std::mutex                                gBiomeMutex;
+std::unordered_map<uint64_t, std::string> gBiomeCache;
+int64_t                                   gBiomeSeed = 0;
+
+void clearBiomeCache() {
+    std::lock_guard lock(gBiomeMutex);
+    gBiomeCache.clear();
+}
+
+std::string cachedBiome(DimQuery const& q, int64_t seed, int x, int z) {
+    auto&    m     = gBiomeMutex;
+    auto&    cache = gBiomeCache;
     uint64_t key = (static_cast<uint64_t>(q.dim & 3) << 62) ^ (static_cast<uint64_t>(static_cast<uint32_t>(x)) << 31)
                  ^ static_cast<uint64_t>(static_cast<uint32_t>(z));
     {
         std::lock_guard lock(m);
+        if (gBiomeSeed != seed) {
+            cache.clear();
+            gBiomeSeed = seed;
+        }
         if (auto it = cache.find(key); it != cache.end()) return it->second;
     }
     std::string b = q.biome(x, z);
     std::lock_guard lock(m);
+    if (gBiomeSeed != seed) return b;
     if (cache.size() > 20000) cache.clear();
     cache.emplace(key, b);
     return b;
@@ -463,6 +477,7 @@ int fillPart(BlockSource& region, int dim, Plan const& p, BigStoneClusterConfig 
     int lo   = std::max(minH + 1, static_cast<int>(std::floor(sh.sy - sh.ry)));
     int hi   = std::min(maxH - 1, static_cast<int>(std::ceil(sh.sy + sh.ry)));
     int n    = 0;
+    // Zeta forEachChunkBlock: y in [lower, upper) (the top row of the bounds is not visited)
     for (int bx = 0; bx < 16; ++bx) {
         int x = (cx << 4) + bx;
         if (std::abs(x - sh.sx) > sh.rx) continue;
@@ -499,7 +514,7 @@ void generateClusters(BlockSource& region, DimQuery const& q, Plan const& p, See
                 int sy    = (range > 0 ? r.nextInt(range) : 0) + lower;
                 int sz    = (z << 4) + r.nextInt(16);
                 ++gStats.sources;
-                std::string biome = cachedBiome(q, sx, sz);
+                std::string biome = cachedBiome(q, seeds.seed, sx, sz);
                 if (biome.empty() || !biomeAllowed(biome, c.biomes)) continue;
                 ++gStats.accepted;
                 Shape sh = shapeAround(sx, sy, sz, c.horizontalSize, c.verticalSize, c.horizontalVariation, c.verticalVariation);
@@ -612,6 +627,8 @@ void generateOres(BlockSource& region, int dim, Plan const& p, int64_t seed, int
     if (p.ores.empty()) return;
     constexpr int kStage = 6; // GenerationStep.Decoration.UNDERGROUND_ORES
     int64_t       deco   = decorationSeed(seed, cx << 4, cz << 4);
+    // Zeta: stageNum = step * 10000 is passed as the feature index, and setFeatureSeed adds
+    // 10000 * step again (decorationSeed + index + 10000 * step)
     int           index  = kStage * 10000;
     for (auto const& o : p.ores) {
         if (!dimensionAllowed(dim, o.dims)) continue;
@@ -696,10 +713,11 @@ void generatePermafrost(BlockSource& region, DimQuery const& q, Plan const& p, S
             JavaRandom r = chunkRandom(seeds, x, z, xr);
             if (r.nextInt(c.rarity) != 0) continue;
             int sx = (x << 4) + r.nextInt(16);
+            // UndergroundStyleGenerator: Random.nextInt(min, max) (BigStoneClusterGenerator: nextInt(range) + min)
             int sy = c.maxYLevel > c.minYLevel ? r.nextInt(c.minYLevel, c.maxYLevel) : c.minYLevel;
             int sz = (z << 4) + r.nextInt(16);
             ++gStats.sources;
-            std::string biome = cachedBiome(q, sx, sz);
+            std::string biome = cachedBiome(q, seeds.seed, sx, sz);
             if (biome.empty() || !biomeAllowed(biome, c.biomes)) continue;
             auto surface = q.surface ? q.surface(sx, sz) : std::nullopt;
             if (!surface || *surface < sy) continue;
@@ -969,7 +987,7 @@ std::vector<SourceInfo> sourcesNear(int dim, int cx, int cz, int radius) {
                 int sx    = (x << 4) + r.nextInt(16);
                 int sy    = (range > 0 ? r.nextInt(range) : 0) + c.minYLevel;
                 int sz    = (z << 4) + r.nextInt(16);
-                auto biome = cachedBiome(q, sx, sz);
+                auto biome = q.biome(sx, sz); // not cached: a command scan would flush the generators' cache
                 if (biome.empty() || !biomeAllowed(biome, c.biomes)) continue;
                 out.push_back({g.info.name, sx, sy, sz, biome});
             }
@@ -985,7 +1003,7 @@ std::vector<SourceInfo> sourcesNear(int dim, int cx, int cz, int radius) {
                 int sx = (x << 4) + r.nextInt(16);
                 int sy = c.maxYLevel > c.minYLevel ? r.nextInt(c.minYLevel, c.maxYLevel) : c.minYLevel;
                 int sz = (z << 4) + r.nextInt(16);
-                auto biome = cachedBiome(q, sx, sz);
+                auto biome = q.biome(sx, sz); // not cached: a command scan would flush the generators' cache
                 if (biome.empty() || !biomeAllowed(biome, c.biomes)) continue;
                 auto surface = q.surface(sx, sz);
                 if (!surface || *surface < sy) continue;
@@ -1002,7 +1020,18 @@ std::string genStats() {
          + " pockets=" + std::to_string(gStats.pockets.load()) + " permafrost=" + std::to_string(gStats.permafrost.load());
 }
 
-void invalidateGenPlan() { gDirty.store(true); }
+void invalidateGenPlan() {
+    clearBiomeCache();
+    gDirty.store(true);
+}
+
+void rebuildGenPlan() {
+    clearBiomeCache();
+    auto p = buildPlan();
+    std::lock_guard lock(gPlanMutex);
+    gPlan = std::move(p);
+    gDirty.store(false);
+}
 
 void installWorldGen() {
     gInstalled.store(true);
