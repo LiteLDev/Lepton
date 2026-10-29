@@ -352,7 +352,33 @@ LP_REGISTER_SELFTEST("worldbeyond.chorus_tick", [](Context& ctx) -> ll::coro::Co
     clearChorus(r, at, 4);
 });
 
-LP_REGISTER_SELFTEST("worldbeyond.crystal_hue", [](Context& ctx) -> ll::coro::CoroTask<> {
+// The tick chain over many cycles: a plant's ticks keep coming (each tick schedules the next one),
+// with the plant moving around on its random ticks (default passiveTeleportChance).
+LP_REGISTER_SELFTEST("worldbeyond.chorus_tick_chain", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto s = co_await sky(ctx, 2915);
+    auto& r = *s.region;
+    Scratch sc(r);
+    sc.platform(s.pos, 5);
+    BlockPos at{s.pos.x, s.pos.y + 1, s.pos.z};
+    struct Stop {
+        ~Stop() { lp::feature::worldbeyond::testing::stopFastTicks(); }
+    } stop;
+    lp::feature::worldbeyond::testing::fastTicks(
+        static_cast<int>(r.getDimensionId()),
+        BlockPos{at.x - 6, at.y - 1, at.z - 6},
+        BlockPos{at.x + 6, at.y + 1, at.z + 6}
+    );
+    sc.set(at, kChorusWeeds); // placing it schedules its first tick
+    co_await ctx.ticks(100);
+    int ticks = lp::feature::worldbeyond::testing::fastTickCount();
+    int n     = countChorus(r, at, 5);
+    ctx.info("plant ticks in 100 game ticks: " + std::to_string(ticks) + ", plants " + std::to_string(n));
+    ctx.check(ticks >= 25, "the plant keeps ticking cycle after cycle (" + std::to_string(ticks) + " ticks)");
+    ctx.check(n >= 1, "the plant is still on the platform");
+    clearChorus(r, at, 5);
+});
+
+LP_REGISTER_SELFTEST("worldbeyond.crystal_hue",[](Context& ctx) -> ll::coro::CoroTask<> {
     auto s = co_await sky(ctx, 2950);
     auto& r = *s.region;
     Scratch sc(r);
@@ -602,11 +628,14 @@ LP_REGISTER_SELFTEST("worldbeyond.end_gen", [](Context& ctx) -> ll::coro::CoroTa
     auto  dim   = level->getDimension(2).lock();
     ctx.require(dim && static_cast<WorldGenerator*>(dim->mWorldGenerator), "the End has a generator");
     auto const& endGen = static_cast<TheEndGenerator const&>(*static_cast<WorldGenerator*>(dim->mWorldGenerator));
-    // find a highlands chunk of the outer islands that no one has generated yet
+    // find a highlands chunk of the outer islands that no one has generated yet: every run in the
+    // same world (a client reruns the selftests) searches a fresh area
+    static int run = 0;
+    int        base = 140 + 400 * (run++ % 8);
     int hx = 0, hz = 0;
     bool found = false;
     for (int i = 0; i < 4000 && !found; ++i) {
-        int cx = 140 + (i % 60) * 3, cz = 140 + (i / 60) * 3;
+        int cx = base + (i % 60) * 3, cz = 140 + (i / 60) * 3;
         if (endBiomeFromHeight(cx, cz, endGen.getIslandHeightValue(cx, cz, 1, 1)) == "minecraft:end_highlands") {
             hx = cx, hz = cz, found = true;
         }
@@ -639,6 +668,15 @@ LP_REGISTER_SELFTEST("worldbeyond.end_gen", [](Context& ctx) -> ll::coro::CoroTa
         ctx.check(h && *h == myaliteHueStep(crystal.at.x, crystal.at.y, crystal.at.z), "generated crystals have their position's colour");
     }
     lp::log().info("worldbeyond: End generation checked: {} weeds, {} crystals, {} dusky myalite", weeds.count, crystal.count, dusky.count);
+    lp::log().info(
+        "worldbeyond: End sample: weeds {} {} {} crystal {} {} {}",
+        weeds.at.x,
+        weeds.at.y,
+        weeds.at.z,
+        crystal.at.x,
+        crystal.at.y,
+        crystal.at.z
+    );
 });
 
 LP_REGISTER_SELFTEST("worldbeyond.nether_gen", [](Context& ctx) -> ll::coro::CoroTask<> {

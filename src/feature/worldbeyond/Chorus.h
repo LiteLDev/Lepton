@@ -34,6 +34,13 @@ void chorusBonemeal(BlockSource& region, BlockPos const& pos);
 /// The server-side random used by the plants (server thread).
 JavaRandom& serverRandom();
 
+namespace testing {
+/// Plants in the box (dimension `dim`) tick every 1..3 ticks; their ticks are counted.
+void fastTicks(int dim, BlockPos const& min, BlockPos const& max);
+[[nodiscard]] int fastTickCount();
+void stopFastTicks();
+} // namespace testing
+
 void installChorus();
 void uninstallChorus();
 

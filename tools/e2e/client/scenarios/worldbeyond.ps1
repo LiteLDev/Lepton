@@ -33,14 +33,25 @@ Close-Screen
 # Generation in the End: the selftest finds an outer highlands chunk, generates it and checks it.
 $mark = Get-LogMark
 $r = Invoke-SelfTest 'worldbeyond.end_gen' -TimeoutSeconds 300
-$line = Wait-LogLine 'End highlands chunk (-?\d+) (-?\d+)' 10 -Since $mark
-if ($line -notmatch 'chunk (-?\d+) (-?\d+)') { throw "no End chunk in '$line'" }
-$x = [int]$Matches[1] * 16 + 8; $z = [int]$Matches[2] * 16 + 8
-Invoke-Chat "/execute in the_end run tp @s $($x - 30) 130 $($z - 30) facing $x 70 $z"
-Start-Sleep -Seconds 12
+$line = Wait-LogLine 'End sample: weeds (-?\d+) (-?\d+) (-?\d+) crystal (-?\d+) (-?\d+) (-?\d+)' 10 -Since $mark
+if ($line -notmatch 'weeds (-?\d+) (-?\d+) (-?\d+) crystal (-?\d+) (-?\d+) (-?\d+)') { throw "no End sample in '$line'" }
+$w = @([int]$Matches[1], [int]$Matches[2], [int]$Matches[3])
+$c = @([int]$Matches[4], [int]$Matches[5], [int]$Matches[6])
+# a barrier to stand on (creative players fall), the camera a little away from the feature
+function Show-From([int[]]$at, [int[]]$off, [int[]]$look) {
+    $x = $at[0] + $off[0]; $y = $at[1] + $off[1]; $z = $at[2] + $off[2]
+    Invoke-Chat "/execute in the_end run setblock $x $($y - 1) $z barrier"
+    Invoke-Chat "/execute in the_end run tp @s $x $y $z facing $($look[0]) $($look[1]) $($look[2])"
+}
+Show-From $c @(-22, 6, -22) $c
+Start-Sleep -Seconds 10
+Show-From $c @(-22, 6, -22) $c
+Start-Sleep -Seconds 3
 Save-Screenshot 'end-spires' | Out-Null
-Invoke-Chat "/tp @s $x 95 $z facing $($x + 6) 60 $($z + 6)"
+Show-From $w @(3, 2, 3) $w
 Start-Sleep -Seconds 6
+Show-From $w @(3, 2, 3) $w
+Start-Sleep -Seconds 2
 Save-Screenshot 'end-chorus' | Out-Null
 if ($r.Fail -gt 0) { throw "worldbeyond.end_gen failed on the integrated server" }
 $r = Invoke-SelfTest 'worldbeyond.*' -TimeoutSeconds 900
