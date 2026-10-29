@@ -154,6 +154,8 @@ pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless 
 - Worktrees under the main checkout: run xmake with `-P .` (as `tools/build.ps1` does), otherwise xmake
   picks the parent checkout's project and builds there. If a build rewrites `xmake-requires.lock`
   (repo commit bumps only), revert it: `git checkout xmake-requires.lock`.
+- Client remote modes download the RP from the BDS host; the harness drops the game's cached copy of
+  Lepton's RP before every launch (same UUID/version in every dev build), so remote runs test this build's assets.
 - Client e2e: `full` (all selftests + handshake), `ui` (UI toolkit demo, screenshots), `net` (run with
   `-Mode local`, `remote-mod` and `remote-vanilla`: handshake, container screen, form fallback),
   `shapes` (generated shape gallery).
