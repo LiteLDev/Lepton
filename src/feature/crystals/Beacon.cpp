@@ -321,23 +321,27 @@ LL_TYPE_INSTANCE_HOOK(
     void,
     BlockSource& region
 ) {
-    origin(region);
-    if (!beaconOn() || region.getLevel().isClientSide()) return;
+    if (!beaconOn() || region.getLevel().isClientSide()) {
+        origin(region);
+        return;
+    }
+    // Java: a broken beam leaves the beacon without effects. Bedrock's tick re-checks the pyramid
+    // and applies the effects in one go (checkShape is inlined on the server), so the chosen
+    // effects are hidden from the vanilla tick while the beam is broken.
+    auto key   = game::globalPos(region, getPosition());
+    bool broke = false;
+    if (auto it = beacons().find(key); it != beacons().end()) broke = it->second.beam.broke;
+    if (broke) {
+        int primary = mPrimaryEffectId, secondary = mSecondaryEffectId;
+        mPrimaryEffectId   = 0;
+        mSecondaryEffectId = 0;
+        origin(region);
+        mPrimaryEffectId   = primary;
+        mSecondaryEffectId = secondary;
+    } else {
+        origin(region);
+    }
     serverTick(*this, region);
-}
-
-LL_TYPE_INSTANCE_HOOK(
-    BeaconShapeHook,
-    ll::memory::HookPriority::Normal,
-    BeaconBlockActor,
-    &BeaconBlockActor::checkShape,
-    void,
-    BlockSource& region
-) {
-    origin(region);
-    if (!beaconOn() || region.getLevel().isClientSide()) return;
-    // Java: a broken beam leaves the beacon without effects
-    if (computeBeam(region, getPosition()).broke) mNumLevels = 0;
 }
 
 class BeaconModule {
@@ -352,12 +356,10 @@ public:
             });
         }
         BeaconTickHook::hook();
-        BeaconShapeHook::hook();
     }
     void uninstall() {
         gInstalled = false;
         BeaconTickHook::unhook();
-        BeaconShapeHook::unhook();
         for (auto& [k, st] : beacons()) clearEntities(st);
         beacons().clear();
     }
