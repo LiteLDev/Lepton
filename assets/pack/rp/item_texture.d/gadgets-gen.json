@@ -1,0 +1,35 @@
+{
+  "lepton_gadgets_lepton_gadgets_abacus": {
+    "textures": "textures/items/lepton_gadgets/abacus"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_chatter": {
+    "textures": "textures/items/lepton_gadgets/music_disc_chatter"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_clock": {
+    "textures": "textures/items/lepton_gadgets/music_disc_clock"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_crickets": {
+    "textures": "textures/items/lepton_gadgets/music_disc_crickets"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_drips": {
+    "textures": "textures/items/lepton_gadgets/music_disc_drips"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_endermosh": {
+    "textures": "textures/items/lepton_gadgets/music_disc_endermosh"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_fire": {
+    "textures": "textures/items/lepton_gadgets/music_disc_fire"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_ocean": {
+    "textures": "textures/items/lepton_gadgets/music_disc_ocean"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_rain": {
+    "textures": "textures/items/lepton_gadgets/music_disc_rain"
+  },
+  "lepton_gadgets_lepton_gadgets_music_disc_wind": {
+    "textures": "textures/items/lepton_gadgets/music_disc_wind"
+  },
+  "lepton_gadgets_lepton_gadgets_pathfinders_quill": {
+    "textures": "textures/items/lepton_gadgets/pathfinders_quill"
+  }
+}

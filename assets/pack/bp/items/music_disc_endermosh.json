@@ -1,0 +1,22 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:music_disc_endermosh",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.record"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_gadgets_lepton_gadgets_music_disc_endermosh",
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "rare",
+      "minecraft:record": {
+        "comparator_signal": 14,
+        "duration": 189.4,
+        "sound_event": "lepton.music.endermosh"
+      }
+    }
+  }
+}
