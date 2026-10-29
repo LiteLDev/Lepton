@@ -138,6 +138,9 @@ BlockPos offset(BlockPos const& pos, int face, int n) {
 std::optional<uint32_t> beaconColorOf(Block const& b) {
     auto const& name = b.getTypeName();
     if (name.starts_with("lepton:")) {
+        // U8 storage's dirty glass (Quark DirtyGlassBlock: BEACON_COLOR_MULTIPLIER 4136704), its
+        // sheet inherits it; matched by id so this unit doesn't depend on U8's files
+        if (name == "lepton:dirty_glass" || name == "lepton:dirty_glass_pane") return 0x3f2f00u;
         int c = colorOf(b);
         if (c < 0) return std::nullopt;
         if (isCorundum(b) || isWaxedCorundum(b) || isPane(b)) return kColors[c].beacon;

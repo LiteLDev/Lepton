@@ -5,9 +5,9 @@
 # integrated server.
 $mark = Get-LogMark
 Invoke-Chat '/quark selftest "crystals.gallery"'
-foreach ($v in 'corundum', 'sheets', 'lamps', 'clusters', 'magnets', 'beacon') {
-    Wait-LogLine "GALLERY view $v" 90 -Since $mark | Out-Null
-    Start-Sleep -Seconds 4
+foreach ($v in 'corundum', 'sheets', 'lamps', 'clusters', 'magnets', 'beacon', 'beacon-side') {
+    Wait-LogLine "GALLERY view $v" 120 -Since $mark | Out-Null
+    Start-Sleep -Seconds 5
     Save-Screenshot "crystals-$v" | Out-Null
 }
 $line = Wait-LogLine 'SELFTEST (PASS|FAIL) crystals\.gallery' 60 -Since $mark

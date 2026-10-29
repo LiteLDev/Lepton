@@ -6,9 +6,9 @@
       "bones": {
         "root": {
           "rotation": [
-            "q.property('lepton:dir') == 0 ? 180 : (q.property('lepton:dir') == 2 ? -90 : (q.property('lepton:dir') == 3 ? 90 : 0))",
+            "q.property('lepton:dir') == 0 ? 180 : (q.property('lepton:dir') == 2 ? 90 : (q.property('lepton:dir') == 3 ? -90 : 0))",
             "0",
-            "q.property('lepton:dir') == 4 ? 90 : (q.property('lepton:dir') == 5 ? -90 : 0)"
+            "q.property('lepton:dir') == 4 ? -90 : (q.property('lepton:dir') == 5 ? 90 : 0)"
           ]
         },
         "beam": {

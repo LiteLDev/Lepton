@@ -548,13 +548,15 @@ LP_REGISTER_SELFTEST("crystals.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         put(45 + 2 * f, 2, 2, "lepton:magnet", {{"minecraft:facing_direction", magnetLook(f)}});
         put(45 + 2 * f, 2, 1, "minecraft:redstone_block");
     }
-    // beacon: up 3, east 4 through a red cluster, up through a blue cluster and yellow corundum
+    // beacon: up 3, east 4 through a red cluster, north 2 through a green one, up through a blue
+    // cluster and yellow corundum
     for (int x = -1; x <= 1; ++x)
         for (int z = -1; z <= 1; ++z) put(62 + x, 0, 2 + z, "minecraft:iron_block");
     put(62, 1, 2, "minecraft:beacon");
     put(62, 4, 2, clusterId(0), {{"minecraft:block_face", std::string("east")}});
-    put(66, 4, 2, clusterId(4), {{"minecraft:block_face", std::string("up")}});
-    put(66, 7, 2, corundumId(2));
+    put(66, 4, 2, clusterId(3), {{"minecraft:block_face", std::string("north")}});
+    put(66, 4, 0, clusterId(4), {{"minecraft:block_face", std::string("up")}});
+    put(66, 7, 0, corundumId(2));
     co_await ctx.ticks(10);
     ctx.check(bs::getBool(blockAt(ctx, at(base, 20, 1, 1)), "lepton:lit").value_or(false), "the upper lamps are lit");
     ctx.check(!bs::getBool(blockAt(ctx, at(base, 20, 0, 1)), "lepton:lit").value_or(true), "the lower lamps are off");
@@ -576,17 +578,19 @@ LP_REGISTER_SELFTEST("crystals.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     };
     // south of the rows, looking north (east on the right)
     view("corundum", 4.5f, 1.f, 7.5f, 15.f, 180.f);
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(200);
     view("sheets", 14.5f, 1.f, 7.5f, 15.f, 180.f);
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(200);
     view("lamps", 24.5f, 1.f, 7.5f, 15.f, 180.f);
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(200);
     view("clusters", 36.5f, 1.f, 7.5f, 15.f, 180.f);
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(200);
     view("magnets", 50.5f, 1.f, 8.5f, 15.f, 180.f);
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(200);
     view("beacon", 64.5f, 1.f, 16.5f, -25.f, 180.f);
-    co_await ctx.ticks(140);
+    co_await ctx.ticks(200);
+    view("beacon-side", 74.5f, 1.f, 10.5f, -20.f, 135.f); // south-east of it, looking north-west
+    co_await ctx.ticks(200);
     ctx.info("GALLERY done");
 });
 
@@ -603,4 +607,22 @@ LP_REGISTER_SELFTEST("crystals.recipes", [](Context& ctx) {
     ctx.check(!has("lepton:red_crystal_lamp"), "no amethyst crystal lamp recipe while useCorundum is on");
     ctx.check(has("lepton:magnet") && !has("lepton:magnet_pre_end"), "the post-End magnet recipe only");
     ctx.check(has("lepton:red_corundum_pane") && has("lepton:red_waxed_corundum"), "sheet and waxing recipes");
+});
+
+LP_REGISTER_SELFTEST("crystals.dirty_glass", [](Context& ctx) -> ll::coro::CoroTask<> {
+    // U8 storage's dirty glass tints beacon beams like Quark's (0x3f2f00); skipped without U8
+    auto const* glass = bs::of("lepton:dirty_glass");
+    auto const* pane  = bs::of("lepton:dirty_glass_pane");
+    if (!glass) {
+        ctx.info("lepton:dirty_glass is not registered: skipped");
+        co_return;
+    }
+    ctx.check(beaconColorOf(*glass) == 0x3f2f00u, "dirty glass tints beams");
+    ctx.check(!pane || beaconColorOf(*pane) == 0x3f2f00u, "the dirty glass pane tints beams");
+    auto beacon = ctx.testPos(1298, 2);
+    ctx.require(co_await ctx.ensureLoaded(beacon), "test area loaded");
+    ctx.require(place(ctx, at(beacon, 0, 3, 0), "lepton:dirty_glass"), "dirty glass above the beacon spot");
+    auto beam = computeBeam(regionOf(ctx), lp::game::blockPos(beacon));
+    ctx.check(!beam.broke && beam.quarkTint && beam.segments.size() == 2 && beam.segments.back().color == 0x3f2f00u,
+              "the beam above the dirty glass is brownish");
 });
