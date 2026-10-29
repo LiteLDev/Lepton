@@ -231,7 +231,7 @@ Vec3 relativeHit(Vec3 const& hit, BlockPos const& clicked) {
 }
 
 int pressTicksOf(Block const& b) {
-    for (int t : {10, 15, 20, 30, 40}) {
+    for (int t : {4, 10, 15, 20, 30, 40, 100}) {
         if (hasTag(b, ("lepton:press_ticks_" + std::to_string(t)).c_str())) return t;
     }
     return kindOf(b) == Kind::PressurePlate ? 20 : 30;
@@ -702,6 +702,7 @@ void scanPlates(Level& level) {
         auto const& b = region.getBlock(at);
         if (kindOf(b) != Kind::PressurePlate) continue;
         if (hasTag(b, "lepton:mobs_only") && !a->isPlayer() && !a->hasCategory(ActorCategory::Mob)) continue;
+        if (hasTag(b, "lepton:players_only") && (!a->isPlayer() || static_cast<Player*>(a)->isSpectator())) continue;
         auto key      = globalPos(region, at);
         s.plates[key] = s.tick;
         if (!bs::getBool(b, "lepton:pressed").value_or(false)) {

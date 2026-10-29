@@ -7,7 +7,26 @@
       "is_summonable": true,
       "is_experimental": false
     },
+    "component_groups": {
+      "lepton:fall_up": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "events": {
+      "lepton:fall_up": {
+        "add": {
+          "component_groups": [
+            "lepton:fall_up"
+          ]
+        }
+      }
+    },
     "components": {
+      "minecraft:variant": {
+        "value": 0
+      },
       "minecraft:type_family": {
         "family": [
           "lepton_gravisand",

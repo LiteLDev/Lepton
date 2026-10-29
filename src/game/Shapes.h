@@ -29,10 +29,13 @@
 //                          vertical_half, lepton:open                      use / by redstone
 //   lepton:button          minecraft:block_face (trait), lepton:pressed    pressed on use for
 //                                                                          lepton:press_ticks_<n>
+//                                                                          (n: 4 10 15 20 30 40 100)
 //   lepton:pressure_plate  lepton:pressed                                  pressed while an entity
 //                                                                          stands on it (players and
 //                                                                          mobs only with
-//                                                                          lepton:mobs_only)
+//                                                                          lepton:mobs_only; players
+//                                                                          but not spectators with
+//                                                                          lepton:players_only)
 //   lepton:pillar          minecraft:block_face (trait)                    (data only: axis model)
 //   lepton:strippable      (any)                                           an axe turns
 //                                                                          lepton:<x> into

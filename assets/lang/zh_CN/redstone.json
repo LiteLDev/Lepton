@@ -1,0 +1,11 @@
+{
+    "quark.jei.hint.ender_watcher": "玩家直视它时，它会发出红石信号，信号强度基于玩家准星与眼睛中心的距离。",
+    "quark.jei.hint.gold_button": "发出非常短的脉冲，持续2红石刻（0.2秒）。",
+    "quark.jei.hint.gravisand": "只有在接收到红石信号时才会掉落，会让相邻的重力沙子跟着它。无法掉落时，它会向上“掉落”。通过比较器可以发出15级的红石信号。",
+    "quark.jei.hint.iron_button": "发出很长的脉冲，持续5秒。",
+    "quark.jei.hint.iron_rod": "用活塞推动时，会破坏它前面的任何（能被活塞推动的）方块。",
+    "quark.jei.hint.redstone_randomizer": "随机将输入信号传向左边或右边。",
+    "quark.jei.hint.piston_te": "现在可以推动复杂方块（又称方块实体）了，刷怪笼除外。",
+    "quark.jei.hint.piston_max_blocks": "可以移动的最大方块数也被改为{}个。",
+    "quark.jei.hint.minecraft.chain": "锁链连接到方块时，若该方块被活塞移动，锁链以及锁链另一端连接的方块也会一起移动。"
+}

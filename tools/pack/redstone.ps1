@@ -101,7 +101,11 @@ Write-PackJson (Join-Path $script:BP 'entities/gravisand.json') ([ordered]@{
         format_version     = '1.21.0'
         'minecraft:entity' = [ordered]@{
             description = [ordered]@{ identifier = 'lepton:gravisand'; is_spawnable = $false; is_summonable = $true; is_experimental = $false }
+            # variant 0 falls down, 1 falls up (Quark's fallDirection), set natively through the event
+            component_groups = [ordered]@{ 'lepton:fall_up' = [ordered]@{ 'minecraft:variant' = [ordered]@{ value = 1 } } }
+            events      = [ordered]@{ 'lepton:fall_up' = [ordered]@{ add = [ordered]@{ component_groups = @('lepton:fall_up') } } }
             components  = [ordered]@{
+                'minecraft:variant'              = [ordered]@{ value = 0 }
                 'minecraft:type_family'          = [ordered]@{ family = @('lepton_gravisand', 'falling_block', 'inanimate') }
                 'minecraft:collision_box'        = [ordered]@{ width = 0.98; height = 0.98 }
                 'minecraft:physics'              = [ordered]@{ has_gravity = $false; has_collision = $false }
