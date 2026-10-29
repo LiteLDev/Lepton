@@ -1,0 +1,4 @@
+item.lepton:trowel=抹泥铲
+item.lepton:hammer=锤子
+key.lepton.lock_rotation=旋转锁定
+key.lepton.variant_selector=变种选择器
