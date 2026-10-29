@@ -2,7 +2,7 @@
 # strip, plus generation checks in the real End and Nether), and the generation log lines.
 $mark = Get-LogMark
 $r = Invoke-SelfTest 'worldbeyond.*' -TimeoutSeconds 900
-if ($r.Pass -lt 19) { throw "expected 19 worldbeyond selftests to pass, got $($r.Pass) (fail $($r.Fail))" }
+if ($r.Pass -lt 21) { throw "expected 21 worldbeyond selftests to pass, got $($r.Pass) (fail $($r.Fail))" }
 Wait-LogLine 'worldbeyond: decorating chunks of dimension 2' 5 -Since $mark | Out-Null
 Wait-LogLine 'worldbeyond: decorating chunks of dimension 1' 5 -Since $mark | Out-Null
 Wait-LogLine 'worldbeyond: viaduct of 6 crystals' 5 -Since $mark | Out-Null

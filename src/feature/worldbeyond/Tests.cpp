@@ -7,11 +7,15 @@
 #include <string>
 #include <vector>
 
+#include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/service/Bedrock.h"
 
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
+#include "mc/server/commands/CommandPermissionLevel.h"
+#include "mc/server/commands/ServerCommandOrigin.h"
+#include "mc/server/sim/LookDuration.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
@@ -371,16 +375,75 @@ LP_REGISTER_SELFTEST("worldbeyond.viaduct", [](Context& ctx) -> ll::coro::CoroTa
     BlockPos base{s.pos.x - 8, s.pos.y, s.pos.z};
     for (int x = -2; x <= 10; ++x) sc.set(BlockPos{base.x + x, base.y, base.z}, "minecraft:end_stone");
     for (int x = 0; x < 6; ++x) sc.set(BlockPos{base.x + x, base.y + 1, base.z}, kMyaliteCrystal);
-    auto& p   = ctx.player();
-    float eye = p.getPosition().y - p.getFeetPos().y;
-    // teleport next to the west end of the line: Quark sends us past the east end
-    p.teleportTo(Vec3{base.x - 0.5f, base.y + 1.0f + eye, base.z + 0.5f}, true, 3, 1, false); // cause 3: command
+    auto& p = ctx.player();
+    // teleport (feet position) next to the west end of the line: Quark sends us past the east end
+    p.teleportTo(Vec3{base.x - 0.5f, base.y + 1.0f, base.z + 0.5f}, true, 3, 1, false); // cause 3: command
     co_await ctx.ticks(3);
     auto     feet = p.getFeetPos();
     BlockPos fb   = lp::game::blockPosOf(feet);
     ctx.check(fb.x == base.x + 6 && fb.z == base.z, "the viaduct moved the player to the far end (x " + std::to_string(fb.x - base.x) + ")");
+    ctx.check(fb.y == base.y + 1, "at the height of the line (y " + std::to_string(fb.y - base.y) + ")");
     p.teleport(Vec3{base.x - 1.5f, base.y + 1.0f, base.z + 0.5f}, p.getDimensionId());
     co_await ctx.ticks(2);
+});
+
+namespace {
+
+void runCommand(std::string const& command) {
+    auto level = ll::service::getLevel();
+    if (!level) return;
+    ServerCommandOrigin origin("lepton-selftest", level->asServer(), CommandPermissionLevel::Owner, DimensionType(0));
+    ll::command::CommandRegistrar::getServerInstance().executeCommand(command, origin);
+}
+
+/// A floor and a line of 6 crystals at feet height going east from `base` (x .. x+5).
+void viaductLine(Scratch& sc, BlockPos const& base) {
+    for (int x = -3; x <= 10; ++x)
+        for (int z = -1; z <= 1; ++z) sc.set(BlockPos{base.x + x, base.y, base.z + z}, "minecraft:end_stone");
+    for (int x = 0; x < 6; ++x) sc.set(BlockPos{base.x + x, base.y + 1, base.z}, kMyaliteCrystal);
+}
+
+} // namespace
+
+LP_REGISTER_SELFTEST("worldbeyond.viaduct_command", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto s = co_await sky(ctx, 2980);
+    Scratch sc(*s.region);
+    BlockPos base{s.pos.x - 8, s.pos.y, s.pos.z};
+    viaductLine(sc, base);
+    auto& p = ctx.player();
+    // a real /tp command next to the west end of the line
+    runCommand(
+        "tp @a[name=\"" + p.getRealName() + "\"] " + std::to_string(base.x - 1) + " " + std::to_string(base.y + 1) + " "
+        + std::to_string(base.z)
+    );
+    co_await ctx.ticks(3);
+    BlockPos fb = lp::game::blockPosOf(p.getFeetPos());
+    ctx.check(fb.x == base.x + 6 && fb.z == base.z, "/tp next to a viaduct ends at its far end (x " + std::to_string(fb.x - base.x) + ")");
+});
+
+LP_REGISTER_SELFTEST("worldbeyond.viaduct_pearl", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto s = co_await sky(ctx, 2985);
+    Scratch sc(*s.region);
+    BlockPos base{s.pos.x - 8, s.pos.y, s.pos.z};
+    auto& p = ctx.spawnPlayer();
+    p.setPlayerGameType(GameType::Survival);
+    // stand there first (a teleport next to the line would take the viaduct), then build the line
+    p.teleport(Vec3{base.x - 0.5f, base.y + 1.0f, base.z + 0.5f}, p.getDimensionId());
+    viaductLine(sc, base);
+    co_await ctx.ticks(10);
+    // throw an ender pearl straight down: it lands next to the west end of the line
+    p.simulateLookAt(Vec3{base.x - 0.5f, static_cast<float>(base.y), base.z + 0.5f}, sim::LookDuration::Instant);
+    co_await ctx.ticks(2);
+    auto pearl = lp::game::makeItem("minecraft:ender_pearl", 1);
+    ctx.require(p.simulateUseItem(pearl), "the pearl was thrown");
+    BlockPos fb;
+    for (int i = 0; i < 40; ++i) {
+        co_await ctx.ticks(1);
+        fb = lp::game::blockPosOf(p.getFeetPos());
+        if (fb.x == base.x + 6) break;
+    }
+    ctx.check(fb.x == base.x + 6 && fb.z == base.z, "an ender pearl next to a viaduct ends at its far end (x " + std::to_string(fb.x - base.x) + ")");
+    p.setPlayerGameType(GameType::Creative);
 });
 
 LP_REGISTER_SELFTEST("worldbeyond.viaduct_loop", [](Context& ctx) -> ll::coro::CoroTask<> {

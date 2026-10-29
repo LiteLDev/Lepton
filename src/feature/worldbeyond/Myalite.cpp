@@ -93,17 +93,15 @@ std::optional<Vec3> redirect(Actor& actor, Vec3 const& pos) {
     auto const& cfg = config();
     if (!cfg.enableSpiralSpires || !cfg.enableMyaliteViaducts) return std::nullopt;
     if (!blocks().ready()) return std::nullopt;
-    // Player positions are at eye height; Quark works with feet positions.
-    float    eye = actor.getPosition().y - actor.getFeetPos().y;
+    // Actor::teleportTo takes the feet position (commands, pearls, chorus fruit, endermen), like
+    // Java's EntityTeleportEvent target.
     BlockPos target{
         static_cast<int>(std::floor(pos.x)),
-        static_cast<int>(std::floor(pos.y - eye + 0.001f)),
+        static_cast<int>(std::floor(pos.y)),
         static_cast<int>(std::floor(pos.z))
     };
     auto& region = actor.getDimensionBlockSource();
-    auto  feet   = viaductTarget(region, target, actor);
-    if (!feet) return std::nullopt;
-    return Vec3{feet->x, feet->y + eye, feet->z};
+    return viaductTarget(region, target, actor);
 }
 
 #define LP_WB_TELEPORT_HOOK(NAME, TYPE)                                                                                \
@@ -119,7 +117,7 @@ std::optional<Vec3> redirect(Actor& actor, Vec3 const& pos) {
         int         sourceEntityType,                                                                                  \
         bool        keepVelocity                                                                                       \
     ) {                                                                                                                \
-        /* Quark reacts to EntityTeleportEvent: pearls, chorus fruit, endermen/shulkers, commands */           \
+        /* Quark reacts to EntityTeleportEvent: pearls, chorus fruit, endermen/shulkers, commands */  \
         if (gInTeleport || cause < 1 || cause > 4)                                                                     \
             return origin(pos, shouldStopRiding, cause, sourceEntityType, keepVelocity);                               \
         auto np     = redirect(*this, pos);                                                                            \
