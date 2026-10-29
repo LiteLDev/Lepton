@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:raw_copper_bricks_revert"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:raw_copper_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:raw_copper_bricks"
+      }
+    ],
+    "result": {
+      "item": "minecraft:raw_copper",
+      "count": 9
+    }
+  }
+}

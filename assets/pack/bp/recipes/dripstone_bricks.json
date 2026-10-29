@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:dripstone_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:polished_dripstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:polished_dripstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:dripstone_bricks",
+      "count": 4
+    }
+  }
+}

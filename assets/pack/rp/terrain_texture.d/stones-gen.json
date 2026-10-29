@@ -1,0 +1,92 @@
+{
+  "lepton_stones_calcite": {
+    "textures": "textures/blocks/calcite"
+  },
+  "lepton_stones_dripstone_block": {
+    "textures": "textures/blocks/dripstone_block"
+  },
+  "lepton_stones_stones_andesite_bricks": {
+    "textures": "textures/blocks/stones/andesite_bricks"
+  },
+  "lepton_stones_stones_andesite_pillar": {
+    "textures": "textures/blocks/stones/andesite_pillar"
+  },
+  "lepton_stones_stones_andesite_pillar_top": {
+    "textures": "textures/blocks/stones/andesite_pillar_top"
+  },
+  "lepton_stones_stones_calcite_bricks": {
+    "textures": "textures/blocks/stones/calcite_bricks"
+  },
+  "lepton_stones_stones_calcite_pillar": {
+    "textures": "textures/blocks/stones/calcite_pillar"
+  },
+  "lepton_stones_stones_calcite_pillar_top": {
+    "textures": "textures/blocks/stones/calcite_pillar_top"
+  },
+  "lepton_stones_stones_chiseled_andesite_bricks": {
+    "textures": "textures/blocks/stones/chiseled_andesite_bricks"
+  },
+  "lepton_stones_stones_chiseled_calcite_bricks": {
+    "textures": "textures/blocks/stones/chiseled_calcite_bricks"
+  },
+  "lepton_stones_stones_chiseled_diorite_bricks": {
+    "textures": "textures/blocks/stones/chiseled_diorite_bricks"
+  },
+  "lepton_stones_stones_chiseled_dripstone_bricks": {
+    "textures": "textures/blocks/stones/chiseled_dripstone_bricks"
+  },
+  "lepton_stones_stones_chiseled_granite_bricks": {
+    "textures": "textures/blocks/stones/chiseled_granite_bricks"
+  },
+  "lepton_stones_stones_diorite_bricks": {
+    "textures": "textures/blocks/stones/diorite_bricks"
+  },
+  "lepton_stones_stones_diorite_pillar": {
+    "textures": "textures/blocks/stones/diorite_pillar"
+  },
+  "lepton_stones_stones_diorite_pillar_top": {
+    "textures": "textures/blocks/stones/diorite_pillar_top"
+  },
+  "lepton_stones_stones_dripstone_bricks": {
+    "textures": "textures/blocks/stones/dripstone_bricks"
+  },
+  "lepton_stones_stones_dripstone_pillar": {
+    "textures": "textures/blocks/stones/dripstone_pillar"
+  },
+  "lepton_stones_stones_dripstone_pillar_top": {
+    "textures": "textures/blocks/stones/dripstone_pillar_top"
+  },
+  "lepton_stones_stones_granite_bricks": {
+    "textures": "textures/blocks/stones/granite_bricks"
+  },
+  "lepton_stones_stones_granite_pillar": {
+    "textures": "textures/blocks/stones/granite_pillar"
+  },
+  "lepton_stones_stones_granite_pillar_top": {
+    "textures": "textures/blocks/stones/granite_pillar_top"
+  },
+  "lepton_stones_stones_polished_calcite": {
+    "textures": "textures/blocks/stones/polished_calcite"
+  },
+  "lepton_stones_stones_polished_dripstone": {
+    "textures": "textures/blocks/stones/polished_dripstone"
+  },
+  "lepton_stones_stones_raw_copper_bricks": {
+    "textures": "textures/blocks/stones/raw_copper_bricks"
+  },
+  "lepton_stones_stones_raw_gold_bricks": {
+    "textures": "textures/blocks/stones/raw_gold_bricks"
+  },
+  "lepton_stones_stones_raw_iron_bricks": {
+    "textures": "textures/blocks/stones/raw_iron_bricks"
+  },
+  "lepton_stones_stones_stone_brick_lamp": {
+    "textures": "textures/blocks/stones/stone_brick_lamp"
+  },
+  "lepton_stones_stones_stone_lamp": {
+    "textures": "textures/blocks/stones/stone_lamp"
+  },
+  "lepton_stones_stones_sturdy_stone": {
+    "textures": "textures/blocks/stones/sturdy_stone"
+  }
+}
