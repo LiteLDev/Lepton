@@ -182,7 +182,10 @@ LP_REGISTER_SELFTEST("worldsurface.fallen_log", [](Context& ctx) -> ll::coro::Co
     Rng      rng(2815);
     gen::Ctx c{r, *st, rng, 0, {}, nullptr};
     BlockPos at{f.x, f.y + 1, f.z};
-    bool     placed = gen::placeFallenLog(c, at, &*it);
+    // A plain log: with U6's hollow logs present the entry would turn hollow at hollowChance.
+    auto plain       = *it;
+    plain.hollowAxis = {};
+    bool placed      = gen::placeFallenLog(c, at, &plain);
     ctx.require(placed, "a log was placed on grass");
     int logs = count(r, {f.x - 4, f.y + 1, f.z - 4}, {f.x + 4, f.y + 1, f.z + 4}, "minecraft:oak_log");
     ctx.check(logs >= 3 && logs <= 4, std::format("3-4 logs (got {})", logs));
@@ -192,7 +195,7 @@ LP_REGISTER_SELFTEST("worldsurface.fallen_log", [](Context& ctx) -> ll::coro::Co
     // on stone: nothing
     fill(ctx, r, {f.x - 5, f.y, f.z - 5}, {f.x + 5, f.y, f.z + 5}, "minecraft:stone");
     fill(ctx, r, {f.x - 5, f.y + 1, f.z - 5}, {f.x + 5, f.y + 1, f.z + 5}, "minecraft:air");
-    ctx.check(!gen::placeFallenLog(c, at, &*it), "no log on stone");
+    ctx.check(!gen::placeFallenLog(c, at, &plain), "no log on stone");
 });
 
 LP_REGISTER_SELFTEST("worldsurface.monster_box_gen", [](Context& ctx) -> ll::coro::CoroTask<> {
