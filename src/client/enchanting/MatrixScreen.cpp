@@ -4,7 +4,6 @@
 
 #ifdef LP_CLIENT
 
-#include <cctype>
 #include <cmath>
 #include <memory>
 
@@ -49,50 +48,11 @@ std::string enchName(int type, int level) {
     return n;
 }
 
-/// `§` formatting segments of a line: (colour, text). DrawContext::text draws the `§` symbols
-/// literally, so the colours are applied per segment.
-std::vector<std::pair<Color, std::string>> segments(std::string const& s) {
-    static constexpr int kCodes[16] = {0x000000, 0x0000aa, 0x00aa00, 0x00aaaa, 0xaa0000, 0xaa00aa, 0xffaa00, 0xaaaaaa,
-                                       0x555555, 0x5555ff, 0x55ff55, 0x55ffff, 0xff5555, 0xff55ff, 0xffff55, 0xffffff};
-    std::vector<std::pair<Color, std::string>> out;
-    Color                                      cur = colors::white;
-    std::string                                text;
-    for (size_t i = 0; i < s.size(); ++i) {
-        if (static_cast<unsigned char>(s[i]) == 0xc2 && i + 2 < s.size() && static_cast<unsigned char>(s[i + 1]) == 0xa7) {
-            char code = static_cast<char>(std::tolower(static_cast<unsigned char>(s[i + 2])));
-            int  idx  = code >= '0' && code <= '9' ? code - '0' : code >= 'a' && code <= 'f' ? code - 'a' + 10 : -1;
-            if (idx >= 0 || code == 'r') {
-                if (!text.empty()) out.emplace_back(cur, std::move(text));
-                text.clear();
-                cur = idx >= 0 ? Color::rgb(kCodes[idx]) : colors::white;
-            }
-            i += 2; // other codes (bold, ...) are dropped
-            continue;
-        }
-        text += s[i];
-    }
-    if (!text.empty()) out.emplace_back(cur, std::move(text));
-    return out;
-}
-
-float formattedWidth(DrawContext& dc, std::string const& s) {
-    float w = 0;
-    for (auto const& [c, t] : segments(s)) w += dc.textWidth(t);
-    return w;
-}
-
-void formattedText(DrawContext& dc, std::string const& s, float x, float y) {
-    for (auto const& [c, t] : segments(s)) {
-        dc.text(t, x, y, c);
-        x += dc.textWidth(t);
-    }
-}
-
 /// Draws a tooltip box with lines at the mouse.
 void tooltip(DrawContext& dc, Vec mouse, std::vector<std::string> const& lines) {
     if (lines.empty()) return;
     float w = 0;
-    for (auto const& l : lines) w = std::max(w, formattedWidth(dc, l));
+    for (auto const& l : lines) w = std::max(w, dc.textWidth(l));
     float h  = static_cast<float>(lines.size()) * 10 + 4;
     auto  sz = dc.screenSize();
     float x  = std::min(mouse.x + 10, sz.x - w - 8);
@@ -101,7 +61,7 @@ void tooltip(DrawContext& dc, Vec mouse, std::vector<std::string> const& lines) 
     dc.outline({x - 3, y - 3, w + 6, h + 2}, Color{0.31f, 0.0f, 1.0f, 0.5f});
     float ly = y;
     for (auto const& l : lines) {
-        formattedText(dc, l, x, ly);
+        dc.text(l, x, ly);
         ly += 10;
     }
 }
