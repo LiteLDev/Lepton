@@ -93,7 +93,7 @@ buttons 100, saplings 100 (ladders: U6).
 - **Saplings**: no collision, selection box 2..14 × 0..12, break instantly, can be placed only on
   dirt-like blocks (grass block, dirt, coarse dirt, podzol, rooted dirt, moss block, mud, muddy
   mangrove roots, farmland: Java `#minecraft:dirt` + farmland) and break when that block goes; can
-  be put in a flower pot (Quark's `potted_*` blocks). Item: flat sapling icon.
+  not be put in a flower pot (see §7). Item: flat sapling icon.
 - **Hedges / leaf carpets**: U6's generators (`L` over `W` → 2 hedges, W any log/wood of the wood;
   `##` leaves → 3 carpets).
 - **Enchanted Fruit**: food 4 (saturation modifier 0.3), always edible.
@@ -104,7 +104,7 @@ Drops (Java loot tables; fortune levels 0..4 / 0..3):
 |---|---|
 | ashen leaves | shears or silk touch: itself; else sapling 5% / 6.25% / 8.33% / 10% (survives explosion), sticks 1-2 at 2% / 2.22% / 2.5% / 3.33% / 10%, Enchanted Fruit 0.5% / 0.56% / 0.625% / 0.83% / 2.5% |
 | trumpet leaves | shears or silk touch: itself; else sapling 0.469% / 0.521% / 0.586% / 0.781% / 1.875%, sticks as above |
-| sapling | itself; flower pot drops pot + sapling |
+| sapling | itself |
 
 Compost chance: leaves 30%, saplings 30%, fruit 65%.
 
@@ -279,8 +279,11 @@ The client mod shows the hints in the item tooltips (Quark shows them in JEI).
   fixed set of wood variants rendered by the game; not ported.
 - **Chests and trapped chests** (`<w>_chest`, `trapped_<w>_chest`): VariantChests is U9's
   behaviour (block tag contract); the chests of these woods are added once U9's generator exists.
-- **Potted saplings** are the vanilla flower pot holding our sapling (`minecraft:flower_pottable`),
-  not separate `potted_*` blocks.
+- **Potted saplings** (Quark's `potted_*_sapling`) are not ported: the vanilla flower pot takes custom
+  blocks through `minecraft:flower_pottable`, but the 1.26.51 client crashes (null read while it builds
+  the chunk mesh) as soon as a pot holding our sapling is drawn, with or without `minecraft:embedded_visual`.
+  Custom blocks can't have a block entity, so a `potted_*` block of our own can't hold the plant either;
+  a static potted block would be possible but isn't Quark's behaviour (planting into an existing pot).
 - **Wind of the falling leaves** follows the world (day) time instead of the game time; they are the
   same unless the time was changed.
 - **Leaf decay** is computed when logs/leaves change instead of from a stored `distance` state;
@@ -310,7 +313,7 @@ units' test rows.
 | `newwoods.strip` | 700 | an axe strips azalea logs keeping the axis |
 | `newwoods.leaf_drops` | - | the loot rules (shears, silk touch, fortune, explosion) by sampling |
 | `newwoods.leaf_decay` | 704 | leaves next to a removed log decay; persistent ones stay; distance 6 / 7 |
-| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it, go into a flower pot |
+| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it, a flower pot refuses them |
 | `newwoods.sapling_bonemeal` | 716 | the player's bone meal advances the sapling; it grows a trumpet tree, dirt below |
 | `newwoods.ancient_tree` | 730 | the ashen tree shape (trunk 18..28, blobs, cap, non-persistent leaves) |
 | `newwoods.blossom_tree` | 750 | a trumpet tree of every colour grows from its sapling |
@@ -327,5 +330,5 @@ units' test rows.
 E2E: `tools/e2e/server/scenarios/newwoods.ps1` runs `newwoods.*`; `newwoods-worldgen.ps1` runs in a
 generated (DEFAULT) world and checks that trumpet trees generate. The client scenario
 `tools/e2e/client/scenarios/newwoods.ps1` runs the gallery and screenshots the three wood sets, the
-tree blocks (leaves, saplings, hedges, carpets, potted saplings) and the grown trees with their
+tree blocks (leaves, saplings, hedges, carpets) and the grown trees with their
 falling leaves.

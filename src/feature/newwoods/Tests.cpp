@@ -119,7 +119,7 @@ LP_REGISTER_SELFTEST("newwoods.blocks", [](Context& ctx) {
             ctx.check(false, "block registered: " + id);
         }
     }
-    ctx.check(nw::allBlockIds().size() == 84, "84 blocks, got " + std::to_string(nw::allBlockIds().size()));
+    ctx.check(nw::allBlockIds().size() == 90, "90 blocks, got " + std::to_string(nw::allBlockIds().size()));
     ctx.check(missing == 0, std::to_string(missing) + " blocks missing");
     ctx.check(!lp::game::makeItem("lepton:ancient_fruit").isNull(), "Enchanted Fruit item");
     for (auto const* id : {"lepton:azalea_door", "lepton:blossom_door", "lepton:ancient_door", "lepton:red_blossom_sapling"})
@@ -263,17 +263,27 @@ LP_REGISTER_SELFTEST("newwoods.sapling_place", [](Context& ctx) -> ll::coro::Cor
     put(ctx, p, "minecraft:stone");
     co_await ctx.ticks(5);
     ctx.check(at(ctx, off(p, 0, 1, 0)).isAir(), "sapling popped off, got " + idAt(ctx, off(p, 0, 1, 0)));
-    // potted: a flower pot takes the sapling (Quark's potted_*_sapling)
+    // potted: a sapling on an empty flower pot makes the potted sapling; using it again gives it back
     auto pot = off(p, 4, 1, 0);
     ctx.require(put(ctx, off(p, 4, 0, 0), "minecraft:stone") && put(ctx, pot, "minecraft:flower_pot"), "flower pot");
     co_await ctx.ticks(10);
     use(ctx, "lepton:blue_blossom_sapling", pot, Facing::Up, Vec3{0.5f, 0.4f, 0.5f});
     co_await ctx.ticks(5);
+    ctx.check(idAt(ctx, pot) == "lepton:potted_blue_blossom_sapling", "potted, got " + idAt(ctx, pot));
     auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(pot));
-    ctx.require(be != nullptr, "flower pot block entity");
-    Block const* plant = static_cast<FlowerPotBlockActor*>(be)->mPlant;
-    ctx.check(plant && plant->getTypeName() == "lepton:blue_blossom_sapling",
-        "the pot holds the sapling, got " + (plant ? plant->getTypeName() : std::string("nothing")));
+    Block const* plant = be ? static_cast<FlowerPotBlockActor*>(be)->mPlant : nullptr;
+    ctx.check(plant == nullptr, "no vanilla pot holds the custom sapling (the client would crash)");
+    co_await ctx.ticks(10);
+    use(ctx, "minecraft:stick", pot, Facing::Up, Vec3{0.5f, 0.4f, 0.5f});
+    co_await ctx.ticks(5);
+    ctx.check(idAt(ctx, pot) == "minecraft:flower_pot", "the sapling came out, got " + idAt(ctx, pot));
+    // the API and the drops
+    auto& region = regionOf(ctx);
+    auto  bp     = lp::game::blockPos(pot);
+    ctx.check(nw::potSapling(region, bp, "lepton:ancient_sapling"), "pot an ashen sapling");
+    ctx.check(!nw::potSapling(region, bp, "lepton:red_blossom_sapling"), "a full pot takes nothing");
+    ctx.check(nw::unpotSapling(region, bp) == "lepton:ancient_sapling", "unpot gives the sapling");
+    ctx.check(!nw::potSapling(region, bp, "minecraft:oak_sapling"), "vanilla saplings are the vanilla pot's");
 });
 
 LP_REGISTER_SELFTEST("newwoods.sapling_bonemeal", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -569,11 +579,14 @@ LP_REGISTER_SELFTEST("newwoods.fuel_compost", [](Context& ctx) {
 LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(700, 60);
     ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
-    int  placed = 0, wanted = 0;
-    auto place  = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
+    int                                      placed = 0, wanted = 0;
+    std::vector<std::pair<GP, Block const*>> all;
+    auto                                     place = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
         ++wanted;
-        if (put(ctx, p, id, st)) ++placed;
-        else ctx.check(false, "placed " + id);
+        if (put(ctx, p, id, st)) {
+            ++placed;
+            all.emplace_back(p, &at(ctx, p));
+        } else ctx.check(false, "placed " + id);
     };
     std::vector<GP> woodRows, treeRows;
     int             wi = 0;
@@ -626,14 +639,12 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         place(off(row, 9, 0, 0), "minecraft:grass_block");
         place(off(row, 9, 1, 0), "lepton:" + n + "_leaf_carpet");
         place(off(row, 11, 0, 0), "minecraft:stone");
-        place(off(row, 11, 1, 0), "minecraft:flower_pot");
-        if (auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(off(row, 11, 1, 0)))) {
-            auto* pot   = static_cast<FlowerPotBlockActor*>(be);
-            pot->mPlant = bs::of(t.sapling);
-            pot->refresh(regionOf(ctx));
-        }
+        place(off(row, 11, 1, 0), "lepton:potted_" + n + "_sapling");
     }
     ctx.check(placed == wanted, "placed " + std::to_string(placed) + " / " + std::to_string(wanted) + " gallery blocks");
+    co_await ctx.ticks(2);
+    ctx.info("rows after placing: " + idAt(ctx, treeRows[0]) + " " + idAt(ctx, off(treeRows[0], 5, 0, 0)) + " "
+             + idAt(ctx, off(woodRows[0], 16, 0, 0)));
 
     // grown trees: the ashen tree and the five trumpets in a line
     auto forest = ctx.testPos(770, 100); // the trees stand in a line along z
@@ -647,6 +658,13 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         collectTree(ctx, off(p, 0, 1, 0), 16, 32);
     }
     ctx.check(grown == 6, "6 grown trees, got " + std::to_string(grown));
+
+    auto rowIds = [&] {
+        auto const& r = treeRows[0];
+        return idAt(ctx, r) + " " + idAt(ctx, off(r, 3, 1, 0)) + " " + idAt(ctx, off(r, 5, 0, 0)) + " " + idAt(ctx, off(r, 8, 1, 0)) + " "
+             + idAt(ctx, off(woodRows[0], 16, 0, 0));
+    };
+    ctx.info("rows after the trees: " + rowIds());
 
     Player* viewer = nullptr;
     ctx.player().getLevel().forEachPlayer([&](Player& p) {
@@ -669,6 +687,15 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         GP          at;
         float       dx, dy, dz, pitch, yaw;
     };
+    // the viewer's client may have missed updates of blocks set before it looked at them: set the
+    // gallery blocks again now that it is next to them
+    view(woodRows[0], 5.f, 1.f, 5.5f, 15.f, 180.f);
+    co_await ctx.ticks(40);
+    auto* air = bs::of("minecraft:air");
+    for (auto const& [p, b] : all) lp::game::setBlock(regionOf(ctx), lp::game::blockPos(p), *air);
+    co_await ctx.ticks(2);
+    for (auto const& [p, b] : all) lp::game::setBlock(regionOf(ctx), lp::game::blockPos(p), *b);
+    co_await ctx.ticks(20);
     std::vector<View> views;
     char const*       woodNames[] = {"azalea", "blossom", "ancient"};
     for (int i = 0; i < 3; ++i) {
@@ -681,7 +708,7 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     views.push_back({"trees-a", forest, 28.f, 8.f, 30.5f, 5.f, 90.f}); // east of the line, looking west
     views.push_back({"trees-b", forest, 28.f, 8.f, 120.5f, 5.f, 90.f});
     for (auto const& v : views) {
-        ctx.info("GALLERY view " + v.name);
+        ctx.info("GALLERY view " + v.name + " | " + rowIds());
         for (int t = 0; t < 120; ++t) { // hold the player there (no floor below some views)
             view(v.at, v.dx, v.dy, v.dz, v.pitch, v.yaw);
             co_await ctx.ticks(1);
@@ -689,5 +716,6 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     }
     view(woodRows[0], 5.f, 1.f, 5.5f, 15.f, 180.f);
     co_await ctx.ticks(10);
+    ctx.info("rows after the views: " + rowIds());
     ctx.info("GALLERY done");
 });

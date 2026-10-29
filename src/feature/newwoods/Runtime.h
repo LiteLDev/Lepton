@@ -2,6 +2,7 @@
 
 // Internal wiring of the newwoods sources (not used by other units).
 
+#include <functional>
 #include <memory>
 
 #include "feature/newwoods/JavaRandom.h"
@@ -25,6 +26,12 @@ void leafParticlesTick(Level& level);
 /// Ticks that fired off the server thread, replayed on it.
 void runDeferredTicks();
 
+/// Runs `fn` on the server thread at the next tick (world edits after a cancelled interaction).
+void defer(std::function<void()> fn);
+void runDeferred();
+
+void installPottedHooks();
+void uninstallPottedHooks();
 void installLeafHooks();
 void uninstallLeafHooks();
 void installSaplingHooks();

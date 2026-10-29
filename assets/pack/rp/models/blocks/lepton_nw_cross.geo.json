@@ -53,8 +53,7 @@
                   "uv_size": [
                     16,
                     16
-                  ],
-                  "material_instance": "cross"
+                  ]
                 },
                 "south": {
                   "uv": [
@@ -64,8 +63,7 @@
                   "uv_size": [
                     -16,
                     16
-                  ],
-                  "material_instance": "cross"
+                  ]
                 }
               }
             },
@@ -99,8 +97,7 @@
                   "uv_size": [
                     16,
                     16
-                  ],
-                  "material_instance": "cross"
+                  ]
                 },
                 "south": {
                   "uv": [
@@ -110,8 +107,7 @@
                   "uv_size": [
                     -16,
                     16
-                  ],
-                  "material_instance": "cross"
+                  ]
                 }
               }
             }

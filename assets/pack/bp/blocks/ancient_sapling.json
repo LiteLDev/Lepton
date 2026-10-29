@@ -44,12 +44,6 @@
           "render_method": "alpha_test",
           "face_dimming": false,
           "ambient_occlusion": false
-        },
-        "cross": {
-          "texture": "lepton_newwoods_newwoods_ancient_sapling",
-          "render_method": "alpha_test",
-          "face_dimming": false,
-          "ambient_occlusion": false
         }
       },
       "minecraft:geometry": "geometry.lepton.nw_cross",
@@ -73,24 +67,6 @@
             ]
           }
         ]
-      },
-      "minecraft:flower_pottable": {},
-      "minecraft:embedded_visual": {
-        "geometry": "geometry.lepton.nw_cross",
-        "material_instances": {
-          "*": {
-            "texture": "lepton_newwoods_newwoods_ancient_sapling",
-            "render_method": "alpha_test",
-            "face_dimming": false,
-            "ambient_occlusion": false
-          },
-          "cross": {
-            "texture": "lepton_newwoods_newwoods_ancient_sapling",
-            "render_method": "alpha_test",
-            "face_dimming": false,
-            "ambient_occlusion": false
-          }
-        }
       },
       "minecraft:loot": "loot_tables/blocks/ancient_sapling.json"
     }

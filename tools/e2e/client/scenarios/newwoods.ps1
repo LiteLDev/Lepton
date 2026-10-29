@@ -15,5 +15,19 @@ foreach ($v in $views) {
 }
 $line = Wait-LogLine 'SELFTEST (PASS|FAIL) newwoods\.gallery' 60 -Since $mark
 if ($line -match 'FAIL') { throw "gallery selftest failed: $line" }
+# the items: planks / logs / slabs are items with Java's item tags (replace_block_item, no icon): they
+# must show the block like any block item; saplings, doors and the fruit have flat icons
+foreach ($id in 'azalea_planks', 'ancient_log', 'stripped_blossom_wood', 'blossom_planks_slab', 'vertical_ancient_planks',
+    'red_blossom_sapling', 'ancient_fruit', 'azalea_door', 'lavender_blossom_leaves') {
+    Invoke-Chat "/give @s lepton:$id 8"
+    Start-Sleep -Milliseconds 300
+}
+Start-Sleep -Seconds 2
+Save-Screenshot 'hotbar' | Out-Null
+Press-Key 'E' 100
+Start-Sleep -Seconds 3
+Save-Screenshot 'inventory' | Out-Null
+Press-Key 'ESCAPE' 100
+Start-Sleep -Seconds 1
 $r = Invoke-SelfTest 'newwoods.*'
 if ($r.Fail -gt 0) { throw "$($r.Fail) newwoods selftest(s) failed on the integrated server" }

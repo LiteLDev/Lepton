@@ -2,6 +2,8 @@
 // fuel, composting and the Enchanted Fruit.
 
 #include <atomic>
+#include <functional>
+#include <vector>
 #include <memory>
 #include <mutex>
 #include <random>
@@ -68,6 +70,27 @@ JavaRandom& runtimeRandom() {
 }
 
 bool onServerThread() { return gServerThread.load() == std::this_thread::get_id(); }
+
+namespace {
+std::vector<std::function<void()>>& deferredTasks() {
+    static std::vector<std::function<void()>> v;
+    return v;
+}
+} // namespace
+
+void defer(std::function<void()> fn) { deferredTasks().push_back(std::move(fn)); }
+
+void runDeferred() {
+    auto tasks = std::move(deferredTasks());
+    deferredTasks().clear();
+    for (auto& t : tasks) {
+        try {
+            t();
+        } catch (std::exception const& e) {
+            log().error("newwoods: task failed: {}", e.what());
+        }
+    }
+}
 
 namespace {
 std::shared_ptr<Palette const> buildPalette();
@@ -349,6 +372,7 @@ void onPlacing(ll::event::PlayerPlacingBlockEvent& ev) {
 void onTick(ll::event::ServerLevelTickEvent& ev) {
     gServerThread.store(std::this_thread::get_id());
     try {
+        runDeferred();
         runDeferredTicks();
         runLeafChecks();
         leafParticlesTick(ev.level());
@@ -365,6 +389,7 @@ public:
         mListeners.push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
         mListeners.push_back(bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>(onPlacing));
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
+        installPottedHooks();
         installLeafHooks();
         installSaplingHooks();
         installWorldGenHooks();
@@ -386,6 +411,7 @@ public:
         auto& bus = ll::event::EventBus::getInstance();
         for (auto& l : mListeners) bus.removeListener(l);
         mListeners.clear();
+        uninstallPottedHooks();
         uninstallLeafHooks();
         uninstallSaplingHooks();
         uninstallWorldGenHooks();

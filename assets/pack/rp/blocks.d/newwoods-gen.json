@@ -191,6 +191,24 @@
   "lepton:orange_blossom_sapling": {
     "sound": "grass"
   },
+  "lepton:potted_ancient_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_blue_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_lavender_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_orange_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_red_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_yellow_blossom_sapling": {
+    "sound": "stone"
+  },
   "lepton:red_blossom_hedge": {
     "sound": "wood"
   },

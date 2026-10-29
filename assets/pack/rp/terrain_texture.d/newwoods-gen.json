@@ -1,4 +1,10 @@
 {
+  "lepton_newwoods_dirt": {
+    "textures": "textures/blocks/dirt"
+  },
+  "lepton_newwoods_flower_pot": {
+    "textures": "textures/blocks/flower_pot"
+  },
   "lepton_newwoods_newwoods_ancient_bookshelf": {
     "textures": "textures/blocks/newwoods/ancient_bookshelf"
   },

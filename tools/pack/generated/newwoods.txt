@@ -62,6 +62,12 @@ assets/pack/bp/blocks/orange_blossom_hedge.json
 assets/pack/bp/blocks/orange_blossom_leaf_carpet.json
 assets/pack/bp/blocks/orange_blossom_leaves.json
 assets/pack/bp/blocks/orange_blossom_sapling.json
+assets/pack/bp/blocks/potted_ancient_sapling.json
+assets/pack/bp/blocks/potted_blue_blossom_sapling.json
+assets/pack/bp/blocks/potted_lavender_blossom_sapling.json
+assets/pack/bp/blocks/potted_orange_blossom_sapling.json
+assets/pack/bp/blocks/potted_red_blossom_sapling.json
+assets/pack/bp/blocks/potted_yellow_blossom_sapling.json
 assets/pack/bp/blocks/red_blossom_hedge.json
 assets/pack/bp/blocks/red_blossom_leaf_carpet.json
 assets/pack/bp/blocks/red_blossom_leaves.json
@@ -186,6 +192,12 @@ assets/pack/bp/loot_tables/blocks/orange_blossom_hedge.json
 assets/pack/bp/loot_tables/blocks/orange_blossom_leaf_carpet.json
 assets/pack/bp/loot_tables/blocks/orange_blossom_leaves.json
 assets/pack/bp/loot_tables/blocks/orange_blossom_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_ancient_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_blue_blossom_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_lavender_blossom_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_orange_blossom_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_red_blossom_sapling.json
+assets/pack/bp/loot_tables/blocks/potted_yellow_blossom_sapling.json
 assets/pack/bp/loot_tables/blocks/red_blossom_hedge.json
 assets/pack/bp/loot_tables/blocks/red_blossom_leaf_carpet.json
 assets/pack/bp/loot_tables/blocks/red_blossom_leaves.json
@@ -319,6 +331,7 @@ assets/pack/bp/recipes/yellow_blossom_leaf_carpet.json
 assets/pack/rp/blocks.d/newwoods-gen.json
 assets/pack/rp/item_texture.d/newwoods-gen.json
 assets/pack/rp/models/blocks/lepton_nw_cross.geo.json
+assets/pack/rp/models/blocks/lepton_nw_potted.geo.json
 assets/pack/rp/particles/blue_blossom_leaf.json
 assets/pack/rp/particles/lavender_blossom_leaf.json
 assets/pack/rp/particles/orange_blossom_leaf.json

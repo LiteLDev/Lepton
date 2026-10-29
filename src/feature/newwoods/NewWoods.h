@@ -128,6 +128,10 @@ bool advanceSapling(BlockSource& region, BlockPos const& pos, JavaRandom& random
 /// Bone meal on a sapling (Java BoneMealItem#growCrop): 45% to advance, particles. Returns true when the
 /// block is one of ours (the bone meal is used).
 bool bonemealSapling(BlockSource& region, BlockPos const& pos, JavaRandom& random);
+/// Potted saplings: an empty vanilla flower pot at `pos` becomes lepton:potted_<x>_sapling.
+bool potSapling(BlockSource& region, BlockPos const& pos, std::string_view saplingId);
+/// The potted sapling at `pos` becomes an empty flower pot; returns the sapling id ("" if none).
+std::string unpotSapling(BlockSource& region, BlockPos const& pos);
 /// Schedules the next random-like block tick of a sapling / unsupported leaf.
 void scheduleTick(BlockSource& region, BlockPos const& pos, Block const& block);
 /// The light Java's sapling checks (raw brightness above it, with the sky darkening).

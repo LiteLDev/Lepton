@@ -27,8 +27,10 @@ function Write-NwCrossGeometry {
         [ordered]@{
             origin = @(-8, 0, 0); size = @(16, 16, 0); pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
             uv = [ordered]@{
-                north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16); material_instance = 'cross' }
-                south = [ordered]@{ uv = @(16, 0); uv_size = @(-16, 16); material_instance = 'cross' }
+                # default material instance only: the flower pot's embedded tessellation crashes the
+                # client on a face with a named instance
+                north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
+                south = [ordered]@{ uv = @(16, 0); uv_size = @(-16, 16) }
             }
         }
     }
@@ -79,11 +81,11 @@ function New-NwSapling {
     $c['minecraft:collision_box'] = $false
     $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 2 0 2 14 12 14)
     $mat = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test'; face_dimming = $false; ambient_occlusion = $false }
-    $c['minecraft:material_instances'] = [ordered]@{ '*' = $mat; cross = $mat }
+    $c['minecraft:material_instances'] = [ordered]@{ '*' = $mat }
     $c['minecraft:geometry'] = $geo
     $c['minecraft:placement_filter'] = [ordered]@{ conditions = @([ordered]@{ allowed_faces = @('up'); block_filter = @($script:SaplingSoil) }) }
-    $c['minecraft:flower_pottable'] = [ordered]@{}
-    $c['minecraft:embedded_visual'] = [ordered]@{ geometry = $geo; material_instances = [ordered]@{ '*' = $mat; cross = $mat } }
+    # no minecraft:flower_pottable: a flower pot holding this block crashes the 1.26.51 client while
+    # it builds the chunk mesh (docs/spec/newwoods.md §7)
     $c['minecraft:loot'] = Write-LootTable (Get-Path $Id) $Id
     Write-BlockJson -Id $Id -Menu ([ordered]@{ category = 'nature'; group = 'minecraft:itemGroup.name.sapling' }) `
         -States ([ordered]@{ 'lepton:stage' = @(0, 1) }) -Components $c
@@ -101,6 +103,67 @@ function New-NwSapling {
                 }
             }
         })
+}
+
+# Potted sapling (Quark's potted_<x>_sapling): the vanilla flower pot's shape with dirt and the
+# sapling's cross. A vanilla pot can't show a custom plant (minecraft:flower_pottable crashes the
+# 1.26.51 client), so src/feature/newwoods swaps the pot for this block when a sapling is planted.
+function Write-NwPottedGeometry {
+    $wall = { param($b) New-WvCube $b @{ '*' = '*' } }
+    $plant = {
+        param($rot)
+        [ordered]@{
+            origin = @(-6, 4, 0); size = @(12, 12, 0); pivot = @(0, 4, 0); rotation = @(0, $rot, 0)
+            uv = [ordered]@{
+                north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16); material_instance = 'plant' }
+                south = [ordered]@{ uv = @(16, 0); uv_size = @(-16, 16); material_instance = 'plant' }
+            }
+        }
+    }
+    $geo = [ordered]@{
+        format_version       = $script:NwGeoFormat
+        'minecraft:geometry' = @([ordered]@{
+                description = [ordered]@{
+                    identifier = 'geometry.lepton.nw_potted'; texture_width = 16; texture_height = 16
+                    visible_bounds_width = 2; visible_bounds_height = 2; visible_bounds_offset = @(0, 0.5, 0)
+                }
+                bones       = @(
+                    [ordered]@{ name = 'pot'; pivot = @(0, 0, 0); cubes = @(
+                            (& $wall (New-Box 5 0 5 11 6 6)), (& $wall (New-Box 5 0 10 11 6 11)),
+                            (& $wall (New-Box 5 0 6 6 6 10)), (& $wall (New-Box 10 0 6 11 6 10)),
+                            (& $wall (New-Box 6 0 6 10 1 10))) },
+                    [ordered]@{ name = 'dirt'; pivot = @(0, 0, 0); cubes = @((New-WvCube (New-Box 6 1 6 10 4 10) @{ '*' = 'dirt' } @() @('up'))) },
+                    [ordered]@{ name = 'plant'; pivot = @(0, 0, 0); cubes = @((& $plant 45), (& $plant -45)) }
+                )
+            })
+    }
+    Write-PackJson -Path (Join-Path $script:RP 'models/blocks/lepton_nw_potted.geo.json') -Object $geo
+    return 'geometry.lepton.nw_potted'
+}
+
+function New-NwPotted {
+    param([Parameter(Mandatory)][string]$Tree, [Parameter(Mandatory)][string]$Texture, [Parameter(Mandatory)][hashtable]$Name,
+        [Parameter(Mandatory)][string]$ModuleTag)
+    $id = "lepton:potted_${Tree}_sapling"
+    $geo = Write-NwPottedGeometry
+    $c = Get-BaseComponents @{ Hardness = 0; Resistance = 0; Flammable = $false; Tool = ''; Tags = @('lepton:nw_potted', $ModuleTag) }
+    $c['minecraft:light_dampening'] = 0
+    $c['minecraft:geometry'] = $geo
+    $c['minecraft:material_instances'] = [ordered]@{
+        '*'   = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/flower_pot'); render_method = 'alpha_test' }
+        dirt  = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/dirt'); render_method = 'alpha_test' }
+        plant = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test'; face_dimming = $false; ambient_occlusion = $false }
+    }
+    $c['minecraft:collision_box'] = ConvertTo-BoxJson (New-Box 5 0 5 11 6 11)
+    $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 5 0 5 11 6 11)
+    $p = Get-Path $id
+    # Java: the pot and the plant
+    Write-PackJson (Join-Path $script:BP "loot_tables/blocks/$p.json") ([ordered]@{ pools = @(
+                [ordered]@{ rolls = 1; entries = @([ordered]@{ type = 'item'; name = 'minecraft:flower_pot'; weight = 1 }) },
+                [ordered]@{ rolls = 1; entries = @([ordered]@{ type = 'item'; name = "lepton:${Tree}_sapling"; weight = 1 }) }) })
+    $c['minecraft:loot'] = "loot_tables/blocks/$p.json"
+    Write-BlockJson -Id $id -Menu ([ordered]@{ category = 'none' }) -Components $c
+    Register-BlockClient $id 'stone' $Name
 }
 
 # The item of a block, replacing the block's own item so it can carry item tags (Java puts the planks,
@@ -281,6 +344,8 @@ function Invoke-NewWoodsPack {
             New-NwLeaves -Id $leaves -Texture "$TB$($t.id)_leaves" -ModuleTag $d.tag -MapColor $t.color -Name @{ en = "$($t.en) Leaves"; zh = "$($t.zh)树叶" }
             New-NwSapling -Id "lepton:$($t.id)_sapling" -Texture "$TB$($t.id)_sapling" -ModuleTag $d.tag -MapColor $t.color `
                 -Name @{ en = "$($t.en) Sapling"; zh = "$($t.zh)树苗" }
+            New-NwPotted -Tree $t.id -Texture "$TB$($t.id)_sapling" -ModuleTag $d.tag `
+                -Name @{ en = "Potted $($t.en) Sapling"; zh = "$($t.zh)树苗盆栽" }
             New-WvHedge -Id "lepton:$($t.id)_hedge" -LogTexture "$TB${w}_log" -LeafTexture "$TB$($t.id)_leaves" -Tint 'none' -Leaves $leaves -Logs $logs `
                 -MapColor $t.color -Name @{ en = "$($t.en) Leaf Hedge"; zh = "$($t.zh)树叶篱" }
             New-WvLeafCarpet -Id "lepton:$($t.id)_leaf_carpet" -LeafTexture "$TB$($t.id)_leaves" -Tint 'none' -Leaves $leaves -MapColor $t.color `
