@@ -187,19 +187,45 @@ function Get-GameDataDir {
     return Join-Path $env:APPDATA 'Minecraft Bedrock'
 }
 
-# Puts the camera back to first person (options.txt `game_thirdperson:0`) so a scenario that
-# switched views (F5 / camera presets) can't leave the shared game in third person for later runs.
-function Reset-CameraPerspective {
+# View options every run starts from (options.txt of the instance): a scenario (or a killed run)
+# that hid the HUD (F1), switched to third person (F5 / camera presets), changed the GUI scale,
+# the safe zone or the interface opacity would otherwise spoil the screenshots of later runs.
+$script:ViewOptions = [ordered]@{
+    'gfx_hidehud'                     = '0'
+    'game_thirdperson'                = '0'
+    'gfx_guiscale_offset'             = '0'
+    'gfx_safe_zone_x'                 = '1'
+    'gfx_safe_zone_y'                 = '1'
+    'gfx_safe_zone_all'               = '1'
+    'gfx_safe_zone_pos_x'             = '0'
+    'gfx_safe_zone_pos_y'             = '0'
+    'gfx_interface_opacity'           = '1'
+    'gfx_hud_text_background_opacity' = '0.6'
+    'gfx_ui_profile'                  = '0'
+    'dev_debug_hud'                   = '0'
+    'gfx_splitscreen'                 = '0'
+}
+
+function Reset-ViewOptions {
     $data = Get-GameDataDir
     foreach ($o in Get-ChildItem -Recurse -Path $data -Filter 'options.txt' -ErrorAction SilentlyContinue) {
-        $lines = Get-Content $o.FullName
-        if ($lines -match '^game_thirdperson:[1-9]') {
-            $lines -replace '^game_thirdperson:\d+', 'game_thirdperson:0' | Set-Content $o.FullName
-            Write-Step "reset camera perspective to first person in $($o.FullName)"
+        $lines   = @(Get-Content $o.FullName)
+        $changed = @()
+        $lines = $lines | ForEach-Object {
+            if ($_ -match '^([^:]+):(.*)$' -and $script:ViewOptions.Contains($Matches[1]) -and $Matches[2] -ne $script:ViewOptions[$Matches[1]]) {
+                $changed += "$($Matches[1]):$($Matches[2])"
+                "$($Matches[1]):$($script:ViewOptions[$Matches[1]])"
+            } else { $_ }
+        }
+        if ($changed) {
+            $lines | Set-Content $o.FullName
+            Write-Step "reset view options ($($changed -join ', ')) in $($o.FullName)"
         }
     }
 }
 
+# Kept for scenarios that call it: the camera is one of the view options.
+function Reset-CameraPerspective { Reset-ViewOptions }
 function Get-WorldsDir {
     $data = Get-GameDataDir
     $dirs = @(Get-ChildItem (Join-Path $data 'Users') -Directory -ErrorAction SilentlyContinue |
