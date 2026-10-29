@@ -25,8 +25,9 @@ blocks through air and Grates): a **lit signal campfire** there pushes the playe
 the force fades linearly to 0 at 20. The new vertical speed is `min(maxSpeed, vy + force)`.
 
 ### MoreNoteBlockSounds (tweaks, on)
-A note block whose instrument would be the harp and that stands on an amethyst block (amethyst
-block, budding amethyst, amethyst cluster, small/medium/large bud) plays the amethyst chime instead,
+A note block that stands on an amethyst block (amethyst block, budding amethyst, amethyst cluster,
+small/medium/large bud) and has no mob head on top plays the amethyst chime instead of its
+instrument (Java gives amethyst the harp, which Quark replaces; Bedrock gives it the bass drum),
 pitched like any note (`2^((note-12)/12)`), with the note particle. Quark's other instruments
 (mob heads) are vanilla on both editions (Bedrock 1.20+ plays head sounds), so only the amethyst
 sound is added (`enableAmethystSound`).
@@ -68,9 +69,8 @@ Every server tick, a monster spawner whose mob is a key of `replaceMobs` ("from,
 switched to the mapped mob.
 
 ### VillagerRerollingRework (experimental, off)
-- `seedInitialVillagerTrades`: each villager gets a random seed on first use; the first trades it
-  generates for a profession come from that seed, so breaking and replacing its job site does not
-  reroll them.
+- `seedInitialVillagerTrades`: the first trades a villager generates for a profession are always
+  the same for that villager, so breaking and replacing its job site does not reroll them.
 - On the first restock of a day (or every restock with `rerollOnAnyRestock`), each out-of-stock
   trade (or each used trade with `rerollEvenIfNotOutOfStock`) is rerolled with chance
   `chanceToRerollWhenRestocking` into a random trade of the same tier, skipping rerolls that
@@ -118,7 +118,8 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
 
 ### MoreNoteBlockSounds
 - Hook `NoteBlock::triggerEvent(region, pos, instrument, note)`. Server side, with
-  `enableAmethystSound`, instrument harp (0) and an amethyst block below: the harp is not played;
+  `enableAmethystSound`, an instrument below 16 (16+ are the mob heads on top) and an amethyst block
+  below: the instrument is not played;
   instead `PlaySoundPacket` `chime.amethyst_block` (volume 1, pitch `2^((note-12)/12)`) goes to the
   players near the block, and the note particle (`LevelEvent` legacy particle `Note`, data = note)
   is broadcast at `pos + (0.5, 1.2, 0.5)`. Client side (mod client) the harp is skipped too.
@@ -158,7 +159,8 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
   velocity is scaled by `0.45 / friction` of the block below, i.e. ground friction 0.45 as in Quark.
 - Falling block: hook `FallingBlockActor::normalTick`: skip when the actor is removed.
 - Mushrooms: hook `HugeMushroomFeature::placeFixed`: cap blocks that replaced anything but air or
-  leaves are restored.
+  leaves are restored. (Tested: Bedrock's own growth already refuses to grow a huge mushroom whose
+  cap space holds glass or stone, so the hook is a guard for any other path.)
 - Tripwire hooks: hook `TripWireHookBlock::calculateState`: a tripwire hook set by the update on a
   position that was not a tripwire hook before is reverted.
 - Villages: hook `VillageFeature::isFeatureChunk`: with `p = 1 - d^2 / villageSpawnNerfDistance^2`
@@ -168,21 +170,28 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
 
 ### SpawnerReplacer
 - `replaceMobs` entries `"from,to"` (both entity ids, `minecraft:` optional) parsed on load/reload.
-- Hook `MobSpawnerBlockActor::tick` (server): spawner mob in the map -> `setMob(region, to)`.
+- Hook `BaseMobSpawner::tick` (server; the spawner block actor ticks through it): the mob (read
+  with `save()`, `EntityIdentifier`) in the map and a `minecraft:mob_spawner` block at the spawner's
+  `getPos()` -> `MobSpawnerBlockActor::setMob(region, to)` (updates clients too).
   Log: `misctweaks: spawner at <pos> <from> -> <to>`.
 
 ### VillagerRerollingRework
-- Per-villager data in the world DB (`lp:misctweaks:villager:<uniqueId>`: `seed`, `day`, `rerolls`),
+- Per-villager data in the world DB (`lp:misctweaks:villager:<uniqueId>`: `trades`, `day`, `rerolls`),
   removed when the villager dies.
-- Seed: hook `EconomyTradeableComponent::_generateTrades`: when the offers are empty and the module
-  and `seedInitialVillagerTrades` are on, the villager's random is re-seeded from its stored seed for
-  the call and restored afterwards.
+- First trades: hook `EconomyTradeableComponent::_generateTrades` (Bedrock generates the trades of
+  every tier at once, into an empty offer list). With the module and `seedInitialVillagerTrades` on
+  and no offers yet: the first list generated for a trade table (profession) is kept
+  (`MerchantRecipeList::createTag`, SNBT under `trades.<table path>`); every later first generation
+  for that table loads the kept list instead. Java seeds the villager's random for that call; the
+  Bedrock generation does not draw from a random we can seed, so the kept list gives the same result
+  (same villager + same profession = same first trades).
 - Reroll: hook `EconomyTradeableComponent::resupplyTrades`. New day (`time / 24000`) -> rerolls = 0
   and, unless `rerollOnAnyRestock`, a reroll attempt before the restock; with `rerollOnAnyRestock`
   the attempt runs after every restock. Attempt: as in Quark (chance per trade from the villager's
   random, tier of the old trade, duplicates skipped, reward-XP flag = new && old, counter).
   The candidate trade is generated by Bedrock's own trade table code (`_generateTrades` into a
-  scratch list) and one recipe of the same tier is picked at random.
+  fresh list while the villager's own list is set aside) and one recipe of the same tier is picked
+  at random.
 
 ### AdjustableChat (client mod)
 - After each HUD frame the chat panel control of `hud_screen` (`chat_panel`) is moved by
@@ -300,7 +309,9 @@ Keybind names (RP `texts.d`): `key.lepton.narrator_readout` = "Narrator Readout"
 - **ArmedArmorStands**: Bedrock armor stands always have arms (Java's missing-arms default does not
   exist); only the shield-to-off-hand rule is added.
 - **GameNerfs**: the anvil's level cost keeps Bedrock's computed cost (the cost is committed by an
-  internal, non-exported part of the anvil validation; Quark sets 5). The mod client's anvil preview
+  internal, non-exported part of the anvil validation; Quark sets 5). Quark also builds a result
+  when vanilla has none (an incompatible combination); Bedrock's validator only accepts results the
+  client predicted, so Lepton only nerfs results the game produced. The mod client's anvil preview
   shows the vanilla result; the result taken is the nerfed one. `disableIceRoads` changes boats driven
   by the integrated server or the client mod; a vanilla client on BDS drives its boat with its own
   physics. `disablePistonPhysicsExploits` **has no effect**: Quark's fix patches three update-order
@@ -313,7 +324,10 @@ Keybind names (RP `texts.d`): `key.lepton.narrator_readout` = "Narrator Readout"
   transforms villagers into a new entity); Quark's special price difference has no Bedrock
   counterpart (Bedrock prices come from demand and cured discounts, which are kept).
 - **NarratorReadout**: speech uses the Windows speech API directly (Java uses its narrator library);
-  for non-container screens Bedrock has no narration message, so the screen name is read.
+  for non-container screens Bedrock has no narration message, so the screen name is read. Quark
+  calls `acceptInput(down || full, down)`, so its "Narrator Readout" key gives the full readout and
+  "Narrator Full Readout" the short one; Lepton keeps that. The hovered item of a container screen
+  is the last item whose hover text the game built in the last 0.5 s.
 - **OverlayShader** (not ported): Java loads a post-processing shader chain (`PostChain`,
   `shaders/post/*.json`) at runtime through the Camera module. Bedrock's RenderDragon renderer
   only uses precompiled materials shipped in resource packs; there is no API for a full-screen
@@ -327,27 +341,37 @@ Keybind names (RP `texts.d`): `key.lepton.narrator_readout` = "Narrator Readout"
   crafts directly from the book. The key is kept.
 
 ## 8. Tests
-Selftests (dx 2700..2799):
-- `misctweaks.config` - defaults match Quark's.
-- `misctweaks.elytra_rocket` (dx 2700) - a simulated player wearing an elytra uses a rocket and
-  glides; without an elytra nothing happens.
-- `misctweaks.campfire_force` (dx 2705) - force for lit signal campfire, soul campfire, distance fade,
-  unlit / non-signal campfires.
-- `misctweaks.note_amethyst` (dx 2710) - a note block on amethyst plays the chime, on stone it doesn't.
-- `misctweaks.recipe_unlock` - the recipe command succeeds for a simulated player.
-- `misctweaks.armor_stand_shield` (dx 2715) - a shield goes to the stand's off hand.
-- `misctweaks.mending_nerf` - no XP repair item with the nerf, Mending II kept with
-  `noNerfForMendingTwo`; anvil result transformation.
-- `misctweaks.no_iron_drops` (dx 2720) - a killed iron golem drops no iron ingots.
-- `misctweaks.no_wool_drops` (dx 2725) - a killed sheep drops no wool.
-- `misctweaks.griefing` (dx 2730) - a creeper explosion breaks no blocks with the nerf.
-- `misctweaks.mushroom` (dx 2735) - a huge mushroom does not replace stone.
+Selftests (dx 2700..2799, each in this unit's 5-block row):
+- `misctweaks.config` - defaults match Quark's; dimension and id spellings.
+- `misctweaks.elytra_rocket` (dx 2700) - a simulated player in the air uses a rocket: without an
+  elytra nothing happens; wearing one it glides and a rocket is fired at it.
+- `misctweaks.campfire_force` (dx 2705) - force for a lit signal campfire, the fade past 16
+  blocks, nothing past 20, soul campfire x -1.5, unlit and non-signal campfires.
+- `misctweaks.note_amethyst` (dx 2710) - a punched note block on amethyst plays the chime, on stone
+  it doesn't.
+- `misctweaks.recipe_unlock` - the recipe command succeeds for a player.
+- `misctweaks.armor_stand_shield` (dx 2715) - a shield goes to the stand's off hand, a sword to the
+  main hand.
+- `misctweaks.mending_nerf` (dx 2718) - anvil result transformation (same item, book, material,
+  Mending II); real experience orbs: vanilla repairs, nerfed doesn't, Mending II does with
+  `noNerfForMendingTwo`.
+- `misctweaks.no_iron_drops` (dx 2720), `misctweaks.no_wool_drops` (dx 2725) - killed iron golems /
+  sheep drop iron / wool without the nerf and none with it.
+- `misctweaks.griefing` (dx 2730) - a creeper's explosion breaks no blocks with the nerf; a pig's
+  does; without the nerf the creeper's does.
+- `misctweaks.mushroom` (dx 2735) - with the nerf a huge mushroom still grows (through the hook);
+  obstructed growth replaces nothing.
 - `misctweaks.village_nerf` - the probability formula.
 - `misctweaks.spawner` (dx 2740) - a pig spawner becomes a cow spawner.
-- `misctweaks.villager_seed` (dx 2745) - generating trades twice with the same seed gives the same trades.
+- `misctweaks.villager_seed` (dx 2745) - regenerating the first trades gives the same trades;
+  rerolling respects `maximumRestocksPerDay`.
 - `misctweaks.climate` - parameter neutralisation.
-- `misctweaks.dimension_elytra` (dx 2750) - gliding is refused outside the End.
+- `misctweaks.dimension_elytra` (dx 2750) - gliding is refused outside the allowed dimensions and
+  stops when the dimension is no longer allowed.
+- `misctweaks.ice_roads` (dx 2755) - a boat pushed over packed ice slides much less with the nerf.
 
-E2E: `tools/e2e/server/scenarios/misctweaks.ps1` runs `misctweaks.*` and checks the pass count;
-`tools/e2e/client/scenarios/misctweaks.ps1` (local world) launches with a rocket, shows the shield
-on an armor stand, the shifted chat and the "(Was Repaired)" tooltip (screenshots).
+E2E: `tools/e2e/server/scenarios/misctweaks.ps1` runs `misctweaks.*` and checks the pass count and
+the log lines. `tools/e2e/client/scenarios/misctweaks.ps1` (local, remote-mod, remote-vanilla):
+recipe unlock without a toast, the shifted chat, the inventory without recipe book, the narrator
+readout (block, hovered slot), the shield on an armor stand, the anvil Mending nerf and the
+"(Was Repaired)" tooltip, and a rocket launch with an elytra (screenshots).

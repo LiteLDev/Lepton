@@ -1,0 +1,11 @@
+{
+  "quark.misc.repaired": "(Was Repaired)",
+  "quark.readout.not_ingame": "Not ingame",
+  "quark.readout.looking": "Looking at {}",
+  "quark.readout.holding": "Holding {}x {}",
+  "quark.readout.holding_with_off": "Holding {} {} and {} {}",
+  "quark.readout.health": "Health {}",
+  "quark.readout.food": "Food {}",
+  "quark.readout.sign_says": ". Sign Says ",
+  "quark.readout.no_item": "No item"
+}

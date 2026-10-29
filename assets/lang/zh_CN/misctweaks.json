@@ -1,0 +1,11 @@
+{
+  "quark.misc.repaired": "（已修复）",
+  "quark.readout.not_ingame": "不在游戏中",
+  "quark.readout.looking": "正看着{}",
+  "quark.readout.holding": "主手拿着{}个{}",
+  "quark.readout.holding_with_off": "主手拿着{}个{}，副手拿着{}个{}",
+  "quark.readout.health": "生命值为{}",
+  "quark.readout.food": "饥饿值为{}",
+  "quark.readout.sign_says": "告示牌写着",
+  "quark.readout.no_item": "无物品"
+}

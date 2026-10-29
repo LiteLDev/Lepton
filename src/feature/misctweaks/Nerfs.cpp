@@ -28,6 +28,7 @@
 #include "mc/world/actor/item/FallingBlockActor.h"
 #include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/actor/player/PlayerUISlot.h"
 #include "mc/world/PlayerUIContainer.h"
 #include "mc/world/inventory/network/ContainerScreenContext.h"
 #include "mc/world/inventory/simulation/AllowedAnywhereConsume.h"
@@ -165,8 +166,8 @@ LL_TYPE_INSTANCE_HOOK(
     auto&   results = result.mResults.get();
     if (!player || results.empty()) return result;
     auto const& ui    = player->mPlayerUIContainer.get();
-    auto const& left  = ui.getItem(1); // PlayerUISlot::AnvilInput
-    auto const& right = ui.getItem(2); // PlayerUISlot::AnvilMaterial
+    auto const& left  = ui.getItem(static_cast<int>(PlayerUISlot::AnvilInput));
+    auto const& right = ui.getItem(static_cast<int>(PlayerUISlot::AnvilMaterial));
     if (nerfAnvilResult(left, right, results.front()))
         log().info("misctweaks: anvil removed Mending for {}", player->getRealName());
     return result;
@@ -252,7 +253,9 @@ constexpr float kBoatFriction = 0.45f;
 LL_TYPE_INSTANCE_HOOK(BoatTickHook, ll::memory::HookPriority::Normal, Boat, &Boat::$normalTick, void) {
     origin();
     if (!nerf(&MiscTweaksConfig::disableIceRoads) || isInWater() || !isOnGround()) return;
-    // A boat driven by a remote player moves on that client; the server would only fight it.
+    // Quark returns 0.45 as the boat's ground friction on every block (not only ice), so boats are
+    // slower on any ground. A boat driven by a remote player moves on that client; the server
+    // would only fight it.
     if (!onClientSide(*this) && getControllingPlayer().rawID != -1 && getControllingPlayer().rawID != 0) {
         auto* driver = getLevel().fetchEntity(getControllingPlayer(), false);
         if (driver && driver->isType(ActorType::Player) && !static_cast<Player*>(driver)->isSimulated()) return;
@@ -350,9 +353,15 @@ LL_TYPE_INSTANCE_HOOK(
         Block const& b = region.getBlock(p);
         if (b.getTypeName() != "minecraft:tripwire_hook") notHooks.emplace_back(p, &b);
     };
+    // calculateState walks the tripwire from the hook and sets the hooks at both ends: remember the
+    // block at this end and every block up to and including the first non-wire block per direction.
     remember(pos);
     for (auto [dx, dz] : kDirs)
-        for (int i = 1; i <= kMaxWire; ++i) remember(BlockPos{pos.x + dx * i, pos.y, pos.z + dz * i});
+        for (int i = 1; i <= kMaxWire; ++i) {
+            BlockPos p{pos.x + dx * i, pos.y, pos.z + dz * i};
+            remember(p);
+            if (region.getBlock(p).getTypeName() != "minecraft:trip_wire") break;
+        }
     origin(region, pos, isBeingDestroyed, wireSourceIdx);
     for (auto const& [p, old] : notHooks) {
         if (region.getBlock(p).getTypeName() == "minecraft:tripwire_hook") {

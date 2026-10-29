@@ -226,10 +226,17 @@ LP_REGISTER_SELFTEST("misctweaks.note_amethyst", [](Context& ctx) -> ll::coro::C
     lp::game::clearBlock(region, bp(pos, 0, 2));
     ctx.require(place(ctx, region, base, "minecraft:amethyst_block"), "amethyst placed");
     ctx.require(place(ctx, region, note, "minecraft:noteblock"), "note block placed");
+    BlockPos sensor = bp(pos, 3, 1);
+    ctx.require(place(ctx, region, sensor, "minecraft:sculk_sensor"), "sculk sensor placed");
+    co_await ctx.ticks(20);
     int before = mt::gAmethystNotes.load();
     region.getBlock(note).getBlockType().attack(&p, note);
     co_await ctx.ticks(2);
     ctx.check(mt::gAmethystNotes.load() == before + 1, "a note block on amethyst plays the chime");
+    co_await ctx.ticks(10);
+    auto phase = lp::game::blockstates::getInt(region.getBlock(sensor), "sculk_sensor_phase");
+    ctx.check(phase && *phase != 0, "the note still makes a vibration (sculk sensor phase " + std::to_string(phase.value_or(-1)) + ")");
+    lp::game::clearBlock(region, sensor);
 
     ctx.require(place(ctx, region, base, "minecraft:stone"), "stone placed");
     before = mt::gAmethystNotes.load();
@@ -306,24 +313,32 @@ LP_REGISTER_SELFTEST("misctweaks.mending_nerf", [](Context& ctx) -> ll::coro::Co
         for (Actor* o : orbs) static_cast<ExperienceOrb*>(o)->playerTouch(p);
         return !orbs.empty();
     };
+    // Orbs are absorbed one at a time with a short delay: wait until none is left near the player.
+    auto absorbed = [&]() -> ll::coro::CoroTask<> {
+        for (int i = 0; i < 40; ++i) {
+            co_await ctx.ticks(5);
+            if (ent::inBox(region, boxAround(p.getPosition(), 4), "minecraft:xp_orb").empty()) break;
+        }
+    };
     cfg->enableGameNerfs = false;
     p.setCarriedItem(withMending("minecraft:diamond_sword", 1, 300));
     ctx.require(touch(10), "orb spawned");
-    co_await ctx.ticks(30);
+    co_await absorbed();
     short vanillaDamage = p.getCarriedItem().getDamageValue();
     ctx.check(vanillaDamage < 300, "control: vanilla Mending repairs from XP");
 
     cfg->enableGameNerfs = true;
     p.setCarriedItem(withMending("minecraft:diamond_sword", 1, 300));
     ctx.require(touch(10), "orb spawned");
-    co_await ctx.ticks(30);
+    co_await absorbed();
     ctx.check(p.getCarriedItem().getDamageValue() == 300, "nerfed: XP does not repair");
 
     cfg->noNerfForMendingTwo = true;
     p.setCarriedItem(withMending("minecraft:diamond_sword", 2, 300));
     ctx.require(touch(10), "orb spawned");
-    co_await ctx.ticks(30);
-    ctx.check(p.getCarriedItem().getDamageValue() < 300, "Mending II still repairs with noNerfForMendingTwo");
+    co_await absorbed();
+    ctx.check(p.getCarriedItem().getDamageValue() < 300,
+              "Mending II still repairs with noNerfForMendingTwo (damage " + std::to_string(p.getCarriedItem().getDamageValue()) + ")");
     p.setCarriedItem(ItemStack::EMPTY_ITEM());
 });
 

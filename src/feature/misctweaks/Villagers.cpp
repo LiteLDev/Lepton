@@ -129,14 +129,15 @@ LL_TYPE_INSTANCE_HOOK(
     if (!cfg().enableVillagerRerollingRework || !isVillager(owner) || onClientSide(owner)) return origin();
     auto j   = loadData(owner);
     int  day = owner.getLevel().getTime() / 24000;
-    if (j.value("day", -1) != day) { // first restock of the day: Java's resetNumberOfRestocks
+    bool newDay = j.value("day", -1) != day;
+    if (newDay) { // first restock of the day: Java's resetNumberOfRestocks
         j["day"]     = day;
         j["rerolls"] = 0;
         saveData(owner, j);
-        if (!cfg().rerollOnAnyRestock) attemptReroll(*this);
     }
+    // Before the restock resets the uses: the out-of-stock trades are the ones to reroll.
+    if (cfg().rerollOnAnyRestock || newDay) attemptReroll(*this);
     origin();
-    if (cfg().rerollOnAnyRestock) attemptReroll(*this);
 }
 
 ll::event::ListenerPtr gDie;

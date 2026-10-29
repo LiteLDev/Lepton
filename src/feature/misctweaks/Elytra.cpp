@@ -105,6 +105,7 @@ std::optional<double> campfireForce(BlockSource& region, BlockPos const& feet, d
     if (game::blockstates::getBool(b, "extinguished").value_or(true)) return std::nullopt;
     if (!isSignalFire(region, pos)) return std::nullopt;
     double force = boostStrength;
+    // Quark's formula, kept as is: past 16 blocks the force drops to 1/4 and climbs back to full at 20.
     if (moves > 16) force -= force * (1.0 - (static_cast<double>(moves) - 16.0) / 4.0);
     if (soul) force *= -1.5;
     return force;
