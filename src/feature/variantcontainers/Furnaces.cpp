@@ -27,6 +27,7 @@
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/network/MinecraftPacketIds.h"
 #include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/BlockActorDataPacket.h"
 #include "mc/network/packet/ContainerOpenPacket.h"
 #include "mc/network/packet/UpdateBlockPacket.h"
 #include "mc/server/ServerPlayer.h"
@@ -316,6 +317,10 @@ bool openFurnace(Player& player, BlockPos const& pos) {
                 if (auto* r = game::regionOf(old->second.dim)) sendBlock(player, old->second.pos, r->getBlock(old->second.pos));
             }
             sendBlock(player, pos, *v);
+            // and the furnace's block actor data, so the client has a furnace block actor there
+            if (auto* f = furnaceAt(region, pos)) {
+                if (auto data = f->_getUpdatePacket(region)) player.sendNetworkPacket(*data);
+            }
             fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick, &b, 0};
             // the client creates the furnace block actor when the stand-in arrives: open a few ticks later
             pendingOpens().push_back({player.getOrCreateUniqueID().rawID, static_cast<int>(region.getDimensionId()), pos, gTick + 4, true});
@@ -392,7 +397,13 @@ public:
                 auto* p    = level ? level->getPlayer(uid) : nullptr;
                 auto* r    = game::regionOf(o.dim);
                 if (!p || !r || static_cast<int>(p->getDimensionId()) != o.dim) continue;
-                if (o.show) showFurnaceScreen(*p, o.pos);
+                if (o.show) {
+                    // the block actor data again: the first copy may have reached the client before
+                    // the stand-in block existed there
+                    if (auto* f = furnaceAt(*r, o.pos))
+                        if (auto data = f->_getUpdatePacket(*r)) p->sendNetworkPacket(*data);
+                    showFurnaceScreen(*p, o.pos);
+                }
                 else openFurnace(*p, o.pos);
             }
         }));
