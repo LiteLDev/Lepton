@@ -45,6 +45,12 @@ bool                 gHooked = false;
 
 enum class Move { Move, Break, Skip, Prevent };
 
+/// Bedrock 1.26.51 marks these immovable; on Java they only stop pistons through their block entity,
+/// so Quark moves them.
+constexpr char const* kJavaMovable[] = {"minecraft:beacon",        "minecraft:jukebox",         "minecraft:sculk_sensor",
+                                        "minecraft:calibrated_sculk_sensor", "minecraft:sculk_catalyst",
+                                        "minecraft:sculk_shrieker"};
+
 std::string const& nameOf(Block const& b) { return b.getTypeName(); }
 
 bool isChain(Block const& b) {
@@ -169,9 +175,7 @@ struct Resolver {
     }
     /// Bedrock-immovable block entity blocks that Java Quark moves (breakable, Java push reaction normal).
     static bool javaMovable(std::string const& name) {
-        static std::set<std::string, std::less<>> const k{"minecraft:beacon", "minecraft:lodestone", "minecraft:conduit",
-                                                          "minecraft:lectern", "minecraft:jukebox"};
-        return k.contains(name);
+        return std::find(std::begin(kJavaMovable), std::end(kJavaMovable), name) != std::end(kJavaMovable);
     }
     bool popped(Block const& b) const { return !b.isAir() && movementOf(b) == MovementType::Popped; }
 
@@ -409,6 +413,45 @@ void scheduleDelayedUpdates(BlockSource& region, std::vector<BlockPos> const& mo
     }
 }
 
+/// Bedrock refuses a few block-entity blocks in its own piston code too: while PistonsMoveTileEntities
+/// is on they get the push_pull movement type (restored when it is turned off / uninstalled).
+struct MovableOverride {
+    bool                                                         applied = false;
+    std::vector<std::pair<BlockMovableComponent*, MovementType>> saved;
+};
+MovableOverride& movableOverride() {
+    static MovableOverride m;
+    return m;
+}
+void restoreMovable() {
+    auto& m = movableOverride();
+    for (auto& [c, t] : m.saved) c->mMovementType = t;
+    m.saved.clear();
+    m.applied = false;
+}
+void syncMovable() {
+    auto& m    = movableOverride();
+    bool  want = cfg().enablePistonsMoveTileEntities && installed();
+    if (want == m.applied) return;
+    if (!want) {
+        restoreMovable();
+        return;
+    }
+    for (auto const* id : kJavaMovable) {
+        auto const* b = bs::of(id);
+        if (!b) continue;
+        b->getBlockType().forEachBlockPermutation([&](Block const& perm) {
+            if (auto* c = const_cast<BlockMovableComponent*>(perm.tryGetComponent<BlockMovableComponent>());
+                c && c->mMovementType == MovementType::Immovable) {
+                m.saved.emplace_back(c, c->mMovementType);
+                c->mMovementType = MovementType::PushPull;
+            }
+            return true;
+        });
+    }
+    m.applied = true;
+}
+
 LL_TYPE_INSTANCE_HOOK(
     LeptonPistonResolverHook,
     ll::memory::HookPriority::Low,
@@ -418,6 +461,7 @@ LL_TYPE_INSTANCE_HOOK(
     BlockSource& region
 ) {
     if (!installed() || !isServerRegion(region) || !onServerThread()) return origin(region);
+    syncMovable();
     auto const& c        = cfg();
     bool        anyRules = c.enableChainsConnectBlocks || c.enableIronRod || c.enablePistonsMoveTileEntities || c.pistonPushLimit != 12;
     bool        retracting = static_cast<PistonState>(mNewState) == PistonState::Retracting;
@@ -478,6 +522,13 @@ ll::event::ListenerPtr gPlaced;
 
 } // namespace
 
+void onWorldClosedPistons() {
+    // the client destroys the world's blocks: forget the overrides without touching them
+    movableOverride().saved.clear();
+    movableOverride().applied = false;
+    delayed().clear();
+}
+
 void installPistons() {
     if (!gHooked) {
         LeptonPistonResolverHook::hook();
@@ -493,6 +544,7 @@ void uninstallPistons() {
         gHooked = false;
     }
     delayed().clear();
+    restoreMovable();
 }
 
 testing::PistonTrace const& testing::lastPiston() { return gTrace; }

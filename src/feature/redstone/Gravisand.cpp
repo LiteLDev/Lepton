@@ -44,7 +44,8 @@ constexpr std::string_view kEntity = "lepton:gravisand";
 
 struct Falling {
     Vec3 velocity{0, 0, 0};
-    int  time = 0;
+    int  time  = 0;
+    int  up    = -1; ///< fall direction (1 up, 0 down); -1: read the entity variant (loaded from disk)
 };
 struct State {
     std::set<core::GlobalPos>                     scheduled; ///< pending fall ticks
@@ -95,7 +96,9 @@ bool tryFall(BlockSource& region, BlockPos const& pos, int face) {
         return false;
     }
     if (face == 1) game::entities::triggerEvent(*e, "lepton:fall_up");
-    st().falling[game::entities::idOf(*e)] = Falling{};
+    Falling f;
+    f.up                                   = face == 1 ? 1 : 0;
+    st().falling[game::entities::idOf(*e)] = f;
     log().info("redstone: gravisand at {} {} {} falls {}", pos.x, pos.y, pos.z, face == 1 ? "up" : "down");
     return true;
 }
@@ -169,7 +172,8 @@ void land(Actor& e, BlockSource& region, BlockPos const& at, bool up) {
 
 void tickEntity(Actor& e) {
     auto& f  = st().falling[game::entities::idOf(e)];
-    bool  up = e.getVariant() == 1;
+    if (f.up < 0) f.up = e.getVariant() == 1 ? 1 : 0;
+    bool up = f.up == 1;
     ++f.time;
     // external impulses (U12 magnets add to the motion) join the velocity
     Vec3& delta = e.mBuiltInComponents->mStateVectorComponent->mPosDelta.get();

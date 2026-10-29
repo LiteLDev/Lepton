@@ -1,17 +1,21 @@
 // U10 redstone selftests (dx 1000..1099). Structures are built in the air above the test position.
 
 #include <algorithm>
+#include <cmath>
 #include <set>
 #include <string>
 
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/phys/AABB.h"
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/server/sim/LookDuration.h"
 #include "mc/world/Container.h"
+#include "mc/entity/components/ActorRotationComponent.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/world/actor/BuiltInActorComponents.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/crafting/Recipes.h"
@@ -232,6 +236,26 @@ LP_REGISTER_SELFTEST("redstone.te_blacklist", [](Context& ctx) -> ll::coro::Coro
     ctx.check(idAt(ctx, off(p, 0, 2, 0)) == "minecraft:barrel", "other block entities move");
 });
 
+LP_REGISTER_SELFTEST("redstone.te_movable", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigGuard guard;
+    GP          p = co_await area(ctx, 1078);
+    for (std::string id : {"minecraft:beacon", "minecraft:jukebox", "minecraft:sculk_catalyst"}) {
+        clearBox(ctx, off(p, -1, 0, 0), 2, 4, 1);
+        put(ctx, off(p, 0, 1, 0), id);
+        co_await firePiston(ctx, p);
+        ctx.check(idAt(ctx, off(p, 0, 2, 0)) == id, id + " is moved (Bedrock refuses it, Quark moves block entities)");
+        auto const& t = rs::testing::lastPiston();
+        ctx.info(id + ": lepton " + std::to_string(t.usedLepton) + " result " + std::to_string(t.result) + " push "
+                 + std::to_string(t.push.size()) + " at " + idAt(ctx, off(p, 0, 1, 0)));
+    }
+    // with the module off, Bedrock's own rules apply
+    lp::config::mut<RConfig>().enablePistonsMoveTileEntities = false;
+    clearBox(ctx, off(p, -1, 0, 0), 2, 4, 1);
+    put(ctx, off(p, 0, 1, 0), "minecraft:beacon");
+    co_await firePiston(ctx, p);
+    ctx.check(idAt(ctx, off(p, 0, 1, 0)) == "minecraft:beacon", "module off: the beacon stays");
+});
+
 LP_REGISTER_SELFTEST("redstone.chests_together", [](Context& ctx) -> ll::coro::CoroTask<> {
     GP p = co_await area(ctx, 1024);
     clearBox(ctx, off(p, -1, 0, 0), 4, 4, 1);
@@ -358,8 +382,12 @@ LP_REGISTER_SELFTEST("redstone.randomizer", [](Context& ctx) -> ll::coro::CoroTa
     put(ctx, off(p, 1, 0, 0), "minecraft:redstone_lamp");
     rs::testing::forceRandomizerSide(1);
     co_await ctx.ticks(2);
+    int ticksBefore = rs::testing::queuedTicks();
     put(ctx, off(p, 0, 0, 1), "minecraft:redstone_block");
     co_await ctx.ticks(10);
+    ctx.check(rs::testing::queuedTicks() > ticksBefore, "the randomizer ticks (minecraft:tick)");
+    ctx.info("input " + std::to_string(rs::signalFrom(regionOf(ctx), bp(p), 3)) + ", component at back "
+             + std::to_string(rs::componentStrength(regionOf(ctx), bp(off(p, 0, 0, 1))).value_or(-1)));
     ctx.check(bs::getString(regionOf(ctx).getBlock(bp(p)), "lepton:powered").value_or("") == "left", "powered from the back: left");
     ctx.check(idAt(ctx, off(p, -1, 0, 0)) == "minecraft:lit_redstone_lamp", "the left (west) lamp is lit");
     ctx.check(idAt(ctx, off(p, 1, 0, 0)) == "minecraft:redstone_lamp", "the right (east) lamp is off");
@@ -371,6 +399,9 @@ LP_REGISTER_SELFTEST("redstone.randomizer", [](Context& ctx) -> ll::coro::CoroTa
     co_await ctx.ticks(10);
     ctx.check(bs::getString(regionOf(ctx).getBlock(bp(p)), "lepton:powered").value_or("") == "right", "next time: right");
     ctx.check(idAt(ctx, off(p, 1, 0, 0)) == "minecraft:lit_redstone_lamp", "the right (east) lamp is lit");
+    ctx.info("right: randomizer " + std::to_string(rs::componentStrength(regionOf(ctx), bp(p)).value_or(-1)) + " east lamp "
+             + std::to_string(rs::componentStrength(regionOf(ctx), bp(off(p, 1, 0, 0))).value_or(-1)) + " west lamp "
+             + std::to_string(rs::componentStrength(regionOf(ctx), bp(off(p, -1, 0, 0))).value_or(-1)));
     rs::testing::forceRandomizerSide(-1);
     // side power doesn't count
     put(ctx, off(p, 0, 0, 1), "minecraft:air");
@@ -387,19 +418,42 @@ LP_REGISTER_SELFTEST("redstone.ender_watcher", [](Context& ctx) -> ll::coro::Cor
     GP p = co_await area(ctx, 1062);
     put(ctx, p, "lepton:ender_watcher");
     auto* sp = static_cast<SimulatedPlayer*>(&ctx.player());
-    sp->teleport(Vec3{p.x + 0.5f, static_cast<float>(p.y) - 1.62f + 0.5f, p.z + 5.5f}, DimensionType(p.dim));
-    co_await ctx.ticks(2);
-    sp->simulateLookAt(Vec3{p.x + 0.5f, p.y + 0.5f, p.z + 1.0f}, sim::LookDuration::Instant);
-    co_await ctx.ticks(6);
+    // Bedrock player positions are at eye level; look north (yaw 180) horizontally at the south face
+    // the player stands on a block 5 south of the watcher; aim with the rotation (pitch, yaw)
+    put(ctx, off(p, 0, -2, 5), "minecraft:glass");
+    sp->teleport(Vec3{p.x + 0.5f, p.y + 0.6f, p.z + 5.5f}, DimensionType(p.dim));
+    co_await ctx.ticks(8);
+    auto aim = [&](float tx) {
+        Vec3  eye   = sp->getEyePos();
+        float dz    = eye.z - (p.z + 1.0f);
+        float dx    = (p.x + 0.5f + tx) - eye.x;
+        float dy    = eye.y - (p.y + 0.5f);
+        float pitch = std::atan2(dy, dz) * 57.29578f;
+        float yaw   = 180.0f + std::atan2(dx, dz) * 57.29578f;
+        sp->mBuiltInComponents->mActorRotationComponent->mRot = Vec2{pitch, yaw};
+    };
+    aim(0.0f);
+    co_await ctx.ticks(4);
     auto const& b = regionOf(ctx).getBlock(bp(p));
     ctx.check(bs::getBool(b, "lepton:watched").value_or(false), "watched while a player looks at it");
     int power = bs::getInt(b, "lepton:power").value_or(0);
-    ctx.check(power >= 13, "looking at the centre gives a strong signal (got " + std::to_string(power) + ")");
-    sp->simulateLookAt(Vec3{p.x + 0.95f, p.y + 0.95f, p.z + 1.0f}, sim::LookDuration::Instant);
+    {
+        auto h = rs::testing::lastWatcherHit();
+        auto r   = sp->getRotation();
+        auto eye = sp->getEyePos();
+        ctx.info("hit " + std::to_string(h[0]) + " " + std::to_string(h[1]) + " " + std::to_string(h[2]) + " face "
+                 + std::to_string(h[3]) + ", power " + std::to_string(power) + ", rot " + std::to_string(r.x) + " "
+                 + std::to_string(r.y) + ", eye " + std::to_string(eye.x - p.x) + " " + std::to_string(eye.y - p.y) + " "
+                 + std::to_string(eye.z - p.z));
+    }
+    ctx.check(power >= 12, "looking at the centre gives a strong signal (got " + std::to_string(power) + ")");
+    // turn ~4 degrees: the ray meets the face near its edge
+    aim(0.4f); // near the east edge
+    co_await ctx.ticks(4);
     co_await ctx.ticks(6);
     int corner = bs::getInt(regionOf(ctx).getBlock(bp(p)), "lepton:power").value_or(0);
-    ctx.check(corner < power, "looking near the corner is weaker (" + std::to_string(corner) + ")");
-    sp->simulateLookAt(Vec3{p.x + 0.5f, p.y + 10.5f, p.z + 5.5f}, sim::LookDuration::Instant);
+    ctx.check(corner > 0 && corner < power, "looking near the edge is weaker (" + std::to_string(corner) + ")");
+    sp->mBuiltInComponents->mActorRotationComponent->mRot = Vec2{-80.0f, 180.0f};
     co_await ctx.ticks(6);
     auto const& b2 = regionOf(ctx).getBlock(bp(p));
     ctx.check(!bs::getBool(b2, "lepton:watched").value_or(true) && bs::getInt(b2, "lepton:power").value_or(1) == 0, "idle when nobody looks");

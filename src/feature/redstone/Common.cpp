@@ -15,6 +15,7 @@
 #include <windows.h>
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/world/BlockChangedEvent.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -29,6 +30,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
+#include "mc/world/level/TickingQueueType.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockChangeContext.h"
 #include "mc/world/level/block/BlockType.h"
@@ -58,6 +60,7 @@ RedstoneConfig const& cfg() { return config::get<RedstoneConfig>(); }
 namespace {
 
 std::atomic<bool>            gInstalled{false};
+int                          gQueuedTicks = 0;
 std::atomic<std::thread::id> gServerThread{};
 
 struct Task {
@@ -190,10 +193,20 @@ std::vector<std::unique_ptr<void*[]>>& oldTables() {
 int slotOfThunk(void* thunk) {
     auto* p = static_cast<uint8_t const*>(thunk);
     for (int i = 0; i < 4 && p[0] == 0xE9; ++i) p = p + 5 + *reinterpret_cast<int32_t const*>(p + 1);
-    if (p[0] != 0x48 || p[1] != 0x8B || p[2] != 0x01 || p[3] != 0xFF) return -1;
-    if (p[4] == 0x20) return 0;
-    if (p[4] == 0x60) return p[5] / 8;
-    if (p[4] == 0xA0) return *reinterpret_cast<int32_t const*>(p + 5) / 8;
+    if (p[0] != 0x48 || p[1] != 0x8B || p[2] != 0x01) return -1;
+    p += 3;
+    // mov rax, [rax + disp]; jmp rax   (or jmp [rax + disp])
+    if (p[0] == 0x48 && p[1] == 0x8B) {
+        if (p[2] == 0x00) return 0;
+        if (p[2] == 0x40) return p[3] / 8;
+        if (p[2] == 0x80) return *reinterpret_cast<int32_t const*>(p + 3) / 8;
+        return -1;
+    }
+    if (p[0] == 0x48) ++p; // rex.W jmp
+    if (p[0] != 0xFF) return -1;
+    if (p[1] == 0x20) return 0;
+    if (p[1] == 0x60) return p[2] / 8;
+    if (p[1] == 0xA0) return *reinterpret_cast<int32_t const*>(p + 2) / 8;
     return -1;
 }
 
@@ -226,8 +239,15 @@ LL_TYPE_INSTANCE_HOOK(
     bool watcher    = !randomizer && name == "lepton:ender_watcher";
     if (!randomizer && !watcher) return;
     if (!onServerThread() || !isServerRegion(region)) return;
+    ++gQueuedTicks;
     if (randomizer) randomizerTick(region, pos, *this);
     else watcherTick(region, pos, *this);
+    // keep the loop going even if the game didn't re-queue (ticks queued natively are not looping)
+    if (region.hasChunksAt(pos, 0, false)) {
+        auto const& now = region.getBlock(pos);
+        if (now.getTypeName() == name && !region.hasTickInPendingTicks(pos, TickingQueueType::Internal))
+            region.addToTickingQueue(pos, now, 1, 0, false);
+    }
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -277,6 +297,29 @@ void onLevelTick(ll::event::ServerLevelTickEvent&) {
     }
 }
 
+/// The randomizer and the ender watcher tick through their looping minecraft:tick component. Blocks set
+/// by commands, pistons or other mods may arrive without a pending tick: queue one (next tick).
+void ensureTicking(int dim, BlockPos pos) {
+    later(1, [dim, pos] {
+        auto* region = game::regionOf(dim);
+        if (!region || !region->hasChunksAt(pos, 0, false)) return;
+        auto const& b    = region->getBlock(pos);
+        auto const& name = b.getTypeName();
+        if (name != "lepton:redstone_randomizer" && name != "lepton:ender_watcher") return;
+        if (region->hasTickInPendingTicks(pos, TickingQueueType::Internal)) return;
+        region->addToTickingQueue(pos, b, 1, 0, false);
+    });
+}
+
+void onBlockChanged(ll::event::BlockChangedEvent& ev) {
+    if (!gInstalled.load(std::memory_order_relaxed)) return;
+    auto const& name = ev.newBlock().getTypeName();
+    if (name != "lepton:redstone_randomizer" && name != "lepton:ender_watcher") return;
+    auto& region = ev.blockSource();
+    if (!isServerRegion(region) || !onServerThread()) return;
+    ensureTicking(dimOf(region), ev.pos());
+}
+
 class RedstoneModule {
 public:
     void install() {
@@ -291,6 +334,7 @@ public:
             });
             game::db::onWorldClosed([] {
                 ts().tasks.clear();
+                onWorldClosedPistons();
                 // the client destroys the world's block types: forget them without touching them
                 for (auto& p : patched()) oldTables().push_back(std::move(p.table));
                 patched().clear();
@@ -298,7 +342,8 @@ public:
         }
         RedstoneQueuedTickHook::hook();
         RedstoneNeighborHook::hook();
-        mTick = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onLevelTick);
+        mTick    = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onLevelTick);
+        mChanged = ll::event::EventBus::getInstance().emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged);
         gInstalled = true;
         installPistons();
         installGravisand();
@@ -316,7 +361,9 @@ public:
         uninstallPistons();
         unpatchAll();
         if (mTick) ll::event::EventBus::getInstance().removeListener(mTick);
+        if (mChanged) ll::event::EventBus::getInstance().removeListener(mChanged);
         mTick.reset();
+        mChanged.reset();
         RedstoneNeighborHook::unhook();
         RedstoneQueuedTickHook::unhook();
         ts().tasks.clear();
@@ -324,11 +371,14 @@ public:
 
 private:
     ll::event::ListenerPtr mTick;
+    ll::event::ListenerPtr mChanged;
 };
 
 } // namespace
 
 bool installed() { return gInstalled.load(std::memory_order_relaxed); }
+
+int testing::queuedTicks() { return gQueuedTicks; }
 
 uint64_t now() { return ts().tick; }
 void     later(uint64_t delay, std::function<void()> fn) {
@@ -474,6 +524,21 @@ int signalFrom(BlockSource& region, BlockPos const& receiver, int face) {
     return std::clamp(c.strength, 0, 15);
 }
 
+bool removeCircuitComponent(BlockSource& region, BlockPos const& pos) {
+    CircuitSystem* sys = region.getDimension().mCircuitSystem.get();
+    if (!sys) return false;
+    auto& graph = *sys->mSceneGraph;
+    for (auto const& [p, comp] : graph.mAllComponents) {
+        if (comp && p == pos) {
+            graph.remove(pos, comp.get());
+            int d = dimOf(region);
+            if (d >= 0 && d < 3) powerCache().tick[d] = ~0ull;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool hasNeighborSignal(BlockSource& region, BlockPos const& pos) {
     for (int f = 0; f < 6; ++f)
         if (signalFrom(region, pos, f) > 0) return true;
@@ -485,7 +550,9 @@ bool hasNeighborSignal(BlockSource& region, BlockPos const& pos) {
 bool patchVirtual(BlockType& type, void* memberThunk, void* fn) {
     int slot = slotOfThunk(memberThunk);
     if (slot < 0) {
-        log().error("redstone: can't read a virtual slot from thunk {}", memberThunk);
+        auto const* b = static_cast<uint8_t const*>(memberThunk);
+        log().error("redstone: can't read a virtual slot from thunk {} ({:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x})",
+                    memberThunk, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]);
         return false;
     }
     auto*& vptr = *reinterpret_cast<void***>(&type);

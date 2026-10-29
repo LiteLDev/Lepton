@@ -3,6 +3,7 @@
 // U10 redstone: ChainsConnectBlocks, IronRod, PistonsMoveTileEntities, Gravisand, MetalButtons,
 // ObsidianPlate, RedstoneRandomizer, EnderWatcher, DispensersPlaceBlocks. See docs/spec/redstone.md.
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -101,6 +102,8 @@ void levelEvent(BlockSource& region, int event, BlockPos const& pos, int data = 
 /// face)), in Bedrock terms: wire power, producers, diodes pointing at the receiver, powered blocks,
 /// Lepton's randomizers and ender watchers.
 [[nodiscard]] int signalFrom(BlockSource& region, BlockPos const& receiver, int face);
+/// Removes the circuit component at `pos` (data-driven producers keep their first connections).
+bool removeCircuitComponent(BlockSource& region, BlockPos const& pos);
 /// Java Level#hasNeighborSignal.
 [[nodiscard]] bool hasNeighborSignal(BlockSource& region, BlockPos const& pos);
 
@@ -114,6 +117,7 @@ void unpatchAll();
 // ---- parts (installed by Common.cpp) -------------------------------------------------------------------
 void installPistons();
 void uninstallPistons();
+void onWorldClosedPistons();
 void installGravisand();
 void uninstallGravisand();
 void onWorldReadyGravisand();
@@ -144,6 +148,10 @@ struct PistonTrace {
 [[nodiscard]] int movementTypeOf(std::string_view id, bool* blockEntity = nullptr);
 /// The paired chest of the chest at `pos`, if any.
 [[nodiscard]] std::optional<BlockPos> chestPartnerOf(BlockSource& region, BlockPos const& pos);
+/// Queued ticks of randomizers / ender watchers handled since install.
+[[nodiscard]] int queuedTicks();
+/// The last ender watcher hit: position relative to the block corner, face.
+[[nodiscard]] std::array<float, 4> lastWatcherHit();
 /// Dispenser placements done since install.
 [[nodiscard]] int dispenserPlacements();
 } // namespace testing
