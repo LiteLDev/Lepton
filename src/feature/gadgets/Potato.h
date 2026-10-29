@@ -3,6 +3,7 @@
 // Tiny potato internals shared with the selftests (docs/spec/gadgets.md, TinyPotato).
 
 #include <array>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -43,6 +44,8 @@ struct Tater {
     std::string                name;
     bool                       angry = false;
     std::array<std::string, 6> items; ///< SNBT, "" = empty
+    std::array<int64_t, 6>     displays{}; ///< display entity per held item (0 = none)
+    bool                       displaysDirty = true;
     int                        jumpTicks = 0;
     int                        soundCd   = 0;
 };
@@ -55,6 +58,14 @@ void registerAt(core::GlobalPos const& pos, std::string const& name, bool angry)
 void interact(Player& player, core::GlobalPos const& pos, int face);
 /// Starts a jump (20 ticks) if not jumping.
 void jump(core::GlobalPos const& pos);
+/// Comparator output of the held items (Java getRedstoneSignalFromContainer, 6 slots of 1).
+[[nodiscard]] int comparatorSignal(Tater const& t);
+/// Gives the tiny potato block type its comparator output (PotatoComparator.cpp).
+bool installComparator();
+void uninstallComparator();
+/// Display entity id showing the item of `slot` at `pos` (0 = none).
+[[nodiscard]] int64_t displayAt(core::GlobalPos const& pos, int slot);
+
 /// A potato item as broken from a potato with this name / angry flag.
 [[nodiscard]] ItemStack makePotatoItem(std::string const& name, bool angry, Player const* player);
 

@@ -85,7 +85,19 @@
           4
         ]
       },
-      "minecraft:geometry": "geometry.lepton.tiny_potato.base.0",
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.tiny_potato",
+        "bone_visibility": {
+          "base": "!(((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 1)))",
+          "bob": "(q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0)",
+          "dinnerbone": "(q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0)",
+          "flat": "(q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1)",
+          "double": "(q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1)",
+          "triple": "(q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1)",
+          "sus": "(q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1)",
+          "tomato": "(q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1)"
+        }
+      },
       "minecraft:material_instances": {
         "*": {
           "texture": "lepton_gadgets_lepton_gadgets_tiny_potato_default",
@@ -110,10 +122,15 @@
     },
     "permutations": [
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'north'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 0",
         "components": {
           "minecraft:transformation": {
             "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
               0,
               0,
               0
@@ -122,36 +139,731 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'west'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 4",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 5",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 6",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              -0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 7",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              -0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 8",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              -0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 9",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              -0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:jump') == 10",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 0",
         "components": {
           "minecraft:transformation": {
             "rotation": [
               0,
               90,
               0
-            ]
-          }
-        }
-      },
-      {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'south'",
-        "components": {
-          "minecraft:transformation": {
-            "rotation": [
+            ],
+            "translation": [
               0,
-              180,
+              0,
               0
             ]
           }
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'east'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 4",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 5",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 6",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              -0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 7",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              -0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 8",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              -0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 9",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              -0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:jump') == 10",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 0",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              -0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              -0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              -0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 4",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              -0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 5",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 6",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 7",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 8",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0.0476,
+              0.1902,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 9",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0.0294,
+              0.1176,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:jump') == 10",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 0",
         "components": {
           "minecraft:transformation": {
             "rotation": [
               0,
               270,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              -0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              -0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              -0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 4",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              -0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 5",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 6",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 7",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 8",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1902,
+              0.0476
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 9",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0.1176,
+              0.0294
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:jump') == 10",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ],
+            "translation": [
+              0,
+              0,
               0
             ]
           }
@@ -425,534 +1137,6 @@
               "render_method": "alpha_test"
             }
           }
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.1"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.2"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.3"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.4"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.5"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.6"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.7"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.8"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.9"
-        }
-      },
-      {
-        "condition": "(((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 9 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 11 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 12 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 13 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 14 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 15 && q.block_state('lepton:look_page') == 0) || (q.block_state('lepton:look') == 2 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 3 && q.block_state('lepton:look_page') == 1) || (q.block_state('lepton:look') == 7 && q.block_state('lepton:look_page') == 1)) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.base.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.bob.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 10 && q.block_state('lepton:look_page') == 0) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.dinnerbone.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 1 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.flat.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 0 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.double.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 4 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.triple.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 5 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.sus.10"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 0)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.0"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.1"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 2)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.2"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 3)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.3"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 4)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.4"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 5)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.5"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 6)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.6"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 7)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.7"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 8)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.8"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 9)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.9"
-        }
-      },
-      {
-        "condition": "((q.block_state('lepton:look') == 6 && q.block_state('lepton:look_page') == 1) && q.block_state('lepton:jump') == 10)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.tomato.10"
-        }
-      },
-      {
-        "condition": "(q.block_state('lepton:look') == 8 && q.block_state('lepton:look_page') == 1)",
-        "components": {
-          "minecraft:geometry": "geometry.lepton.tiny_potato.invisible"
         }
       }
     ]

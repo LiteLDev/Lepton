@@ -147,41 +147,44 @@ function Get-ShapeCubes([string]$Shape, [double]$Dx, [double]$Dy) {
     return @()
 }
 
-$geometries = [System.Collections.Generic.List[object]]::new()
+# One block geometry, a bone per shape shown by bone_visibility (like the shape generators); the
+# dinnerbone shape is the base potato turned upside down. The jump (Quark: t ticks left -> up
+# |sin(t/10 pi)| * 0.2 blocks, wiggle sin * 0.05 blocks along the potato's x) is a per-frame
+# minecraft:transformation together with the facing rotation (frame k shows t = 2k). Quark's
+# extra 2 degree tilt is left out: block transformations rotate in 90 degree steps only.
 $shapes = @('base', 'bob', 'dinnerbone', 'flat', 'double', 'triple', 'sus', 'tomato')
+$bones = [System.Collections.Generic.List[object]]::new()
 foreach ($shape in $shapes) {
-    for ($f = 0; $f -le $frames; $f++) {
-        # Quark: t ticks of jump left -> up |sin(t/10 pi)| * 0.2 blocks, tilt sin * 2 deg, wiggle sin * 0.05 blocks.
-        $s = [Math]::Sin(($f * 2) / 10.0 * [Math]::PI)
-        $up = [Math]::Round([Math]::Abs($s) * 0.2 * 16, 3)
-        $wig = [Math]::Round($s * 0.05 * 16, 3)
-        $rz = [Math]::Round($s * 2, 3)
-        $bones = @([ordered]@{ name = 'root'; pivot = @((Get-Num (-$wig)), (Get-Num $up), 0); rotation = @(0, 0, (Get-Num $rz)) })
-        if ($shape -eq 'dinnerbone') {
-            $bones += [ordered]@{ name = 'flip'; parent = 'root'; pivot = @((Get-Num (-$wig)), (Get-Num ($up + 3)), 0); rotation = @(0, 0, 180); cubes = @(Get-ShapeCubes $shape $wig $up) }
-        } else {
-            $bones[0].cubes = @(Get-ShapeCubes $shape $wig $up)
-        }
-        $geometries.Add([ordered]@{
+    $bone = [ordered]@{ name = $shape; pivot = @(0, 3, 0) }
+    if ($shape -eq 'dinnerbone') { $bone.rotation = @(0, 0, 180) }
+    $bone.cubes = @(Get-ShapeCubes $shape 0 0)
+    $bones.Add($bone)
+}
+Write-PackJson (Join-Path $script:RP 'models/blocks/lepton_gadgets_tiny_potato.geo.json') ([ordered]@{
+        format_version       = '1.12.0'
+        'minecraft:geometry' = @([ordered]@{
                 description = [ordered]@{
-                    identifier = "geometry.lepton.tiny_potato.$shape.$f"; texture_width = 16; texture_height = 16
+                    identifier = 'geometry.lepton.tiny_potato'; texture_width = 16; texture_height = 16
                     visible_bounds_width = 2; visible_bounds_height = 2; visible_bounds_offset = @(0, 0.5, 0)
                 }
-                bones       = $bones
+                bones       = @($bones)
             })
-    }
-}
-$geometries.Add([ordered]@{
-        description = [ordered]@{ identifier = 'geometry.lepton.tiny_potato.invisible'; texture_width = 16; texture_height = 16 }
-        bones       = @([ordered]@{ name = 'root'; pivot = @(0, 0, 0) })
     })
-Write-PackJson (Join-Path $script:RP 'models/blocks/lepton_gadgets_tiny_potato.geo.json') ([ordered]@{ format_version = '1.12.0'; 'minecraft:geometry' = @($geometries) })
 
 # Block states hold at most 16 values: the look is lepton:look (0..15) + 16 * lepton:look_page (0..1).
 $vc = { param($v) "(q.block_state('lepton:look') == $($v % 16) && q.block_state('lepton:look_page') == $([Math]::Floor($v / 16)))" }
 $mat = { param($look) [ordered]@{ texture = (Add-TerrainTexture "$btex/tiny_potato_$look"); render_method = 'alpha_test' } }
 $glasses = & $mat 'sus'
 $box = [ordered]@{ origin = @(-2, 0, -2); size = @(4, 6, 4) }
+$visibility = [ordered]@{}
+$shapeCond = @{}
+foreach ($shape in $shapes + @('invisible')) {
+    if ($shape -eq 'base') { continue }
+    $vs = @(for ($v = 0; $v -lt $variants.Count; $v++) { if ($variants[$v][1] -eq $shape) { $v } })
+    $shapeCond[$shape] = Join-Or @($vs | ForEach-Object { & $vc $_ })
+}
+$shapeCond['base'] = "!($(Join-Or @($shapes + @('invisible') | Where-Object { $_ -ne 'base' } | ForEach-Object { $shapeCond[$_] })))"
+foreach ($shape in $shapes) { $visibility[$shape] = $shapeCond[$shape] }
 $c = [ordered]@{
     'minecraft:destructible_by_mining'    = [ordered]@{ seconds_to_destroy = 0.25 }
     'minecraft:destructible_by_explosion' = [ordered]@{ explosion_resistance = 0.25 }
@@ -189,34 +192,29 @@ $c = [ordered]@{
     'minecraft:light_dampening'           = 0
     'minecraft:collision_box'             = $box
     'minecraft:selection_box'             = $box
-    'minecraft:geometry'                  = 'geometry.lepton.tiny_potato.base.0'
+    'minecraft:geometry'                  = [ordered]@{ identifier = 'geometry.lepton.tiny_potato'; bone_visibility = $visibility }
     'minecraft:material_instances'        = [ordered]@{ '*' = (& $mat 'default'); glasses = $glasses }
     'minecraft:loot'                      = 'loot_tables/empty.json'
     'minecraft:liquid_detection'          = [ordered]@{ detection_rules = @([ordered]@{ liquid_type = 'water'; can_contain_liquid = $true; on_liquid_touches = 'no_reaction' }) }
     'tag:lepton:tiny_potato'              = [ordered]@{}
 }
 $perms = [System.Collections.Generic.List[object]]::new()
-foreach ($r in @(@('north', 0), @('west', 90), @('south', 180), @('east', 270))) {
-    $perms.Add([ordered]@{ condition = "q.block_state('minecraft:cardinal_direction') == '$($r[0])'"
-            components = [ordered]@{ 'minecraft:transformation' = [ordered]@{ rotation = @(0, $r[1], 0) } } })
+# facing (model front = north) x jump frame
+foreach ($r in @(@('north', 0, 1, 0), @('west', 90, 0, 1), @('south', 180, -1, 0), @('east', 270, 0, -1))) {
+    for ($f = 0; $f -le $frames; $f++) {
+        $s = [Math]::Sin(($f * 2) / 10.0 * [Math]::PI)
+        $up = [Math]::Round([Math]::Abs($s) * 0.2, 4)
+        $wig = [Math]::Round($s * 0.05, 4)
+        # Quark translates along the potato's local x after turning it: world offset of local +x
+        $tr = @((Get-Num ([Math]::Round($wig * $r[2], 4))), (Get-Num $up), (Get-Num ([Math]::Round($wig * $r[3], 4))))
+        $perms.Add([ordered]@{ condition = "q.block_state('minecraft:cardinal_direction') == '$($r[0])' && q.block_state('lepton:jump') == $f"
+                components = [ordered]@{ 'minecraft:transformation' = [ordered]@{ rotation = @(0, $r[1], 0); translation = $tr } } })
+    }
 }
 for ($v = 1; $v -lt $variants.Count; $v++) {
     $look = $variants[$v][0]
     if ($look -eq 'default') { continue }
     $perms.Add([ordered]@{ condition = (& $vc $v); components = [ordered]@{ 'minecraft:material_instances' = [ordered]@{ '*' = (& $mat $look); glasses = $glasses } } })
-}
-foreach ($shape in $shapes + @('invisible')) {
-    $vs = @(for ($v = 0; $v -lt $variants.Count; $v++) { if ($variants[$v][1] -eq $shape) { $v } })
-    $shapeCond = Join-Or @($vs | ForEach-Object { & $vc $_ })
-    if ($shape -eq 'invisible') {
-        $perms.Add([ordered]@{ condition = $shapeCond; components = [ordered]@{ 'minecraft:geometry' = 'geometry.lepton.tiny_potato.invisible' } })
-        continue
-    }
-    for ($f = 0; $f -le $frames; $f++) {
-        if ($shape -eq 'base' -and $f -eq 0) { continue } # the default geometry
-        $perms.Add([ordered]@{ condition = Join-And @($shapeCond, "q.block_state('lepton:jump') == $f")
-                components = [ordered]@{ 'minecraft:geometry' = "geometry.lepton.tiny_potato.$shape.$f" } })
-    }
 }
 Write-BlockJson -Id 'lepton:tiny_potato' -Menu ([ordered]@{ category = 'items' }) `
     -States ([ordered]@{ 'lepton:look' = @(0..15); 'lepton:look_page' = @(0, 1); 'lepton:jump' = @(0..$frames) }) `
@@ -224,6 +222,85 @@ Write-BlockJson -Id 'lepton:tiny_potato' -Menu ([ordered]@{ category = 'items' }
     -Components $c -Permutations $perms
 Register-BlockClient 'lepton:tiny_potato' 'cloth' @{ en = 'Tiny Potato'; zh = '小土豆' }
 
+# ---- held items: one display entity per item, holding it like a hand ----------------------------
+# Properties: lepton:face (the potato side: 0 down, 1 up, 2 north, 3 south, 4 west, 5 east; the
+# entity is turned towards that side, or the potato's facing for up/down), lepton:kind (0 item
+# sprite, 1 block, 2 a tiny potato: my son). Bones mirror Bedrock's held-item rig (rightItem).
+Write-PackJson (Join-Path $script:BP 'entities/tiny_potato_item.json') ([ordered]@{
+        format_version     = '1.21.0'
+        'minecraft:entity' = [ordered]@{
+            description = [ordered]@{
+                identifier = 'lepton:tiny_potato_item'; is_spawnable = $false; is_summonable = $true; is_experimental = $false
+                properties = [ordered]@{
+                    'lepton:face' = [ordered]@{ type = 'int'; range = @(0, 5); default = 1; client_sync = $true }
+                    'lepton:kind' = [ordered]@{ type = 'int'; range = @(0, 2); default = 0; client_sync = $true }
+                }
+            }
+            components  = [ordered]@{
+                'minecraft:type_family'                        = [ordered]@{ family = @('lepton_potato_item', 'inanimate') }
+                'minecraft:collision_box'                      = [ordered]@{ width = 0.01; height = 0.01 }
+                'minecraft:physics'                            = [ordered]@{ has_gravity = $false; has_collision = $false }
+                'minecraft:pushable'                           = [ordered]@{ is_pushable = $false; is_pushable_by_piston = $false }
+                'minecraft:damage_sensor'                      = [ordered]@{ triggers = [ordered]@{ cause = 'all'; deals_damage = 'no' } }
+                'minecraft:health'                             = [ordered]@{ value = 1; max = 1 }
+                'minecraft:fire_immune'                        = [ordered]@{}
+                'minecraft:knockback_resistance'               = [ordered]@{ value = 1.0 }
+                'minecraft:body_rotation_blocked'              = [ordered]@{}
+                'minecraft:conditional_bandwidth_optimization' = [ordered]@{
+                    default_values = [ordered]@{ max_optimized_distance = 0.0; max_dropped_ticks = 0; use_motion_prediction_hints = $false }
+                }
+            }
+        }
+    })
+Write-PackJson (Join-Path $script:RP 'models/entity/lepton_tiny_potato_item.geo.json') ([ordered]@{
+        format_version       = '1.12.0'
+        'minecraft:geometry' = @([ordered]@{
+                description = [ordered]@{
+                    identifier = 'geometry.lepton.tiny_potato_item'; texture_width = 16; texture_height = 16
+                    visible_bounds_width = 2; visible_bounds_height = 2; visible_bounds_offset = @(0, 0.5, 0)
+                }
+                bones       = @(
+                    [ordered]@{ name = 'root'; pivot = @(0, 0, 0) },
+                    [ordered]@{ name = 'face'; parent = 'root'; pivot = @(0, 8, 0) },
+                    [ordered]@{ name = 'holder'; parent = 'face'; pivot = @(0, 8, 0) },
+                    [ordered]@{ name = 'rightArm'; parent = 'holder'; pivot = @(0, 8, 0) },
+                    [ordered]@{ name = 'rightItem'; parent = 'rightArm'; pivot = @(0, 8, 0) }
+                )
+            })
+    })
+$pf = "q.property('lepton:face')"
+$pk = "q.property('lepton:kind')"
+# Centre heights in px: on top of the 6 px potato, half way up the sides, flat on the ground below.
+$centreY = "($pf == 1 ? 8.5 : ($pf == 0 ? 0.3 : 3.0))"
+Write-PackJson (Join-Path $script:RP 'animations/lepton_tiny_potato_item.animation.json') ([ordered]@{
+        format_version = '1.8.0'
+        animations     = [ordered]@{
+            'animation.lepton.tiny_potato_item.pose' = [ordered]@{
+                loop  = $true
+                bones = [ordered]@{
+                    root     = [ordered]@{ position = @(0, "$centreY - 8", 0) }
+                    face     = [ordered]@{ rotation = @("($pf == 0 ? -90 : 0)", 0, 0) }
+                    holder   = [ordered]@{ position = @(0, 0, "($pf >= 2 ? -2.6 : 0)"); scale = "($pk == 1 ? 0.25 : 0.35)" }
+                    rightArm = [ordered]@{ rotation = @(0, "($pk == 0 ? 90 : 0)", 0) }
+                }
+            }
+        }
+    })
+Write-PackJson (Join-Path $script:RP 'entity/lepton_tiny_potato_item.entity.json') ([ordered]@{
+        format_version            = '1.10.0'
+        'minecraft:client_entity' = [ordered]@{
+            description = [ordered]@{
+                identifier         = 'lepton:tiny_potato_item'
+                materials          = [ordered]@{ default = 'entity_alphatest' }
+                textures           = [ordered]@{ default = 'textures/blocks/lepton_gadgets/tiny_potato_default' }
+                geometry           = [ordered]@{ default = 'geometry.lepton.tiny_potato_item' }
+                animations         = [ordered]@{ pose = 'animation.lepton.tiny_potato_item.pose' }
+                scripts            = [ordered]@{ animate = @('pose') }
+                render_controllers = @('controller.render.default')
+                enable_attachables = $true
+            }
+        }
+    })
 # ---- sounds -----------------------------------------------------------------------------------------
 $defs = [ordered]@{}
 foreach ($d in 'chatter', 'clock', 'crickets', 'drips', 'fire', 'ocean', 'rain', 'wind') {

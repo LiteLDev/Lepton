@@ -1,4 +1,5 @@
 assets/pack/bp/blocks/tiny_potato.json
+assets/pack/bp/entities/tiny_potato_item.json
 assets/pack/bp/items/abacus.json
 assets/pack/bp/items/music_disc_chatter.json
 assets/pack/bp/items/music_disc_clock.json
@@ -14,9 +15,12 @@ assets/pack/bp/recipes/abacus.json
 assets/pack/bp/recipes/tiny_potato_heart.json
 assets/pack/bp/recipes/tiny_potato_no_heart.json
 assets/pack/bp/recipes/tiny_potato_no_heart_emerald.json
+assets/pack/rp/animations/lepton_tiny_potato_item.animation.json
 assets/pack/rp/blocks.d/gadgets-gen.json
+assets/pack/rp/entity/lepton_tiny_potato_item.entity.json
 assets/pack/rp/item_texture.d/gadgets-gen.json
 assets/pack/rp/models/blocks/lepton_gadgets_tiny_potato.geo.json
+assets/pack/rp/models/entity/lepton_tiny_potato_item.geo.json
 assets/pack/rp/sounds.d/gadgets.json
 assets/pack/rp/terrain_texture.d/gadgets-gen.json
 assets/pack/rp/texts.d/en_US/gadgets-gen.lang

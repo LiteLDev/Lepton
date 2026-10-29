@@ -1,0 +1,29 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:tiny_potato_item",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/blocks/lepton_gadgets/tiny_potato_default"
+      },
+      "geometry": {
+        "default": "geometry.lepton.tiny_potato_item"
+      },
+      "animations": {
+        "pose": "animation.lepton.tiny_potato_item.pose"
+      },
+      "scripts": {
+        "animate": [
+          "pose"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "enable_attachables": true
+    }
+  }
+}
