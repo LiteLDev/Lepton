@@ -14,23 +14,22 @@ Invoke-Chat '/time set noon'
 Invoke-Chat '/gamerule dodaylightcycle false'
 Invoke-Chat '/weather clear'
 Invoke-Chat '/gamemode creative'
-Invoke-Chat '/tp @s ~ ~ ~ 0 10'
 Start-Sleep -Seconds 1
 
 # ---- gallery ----------------------------------------------------------------------------------
 $mark = Get-LogMark
 Invoke-Chat '/quark cosmetics gallery'
-Wait-LogLine 'cosmetics: gallery of \d+ mobs' 30 -Since $mark | Out-Null
+$line = Wait-LogLine 'cosmetics: gallery of \d+ mobs in \d+ rows' 30 -Since $mark
+$rows = if ($line -match 'in (\d+) rows') { [int]$Matches[1] } else { 8 }
 Start-Sleep -Seconds 3
-for ($row = 0; $row -lt 7; $row++) {
-    # Stand 3 blocks in front of row $row, a little above, looking at it.
-    $z = 4 * $row + 1
-    Invoke-Chat "/tp @s ~ ~ ~ 0 20"
-    if ($row -gt 0) { Invoke-Chat '/tp @s ~ ~ ~4' }
-    Start-Sleep -Seconds 2
+for ($row = 0; $row -lt $rows; $row++) {
+    $m = Get-LogMark
+    Invoke-Chat "/quark cosmetics view $row"
+    Wait-LogLine "cosmetics: viewing gallery row $row" 20 -Since $m | Out-Null
+    Start-Sleep -Seconds 3
     Save-Screenshot "gallery-$row" | Out-Null
 }
-Invoke-Chat '/tp @s ~ ~ ~-24'
+Invoke-Chat '/tp @s ~ ~ ~-30 0 10'
 Start-Sleep -Seconds 1
 
 # ---- carried chicken (third person) -------------------------------------------------------------
@@ -39,6 +38,8 @@ Invoke-Chat '/quark cosmetics carry'
 Wait-LogLine 'cosmetics: chicken carried: true' 20 -Since $mark | Out-Null
 Start-Sleep -Seconds 1
 Press-Key F5
+Start-Sleep -Seconds 2
+Save-Screenshot 'chicken-carried-back' | Out-Null
 Press-Key F5
 Start-Sleep -Seconds 2
 Save-Screenshot 'chicken-carried' | Out-Null

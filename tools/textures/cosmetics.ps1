@@ -13,9 +13,6 @@ Add-Type -ReferencedAssemblies System.Drawing, System.Drawing.Primitives, System
     -Path "$PSScriptRoot/cosmetics-painter.cs", "$PSScriptRoot/cosmetics-mobs.cs"
 [LeptonTex.Mobs]::Run($rp)
 
-# ---- transparent texture (the vanished pumpkin overlay) ------------------------------------------
-Save-PixelArt -Rows (@('................') * 16) -Palette @{} -Path (Join-Path $rp 'textures/lepton/cosmetics/empty.png')
-
 # ---- bucket icons (16x16) ------------------------------------------------------------------------
 # The bucket: rim, water surface, body. Creatures are drawn over the water.
 $bucket = @(

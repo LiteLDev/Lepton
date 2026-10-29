@@ -5,6 +5,7 @@
 //   buckets          one axolotl bucket per colour and a few tropical fish buckets in the inventory
 //   pumpkin <bool>   wears a carved pumpkin, with Curse of Vanishing when true
 //   carry            seats the nearest chicken on the player (as GrabChickens does)
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/memory/Hook.h"
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/nbt/CompoundTag.h"
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
@@ -38,6 +40,11 @@
 #include "mod/Log.h"
 
 namespace lp::feature::cosmetics {
+
+/// Parameters of `/quark cosmetics view <row>`.
+struct CosmeticsViewParams {
+    int row = 0;
+};
 
 /// Parameters of `/quark cosmetics pumpkin <cursed>` (command parameter types need external linkage).
 struct CosmeticsPumpkinParams {
@@ -74,25 +81,33 @@ std::vector<std::vector<Entry>> rows() {
     r.push_back({{"minecraft:rabbit", kShinySkin}, {"minecraft:llama", kShinySkin}, {"minecraft:dolphin", kShinySkin}, {"minecraft:slime", kShinySkin},
                  {"minecraft:armadillo", kShinySkin}, {"minecraft:frog", kShinySkin}});
     std::vector<Entry> bees;
-    for (int i = 1; i <= static_cast<int>(kBeeVariants.size()); ++i) bees.push_back({"minecraft:bee", i});
-    r.push_back(bees);
+    for (int i = 1; i <= static_cast<int>(kBeeVariants.size()); ++i) {
+        bees.push_back({"minecraft:bee", i});
+        if (bees.size() == 9) r.push_back(bees), bees.clear();
+    }
+    if (!bees.empty()) r.push_back(bees);
     r.push_back({{"minecraft:villager_v2", -1, kBeachTag.data()}, {"minecraft:villager_v2", -1, kOceanTag.data()},
                  {"minecraft:zombie_villager_v2", -1, kBeachTag.data()}, {"minecraft:zombie_villager_v2", -1, kOceanTag.data()},
                  {"minecraft:armor_stand", -1}});
     return r;
 }
 
+/// Where the last gallery was built (views are relative to it).
+std::optional<std::pair<BlockPos, int>> gGallery;
+
 /// An invisible barrier cage (walls two blocks high and a roof) around a mob's cell.
-void cage(BlockSource& region, BlockPos const& at) {
+int cage(BlockSource& region, BlockPos const& at) {
     Block const* barrier = game::blockWith("minecraft:barrier");
-    if (!barrier) return;
+    if (!barrier) return 0;
+    int placed = 0;
     for (int dx = -1; dx <= 1; ++dx)
         for (int dz = -1; dz <= 1; ++dz)
             for (int dy = 0; dy <= 2; ++dy) {
                 if (dx == 0 && dz == 0 && dy < 2) continue;
                 BlockPos p{at.x + dx, at.y + dy, at.z + dz};
-                if (game::replaceable(region, p)) game::setBlock(region, p, *barrier);
+                if (game::replaceable(region, p) && game::setBlock(region, p, *barrier)) ++placed;
             }
+    return placed;
 }
 
 ItemStack enchanted(char const* id, Enchant::Type type) {
@@ -129,12 +144,14 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         feet.y          = static_cast<int>(std::floor(p->getAABB().min.y + 0.01f));
         int  dim        = static_cast<int>(p->getDimensionId());
         int  count      = 0;
+        int  barriers   = 0;
         auto all        = rows();
+        gGallery        = std::make_pair(feet, dim);
         for (size_t row = 0; row < all.size(); ++row) {
             for (size_t col = 0; col < all[row].size(); ++col) {
                 auto const& e = all[row][col];
-                BlockPos    cell{feet.x - 8 + static_cast<int>(col) * 3, feet.y, feet.z + 4 + static_cast<int>(row) * 4};
-                cage(region, cell);
+                BlockPos    cell{feet.x - 8 + static_cast<int>(col) * 2, feet.y, feet.z + 6 + static_cast<int>(row) * 3};
+                barriers += cage(region, cell);
                 Vec3   at{static_cast<float>(cell.x) + 0.5f, static_cast<float>(cell.y), static_cast<float>(cell.z) + 0.5f};
                 Actor* a = ent::spawn(dim, e.type, at);
                 if (!a) continue;
@@ -146,9 +163,23 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
                 ++count;
             }
         }
-        log().info("cosmetics: gallery of {} mobs", count);
+        log().info("cosmetics: gallery of {} mobs in {} rows ({} barriers)", count, all.size(), barriers);
         output.success("Spawned " + std::to_string(count) + " cosmetics mobs.");
     });
+
+    cmd.overload<CosmeticsViewParams>().text("cosmetics").text("view").required("row").execute(
+        [](CommandOrigin const& origin, CommandOutput& output, CosmeticsViewParams const& params) {
+            auto* p = lp::commands::playerOf(origin);
+            if (!p || !lp::commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+            if (!gGallery) return output.error("No gallery yet.");
+            auto [base, dim] = *gGallery;
+            // Behind the row, raised, looking south (+z) and down at it.
+            Vec3 eye{static_cast<float>(base.x) + 0.5f, static_cast<float>(base.y) + 3.f, static_cast<float>(base.z + 6 + params.row * 3) - 6.f};
+            p->teleport(eye, p->getDimensionId(), Vec2{25.f, 0.f});
+            log().info("cosmetics: viewing gallery row {}", params.row);
+            output.success("Viewing row " + std::to_string(params.row) + ".");
+        }
+    );
 
     cmd.overload().text("cosmetics").text("buckets").execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* p = lp::commands::playerOf(origin);
@@ -201,6 +232,13 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         gSeating = false;
         CarryHook::unhook();
         applyTo(*chicken);
+        if (ok) {
+            p->positionPassenger(*chicken);
+            auto const& cp = chicken->getPosition();
+            auto const& pp = p->getPosition();
+            log().info("cosmetics: chicken at {:.2f} {:.2f} {:.2f} from the player's feet (yaw {:.0f})", cp.x - pp.x, cp.y - p->getAABB().min.y,
+                       cp.z - pp.z, p->getRotation().y);
+        }
         log().info("cosmetics: chicken carried: {}", ok);
         if (ok) output.success("Carrying a chicken.");
         else output.error("The chicken could not ride.");

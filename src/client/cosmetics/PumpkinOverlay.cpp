@@ -1,28 +1,30 @@
 // UsesForCurses, vanishPumpkinOverlay (client): a worn carved pumpkin with Curse of Vanishing draws
-// no pumpkin blur (docs/spec/cosmetics.md §3). The overlay texture is looked up through the texture
-// group; while the condition holds the lookup answers with a transparent texture.
+// no pumpkin blur (docs/spec/cosmetics.md §3). The overlay is drawn by native code from a cached
+// texture, so the texture itself is swapped: while the condition holds, `textures/misc/pumpkinblur`
+// is replaced in place by a transparent image of the same size, and restored afterwards.
 #ifdef LP_CLIENT
 
-#include <atomic>
+#include <cstring>
+#include <memory>
+#include <optional>
 #include <string>
 
-#include "ll/api/memory/Hook.h"
-
+#include "mc/client/game/ClientInstance.h"
+#include "mc/client/player/LocalPlayer.h"
 #include "mc/client/renderer/TextureGroup.h"
-#include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
+#include "mc/deps/core/container/Blob.h"
 #include "mc/deps/core/file/PathView.h"
 #include "mc/deps/core/resource/ResourceLocation.h"
-#include "mc/deps/minecraft_renderer/renderer/TexturePtr.h"
+#include "mc/deps/core_graphics/ImageBuffer.h"
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
-#include "mc/client/player/LocalPlayer.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/enchanting/Enchant.h"
 #include "mc/world/item/enchanting/EnchantUtils.h"
 
 #include "client/Client.h"
+#include "client/ui/Ui.h"
 #include "feature/cosmetics/Cosmetics.h"
 #include "mod/Log.h"
-#include "mod/Module.h"
 
 namespace lp::client::cosmetics {
 
@@ -41,69 +43,48 @@ bool hidePumpkinOverlay() {
 
 namespace {
 
-bool isPumpkinBlur(ResourceLocation const& loc) { return loc.mPath->value.find("misc/pumpkinblur") != std::string::npos; }
-
-ResourceLocation const& emptyTexture() {
-    static ResourceLocation const loc(Core::PathView("textures/lepton/cosmetics/empty"));
+ResourceLocation const& blurLocation() {
+    static ResourceLocation const loc(Core::PathView("textures/misc/pumpkinblur"));
     return loc;
 }
 
-std::atomic<bool> gSeen{false};
+struct State {
+    std::optional<cg::ImageBuffer> original; ///< the overlay as loaded by the game
+    bool                           hidden = false;
+} gState;
 
-void noteLookup(char const* where) {
-    if (!gSeen.exchange(true)) log().debug("cosmetics: pumpkin overlay looked up through {}", where);
+void setHidden(bool hide) {
+    auto* client = client::currentClient();
+    if (!client) return;
+    auto group = client->getTextureGroup();
+    if (!group) return;
+    if (!gState.original) {
+        cg::ImageBuffer* loaded = group->getCachedImageOrLoadSync(blurLocation(), false);
+        if (!loaded) return;
+        gState.original.emplace(*loaded);
+    }
+    cg::ImageBuffer image(*gState.original);
+    if (hide) {
+        auto& blob = *image.mStorage;
+        if (blob.size()) std::memset(blob.data(), 0, blob.size());
+    }
+    group->updateTextureInPlace(blurLocation(), std::move(image));
+    gState.hidden = hide;
+    log().info("cosmetics: pumpkin overlay {}", hide ? "hidden" : "shown");
 }
 
-LL_TYPE_INSTANCE_HOOK(
-    UiTextureHook,
-    ll::memory::HookPriority::Normal,
-    MinecraftUIRenderContext,
-    &MinecraftUIRenderContext::$getTexture,
-    ::mce::TexturePtr,
-    ::ResourceLocation const& loc,
-    bool                      forceReload
-) {
-    if (isPumpkinBlur(loc)) {
-        noteLookup("the UI render context");
-        if (hidePumpkinOverlay()) return origin(emptyTexture(), forceReload);
+LP_REGISTER_HUD([](ui::DrawContext&) {
+    try {
+        bool want = hidePumpkinOverlay();
+        if (want != gState.hidden) setHidden(want);
+    } catch (std::exception const& e) {
+        log().error("cosmetics: pumpkin overlay: {}", e.what());
+        gState.hidden = hidePumpkinOverlay(); // don't retry every frame
     }
-    return origin(loc, forceReload);
-}
-
-LL_TYPE_INSTANCE_HOOK(
-    GroupTextureHook,
-    ll::memory::HookPriority::Normal,
-    mce::TextureGroup,
-    &mce::TextureGroup::$getTexture,
-    ::mce::TexturePtr,
-    ::ResourceLocation const&       loc,
-    bool const                      forceReload,
-    ::std::optional<uint>           order,
-    ::cg::TextureSetLayerType const type
-) {
-    if (isPumpkinBlur(loc)) {
-        noteLookup("the texture group");
-        if (hidePumpkinOverlay()) return origin(emptyTexture(), forceReload, order, type);
-    }
-    return origin(loc, forceReload, order, type);
-}
-
-class PumpkinOverlay {
-public:
-    void install() {
-        UiTextureHook::hook();
-        GroupTextureHook::hook();
-    }
-    void uninstall() {
-        GroupTextureHook::unhook();
-        UiTextureHook::unhook();
-    }
-};
+});
 
 } // namespace
 
 } // namespace lp::client::cosmetics
-
-LP_REGISTER_MODULE(lp::client::cosmetics::PumpkinOverlay);
 
 #endif // LP_CLIENT
