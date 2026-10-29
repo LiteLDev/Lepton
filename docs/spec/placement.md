@@ -308,6 +308,12 @@ Rotation Lock, `key.lepton.variant_selector` Variant Selector (RP `texts.d/*/pla
 ## 7. Bedrock differences / not ported
 
 - Offhand: Bedrock can't place blocks from the offhand; reacharound uses the main hand only.
+- Bedrock clients (vanilla and modded) bridge on their own: in many reacharound poses the client
+  itself clicks a face of the edge block and the game places the block before the "use item in the
+  air" reaches the server, which then finds the target filled. The server's reacharound covers the
+  remaining cases; the result is the same block at the edge.
+- Pick block on nothing never reaches the game's pick code on Bedrock: the client mod catches the
+  middle mouse button itself for LongRangePickBlock.
 - Reach: the game's pick range (Bedrock) instead of Java's 4.5/5 block interaction range.
 - Tag-driven lists (`reacharound_able`, `trowel_*`, `ladders`, `cannot_replace_scaffolding`) are
   built in or config lists: Bedrock items have no data-pack tags.
