@@ -13,6 +13,7 @@
 
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/core/string/HashedString.h"
+#include "mc/deps/nbt/CompoundTag.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
@@ -224,6 +225,17 @@ std::map<core::GlobalPos, BeaconState>& beacons() {
 void setProps(Actor& a, Piece const& p) {
     auto props = a.getEntityContext().tryGetComponent<PropertyComponent>();
     if (!props) return;
+    // Write the values at once (like loading a saved entity), so the AddActor packet a remote
+    // client gets carries them; queued changes alone never reached remote clients.
+    CompoundTag values;
+    values.putInt("lepton:dir", p.dir);
+    values.putInt("lepton:len", p.len);
+    values.putInt("lepton:glow", p.glow);
+    values.putFloat("lepton:r", ((p.color >> 16) & 255) / 255.f);
+    values.putFloat("lepton:g", ((p.color >> 8) & 255) / 255.f);
+    values.putFloat("lepton:b", (p.color & 255) / 255.f);
+    props->readLoadedProperties(values);
+    props->mEverythingDirty = true;
     auto h = [](char const* n) { return HashedString::computeHash(n); };
     ActorPropertyUtils::tryQueueIntValue(*props, a, h("lepton:dir"), p.dir);
     ActorPropertyUtils::tryQueueIntValue(*props, a, h("lepton:len"), p.len);

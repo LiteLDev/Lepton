@@ -9,6 +9,10 @@
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/item/ItemActor.h"
+#include "mc/world/actor/state/PropertyComponent.h"
+#include "mc/world/actor/state/PropertyContainer.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/deps/core/string/HashedString.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/crafting/Recipe.h"
@@ -287,6 +291,14 @@ LP_REGISTER_SELFTEST("crystals.beam_entities", [](Context& ctx) -> ll::coro::Cor
     auto ids = beamEntitiesOf(key);
     ctx.check(ids.size() >= 3, "the redirected beam is drawn with entities (" + std::to_string(ids.size()) + ")");
     for (auto id : ids) ctx.check(lp::game::entities::find(id) != nullptr, "beam entity is alive");
+    int dirs = 0;
+    for (auto id : ids)
+        if (auto* e = lp::game::entities::find(id))
+            if (auto pc = e->getEntityContext().tryGetComponent<PropertyComponent>()) {
+                auto v = pc->mPropertyContainer->getValueVariant(HashedString::computeHash("lepton:dir"));
+                if (v && std::holds_alternative<int>(*v) && std::get<int>(*v) == 5) ++dirs;
+            }
+    ctx.check(dirs >= 1, "a beam piece points east (entity property lepton:dir)");
     // removing the redirect brings back the vanilla beam
     lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(at(beacon, 0, 3, 0)));
     for (int i = 0; i < 60 && !beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
