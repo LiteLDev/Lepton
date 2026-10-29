@@ -99,6 +99,12 @@ namespace glass {
 void install();
 void uninstall();
 void applyConfig();
+/// Comparator output of the glass frame at `pos` (Java ItemFrame#getAnalogOutput: 0 when empty,
+/// rotation + 1 otherwise).
+[[nodiscard]] int comparatorSignal(core::GlobalPos const& pos);
+void installComparators();   ///< Comparator.cpp: patch the glass frame block types
+void uninstallComparators(); ///< restore their tables
+void forgetComparators();    ///< world closed: drop the patched types without touching them
 } // namespace glass
 namespace dyed {
 void install();

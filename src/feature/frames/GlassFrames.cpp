@@ -66,6 +66,7 @@ struct Frame {
 struct State {
     std::map<GlobalPos, Frame>                               frames;
     std::set<GlobalPos>                                      checkSoon;  ///< survival checks for the next tick
+    std::set<GlobalPos>                                      notify;     ///< comparator updates for the next tick
     std::map<GlobalPos, bool>                                setFilled;  ///< deferred `lepton:filled` changes
     std::unordered_map<std::int64_t, std::pair<GlobalPos, std::uint64_t>> lastUse; ///< debounce per player
     std::uint64_t                                            tick       = 0;
@@ -378,6 +379,7 @@ bool use(Player& player, BlockSource& region, BlockPos const& pos) {
     updateAttachment(region, pos, dir, f);
     save(gp, f);
     syncDisplay(region, gp, f, block);
+    st().notify.insert(gp);
     return true;
 }
 
@@ -394,6 +396,7 @@ bool punch(Player& player, BlockSource& region, BlockPos const& pos) {
     save(gp, f);
     syncDisplay(region, gp, f, block);
     requestFilled(gp, false);
+    st().notify.insert(gp);
     log().info("frames: {} knocked the item out of a glass frame", player.getRealName());
     return true;
 }
@@ -486,6 +489,21 @@ void onTick(ll::event::ServerLevelTickEvent&) {
         }
     }
 
+    // comparators read the frame through its support: update around both
+    if (!s.notify.empty()) {
+        auto todo = std::move(s.notify);
+        s.notify.clear();
+        for (auto const& gp : todo) {
+            auto* region = game::regionOf(gp.dim);
+            if (!region) continue;
+            BlockPos pos = game::blockPos(gp);
+            if (!region->hasChunksAt(pos, 1, false)) continue;
+            auto const& block = region->getBlock(pos);
+            region->updateNeighborsAt(pos);
+            if (isGlassBlock(block)) region->updateNeighborsAt(offset(pos, oppositeDir(dirOf(block))));
+        }
+    }
+
     if (!s.checkSoon.empty()) {
         auto todo = std::move(s.checkSoon);
         s.checkSoon.clear();
@@ -541,21 +559,34 @@ void install() {
     if (!once) {
         once = true;
         game::db::onWorldReady([] {
+            if (gListeners.empty()) return; // not installed
             loadAll();
             setRecipesEnabled(recipeIds(), cfg().enableGlassItemFrame);
+            installComparators();
         });
         game::db::onWorldClosed([] {
             st().frames.clear();
+            st().notify.clear();
             st().loaded = false;
+            forgetComparators();
         });
     }
     if (game::db::available() && !st().loaded) {
         loadAll();
         setRecipesEnabled(recipeIds(), cfg().enableGlassItemFrame);
+        installComparators();
     }
 }
 
+int comparatorSignal(core::GlobalPos const& pos) {
+    auto& frames = st().frames;
+    auto  it     = frames.find(pos);
+    if (it == frames.end() || game::isEmpty(it->second.item)) return 0;
+    return it->second.rotation % 8 + 1;
+}
+
 void uninstall() {
+    uninstallComparators();
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : gListeners) bus.removeListener(l);
     gListeners.clear();

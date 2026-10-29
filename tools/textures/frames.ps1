@@ -115,7 +115,7 @@ $overlay = New-Rows 32 16 {
     }
     return '.'
 }
-Save-PixelArt -Rows $overlay -Palette @{ o = '#9a9a9a'; m = '#c2c2c2'; h = '#e2e2e2'; b = '#d8d8d8'; d = '#bcbcbc'; l = '#f0f0f0' } `
+Save-PixelArt -Rows $overlay -Palette @{ o = '#3a3a3a'; m = '#5c5c5c'; h = '#7a7a7a'; b = '#e4e4e4'; d = '#c8c8c8'; l = '#f8f8f8' } `
     -Path (Join-Path $rp 'entity/frames/dyed_item_frame.png')
 
 Write-Host '[textures] frames: done'

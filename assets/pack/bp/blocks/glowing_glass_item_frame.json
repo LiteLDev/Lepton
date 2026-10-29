@@ -97,6 +97,63 @@
           "east": "q.block_state('minecraft:block_face') == 'east' && !q.block_state('lepton:filled')"
         }
       },
+      "minecraft:item_visual": {
+        "geometry": {
+          "identifier": "geometry.lepton.glass_item_frame",
+          "bone_visibility": {
+            "down": false,
+            "up": false,
+            "north": false,
+            "south": true,
+            "west": false,
+            "east": false
+          }
+        },
+        "material_instances": {
+          "*": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "north": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "south": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "east": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "west": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "up": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "down": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          }
+        }
+      },
       "minecraft:loot": "loot_tables/blocks/glowing_glass_item_frame.json",
       "minecraft:map_color": "#c8e4ec",
       "tag:lepton:glass_item_frame": {}
