@@ -71,7 +71,9 @@ ll::coro::CoroTask<bool> openTestContainer(Context& ctx, lp::core::GlobalPos pos
     spec.size          = 27;
     spec.titleFallback = "U15 probe";
     if (!vc::open(ctx.player(), pos, spec)) co_return false;
-    co_await ctx.ticks(3);
+    // The screen opens a few ticks after the helper entity was spawned.
+    for (int i = 0; i < 20 && (!vc::liveContainer(pos) || openContainer(ctx.player(), true) != vc::liveContainer(pos)); ++i)
+        co_await ctx.ticks(1);
     co_return vc::liveContainer(pos) != nullptr;
 }
 
@@ -368,7 +370,8 @@ LP_REGISTER_SELFTEST("inventory.heldshulker", [](Context& ctx) -> ll::coro::Coro
     pinv.setItem(13, makeItem("minecraft:red_shulker_box"));
     ctx.require(openHeldShulker(p, 12), "opened again");
     at = heldShulkerPos(p);
-    for (int i = 0; i < 20 && vc::viewers(*at) == 0; ++i) co_await ctx.ticks(1);
+    for (int i = 0; i < 40 && (!vc::liveContainer(*at) || openContainer(p, false) != vc::liveContainer(*at)); ++i)
+        co_await ctx.ticks(1);
     if (auto* again = vc::liveContainer(*at)) {
         transferItems(p, *again, false, false);
         ctx.check(isShulkerBox(pinv.getItem(13)), "a held box rejects boxes from Insert");

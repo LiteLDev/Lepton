@@ -57,13 +57,25 @@ bool matchStack(ItemStack const& stack, std::string search, int depth) {
     }
     if (search.size() >= 3 && search.front() == '/' && search.back() == '/') {
         search  = search.substr(1, search.size() - 2);
-        std::shared_ptr<std::regex> re; // compiled once per search
-        try {
-            re = std::make_shared<std::regex>(search);
-        } catch (std::regex_error const&) {
-            return false; // a bad expression matches nothing
+        // Compiled once per search text (per thread: the client renders, the server sorts).
+        thread_local std::string                 lastText;
+        thread_local std::shared_ptr<std::regex> lastRe;
+        if (!lastRe || lastText != search) {
+            lastText = search;
+            try {
+                lastRe = std::make_shared<std::regex>(search);
+            } catch (std::regex_error const&) {
+                lastRe = nullptr;
+            }
         }
-        matcher = [re](std::string const& hay, std::string const&) { return std::regex_search(hay, *re); };
+        if (!lastRe) return false; // a bad expression matches nothing
+        matcher = [re = lastRe](std::string const& hay, std::string const&) {
+            try {
+                return std::regex_search(hay, *re);
+            } catch (std::regex_error const&) {
+                return false; // too complex for this text
+            }
+        };
     }
     return matchWith(stack, search, matcher, depth);
 }

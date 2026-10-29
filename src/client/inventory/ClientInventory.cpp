@@ -684,12 +684,6 @@ void hud(DrawContext& dc) {
         if (topScreen() != "hud_screen") gPendingOpen->hudSince = {};
         else if (gPendingOpen->hudSince == Clock::time_point{}) gPendingOpen->hudSince = now;
         if (gPendingOpen->hudSince != Clock::time_point{} && now - gPendingOpen->hudSince > std::chrono::milliseconds(300)) {
-            // A popped inventory screen can leave its container manager behind, and the game
-            // ignores a new container screen while one exists.
-            if (auto* p = client::currentPlayer(); p && p->mContainerManager.get()) {
-                log().info("inventory: closing the leftover container manager");
-                p->deleteContainerManager();
-            }
             net::sendToServer(gPendingOpen->request);
             log().info("inventory: interaction 'open' requested");
             gPendingOpen.reset();
@@ -759,7 +753,7 @@ LP_REGISTER_KEYBIND("shift_lock", Key::Unbound, [] {
     if (inContainerScreen() && cfg().enableShiftLock) gShiftLocked = !gShiftLocked;
 }, {}, true);
 LP_REGISTER_KEYBIND("change_hotbar", Key::Z, [] {
-    if (!cfg().enableHotbarChanger || topScreen() != "hud_screen") return; // spectators: closed by the HUD
+    if (!cfg().enableHotbarChanger || topScreen() != "hud_screen" || spectator()) return;
     gHotbarOpen = !gHotbarOpen;
     log().info("inventory: hotbar changer {}", gHotbarOpen ? "opened" : "closed");
 });

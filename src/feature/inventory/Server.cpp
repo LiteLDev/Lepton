@@ -191,7 +191,10 @@ bool targetHas(Container const& target, inv::Range range, ItemStack const& stack
 
 /// The open screen shows a shulker box (a placed one, or a held one in its virtual chest screen).
 bool isShulkerContainer(Player& player) {
-    if (heldShulkerPos(player)) return true;
+    if (auto held = heldShulkerPos(player)) {
+        auto* live = game::vc::liveContainer(*held);
+        if (live && openContainer(player, false) == live) return true;
+    }
     auto const& manager = player.mContainerManager.get();
     if (!manager) return false;
     auto const* pos = std::get_if<BlockPos>(&manager->mScreenContext->mOwner.get());
@@ -566,8 +569,6 @@ bool openHeldShulker(Player& player, int slot, int delayTicks) {
     s.box  = box;
     s.wait  = 20;
     s.delay = std::max(0, delayTicks);
-    // Right-clicked in the inventory screen: close it, the chest screen replaces it (tickHeld
-    // retries vc::open until the client has closed the inventory).
     // Right-clicked in the inventory screen: the mod client closes it itself (Bedrock clients
     // ignore a server close of their own inventory screen); tickHeld opens the box screen once
     // the inventory is closed.
@@ -658,13 +659,18 @@ void restoreHeldOnJoin(Player& player) {
     if (heldSessions().contains(uuid)) return;
     auto j = game::db::load(heldKey(uuid));
     if (!j || !j->is_object()) return;
-    auto box = game::itemFromSnbt(j->value("item", std::string{}));
+    auto box  = game::itemFromSnbt(j->contains("item") && (*j)["item"].is_string() ? (*j)["item"].get<std::string>() : std::string{});
+    int  slot = j->contains("slot") && (*j)["slot"].is_number_integer() ? (*j)["slot"].get<int>() : -1;
     game::db::erase(heldKey(uuid));
     // The record holds the latest contents: drop what a crash left in the virtual container.
-    if (auto p = j->find("pos"); p != j->end() && p->is_array() && p->size() == 4)
-        game::vc::takeAll(core::GlobalPos{(*p)[0].get<int>(), (*p)[1].get<int>(), (*p)[2].get<int>(), (*p)[3].get<int>()});
+    // (Not when another open held box uses that position by now.)
+    if (auto p = j->find("pos"); p != j->end() && p->is_array() && p->size() == 4
+                                 && std::all_of(p->begin(), p->end(), [](auto const& v) { return v.is_number_integer(); })) {
+        core::GlobalPos pos{(*p)[0].get<int>(), (*p)[1].get<int>(), (*p)[2].get<int>(), (*p)[3].get<int>()};
+        if (!heldPosInUse(pos)) game::vc::takeAll(pos);
+    }
     if (isEmpty(box)) return;
-    returnBox(player, j->value("slot", -1), box);
+    returnBox(player, slot, box);
     log().info("inventory: gave {} back the shulker box that was open", player.getRealName());
 }
 
