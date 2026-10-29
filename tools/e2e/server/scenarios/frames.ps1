@@ -3,7 +3,7 @@
 # map washing and the banner layer limit, through the selftests.
 $r = Invoke-SelfTest 'frames.*'
 if ($r.Fail -gt 0) { throw "$($r.Fail) frames selftest(s) failed" }
-if ($r.Pass -lt 13) { throw "expected 13 frames selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 14) { throw "expected 14 frames selftests to pass, got $($r.Pass)" }
 
 # Key log lines of the actions the tests performed.
 $log = Get-ServerLog

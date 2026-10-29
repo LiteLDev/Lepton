@@ -14,6 +14,10 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/actor/CauldronBlockActor.h"
+#include "mc/world/level/block/actor/ItemFrameBlockActor.h"
+#include "mc/world/item/ItemInstance.h"
+#include "mc/deps/core/math/Vec2.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/phys/AABB.h"
 
 #include "feature/frames/Frames.h"
@@ -564,4 +568,125 @@ LP_REGISTER_SELFTEST("frames.banner_limit", [](Context& ctx) {
     cfg->layerLimit             = 3;
     cfg->enableMoreBannerLayers = false;
     ctx.check(fr::banners::effectiveLimit() == 6, "disabled: vanilla 6");
+});
+
+// ---- gallery (client e2e screenshots) --------------------------------------------------------------
+// Builds a wall of glass frames (an item, a tool, a block, a banner, a shield, a map, rotated items,
+// glow frames, empty frames, floor frames), frames on signs and dyed frames, then moves the real
+// player (if any) in front of each part: "FRAMES view <part>" lines for the client scenario.
+LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    namespace game = lp::game;
+    ConfigGuard cfg;
+    auto base = ctx.testPos(2470);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    ctx.require(co_await ctx.ensureLoaded(off(base, 40, 0, 0)), "test area loaded (east)");
+    auto& sp     = ctx.player();
+    auto& region = regionOf(ctx);
+    stepAside(ctx, off(base, 0, 0, 6));
+    std::vector<GlobalPos> glass;
+
+    auto glassFrame = [&](GlobalPos const& f, std::string_view id, std::string_view face, ItemStack const& item,
+                          int rotations) {
+        if (!put(ctx, f, id, {{"minecraft:block_face", std::string(face)}})) return;
+        glass.push_back(f);
+        if (game::isEmpty(item)) return;
+        hold(ctx, item);
+        fr::testing::useGlass(sp, f);
+        hold(ctx, ItemStack{});
+        sp.setSneaking(true);
+        for (int i = 0; i < rotations; ++i) fr::testing::useGlass(sp, f);
+        sp.setSneaking(false);
+    };
+
+    // the glass wall: x 0..13, z 0, y 0..3; frames on its south side
+    for (int x = 0; x < 14; ++x)
+        for (int y = 0; y < 4; ++y) put(ctx, off(base, x, y, 0), "minecraft:stone");
+    co_await ctx.ticks(2);
+    std::vector<std::pair<std::string, int>> items{
+        {"minecraft:apple", 0},  {"minecraft:diamond_sword", 0}, {"minecraft:grass_block", 0}, {"minecraft:banner", 0},
+        {"minecraft:shield", 0}, {"minecraft:filled_map", 0},    {"minecraft:arrow", 1},       {"minecraft:arrow", 2},
+        {"minecraft:torch", 0},  {"minecraft:bow", 0},           {"minecraft:lantern", 0},     {"minecraft:compass", 3},
+    };
+    for (int i = 0; i < static_cast<int>(items.size()); ++i) {
+        auto const& [id, rot] = items[i];
+        glassFrame(off(base, i, 1, 1), fr::kGlassFrame, "south", game::makeItem(id), rot);
+        glassFrame(off(base, i, 2, 1), fr::kGlowingGlassFrame, "south", game::makeItem(id), rot);
+    }
+    glassFrame(off(base, 0, 3, 1), fr::kGlassFrame, "south", ItemStack{}, 0);
+    glassFrame(off(base, 1, 3, 1), fr::kGlowingGlassFrame, "south", ItemStack{}, 0);
+    glassFrame(off(base, 3, 0, 2), fr::kGlassFrame, "up", game::makeItem("minecraft:diamond"), 0);
+    glassFrame(off(base, 5, 0, 2), fr::kGlassFrame, "up", ItemStack{}, 0);
+
+    // frames on signs (x 18..)
+    auto sx = off(base, 18, 0, 1);
+    put(ctx, sx, "minecraft:standing_sign", {{"ground_sign_direction", 8}});
+    glassFrame(off(sx, 0, 0, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
+    put(ctx, off(sx, 3, 0, -1), "minecraft:stone");
+    put(ctx, off(sx, 3, 0, 0), "minecraft:wall_sign", {{"facing_direction", 3}});
+    glassFrame(off(sx, 3, 0, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
+    put(ctx, off(sx, 6, 2, 0), "minecraft:stone");
+    put(ctx, off(sx, 6, 1, 0), "minecraft:oak_hanging_sign",
+        {{"hanging", true}, {"attached_bit", true}, {"ground_sign_direction", 0}});
+    glassFrame(off(sx, 6, 1, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
+    put(ctx, off(sx, 9, 0, 0), "minecraft:standing_sign", {{"ground_sign_direction", 0}});
+    glassFrame(off(sx, 9, 0, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
+
+    // dyed frames (x 30..37) on a wall
+    auto dx = off(base, 30, 0, 0);
+    for (int x = 0; x < 8; ++x)
+        for (int y = 0; y < 3; ++y) put(ctx, off(dx, x, y, 0), "minecraft:stone");
+    std::vector<std::pair<int, bool>> colors{
+        {0xB02E26, false}, {0x3C44AA, false}, {0x5E7C16, false}, {0xFED83D, false},
+        {0xF38BAA, true},  {0x169C9C, true},  {0x1D1D21, false}, {0xF9FFFE, false},
+    };
+    for (int i = 0; i < static_cast<int>(colors.size()); ++i) {
+        hold(ctx, dyed(colors[i].second, colors[i].first));
+        fr::testing::placeDyed(sp, region, game::blockPos(off(dx, i, 1, 0)), 3);
+        ctx.cleanupBlock(off(dx, i, 1, 1));
+    }
+    hold(ctx, dyed(false, 0xF9801D));
+    fr::testing::placeDyed(sp, region, game::blockPos(off(dx, 2, 0, 1)), 1);
+    ctx.cleanupBlock(off(dx, 2, 1, 1));
+    co_await ctx.ticks(3);
+    // a map in the second and an apple in the third dyed frame
+    if (auto* be = region.getBlockEntity(game::blockPos(off(dx, 1, 1, 1))))
+        static_cast<ItemFrameBlockActor&>(*be).setItem(region, ItemInstance(game::makeItem("minecraft:filled_map")), nullptr);
+    if (auto* be = region.getBlockEntity(game::blockPos(off(dx, 2, 1, 1))))
+        static_cast<ItemFrameBlockActor&>(*be).setItem(region, ItemInstance(game::makeItem("minecraft:apple")), nullptr);
+    co_await ctx.ticks(12);
+    auto mapRec = fr::testing::dyedRecord(off(dx, 1, 1, 1));
+    ctx.check(mapRec.has_value(), "the dyed frames are tracked");
+    if (mapRec && mapRec->overlay)
+        if (auto* o = game::entities::find(mapRec->overlay))
+            ctx.check(fr::intProperty(*o, "lepton:map").value_or(0) == 1, "the overlay switches to the map frame shape");
+    fr::testing::glassSweep();
+    co_await ctx.ticks(2);
+
+    Player* viewer = nullptr;
+    sp.getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (viewer) {
+        auto uid  = viewer->getOrCreateUniqueID();
+        auto view = [&](GlobalPos const& at, float dz, float pitch) {
+            if (auto* v = sp.getLevel().getPlayer(uid))
+                v->teleport(Vec3{at.x + 0.5f, static_cast<float>(at.y), at.z + dz}, DimensionType(at.dim), Vec2{pitch, 180.f});
+        };
+        ctx.info("FRAMES view glass");
+        view(off(base, 6, 0, 0), 6.f, 15.f);
+        co_await ctx.ticks(160);
+        ctx.info("FRAMES view glass-close");
+        view(off(base, 2, 1, 0), 3.5f, 10.f);
+        co_await ctx.ticks(120);
+        ctx.info("FRAMES view signs");
+        view(off(sx, 4, 0, -1), 5.f, 15.f);
+        co_await ctx.ticks(120);
+        ctx.info("FRAMES view dyed");
+        view(off(dx, 3, 0, 0), 5.5f, 15.f);
+        co_await ctx.ticks(120);
+        ctx.info("FRAMES done");
+    }
+    for (auto const& g : glass) fr::testing::emptyGlass(g);
+    co_await ctx.ticks(1);
 });

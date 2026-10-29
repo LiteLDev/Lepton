@@ -132,6 +132,8 @@ void glassSweep();
 bool useGlass(Player& player, core::GlobalPos const& pos);
 /// Punches a glass frame as `player`. True when the frame survived (only its item dropped).
 bool punchGlass(Player& player, core::GlobalPos const& pos);
+/// Removes a glass frame's item without dropping it (test cleanup).
+void emptyGlass(core::GlobalPos const& pos);
 
 struct DyedRecord {
     int          rgb  = 0;

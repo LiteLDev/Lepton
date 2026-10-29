@@ -581,6 +581,16 @@ bool useGlass(Player& player, core::GlobalPos const& pos) {
     return region && glass::use(player, *region, game::blockPos(pos));
 }
 
+void emptyGlass(core::GlobalPos const& pos) {
+    auto& frames = glass::st().frames;
+    auto  it     = frames.find(pos);
+    if (it == frames.end()) return;
+    it->second.item     = ItemStack{};
+    it->second.rotation = 0;
+    glass::despawnDisplay(it->second);
+    glass::save(pos, it->second);
+}
+
 bool punchGlass(Player& player, core::GlobalPos const& pos) {
     auto* region = game::regionOf(pos.dim);
     return region && glass::punch(player, *region, game::blockPos(pos));

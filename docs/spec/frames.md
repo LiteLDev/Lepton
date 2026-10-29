@@ -227,7 +227,7 @@ No mod strings (Quark's only strings are the JEI hints, not ported per SPEC §8;
 9. Disabled GlassItemFrame keeps the (unobtainable) items registered (see 3.5).
 
 ## 8. Tests
-Selftests `frames.*`, dx 2400..2499 (13 tests):
+Selftests `frames.*`, dx 2400..2499 (14 tests):
 `frames.config`, `frames.sign_rule` (Quark's attachment rule), `frames.recipes` (incl. removal when
 disabled), `frames.glass_use` (real placement, insert, display entity + properties, rotate, punch,
 removal drops), `frames.glass_place_rules` (floor frame, disabled module), `frames.glass_survive`,
@@ -235,7 +235,7 @@ removal drops), `frames.glass_place_rules` (floor frame, disabled module), `fram
 (standing front/behind, wall sign, ceiling hanging, wall hanging), `frames.glass_maps` (sweep and
 every-tick updates, option off), `frames.dye` (cauldron dyeing, re-dyeing, sneaking, disabled),
 `frames.wash` (dyed frame washing, map washing, dyed water, emptying), `frames.dyed_frames` (real
-placement, overlay properties, glow frame, dyed drop on break, disabled), `frames.banner_limit`.
+placement, overlay properties, glow frame, dyed drop on break, disabled), `frames.banner_limit`, `frames.gallery` (the scene of the client screenshots).
 E2E: `tools/e2e/server/scenarios/frames.ps1` (all selftests + log lines);
 `tools/e2e/client/scenarios/frames.ps1` (a wall of glass frames with an item, a block, a tool, a
 banner, a shield and a map, glow frames, a frame on standing/wall/hanging signs, and dyed frames of
