@@ -52,7 +52,7 @@ if (-not $vanilla) {
     $bx, $by = Get-Fraction $btn
     Click $bx $by -Relative
     Wait-LogLine 'backpack: closed by' 10 -Since $m | Out-Null
-    Wait-LogLine 'backpack client: opened the inventory' 10 -Since $m | Out-Null
+    Wait-LogLine 'backpack: .* opened the inventory' 10 -Since $m | Out-Null
     Start-Sleep -Milliseconds 1500
     Save-Screenshot 'inventory' | Out-Null
     # ... and its "Backpack" button opens the backpack screen again.
