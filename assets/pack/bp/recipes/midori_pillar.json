@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:midori_pillar"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:midori_block_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:midori_block_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:midori_pillar",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mossy_cobblestone_bricks_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:mossy_cobblestone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:mossy_cobblestone_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:mossy_cobblestone_bricks_slab",
+      "count": 6
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:cobblestone_bricks_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:cobblestone_bricks_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:cobblestone_bricks_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:cobblestone_bricks_vertical_slab",
+      "count": 3
+    }
+  }
+}

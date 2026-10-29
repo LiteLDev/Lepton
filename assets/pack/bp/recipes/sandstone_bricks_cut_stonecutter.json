@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:sandstone_bricks_cut_stonecutter"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:cut_sandstone"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:cut_sandstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:sandstone_bricks",
+      "count": 1
+    }
+  }
+}

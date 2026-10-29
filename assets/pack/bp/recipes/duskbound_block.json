@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:duskbound_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "PPP",
+      "POP",
+      "PPP"
+    ],
+    "key": {
+      "O": {
+        "item": "lepton:dusky_myalite"
+      },
+      "P": {
+        "item": "minecraft:purpur_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:dusky_myalite"
+      },
+      {
+        "item": "minecraft:purpur_block"
+      }
+    ],
+    "result": {
+      "item": "lepton:duskbound_block",
+      "count": 16
+    }
+  }
+}

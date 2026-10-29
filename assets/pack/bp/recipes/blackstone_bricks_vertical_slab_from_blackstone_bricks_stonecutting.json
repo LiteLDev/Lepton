@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:blackstone_bricks_vertical_slab_from_blackstone_bricks_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:blackstone_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:blackstone_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:blackstone_bricks_vertical_slab",
+      "count": 2
+    }
+  }
+}

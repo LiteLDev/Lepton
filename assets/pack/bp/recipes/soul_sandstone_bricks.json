@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:soul_sandstone_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:cut_soul_sandstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:cut_soul_sandstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:soul_sandstone_bricks",
+      "count": 4
+    }
+  }
+}

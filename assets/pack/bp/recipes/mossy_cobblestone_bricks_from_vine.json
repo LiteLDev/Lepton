@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:mossy_cobblestone_bricks_from_vine"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:cobblestone_bricks"
+      },
+      {
+        "item": "minecraft:vine"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:cobblestone_bricks"
+      },
+      {
+        "item": "minecraft:vine"
+      }
+    ],
+    "result": {
+      "item": "lepton:mossy_cobblestone_bricks",
+      "count": 1
+    }
+  }
+}

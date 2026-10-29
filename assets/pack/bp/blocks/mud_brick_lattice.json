@@ -1,0 +1,66 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:mud_brick_lattice",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3
+      },
+      "minecraft:map_color": "#876b62",
+      "tag:lepton:lattice": {},
+      "tag:lepton:requires_tool": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "north": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "south": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "east": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "west": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "up": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        },
+        "down": {
+          "texture": "lepton_bricks_mud_brick_lattice",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:liquid_detection": {
+        "detection_rules": [
+          {
+            "liquid_type": "water",
+            "can_contain_liquid": true,
+            "on_liquid_touches": "no_reaction"
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/mud_brick_lattice.json"
+    }
+  }
+}
