@@ -322,6 +322,8 @@ std::string const& Overlay::textField(std::string const& id, Rect const& r, std:
 
 void Overlay::greyOut(Rect const& r, Color color) { mImpl.dc.fill(r, color); }
 
+Vec Overlay::mouse() const { return mImpl.mouse; }
+
 // ---- public functions ---------------------------------------------------------------------------
 
 std::string topScreen() {
