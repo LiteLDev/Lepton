@@ -176,10 +176,11 @@ Existing items stay (inert), like Quark.
 | Backpack inventory | vanilla chest screen "Backpack" (27 slots + inventory + hotbar), plus an overlay button "Inventory" (opens the normal inventory with armour/crafting); the normal inventory gets a "Backpack" button while a backpack is worn | the same chest screen; sneak + E opens the normal inventory |
 
 Switching (mod clients; buttons to the right of the inventory slots): "Inventory" closes the backpack
-screen and the client opens its own inventory (the server lets one inventory request through for
-two seconds); "Backpack" closes the inventory and sends the vanilla inventory request, which the
-server answers with the backpack screen. (Clients do not show a container the server opens without
-a request while another screen is open or closing.)
+screen; "Backpack" closes the inventory. Once the closed screen has settled (HUD on top for 0.5 s)
+the client sends the vanilla inventory request, as the E key does: after "Inventory" the server lets
+one such request through (2 s) and opens the normal inventory, otherwise it answers with the backpack
+screen. (Clients show no container the server opens without their request, nor one opened while a
+screen is closing.)
 
 | Screen | Mod client | Vanilla client |
 |---|---|---|
