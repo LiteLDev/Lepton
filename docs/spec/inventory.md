@@ -293,6 +293,9 @@ Keybind names (RP `texts.d/*/inventory.lang`): `key.lepton.sort_player` Sort Pla
   the server while open (§3.6) instead of locking the menu slot.
 - Restock triggers come from the tool damage hook and from block placement / item use events (the
   Forge `PlayerDestroyItemEvent` does not exist on Bedrock).
+- Hotbar changer: Quark moves the hearts / hunger bars up with the rows; Bedrock's status bars
+  cannot be moved, so the rows rise above them (66 units above the status bars instead of 90 from
+  the bottom of the screen).
 - Quick armour swapping: Bedrock armour stands have one hand; `swapOffHand` swaps the player's off
   hand with the stand's hand item.
 - Chest search text field keys: letters, digits, space and the US-layout punctuation
