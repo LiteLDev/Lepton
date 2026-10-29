@@ -39,9 +39,10 @@ class Player;
 namespace lp::game::vc {
 
 enum class Screen {
-    Chest,     ///< chest screen; size 1..27 (single) or 28..54 (shown as a double chest)
+    Chest,     ///< chest screen; size 1..27 (single) or 28..54 (a double chest: the client is shown a
+               ///< pair of chests at the position and the block east of it while it is open)
     Hopper,    ///< 5 slots
-    Dispenser, ///< 9 slots (3x3)
+    Dispenser, ///< 9 slots (3x3; the client is shown a dispenser at the position while it is open)
 };
 
 struct Spec {
