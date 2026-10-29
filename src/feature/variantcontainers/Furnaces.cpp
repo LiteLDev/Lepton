@@ -258,6 +258,7 @@ struct Pending {
     int      dim;
     BlockPos pos;
     uint64_t due;
+    bool     show = false; ///< the stand-in was sent: show the screen now
 };
 std::vector<std::pair<int, BlockPos>>& soulChecks() {
     static std::vector<std::pair<int, BlockPos>> v;
@@ -297,6 +298,8 @@ void onFurnaceRemoved(BlockSource& region, BlockPos const& pos) {
     log().info("variantcontainers: furnace at {} {} {} removed ({} xp)", pos.x, pos.y, pos.z, xp);
 }
 
+bool showFurnaceScreen(Player& player, BlockPos const& pos);
+
 bool openFurnace(Player& player, BlockPos const& pos) {
     if (player.isClientSide()) return false;
     auto& region = player.getDimensionBlockSource();
@@ -304,7 +307,7 @@ bool openFurnace(Player& player, BlockPos const& pos) {
     if (!isVariantFurnace(b) || !furnaceAt(region, pos)) return false;
     if (player.mContainerManager.get()) return false;
     auto& sp = static_cast<ServerPlayer&>(player);
-    if (!patchedClients().contains(player.getUuid().asString())) {
+    if (!player.isSimulated() && !patchedClients().contains(player.getUuid().asString())) {
         // the client needs a furnace block actor at the position to show the screen: a client
         // without our registry patch (vanilla, or an old client mod) gets a vanilla furnace there
         if (auto const* v = vanillaFurnaceFor(b)) {
@@ -314,8 +317,20 @@ bool openFurnace(Player& player, BlockPos const& pos) {
             }
             sendBlock(player, pos, *v);
             fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick, &b, 0};
+            // the client creates the furnace block actor when the stand-in arrives: open a few ticks later
+            pendingOpens().push_back({player.getOrCreateUniqueID().rawID, static_cast<int>(region.getDimensionId()), pos, gTick + 4, true});
+            log().info("variantcontainers: {} opens {} at {} {} {} (stand-in)", player.getRealName(), b.getTypeName(), pos.x, pos.y, pos.z);
+            return true;
         }
     }
+    return showFurnaceScreen(player, pos);
+}
+
+bool showFurnaceScreen(Player& player, BlockPos const& pos) {
+    auto& region = player.getDimensionBlockSource();
+    auto const& b = region.getBlock(pos);
+    if (!isVariantFurnace(b) || !furnaceAt(region, pos) || player.mContainerManager.get()) return false;
+    auto& sp = static_cast<ServerPlayer&>(player);
     // what the game does for its own furnaces: a furnace container manager on the server, then the
     // open packet that names the block position
     int next = static_cast<int>(sp.mContainerCounter) + 1;
@@ -336,7 +351,8 @@ bool openFurnace(Player& player, BlockPos const& pos) {
     }
     sp.refreshContainer(*model); // the slots go to the client now
 
-    bool ok = hasFurnaceOpen(player, pos);    log().info("variantcontainers: {} opened {} at {} {} {}{}", player.getRealName(), b.getTypeName(), pos.x, pos.y, pos.z, ok ? "" : " (failed)");
+    bool ok = hasFurnaceOpen(player, pos);
+    log().info("variantcontainers: {} opened {} at {} {} {}{}", player.getRealName(), b.getTypeName(), pos.x, pos.y, pos.z, ok ? "" : " (failed)");
     return ok;
 }
 
@@ -376,7 +392,8 @@ public:
                 auto* p    = level ? level->getPlayer(uid) : nullptr;
                 auto* r    = game::regionOf(o.dim);
                 if (!p || !r || static_cast<int>(p->getDimensionId()) != o.dim) continue;
-                openFurnace(*p, o.pos);
+                if (o.show) showFurnaceScreen(*p, o.pos);
+                else openFurnace(*p, o.pos);
             }
         }));
         mListeners.push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& ev) {
