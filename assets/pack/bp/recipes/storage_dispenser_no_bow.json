@@ -1,0 +1,42 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_dispenser_no_bow"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " #X",
+      "#DX",
+      " #X"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:stick"
+      },
+      "D": {
+        "item": "minecraft:dropper"
+      },
+      "X": {
+        "item": "minecraft:string"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:dropper"
+      },
+      {
+        "item": "minecraft:stick"
+      },
+      {
+        "item": "minecraft:string"
+      }
+    ],
+    "result": {
+      "item": "minecraft:dispenser",
+      "count": 1
+    }
+  }
+}

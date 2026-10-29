@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_horn_coral_to_yellow_dye"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:horn_coral"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:horn_coral"
+      }
+    ],
+    "result": {
+      "item": "minecraft:yellow_dye",
+      "count": 1
+    }
+  }
+}

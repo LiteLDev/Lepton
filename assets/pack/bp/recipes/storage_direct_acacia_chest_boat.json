@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_direct_acacia_chest_boat"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#X#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:acacia_planks"
+      },
+      "X": {
+        "item": "minecraft:chest"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:acacia_planks"
+      },
+      {
+        "item": "minecraft:chest"
+      }
+    ],
+    "result": {
+      "item": "minecraft:acacia_chest_boat",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_stone_shovel_from_tuff"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "S",
+      "S"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:tuff"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stick"
+      },
+      {
+        "item": "minecraft:tuff"
+      }
+    ],
+    "result": {
+      "item": "minecraft:stone_shovel",
+      "count": 1
+    }
+  }
+}

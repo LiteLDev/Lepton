@@ -1,0 +1,194 @@
+{
+  "lepton:apple_crate": {
+    "sound": "wood"
+  },
+  "lepton:beetroot_crate": {
+    "sound": "wood"
+  },
+  "lepton:berry_sack": {
+    "sound": "cloth"
+  },
+  "lepton:black_stool": {
+    "sound": "wood"
+  },
+  "lepton:blaze_lantern": {
+    "sound": "glass"
+  },
+  "lepton:blue_stool": {
+    "sound": "wood"
+  },
+  "lepton:bonded_leather": {
+    "sound": "cloth"
+  },
+  "lepton:bonded_rabbit_hide": {
+    "sound": "cloth"
+  },
+  "lepton:brown_stool": {
+    "sound": "wood"
+  },
+  "lepton:cactus_block": {
+    "sound": "wood"
+  },
+  "lepton:carrot_crate": {
+    "sound": "wood"
+  },
+  "lepton:charcoal_block": {
+    "sound": "stone"
+  },
+  "lepton:chorus_fruit_block": {
+    "sound": "wood"
+  },
+  "lepton:cocoa_beans_sack": {
+    "sound": "cloth"
+  },
+  "lepton:cut_vine": {
+    "sound": "grass"
+  },
+  "lepton:cyan_stool": {
+    "sound": "wood"
+  },
+  "lepton:dirty_glass": {
+    "sound": "glass"
+  },
+  "lepton:dirty_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:glowberry_sack": {
+    "sound": "cloth"
+  },
+  "lepton:golden_apple_crate": {
+    "sound": "wood"
+  },
+  "lepton:golden_carrot_crate": {
+    "sound": "wood"
+  },
+  "lepton:gray_stool": {
+    "sound": "wood"
+  },
+  "lepton:green_stool": {
+    "sound": "wood"
+  },
+  "lepton:gunpowder_sack": {
+    "sound": "cloth"
+  },
+  "lepton:light_blue_stool": {
+    "sound": "wood"
+  },
+  "lepton:light_gray_stool": {
+    "sound": "wood"
+  },
+  "lepton:lime_stool": {
+    "sound": "wood"
+  },
+  "lepton:magenta_stool": {
+    "sound": "wood"
+  },
+  "lepton:nether_wart_sack": {
+    "sound": "cloth"
+  },
+  "lepton:orange_stool": {
+    "sound": "wood"
+  },
+  "lepton:pink_stool": {
+    "sound": "wood"
+  },
+  "lepton:potato_crate": {
+    "sound": "wood"
+  },
+  "lepton:potted_beetroot": {
+    "sound": "stone"
+  },
+  "lepton:potted_berries": {
+    "sound": "stone"
+  },
+  "lepton:potted_carrot": {
+    "sound": "stone"
+  },
+  "lepton:potted_cave_vines": {
+    "sound": "stone"
+  },
+  "lepton:potted_chorus": {
+    "sound": "stone"
+  },
+  "lepton:potted_cocoa_bean": {
+    "sound": "stone"
+  },
+  "lepton:potted_large_fern": {
+    "sound": "stone"
+  },
+  "lepton:potted_lilac": {
+    "sound": "stone"
+  },
+  "lepton:potted_melon": {
+    "sound": "stone"
+  },
+  "lepton:potted_nether_sprouts": {
+    "sound": "stone"
+  },
+  "lepton:potted_nether_wart": {
+    "sound": "stone"
+  },
+  "lepton:potted_peony": {
+    "sound": "stone"
+  },
+  "lepton:potted_pitcher_plant": {
+    "sound": "stone"
+  },
+  "lepton:potted_potato": {
+    "sound": "stone"
+  },
+  "lepton:potted_pumpkin": {
+    "sound": "stone"
+  },
+  "lepton:potted_rose": {
+    "sound": "stone"
+  },
+  "lepton:potted_sea_pickle": {
+    "sound": "stone"
+  },
+  "lepton:potted_short_grass": {
+    "sound": "stone"
+  },
+  "lepton:potted_sugar_cane": {
+    "sound": "stone"
+  },
+  "lepton:potted_sunflower": {
+    "sound": "stone"
+  },
+  "lepton:potted_tall_grass": {
+    "sound": "stone"
+  },
+  "lepton:potted_twisting_vines": {
+    "sound": "stone"
+  },
+  "lepton:potted_vine": {
+    "sound": "stone"
+  },
+  "lepton:potted_weeping_vines": {
+    "sound": "stone"
+  },
+  "lepton:potted_wheat": {
+    "sound": "stone"
+  },
+  "lepton:purple_stool": {
+    "sound": "wood"
+  },
+  "lepton:red_stool": {
+    "sound": "wood"
+  },
+  "lepton:rope": {
+    "sound": "cloth"
+  },
+  "lepton:stick_block": {
+    "sound": "wood"
+  },
+  "lepton:sugar_cane_block": {
+    "sound": "wood"
+  },
+  "lepton:white_stool": {
+    "sound": "wood"
+  },
+  "lepton:yellow_stool": {
+    "sound": "wood"
+  }
+}

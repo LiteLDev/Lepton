@@ -1,0 +1,275 @@
+{
+  "lepton_storage_beetroots_stage_3": {
+    "textures": "textures/blocks/beetroots_stage_3"
+  },
+  "lepton_storage_carrots_stage_3": {
+    "textures": "textures/blocks/carrots_stage_3"
+  },
+  "lepton_storage_dirt": {
+    "textures": "textures/blocks/dirt"
+  },
+  "lepton_storage_double_plant_fern_top": {
+    "textures": "textures/blocks/double_plant_fern_top"
+  },
+  "lepton_storage_double_plant_grass_top": {
+    "textures": "textures/blocks/double_plant_grass_top"
+  },
+  "lepton_storage_double_plant_paeonia_top": {
+    "textures": "textures/blocks/double_plant_paeonia_top"
+  },
+  "lepton_storage_double_plant_rose_top": {
+    "textures": "textures/blocks/double_plant_rose_top"
+  },
+  "lepton_storage_double_plant_syringa_top": {
+    "textures": "textures/blocks/double_plant_syringa_top"
+  },
+  "lepton_storage_flower_pot": {
+    "textures": "textures/blocks/flower_pot"
+  },
+  "lepton_storage_nether_wart_stage_2": {
+    "textures": "textures/blocks/nether_wart_stage_2"
+  },
+  "lepton_storage_potatoes_stage_3": {
+    "textures": "textures/blocks/potatoes_stage_3"
+  },
+  "lepton_storage_storage_apple_crate": {
+    "textures": "textures/blocks/storage/apple_crate"
+  },
+  "lepton_storage_storage_apple_crate_bottom": {
+    "textures": "textures/blocks/storage/apple_crate_bottom"
+  },
+  "lepton_storage_storage_apple_crate_top": {
+    "textures": "textures/blocks/storage/apple_crate_top"
+  },
+  "lepton_storage_storage_beetroot_crate": {
+    "textures": "textures/blocks/storage/beetroot_crate"
+  },
+  "lepton_storage_storage_beetroot_crate_bottom": {
+    "textures": "textures/blocks/storage/beetroot_crate_bottom"
+  },
+  "lepton_storage_storage_beetroot_crate_top": {
+    "textures": "textures/blocks/storage/beetroot_crate_top"
+  },
+  "lepton_storage_storage_berry_sack": {
+    "textures": "textures/blocks/storage/berry_sack"
+  },
+  "lepton_storage_storage_berry_sack_bottom": {
+    "textures": "textures/blocks/storage/berry_sack_bottom"
+  },
+  "lepton_storage_storage_berry_sack_top": {
+    "textures": "textures/blocks/storage/berry_sack_top"
+  },
+  "lepton_storage_storage_black_stool": {
+    "textures": "textures/blocks/storage/black_stool"
+  },
+  "lepton_storage_storage_blaze_lantern": {
+    "textures": "textures/blocks/storage/blaze_lantern"
+  },
+  "lepton_storage_storage_blue_stool": {
+    "textures": "textures/blocks/storage/blue_stool"
+  },
+  "lepton_storage_storage_bonded_leather": {
+    "textures": "textures/blocks/storage/bonded_leather"
+  },
+  "lepton_storage_storage_bonded_rabbit_hide": {
+    "textures": "textures/blocks/storage/bonded_rabbit_hide"
+  },
+  "lepton_storage_storage_brown_stool": {
+    "textures": "textures/blocks/storage/brown_stool"
+  },
+  "lepton_storage_storage_cactus_block": {
+    "textures": "textures/blocks/storage/cactus_block"
+  },
+  "lepton_storage_storage_cactus_block_top": {
+    "textures": "textures/blocks/storage/cactus_block_top"
+  },
+  "lepton_storage_storage_carrot_crate": {
+    "textures": "textures/blocks/storage/carrot_crate"
+  },
+  "lepton_storage_storage_carrot_crate_bottom": {
+    "textures": "textures/blocks/storage/carrot_crate_bottom"
+  },
+  "lepton_storage_storage_carrot_crate_top": {
+    "textures": "textures/blocks/storage/carrot_crate_top"
+  },
+  "lepton_storage_storage_charcoal_block": {
+    "textures": "textures/blocks/storage/charcoal_block"
+  },
+  "lepton_storage_storage_chorus_fruit_block": {
+    "textures": "textures/blocks/storage/chorus_fruit_block"
+  },
+  "lepton_storage_storage_chorus_fruit_block_top": {
+    "textures": "textures/blocks/storage/chorus_fruit_block_top"
+  },
+  "lepton_storage_storage_cocoa_beans_sack": {
+    "textures": "textures/blocks/storage/cocoa_beans_sack"
+  },
+  "lepton_storage_storage_cocoa_beans_sack_bottom": {
+    "textures": "textures/blocks/storage/cocoa_beans_sack_bottom"
+  },
+  "lepton_storage_storage_cocoa_beans_sack_top": {
+    "textures": "textures/blocks/storage/cocoa_beans_sack_top"
+  },
+  "lepton_storage_storage_cyan_stool": {
+    "textures": "textures/blocks/storage/cyan_stool"
+  },
+  "lepton_storage_storage_dirty_glass": {
+    "textures": "textures/blocks/storage/dirty_glass"
+  },
+  "lepton_storage_storage_glowberry_sack": {
+    "textures": "textures/blocks/storage/glowberry_sack"
+  },
+  "lepton_storage_storage_glowberry_sack_bottom": {
+    "textures": "textures/blocks/storage/glowberry_sack_bottom"
+  },
+  "lepton_storage_storage_glowberry_sack_top": {
+    "textures": "textures/blocks/storage/glowberry_sack_top"
+  },
+  "lepton_storage_storage_golden_apple_crate": {
+    "textures": "textures/blocks/storage/golden_apple_crate"
+  },
+  "lepton_storage_storage_golden_apple_crate_bottom": {
+    "textures": "textures/blocks/storage/golden_apple_crate_bottom"
+  },
+  "lepton_storage_storage_golden_apple_crate_top": {
+    "textures": "textures/blocks/storage/golden_apple_crate_top"
+  },
+  "lepton_storage_storage_golden_carrot_crate": {
+    "textures": "textures/blocks/storage/golden_carrot_crate"
+  },
+  "lepton_storage_storage_golden_carrot_crate_bottom": {
+    "textures": "textures/blocks/storage/golden_carrot_crate_bottom"
+  },
+  "lepton_storage_storage_golden_carrot_crate_top": {
+    "textures": "textures/blocks/storage/golden_carrot_crate_top"
+  },
+  "lepton_storage_storage_gray_stool": {
+    "textures": "textures/blocks/storage/gray_stool"
+  },
+  "lepton_storage_storage_green_stool": {
+    "textures": "textures/blocks/storage/green_stool"
+  },
+  "lepton_storage_storage_gunpowder_sack": {
+    "textures": "textures/blocks/storage/gunpowder_sack"
+  },
+  "lepton_storage_storage_gunpowder_sack_bottom": {
+    "textures": "textures/blocks/storage/gunpowder_sack_bottom"
+  },
+  "lepton_storage_storage_gunpowder_sack_top": {
+    "textures": "textures/blocks/storage/gunpowder_sack_top"
+  },
+  "lepton_storage_storage_light_blue_stool": {
+    "textures": "textures/blocks/storage/light_blue_stool"
+  },
+  "lepton_storage_storage_light_gray_stool": {
+    "textures": "textures/blocks/storage/light_gray_stool"
+  },
+  "lepton_storage_storage_lime_stool": {
+    "textures": "textures/blocks/storage/lime_stool"
+  },
+  "lepton_storage_storage_magenta_stool": {
+    "textures": "textures/blocks/storage/magenta_stool"
+  },
+  "lepton_storage_storage_nether_wart_sack": {
+    "textures": "textures/blocks/storage/nether_wart_sack"
+  },
+  "lepton_storage_storage_nether_wart_sack_bottom": {
+    "textures": "textures/blocks/storage/nether_wart_sack_bottom"
+  },
+  "lepton_storage_storage_nether_wart_sack_top": {
+    "textures": "textures/blocks/storage/nether_wart_sack_top"
+  },
+  "lepton_storage_storage_orange_stool": {
+    "textures": "textures/blocks/storage/orange_stool"
+  },
+  "lepton_storage_storage_pink_stool": {
+    "textures": "textures/blocks/storage/pink_stool"
+  },
+  "lepton_storage_storage_potato_crate": {
+    "textures": "textures/blocks/storage/potato_crate"
+  },
+  "lepton_storage_storage_potato_crate_bottom": {
+    "textures": "textures/blocks/storage/potato_crate_bottom"
+  },
+  "lepton_storage_storage_potato_crate_top": {
+    "textures": "textures/blocks/storage/potato_crate_top"
+  },
+  "lepton_storage_storage_potted_cave_vines": {
+    "textures": "textures/blocks/storage/potted_cave_vines"
+  },
+  "lepton_storage_storage_potted_chorus": {
+    "textures": "textures/blocks/storage/potted_chorus"
+  },
+  "lepton_storage_storage_potted_cocoa_bean": {
+    "textures": "textures/blocks/storage/potted_cocoa_bean"
+  },
+  "lepton_storage_storage_potted_melon": {
+    "textures": "textures/blocks/storage/potted_melon"
+  },
+  "lepton_storage_storage_potted_nether_sprouts": {
+    "textures": "textures/blocks/storage/potted_nether_sprouts"
+  },
+  "lepton_storage_storage_potted_pitcher_plant": {
+    "textures": "textures/blocks/storage/potted_pitcher_plant"
+  },
+  "lepton_storage_storage_potted_pumpkin": {
+    "textures": "textures/blocks/storage/potted_pumpkin"
+  },
+  "lepton_storage_storage_potted_sea_pickle": {
+    "textures": "textures/blocks/storage/potted_sea_pickle"
+  },
+  "lepton_storage_storage_potted_sugar_cane": {
+    "textures": "textures/blocks/storage/potted_sugar_cane"
+  },
+  "lepton_storage_storage_potted_sunflower": {
+    "textures": "textures/blocks/storage/potted_sunflower"
+  },
+  "lepton_storage_storage_potted_twisting_vines": {
+    "textures": "textures/blocks/storage/potted_twisting_vines"
+  },
+  "lepton_storage_storage_potted_vine": {
+    "textures": "textures/blocks/storage/potted_vine"
+  },
+  "lepton_storage_storage_potted_weeping_vines": {
+    "textures": "textures/blocks/storage/potted_weeping_vines"
+  },
+  "lepton_storage_storage_purple_stool": {
+    "textures": "textures/blocks/storage/purple_stool"
+  },
+  "lepton_storage_storage_red_stool": {
+    "textures": "textures/blocks/storage/red_stool"
+  },
+  "lepton_storage_storage_rope": {
+    "textures": "textures/blocks/storage/rope"
+  },
+  "lepton_storage_storage_stick_block": {
+    "textures": "textures/blocks/storage/stick_block"
+  },
+  "lepton_storage_storage_stick_block_top": {
+    "textures": "textures/blocks/storage/stick_block_top"
+  },
+  "lepton_storage_storage_sugar_cane_block": {
+    "textures": "textures/blocks/storage/sugar_cane_block"
+  },
+  "lepton_storage_storage_sugar_cane_block_top": {
+    "textures": "textures/blocks/storage/sugar_cane_block_top"
+  },
+  "lepton_storage_storage_white_stool": {
+    "textures": "textures/blocks/storage/white_stool"
+  },
+  "lepton_storage_storage_yellow_stool": {
+    "textures": "textures/blocks/storage/yellow_stool"
+  },
+  "lepton_storage_sweet_berry_bush_stage3": {
+    "textures": "textures/blocks/sweet_berry_bush_stage3"
+  },
+  "lepton_storage_tallgrass": {
+    "textures": "textures/blocks/tallgrass"
+  },
+  "lepton_storage_vine": {
+    "textures": "textures/blocks/vine"
+  },
+  "lepton_storage_wheat_stage_7": {
+    "textures": "textures/blocks/wheat_stage_7"
+  }
+}

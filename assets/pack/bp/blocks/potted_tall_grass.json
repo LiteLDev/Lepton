@@ -1,0 +1,64 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:potted_tall_grass",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "tag:lepton:potted": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:geometry": "geometry.lepton.storage_potted",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_flower_pot",
+          "render_method": "alpha_test"
+        },
+        "dirt": {
+          "texture": "lepton_storage_dirt",
+          "render_method": "alpha_test"
+        },
+        "plant": {
+          "texture": "lepton_storage_double_plant_grass_top",
+          "render_method": "alpha_test",
+          "face_dimming": false,
+          "ambient_occlusion": false,
+          "tint_method": "grass"
+        }
+      },
+      "minecraft:collision_box": {
+        "origin": [
+          -3,
+          0,
+          -3
+        ],
+        "size": [
+          6,
+          6,
+          6
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -3,
+          0,
+          -3
+        ],
+        "size": [
+          6,
+          6,
+          6
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/potted_tall_grass.json"
+    }
+  }
+}

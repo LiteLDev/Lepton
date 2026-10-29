@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_dirty_glass_pane"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:dirty_glass"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:dirty_glass"
+      }
+    ],
+    "result": {
+      "item": "lepton:dirty_glass_pane",
+      "count": 16
+    }
+  }
+}

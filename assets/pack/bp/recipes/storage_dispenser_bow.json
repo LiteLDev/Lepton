@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_dispenser_bow"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:dropper"
+      },
+      {
+        "item": "minecraft:bow"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:bow"
+      },
+      {
+        "item": "minecraft:dropper"
+      }
+    ],
+    "result": {
+      "item": "minecraft:dispenser",
+      "count": 1
+    }
+  }
+}

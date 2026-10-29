@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_hopper_minecart"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#X#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:iron_ingot"
+      },
+      "X": {
+        "item": "minecraft:hopper"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:hopper"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      }
+    ],
+    "result": {
+      "item": "minecraft:hopper_minecart",
+      "count": 1
+    }
+  }
+}

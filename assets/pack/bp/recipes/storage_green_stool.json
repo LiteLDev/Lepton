@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_green_stool"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "WWW"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:green_wool"
+      },
+      "W": {
+        "tag": "minecraft:wooden_slabs"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:green_wool"
+      }
+    ],
+    "result": {
+      "item": "lepton:green_stool",
+      "count": 4
+    }
+  }
+}
