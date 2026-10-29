@@ -226,8 +226,6 @@ function Remove-DeployedMod {
     if (Test-Path $dest) { Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue; Write-Step "removed $dest" }
 }
 
-# Remove mods\LeviHeadlessInput (a leftover of a killed run, or this run's copy once the game is
-# closed), retrying while the game still holds the DLL open.
 # The game keeps resource packs downloaded from servers in its pack cache by UUID and version, and
 # every development build of Lepton's RP has the same ones: without this, a remote run would test
 # the RP of whichever build the instance downloaded first. Drops the cached copies of Lepton's RP
@@ -242,6 +240,8 @@ function Clear-CachedLeptonPack {
     } | ForEach-Object { Write-Step "dropping the cached Lepton RP $($_.Name)"; Remove-Item -Recurse -Force $_.FullName }
 }
 
+# Remove mods\LeviHeadlessInput (a leftover of a killed run, or this run's copy once the game is
+# closed), retrying while the game still holds the DLL open.
 function Remove-HeadlessInputLeftover {
     $dest = Join-Path $script:ModsDir 'LeviHeadlessInput'
     for ($i = 0; $i -lt 10 -and (Test-Path $dest); $i++) {
