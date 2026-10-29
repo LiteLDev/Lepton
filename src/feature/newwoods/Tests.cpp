@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/item/Item.h"
@@ -20,6 +21,8 @@
 #include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/ComposterBlock.h"
+#include "mc/world/level/block/actor/BlockActor.h"
+#include "mc/world/level/block/actor/FlowerPotBlockActor.h"
 #include "mc/world/level/block/actor/FurnaceBlockActor.h"
 #include "mc/world/level/dimension/DimensionType.h"
 #include "mc/world/level/storage/loot/LootPool.h"
@@ -255,6 +258,17 @@ LP_REGISTER_SELFTEST("newwoods.sapling_place", [](Context& ctx) -> ll::coro::Cor
     put(ctx, p, "minecraft:stone");
     co_await ctx.ticks(5);
     ctx.check(at(ctx, off(p, 0, 1, 0)).isAir(), "sapling popped off, got " + idAt(ctx, off(p, 0, 1, 0)));
+    // potted: a flower pot takes the sapling (Quark's potted_*_sapling)
+    auto pot = off(p, 4, 1, 0);
+    ctx.require(put(ctx, off(p, 4, 0, 0), "minecraft:stone") && put(ctx, pot, "minecraft:flower_pot"), "flower pot");
+    co_await ctx.ticks(10);
+    use(ctx, "lepton:blue_blossom_sapling", pot, Facing::Up, Vec3{0.5f, 0.4f, 0.5f});
+    co_await ctx.ticks(5);
+    auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(pot));
+    ctx.require(be != nullptr, "flower pot block entity");
+    Block const* plant = static_cast<FlowerPotBlockActor*>(be)->mPlant;
+    ctx.check(plant && plant->getTypeName() == "lepton:blue_blossom_sapling",
+        "the pot holds the sapling, got " + (plant ? plant->getTypeName() : std::string("nothing")));
 });
 
 LP_REGISTER_SELFTEST("newwoods.sapling_bonemeal", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -503,21 +517,133 @@ LP_REGISTER_SELFTEST("newwoods.fuel_compost", [](Context& ctx) {
     ctx.check(ComposterBlock::getFillChance(lp::game::makeItem("lepton:ancient_sapling")) == 30, "saplings compost 30%");
 });
 
+// The gallery for the client screenshots (docs §8): one row per wood set (log, wood, stripped log and
+// wood, planks, stairs, slab, vertical slab, fences + gate, door, trapdoor, button, pressure plate,
+// vertical planks, bookshelf, ladder, posts, hollow log), one row per tree (leaves, sapling, hedges,
+// leaf carpet, potted sapling), and grown trees (ashen + the five trumpets). With a real player
+// online the player is moved in front of each part ("GALLERY view <name>" lines).
 LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
-    // every block of the unit in rows (wood sets, then the trees' blocks), for the client screenshots
     auto base = ctx.testPos(790, 60);
     ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
-    auto const& ids = nw::allBlockIds();
-    int         n   = 0;
-    for (size_t i = 0; i < ids.size(); ++i) {
-        int  row = static_cast<int>(i / 20), col = static_cast<int>(i % 20);
-        auto p   = off(base, col - 10, 0, row * 3);
-        auto const& id = ids[i];
-        bool sapling = id.ends_with("_sapling");
-        if (sapling) put(ctx, p, "minecraft:grass_block");
-        if (put(ctx, sapling ? off(p, 0, 1, 0) : p, id)) ++n;
+    int  placed = 0, wanted = 0;
+    auto place  = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
+        ++wanted;
+        if (put(ctx, p, id, st)) ++placed;
+        else ctx.check(false, "placed " + id);
+    };
+    std::vector<GP> woodRows, treeRows;
+    int             wi = 0;
+    for (auto w : {"azalea", "blossom", "ancient"}) {
+        std::string s(w);
+        auto        row = off(base, 0, 0, -6 * wi++); // rows go north, each viewed from its south side
+        woodRows.push_back(row);
+        auto at = [&](int i, int dy = 0) { return off(row, i, dy, 0); };
+        place(at(0), "lepton:" + s + "_log");
+        place(at(1), "lepton:" + s + "_wood");
+        place(at(2), "lepton:stripped_" + s + "_log", {{"minecraft:block_face", std::string("east")}});
+        place(at(3), "lepton:stripped_" + s + "_wood");
+        place(at(4), "lepton:" + s + "_planks");
+        place(at(5), "lepton:" + s + "_planks_stairs", {{"minecraft:cardinal_direction", std::string("north")}});
+        place(at(6), "lepton:" + s + "_planks_slab");
+        place(at(7), "lepton:" + s + "_planks_vertical_slab", {{"lepton:type", std::string("south")}});
+        place(at(8), "lepton:" + s + "_fence", {{"lepton:east", true}});
+        place(at(9), "lepton:" + s + "_fence_gate", {{"minecraft:cardinal_direction", std::string("east")}});
+        place(at(10), "lepton:" + s + "_door", {{"minecraft:cardinal_direction", std::string("north")}});
+        place(at(10, 1), "lepton:" + s + "_door", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:upper", true}});
+        place(at(11), "lepton:" + s + "_trapdoor", {{"minecraft:cardinal_direction", std::string("north")}});
+        place(at(12), "lepton:" + s + "_planks");
+        place(at(12, 1), "lepton:" + s + "_button", {{"minecraft:block_face", std::string("up")}});
+        place(at(13), "lepton:" + s + "_pressure_plate");
+        place(at(14), "lepton:vertical_" + s + "_planks");
+        place(at(15), "lepton:" + s + "_bookshelf");
+        place(off(row, 16, 0, -1), "lepton:" + s + "_planks");
+        place(off(row, 16, 1, -1), "lepton:" + s + "_planks");
+        place(at(16), "lepton:" + s + "_ladder", {{"minecraft:block_face", std::string("south")}});
+        place(at(16, 1), "lepton:" + s + "_ladder", {{"minecraft:block_face", std::string("south")}});
+        place(at(17), "lepton:" + s + "_post");
+        place(at(18), "lepton:stripped_" + s + "_post", {{"minecraft:block_face", std::string("east")}});
+        place(at(19), "lepton:hollow_" + s + "_log", {{"minecraft:block_face", std::string("south")}});
     }
-    ctx.check(n == static_cast<int>(ids.size()), "placed " + std::to_string(n) + " blocks");
-    ctx.player().teleport(Vec3{static_cast<float>(base.x) + 0.5f, static_cast<float>(base.y) + 4, static_cast<float>(base.z) - 6.f}, DimensionType(0));
-    co_await ctx.ticks(5);
+    int ti = 0;
+    for (auto const& t : nw::treeTypes()) {
+        auto row = off(base, 0, 0, -20 - 4 * ti++);
+        treeRows.push_back(row);
+        std::string n(t.name);
+        place(row, std::string(t.leaves));
+        place(off(row, 1, 0, 0), std::string(t.leaves));
+        place(off(row, 1, 1, 0), std::string(t.leaves));
+        place(off(row, 3, 0, 0), "minecraft:grass_block");
+        place(off(row, 3, 1, 0), std::string(t.sapling));
+        place(off(row, 5, 0, 0), "lepton:" + n + "_hedge", {{"lepton:east", true}});
+        place(off(row, 6, 0, 0), "lepton:" + n + "_hedge", {{"lepton:west", true}});
+        place(off(row, 6, 1, 0), "lepton:" + n + "_hedge", {{"lepton:extend", true}});
+        place(off(row, 8, 0, 0), "minecraft:grass_block");
+        place(off(row, 8, 1, 0), "lepton:" + n + "_leaf_carpet");
+        place(off(row, 9, 0, 0), "minecraft:grass_block");
+        place(off(row, 9, 1, 0), "lepton:" + n + "_leaf_carpet");
+        place(off(row, 11, 0, 0), "minecraft:stone");
+        place(off(row, 11, 1, 0), "minecraft:flower_pot");
+        if (auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(off(row, 11, 1, 0)))) {
+            auto* pot   = static_cast<FlowerPotBlockActor*>(be);
+            pot->mPlant = bs::of(t.sapling);
+            pot->refresh(regionOf(ctx));
+        }
+    }
+    ctx.check(placed == wanted, "placed " + std::to_string(placed) + " / " + std::to_string(wanted) + " gallery blocks");
+
+    // grown trees: the ashen tree and the five trumpets in a line
+    auto forest = off(base, 0, 0, 40);
+    int  grown  = 0, k = 0;
+    for (auto const& t : nw::treeTypes()) {
+        auto p = off(forest, 26 * k++, 0, 0);
+        if (!co_await ctx.ensureLoaded(p)) continue;
+        if (!plantSapling(ctx, p, t)) continue;
+        nw::JavaRandom r(1000 + k);
+        if (nw::advanceSapling(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)), r)) ++grown;
+        collectTree(ctx, off(p, 0, 1, 0), 16, 32);
+    }
+    ctx.check(grown == 6, "6 grown trees, got " + std::to_string(grown));
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) co_return;
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](GP const& at, float dx, float dy, float dz, float pitch, float yaw) {
+        if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
+            v->teleport(
+                Vec3{static_cast<float>(at.x) + dx, static_cast<float>(at.y) + dy, static_cast<float>(at.z) + dz},
+                DimensionType(at.dim),
+                Vec2{pitch, yaw}
+            );
+        }
+    };
+    struct View {
+        std::string name;
+        GP          at;
+        float       dx, dy, dz, pitch, yaw;
+    };
+    std::vector<View> views;
+    char const*       woodNames[] = {"azalea", "blossom", "ancient"};
+    for (int i = 0; i < 3; ++i) {
+        views.push_back({std::string(woodNames[i]) + "-left", woodRows[i], 5.f, 1.f, 5.5f, 15.f, 180.f});
+        views.push_back({std::string(woodNames[i]) + "-right", woodRows[i], 15.f, 1.f, 5.5f, 15.f, 180.f});
+    }
+    views.push_back({"trees-rows-a", treeRows[0], 6.f, 3.f, 4.5f, 25.f, 180.f});
+    views.push_back({"trees-rows-b", treeRows[2], 6.f, 3.f, 4.5f, 25.f, 180.f});
+    views.push_back({"trees-rows-c", treeRows[4], 6.f, 3.f, 4.5f, 25.f, 180.f});
+    views.push_back({"trees-a", forest, 26.f, 8.f, 34.f, 5.f, 180.f});
+    views.push_back({"trees-b", forest, 104.f, 8.f, 34.f, 5.f, 180.f});
+    for (auto const& v : views) {
+        ctx.info("GALLERY view " + v.name);
+        for (int t = 0; t < 120; ++t) { // hold the player there (no floor below some views)
+            view(v.at, v.dx, v.dy, v.dz, v.pitch, v.yaw);
+            co_await ctx.ticks(1);
+        }
+    }
+    view(woodRows[0], 5.f, 1.f, 5.5f, 15.f, 180.f);
+    co_await ctx.ticks(10);
+    ctx.info("GALLERY done");
 });

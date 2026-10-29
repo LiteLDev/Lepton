@@ -55,6 +55,7 @@ function New-NwLeaves {
     # Java leaves: fire spread 30 / 60
     $c['minecraft:flammable'] = [ordered]@{ catch_chance_modifier = 30; destroy_chance_modifier = 60 }
     $c['minecraft:light_dampening'] = 1
+    $c['minecraft:liquid_detection'] = $script:Waterloggable   # Java leaves are waterloggable
     $c['minecraft:geometry'] = 'minecraft:geometry.full_block'
     $c['minecraft:material_instances'] = [ordered]@{ '*' = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test' } }
     $p = Get-Path $Id
