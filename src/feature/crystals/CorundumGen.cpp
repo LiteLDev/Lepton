@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <memory>
 
@@ -44,7 +45,7 @@ namespace {
 
 bool gInstalled = false;
 struct GenStats {
-    uint64_t chunks = 0, sources = 0, accepted = 0, placed = 0;
+    std::atomic<uint64_t> chunks = 0, sources = 0, accepted = 0, placed = 0;
 };
 GenStats gStats;
 
@@ -82,9 +83,9 @@ Shape shapeAround(BlockPos const& src, GenerationSettings const& g) {
 }
 
 PerlinSimplexNoise const& shapeNoise() {
-    static std::unique_ptr<PerlinSimplexNoise> noise;
-    if (!noise) noise = std::make_unique<PerlinSimplexNoise>(static_cast<int64_t>(javaHash("corundum")), -4, 4);
-    return *noise;
+    // world generation runs on several threads: a function-local static is initialised once, safely
+    static PerlinSimplexNoise const noise(static_cast<int64_t>(javaHash("corundum")), -4, 4);
+    return noise;
 }
 
 // ---- biome / dimension filters ----------------------------------------------------------------------
@@ -384,8 +385,8 @@ std::pair<int, int> caveColors(BlockPos const& src) {
 }
 bool caveBiomeAllowed(std::string const& biome) { return biomeAllowed(biome, cfg().generationSettings.biomes); }
 std::string caveGenStats() {
-    return "chunks=" + std::to_string(gStats.chunks) + " sources=" + std::to_string(gStats.sources) + " accepted="
-         + std::to_string(gStats.accepted) + " placed=" + std::to_string(gStats.placed);
+    return "chunks=" + std::to_string(gStats.chunks.load()) + " sources=" + std::to_string(gStats.sources.load())
+         + " accepted=" + std::to_string(gStats.accepted.load()) + " placed=" + std::to_string(gStats.placed.load());
 }
 std::vector<BlockPos> caveSourcesNear(int cx, int cz, int radius) {
     std::vector<BlockPos> out;

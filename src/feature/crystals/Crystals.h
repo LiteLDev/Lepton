@@ -152,7 +152,8 @@ inline constexpr std::array<CrystalColor, 9> kColors{{
 // ---- tracked positions --------------------------------------------------------------------------
 
 /// Positions of the unit's ticking blocks (unwaxed corundum, lamps, magnets), kept in sync from
-/// block changes and saved in the world DB (lp:crystals:<kind>).
+/// block changes and saved in the world DB (lp:crystals:<kind>). track / untrack may be called from
+/// world generation threads (applied on the next server tick); tracked() is server-thread only.
 enum class Kind { Corundum, Lamp, Magnet, Count };
 [[nodiscard]] std::set<core::GlobalPos> const& tracked(Kind kind);
 void                                         track(Kind kind, core::GlobalPos const& pos);
@@ -177,6 +178,9 @@ bool destroyBlock(BlockSource& region, BlockPos const& pos, bool drop);
 /// near `pos` (within 64 blocks).
 void spawnParticle(BlockSource& region, std::string const& effect, Vec3 const& pos,
                    std::vector<std::pair<std::string, float>> const& vars = {});
+/// The same for one player only (client-side effects sampled per player, like Java's animateTick).
+void spawnParticleFor(Player const& player, BlockSource& region, std::string const& effect, Vec3 const& pos,
+                      std::vector<std::pair<std::string, float>> const& vars = {});
 /// Plays a level sound event at the block.
 void playSound(BlockSource& region, BlockPos const& pos, int levelSoundEvent, std::string const& blockId = {});
 /// Java randomTickSpeed equivalent of the world (Bedrock gamerule randomtickspeed).

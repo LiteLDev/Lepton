@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <mutex>
+#include <thread>
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/world/BlockChangedEvent.h"
@@ -62,20 +64,36 @@ std::vector<std::string> corundumIds() {
 
 bool hasTag(Block const& b, char const* tag) { return b.hasTag(HashedString(tag)); }
 
+namespace {
+// precomputed tag hashes: these checks run in hot paths (neighbour updates, beam walks)
+struct TagHashes {
+    HashedString corundum{"lepton:corundum"}, waxed{"lepton:waxed_corundum"}, cluster{"lepton:corundum_cluster"},
+        pane{"lepton:corundum_pane"}, lamp{"lepton:crystal_lamp"};
+    std::array<HashedString, 9> colors{
+        HashedString("lepton:crystal_color_red"),    HashedString("lepton:crystal_color_orange"),
+        HashedString("lepton:crystal_color_yellow"), HashedString("lepton:crystal_color_green"),
+        HashedString("lepton:crystal_color_blue"),   HashedString("lepton:crystal_color_indigo"),
+        HashedString("lepton:crystal_color_violet"), HashedString("lepton:crystal_color_white"),
+        HashedString("lepton:crystal_color_black")};
+};
+TagHashes const& tags() {
+    static TagHashes const t;
+    return t;
+}
+} // namespace
+
 int colorOf(Block const& b) {
-    auto const& name = b.getTypeName();
-    if (!name.starts_with("lepton:")) return -1;
-    for (int i = 0; i < static_cast<int>(kColors.size()); ++i) {
-        std::string tag = "lepton:crystal_color_" + std::string(kColors[i].name);
-        if (b.hasTag(HashedString(tag))) return i;
-    }
+    if (!b.getTypeName().starts_with("lepton:")) return -1;
+    auto const& t = tags();
+    for (int i = 0; i < static_cast<int>(kColors.size()); ++i)
+        if (b.hasTag(t.colors[i])) return i;
     return -1;
 }
-bool isCorundum(Block const& b) { return hasTag(b, "lepton:corundum"); }
-bool isWaxedCorundum(Block const& b) { return hasTag(b, "lepton:waxed_corundum"); }
-bool isCluster(Block const& b) { return hasTag(b, "lepton:corundum_cluster"); }
-bool isPane(Block const& b) { return hasTag(b, "lepton:corundum_pane"); }
-bool isLamp(Block const& b) { return hasTag(b, "lepton:crystal_lamp"); }
+bool isCorundum(Block const& b) { return b.hasTag(tags().corundum); }
+bool isWaxedCorundum(Block const& b) { return b.hasTag(tags().waxed); }
+bool isCluster(Block const& b) { return b.hasTag(tags().cluster); }
+bool isPane(Block const& b) { return b.hasTag(tags().pane); }
+bool isLamp(Block const& b) { return b.hasTag(tags().lamp); }
 bool isMagnet(Block const& b) { return b.getTypeName() == "lepton:magnet"; }
 bool isMagnetized(Block const& b) { return b.getTypeName() == "lepton:magnetized_block"; }
 
@@ -157,19 +175,19 @@ int32_t JavaRandom::nextInt(int32_t bound) {
     do {
         bits = next(31);
         val  = bits % bound;
-    } while (bits - val + (bound - 1) < 0);
+    } while (static_cast<int32_t>(static_cast<uint32_t>(bits) - static_cast<uint32_t>(val) + static_cast<uint32_t>(bound - 1)) < 0);
     return val;
 }
 
 int32_t JavaRandom::nextInt(int32_t origin, int32_t bound) {
     int32_t r = nextInt();
     if (origin < bound) {
-        int32_t n = bound - origin, m = n - 1;
+        int32_t n = static_cast<int32_t>(static_cast<uint32_t>(bound) - static_cast<uint32_t>(origin)), m = n - 1;
         if ((n & m) == 0) {
             r = (r & m) + origin;
         } else if (n > 0) {
             for (int32_t u = static_cast<int32_t>(static_cast<uint32_t>(r) >> 1);
-                 u + m - (r = u % n) < 0;
+                 static_cast<int32_t>(static_cast<uint32_t>(u) + static_cast<uint32_t>(m) - static_cast<uint32_t>(r = u % n)) < 0;
                  u = static_cast<int32_t>(static_cast<uint32_t>(nextInt()) >> 1)) {}
             r += origin;
         } else {
@@ -204,10 +222,11 @@ TrackState& ts() {
 constexpr char const* kKindKey[] = {"lp:crystals:corundum", "lp:crystals:lamps", "lp:crystals:magnets"};
 
 void loadTracked() {
+    // merge: blocks tracked since the world opened (spawn chunks generated before the world is
+    // ready) are kept; onWorldClosed resets everything
     auto& s = ts();
-    for (auto& set : s.sets) set.clear();
-    s.dirty.fill(false);
     for (size_t k = 0; k < s.sets.size(); ++k) {
+        s.dirty[k] = !s.sets[k].empty();
         auto j = game::db::load(kKindKey[k]);
         if (!j || !j->is_array()) continue;
         for (auto const& e : *j)
@@ -229,12 +248,58 @@ void saveTracked() {
 }
 } // namespace
 
+namespace {
+// World generation runs on worker threads: their changes are queued and applied on the server
+// thread (the only thread that reads the sets).
+std::thread::id& mainThread() {
+    static std::thread::id id;
+    return id;
+}
+struct PendingTrack {
+    Kind            kind;
+    core::GlobalPos pos;
+    bool            add;
+};
+std::mutex& pendingMutex() {
+    static std::mutex m;
+    return m;
+}
+std::vector<PendingTrack>& pendingTracks() {
+    static std::vector<PendingTrack> v;
+    return v;
+}
+/// Before the first server tick the server thread is unknown: everything is queued.
+bool offThread() { return mainThread() == std::thread::id{} || std::this_thread::get_id() != mainThread(); }
+void applyTrack(Kind kind, core::GlobalPos const& pos, bool add) {
+    auto k = static_cast<size_t>(kind);
+    if (add ? ts().sets[k].insert(pos).second : ts().sets[k].erase(pos) > 0) ts().dirty[k] = true;
+}
+void drainPending() {
+    std::vector<PendingTrack> list;
+    {
+        std::lock_guard lock(pendingMutex());
+        list.swap(pendingTracks());
+    }
+    for (auto const& p : list) applyTrack(p.kind, p.pos, p.add);
+}
+} // namespace
+
 std::set<core::GlobalPos> const& tracked(Kind kind) { return ts().sets[static_cast<size_t>(kind)]; }
 void track(Kind kind, core::GlobalPos const& pos) {
-    if (ts().sets[static_cast<size_t>(kind)].insert(pos).second) ts().dirty[static_cast<size_t>(kind)] = true;
+    if (offThread()) {
+        std::lock_guard lock(pendingMutex());
+        pendingTracks().push_back({kind, pos, true});
+        return;
+    }
+    applyTrack(kind, pos, true);
 }
 void untrack(Kind kind, core::GlobalPos const& pos) {
-    if (ts().sets[static_cast<size_t>(kind)].erase(pos)) ts().dirty[static_cast<size_t>(kind)] = true;
+    if (offThread()) {
+        std::lock_guard lock(pendingMutex());
+        pendingTracks().push_back({kind, pos, false});
+        return;
+    }
+    applyTrack(kind, pos, false);
 }
 std::optional<Kind> kindOf(Block const& b) {
     if (isCorundum(b)) return Kind::Corundum;
@@ -317,8 +382,9 @@ bool destroyBlock(BlockSource& region, BlockPos const& pos, bool drop) {
     return level->destroyBlock(region, pos, drop, ctx);
 }
 
-void spawnParticle(BlockSource& region, std::string const& effect, Vec3 const& pos,
-                   std::vector<std::pair<std::string, float>> const& vars) {
+namespace {
+void sendParticle(BlockSource& region, std::string const& effect, Vec3 const& pos,
+                  std::vector<std::pair<std::string, float>> const& vars, Player const* only) {
     // MolangVariableMap has no exported default constructor: an all-zero object is an empty map
     // (two empty vectors and a bool); fill it, copy it with the inline copy constructor, destroy it.
     struct alignas(MolangVariableMap) Raw {
@@ -334,8 +400,22 @@ void spawnParticle(BlockSource& region, std::string const& effect, Vec3 const& p
     tmp.~MolangVariableMap();
     auto dim = static_cast<uchar>(static_cast<int>(region.getDimensionId()));
     SpawnParticleEffectPacket pkt(SpawnParticleEffectPacketPayload(pos, effect, dim, std::move(map)));
+    if (only) {
+        pkt.sendTo(*only);
+        return;
+    }
     pkt.sendTo(BlockPos{static_cast<int>(std::floor(pos.x)), static_cast<int>(std::floor(pos.y)), static_cast<int>(std::floor(pos.z))},
                region.getDimensionId());
+}
+} // namespace
+
+void spawnParticle(BlockSource& region, std::string const& effect, Vec3 const& pos,
+                   std::vector<std::pair<std::string, float>> const& vars) {
+    sendParticle(region, effect, pos, vars, nullptr);
+}
+void spawnParticleFor(Player const& player, BlockSource& region, std::string const& effect, Vec3 const& pos,
+                      std::vector<std::pair<std::string, float>> const& vars) {
+    sendParticle(region, effect, pos, vars, &player);
 }
 
 void playSound(BlockSource& region, BlockPos const& pos, int event, std::string const& blockId) {
@@ -383,9 +463,12 @@ public:
             auto gp = game::globalPos(region, ev.pos());
             if (auto k = kindOf(ev.previousBlock())) untrack(*k, gp);
             if (auto k = kindOf(ev.newBlock())) track(*k, gp);
+            if (offThread()) return;
             for (auto& fn : changeListeners()) fn(region, ev.pos(), ev.previousBlock(), ev.newBlock());
         }));
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
+            mainThread() = std::this_thread::get_id();
+            drainPending();
             ++tickCounter();
             for (auto& fn : tickListeners()) fn();
         }));
@@ -395,6 +478,10 @@ public:
             game::db::onWorldReady([] { loadTracked(); });
             game::db::onWorldSave([] { saveTracked(); });
             game::db::onWorldClosed([] {
+                {
+                    std::lock_guard lock(pendingMutex());
+                    pendingTracks().clear();
+                }
                 ts() = TrackState{};
                 powerCache() = PowerCache{};
             });

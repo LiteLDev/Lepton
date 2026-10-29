@@ -26,6 +26,7 @@
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
 #include "game/Items.h"
+#include "game/WorldDb.h"
 #include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -104,14 +105,14 @@ void randomTick(BlockSource& region, BlockPos const& pos) {
 
 // ---- particles (Java CorundumBlock#animateTick, sent from the server) -----------------------------
 
-void animateTick(BlockSource& region, BlockPos const& pos, Block const& self) {
+void animateTick(Player const& viewer, BlockSource& region, BlockPos const& pos, Block const& self) {
     int c = colorOf(self);
     if (c < 0) return;
     uint32_t col = kColors[c].beacon;
     float    r = ((col >> 16) & 255) / 255.f, g = ((col >> 8) & 255) / 255.f, b = (col & 255) / 255.f;
     if (canGrow(region, pos, self)) {
         Vec3 at{static_cast<float>(pos.x + rand01()), static_cast<float>(pos.y + rand01()), static_cast<float>(pos.z + rand01())};
-        spawnParticle(region, "lepton:corundum_grow", at,
+        spawnParticleFor(viewer, region, "lepton:corundum_grow", at,
                       {{"r", r}, {"g", g}, {"b", b}, {"dx", static_cast<float>(rand01())}, {"dy", static_cast<float>(rand01())},
                        {"dz", static_cast<float>(rand01())}});
     }
@@ -123,10 +124,10 @@ void animateTick(BlockSource& region, BlockPos const& pos, Block const& self) {
         if (rand01() < 0.1) {
             double ol = (ox * ox + oy * oy + oz * oz) * -2;
             if (ol == 0) ol = 0.0001;
-            spawnParticle(region, "lepton:corundum_spark", at,
+            spawnParticleFor(viewer, region, "lepton:corundum_spark", at,
                           {{"dx", static_cast<float>(ox / ol)}, {"dy", static_cast<float>(oy / ol)}, {"dz", static_cast<float>(oz / ol)}});
         }
-        spawnParticle(region, "lepton:corundum_dust", at, {{"r", r}, {"g", g}, {"b", b}, {"size", size}});
+        spawnParticleFor(viewer, region, "lepton:corundum_dust", at, {{"r", r}, {"g", g}, {"b", b}, {"size", size}});
     }
 }
 
@@ -151,7 +152,7 @@ void particleTick() {
             BlockPos bp{it->x, it->y, it->z};
             if (!region.hasChunksAt(bp, 0, false)) continue;
             auto const& b = region.getBlock(bp);
-            if (isCorundum(b)) animateTick(region, bp, b);
+            if (isCorundum(b)) animateTick(p, region, bp, b); // each player samples its own, like Java clients
         }
         return true;
     });
@@ -288,7 +289,11 @@ LL_TYPE_INSTANCE_HOOK(
     auto const& step = getFacingDir(region);
     int  sign   = static_cast<PistonState>(mNewState) == PistonState::Retracting ? -1 : 1;
     BlockPos move{step.x * sign, step.y * sign, step.z * sign};
-    auto contains = [&](BlockPos const& p) { return std::find(attached.begin(), attached.end(), p) != attached.end(); };
+    auto const& breaking = mBreakBlocks.get();
+    auto contains = [&](BlockPos const& p) {
+        return std::find(attached.begin(), attached.end(), p) != attached.end()
+            || std::find(breaking.begin(), breaking.end(), p) != breaking.end();
+    };
     std::vector<BlockPos> extra;
     for (auto const& p : attached) {
         auto const& base = region.getBlock(p);
@@ -315,6 +320,10 @@ public:
         static bool once = false;
         if (!once) {
             once = true;
+            game::db::onWorldClosed([] {
+                tasks().clear();
+                supportQueue().clear();
+            });
             tickListeners().push_back([] {
                 if (!gInstalled) return;
                 runTasks();

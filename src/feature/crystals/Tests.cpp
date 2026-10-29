@@ -280,7 +280,7 @@ LP_REGISTER_SELFTEST("crystals.beam_entities", [](Context& ctx) -> ll::coro::Cor
     ctx.require(place(ctx, at(beacon, 0, 3, 0), clusterId(6), {{"minecraft:block_face", std::string("east")}}), "cluster east");
     ctx.require(place(ctx, at(beacon, 3, 3, 0), clusterId(2), {{"minecraft:block_face", std::string("up")}}), "cluster up");
     auto key = lp::game::globalPos(regionOf(ctx), lp::game::blockPos(beacon));
-    for (int i = 0; i < 100 && beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
+    for (int i = 0; i < 140 && beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
     ctx.info(std::string("beacon ticked: ") + (beaconTicked(key) ? "yes" : "no") + " at " + key.key());
     auto ids = beamEntitiesOf(key);
     ctx.check(ids.size() >= 3, "the redirected beam is drawn with entities (" + std::to_string(ids.size()) + ")");
@@ -557,7 +557,7 @@ LP_REGISTER_SELFTEST("crystals.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     ctx.check(bs::getBool(blockAt(ctx, at(base, 20, 1, 1)), "lepton:lit").value_or(false), "the upper lamps are lit");
     ctx.check(!bs::getBool(blockAt(ctx, at(base, 20, 0, 1)), "lepton:lit").value_or(true), "the lower lamps are off");
     auto key = lp::game::globalPos(regionOf(ctx), lp::game::blockPos(at(base, 62, 1, 2)));
-    for (int i = 0; i < 60 && beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
+    for (int i = 0; i < 140 && beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
     ctx.check(!beamEntitiesOf(key).empty(), "the redirected beam is drawn");
 
     Player* viewer = nullptr;

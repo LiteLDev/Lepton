@@ -73,9 +73,9 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     });
     cmd.overload().text("crystals").text("magnetic").execute([](CommandOrigin const& origin, CommandOutput& out) {
         auto* p = lp::commands::playerOf(origin);
-        if (!p) return out.error("Players only.");
+        if (!p) return out.error(lp::tr("lp.crystals.players_only", "Only players can use this command."));
         auto const& held = p->getSelectedItem();
-        if (lp::game::isEmpty(held)) return out.error("Hold an item.");
+        if (lp::game::isEmpty(held)) return out.error(lp::trFor(*p, "lp.crystals.hold_item", "Hold an item in your main hand."));
         auto id = held.getTypeName();
         bool yes = isItemMagnetic(id);
         out.success(lp::trFor(*p, "lp.crystals.magnetic", "{} is magnetic: {}", id,

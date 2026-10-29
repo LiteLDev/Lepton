@@ -12,5 +12,7 @@
   "lp.crystals.info.disabled": "此模块已禁用。",
   "lp.crystals.magnetic": "{} 具有磁性：{}",
   "lp.crystals.yes": "是",
-  "lp.crystals.no": "否"
+  "lp.crystals.no": "否",
+  "lp.crystals.players_only": "只有玩家可以使用此命令。",
+  "lp.crystals.hold_item": "请在主手持有一个物品。"
 }

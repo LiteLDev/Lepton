@@ -32,6 +32,7 @@
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
 #include "game/Entities.h"
+#include "game/WorldDb.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
 #ifdef LP_CLIENT
@@ -234,24 +235,30 @@ void setProps(Actor& a, Piece const& p) {
 
 void clearEntities(BeaconState& st) {
     for (auto id : st.entities)
-        if (auto* a = game::entities::find(id)) game::entities::despawn(*a);
+        if (auto* a = id != -1 ? game::entities::find(id) : nullptr) game::entities::despawn(*a);
     st.entities.clear();
     st.pieces.clear();
 }
 
-void updateEntities(BlockSource& region, core::GlobalPos const& key, BeaconState& st, std::vector<Piece> const& want) {
-    bool alive = std::all_of(st.entities.begin(), st.entities.end(), [](int64_t id) { return game::entities::find(id) != nullptr; });
-    if (want == st.pieces && alive) return;
+/// st.entities[i] draws want[i] (-1: not spawned, its chunk was not loaded).
+void updateEntities(BlockSource& region, BeaconState& st, std::vector<Piece> const& want) {
+    bool alive = want == st.pieces && st.entities.size() == st.pieces.size();
+    for (size_t i = 0; alive && i < st.entities.size(); ++i) {
+        auto const& at = st.pieces[i].at;
+        // an entity in an unloaded chunk can't be found but is not gone
+        if (region.hasChunksAt(at, 0, false)
+            && (st.entities[i] == -1 || game::entities::find(st.entities[i]) == nullptr))
+            alive = false;
+    }
+    if (alive) return;
     clearEntities(st);
     for (auto const& p : want) {
-        Vec3 at{p.at.x + 0.5f, static_cast<float>(p.at.y), p.at.z + 0.5f};
-        auto* a = game::entities::spawn(region, "lepton:beacon_beam", at);
-        if (!a) continue;
-        setProps(*a, p);
-        st.entities.push_back(game::entities::idOf(*a));
+        Vec3  at{p.at.x + 0.5f, static_cast<float>(p.at.y), p.at.z + 0.5f};
+        auto* a = region.hasChunksAt(p.at, 0, false) ? game::entities::spawn(region, "lepton:beacon_beam", at) : nullptr;
+        if (a) setProps(*a, p);
+        st.entities.push_back(a ? game::entities::idOf(*a) : -1);
     }
     st.pieces = want;
-    (void)key;
 }
 
 void applyEffects(BeaconBlockActor& beacon, BlockSource& region) {
@@ -292,8 +299,9 @@ void serverTick(BeaconBlockActor& beacon, BlockSource& region) {
     uint64_t phase    = static_cast<uint32_t>(javaHash(pos.x, pos.y, pos.z)) % 20u;
     if (fresh || (currentTick() + phase) % 20 == 0) {
         st.beam  = computeBeam(region, pos);
-        bool own = !st.beam.broke && (st.beam.redirected || st.beam.quarkTint);
-        updateEntities(region, key, st, own ? piecesOf(st.beam, pos, region.getMaxHeight()) : std::vector<Piece>{});
+        // Java draws no beam for an inactive beacon (getBeamSections is empty without levels)
+        bool own = beacon.mNumLevels > 0 && !st.beam.broke && (st.beam.redirected || st.beam.quarkTint);
+        updateEntities(region, st, own ? piecesOf(st.beam, pos, region.getMaxHeight()) : std::vector<Piece>{});
         if (st.beam.redirected && !st.beam.broke && st.pieces.size() && !st.loggedRedirect) {
             st.loggedRedirect = true;
             log().info("crystals: beacon at {} {} {} redirected ({} segments)", pos.x, pos.y, pos.z, st.beam.segments.size());
@@ -339,13 +347,13 @@ void clientTick(BeaconBlockActor& beacon, BlockSource& region) {
     if (!net::serverHasMod() && !ll::service::getLevel()) return;
     auto const& pos = beacon.getPosition();
     auto        key = game::globalPos(region, pos);
-    auto&       st  = clientBeacons()[key];
-    auto        now = ++clientTicks();
+    if (clientBeacons().size() > 256 && !clientBeacons().contains(key)) clientBeacons().clear();
+    auto& st  = clientBeacons()[key];
+    auto  now = ++clientTicks();
     if (now >= st.nextCheck) {
         st.nextCheck = now + 10;
         auto beam    = computeBeam(region, pos);
         st.hide      = beam.broke || beam.redirected || beam.quarkTint;
-        if (clientBeacons().size() > 256) clientBeacons().clear();
     }
     if (st.hide) beacon.mBeamSections->clear();
 }
@@ -402,6 +410,13 @@ public:
             once = true;
             tickListeners().push_back([] {
                 if (gInstalled) cleanup();
+            });
+            // the entities belong to the closed world: forget them without despawning
+            game::db::onWorldClosed([] {
+                beacons().clear();
+#ifdef LP_CLIENT
+                clientBeacons().clear();
+#endif
             });
         }
         BeaconTickHook::hook();

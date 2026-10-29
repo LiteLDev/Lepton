@@ -283,7 +283,6 @@ struct Moving {
     bs::Changes           states;
     int                   facing;
     int                   ticksLeft;
-    Block const*          block = nullptr; ///< the moving state (registry blocks live for the session)
 };
 std::vector<Moving>& moving() {
     static std::vector<Moving> m;
@@ -338,8 +337,7 @@ void loadMoving() {
                             e.value("id", std::string{}),
                             statesFromJson(e.value("st", nlohmann::json::array())),
                             e.value("f", 0),
-                            e.value("t", 1),
-                            nullptr});
+                            e.value("t", 1)});
     }
 }
 
@@ -352,29 +350,48 @@ DataLoadHelper& loadHelper() {
     return *reinterpret_cast<DataLoadHelper*>(&raw);
 }
 
-std::string saveBlockActor(BlockSource& region, BlockPos const& pos) {
-    auto* be = region.getBlockEntity(pos);
-    if (!be) return {};
-    CompoundTag tag;
-    auto        ctx = SaveContextFactory::createCloneSaveContext();
-    if (!be->save(tag, *ctx)) return {};
+/// A block actor's data while its block moves, plus the container items (dropped if the data
+/// can't be put back, so nothing is ever lost).
+struct SavedActor {
+    std::unique_ptr<CompoundTag> tag;
+    std::vector<ItemStack>       items;
+};
+
+SavedActor saveBlockActor(BlockSource& region, BlockPos const& pos) {
+    SavedActor out;
+    auto*      be = region.getBlockEntity(pos);
+    if (!be) return out;
+    out.tag  = std::make_unique<CompoundTag>();
+    auto ctx = SaveContextFactory::createCloneSaveContext();
+    if (!be->save(*out.tag, *ctx)) out.tag.reset();
     // empty the original container so replacing the block never drops its items
     if (auto* main = be->_getMainComponent())
         if (auto* container = main->getContainer())
-            for (int i = 0; i < container->getContainerSize(); ++i) container->setItem(i, ItemStack{});
-    return tag.toSnbt(SnbtFormat::Minimize, 0);
+            for (int i = 0; i < container->getContainerSize(); ++i) {
+                out.items.push_back(container->getItem(i));
+                container->setItem(i, ItemStack{});
+            }
+    return out;
 }
 
-BlockActor* restoreBlockActor(BlockSource& region, BlockPos const& pos, std::string const& snbt) {
+BlockActor* restoreBlockActor(BlockSource& region, BlockPos const& pos, SavedActor const& saved) {
     auto* be = region.getBlockEntity(pos);
-    if (!be || snbt.empty()) return be;
-    auto tag = CompoundTag::fromSnbt(snbt);
-    if (!tag) return be;
-    tag->putInt("x", pos.x);
-    tag->putInt("y", pos.y);
-    tag->putInt("z", pos.z);
-    be->load(region.getLevel(), *tag, loadHelper());
-    be->refresh(region);
+    bool  ok = saved.tag == nullptr && saved.items.empty();
+    if (be && saved.tag) {
+        auto tag = saved.tag->clone();
+        tag->putInt("x", pos.x);
+        tag->putInt("y", pos.y);
+        tag->putInt("z", pos.z);
+        be->load(region.getLevel(), *tag, loadHelper());
+        be->refresh(region);
+        ok = true;
+    }
+    if (!ok && !saved.items.empty()) {
+        Vec3 at{pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f};
+        for (auto const& item : saved.items)
+            if (!game::isEmpty(item)) region.getLevel().getSpawner().spawnItem(region, item, nullptr, at, 10);
+        log().warn("crystals: a moved block lost its block data at {} {} {}; its items were dropped", pos.x, pos.y, pos.z);
+    }
     return be;
 }
 
@@ -489,11 +506,11 @@ void finalizeMove(BlockSource& region, Moving const& m) {
         game::clearBlock(region, dest); // the block was taken away meanwhile
         return;
     }
-    std::string tag = saveBlockActor(region, src);
+    auto saved = saveBlockActor(region, src);
     game::clearBlock(region, src);
     setBlock(region, dest, cur);
     playSound(region, dest, static_cast<int>(SoundEvent::Place), m.blockId);
-    auto* be = restoreBlockActor(region, dest, tag);
+    auto* be = restoreBlockActor(region, dest, saved);
     auto const& placed = region.getBlock(dest);
     if (m.blockId == "minecraft:hopper") hopperMoved(region, dest, m.facing, placed, be);
     else if (m.blockId == "minecraft:stonecutter_block") stonecutterMoved(region, dest);
@@ -517,7 +534,7 @@ bool moveBlock(BlockSource& region, BlockPos const& magnetPos, bool push, int di
     if (action == Move::Break) destroyBlock(region, endPos, true);
     setBlock(region, endPos, *placeholder);
     // Java: placed at the block event, finished on the placeholder's third tick
-    moving().push_back({game::globalPos(region, endPos), targetState.getTypeName(), bs::all(targetState), moveDir, 3, &targetState});
+    moving().push_back({game::globalPos(region, endPos), targetState.getTypeName(), bs::all(targetState), moveDir, 3});
     return true;
 }
 // ---- entities --------------------------------------------------------------------------------------
@@ -581,7 +598,8 @@ void magnetize(BlockSource& region, BlockPos const& pos, Block const& state, int
             // the moving block's own state decides whether the flux passes
             auto gp = game::globalPos(region, targetPos);
             for (auto const& m : moving())
-                if (m.pos == gp && m.block) targetState = m.block;
+                if (m.pos == gp)
+                    if (auto const* b = bs::of(m.blockId, m.states); b || (b = bs::of(m.blockId))) targetState = b;
         }
         if (!collisionEmpty(region, targetPos, *targetState)) break;
     }

@@ -12,5 +12,7 @@
   "lp.crystals.info.disabled": "This module is disabled.",
   "lp.crystals.magnetic": "{} is magnetic: {}",
   "lp.crystals.yes": "yes",
-  "lp.crystals.no": "no"
+  "lp.crystals.no": "no",
+  "lp.crystals.players_only": "Only players can use this command.",
+  "lp.crystals.hold_item": "Hold an item in your main hand."
 }
