@@ -32,6 +32,7 @@
 #include "mc/world/level/block/CachedComponentData.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/phys/AABB.h"
+#include "mc/world/redstone/circuit/CircuitSystem.h"
 
 #include "feature/variantcontainers/ItemsContainer.h"
 #include "feature/variantcontainers/VariantContainers.h"
@@ -132,6 +133,11 @@ void setChestBlock(BlockSource& region, BlockPos const& pos, Block const* next) 
     if (next && *next != region.getBlock(pos)) game::setBlock(region, pos, *next);
 }
 
+/// Strength of the trapped chest's redstone producer (Java getSignal = viewers, max 15).
+void setTrappedPower(BlockSource& region, BlockPos const& pos, int power) {
+    if (auto* sys = region.getDimension().mCircuitSystem.get()) sys->setStrength(pos, power);
+}
+
 void soundAtChest(BlockSource& region, ChestStorage const& st, bool open) {
     auto  k = game::blockPos(st.key);
     float x = k.x + 0.5f, y = k.y + 0.5f, z = k.z + 0.5f;
@@ -172,6 +178,8 @@ void tickAnims() {
             auto        s = chestState(b);
             if (!s) continue;
             setChestBlock(*region, h, withChest(b, std::nullopt, std::nullopt, frame, s->trapped ? std::optional<int>(power) : std::nullopt));
+            // a state change does not always rebuild the circuit component: set its strength too
+            if (s->trapped) setTrappedPower(*region, h, power);
         }
         if (!open && a.openness == 0) done.push_back(key);
     }

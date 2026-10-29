@@ -255,6 +255,15 @@
         }
       },
       {
+        "condition": "q.block_state('lepton:power') == 0",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 0,
+            "strongly_powered_face": "down"
+          }
+        }
+      },
+      {
         "condition": "q.block_state('lepton:power') == 1",
         "components": {
           "minecraft:redstone_producer": {

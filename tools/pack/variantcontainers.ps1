@@ -203,8 +203,10 @@ function Write-ChestBlock([string]$Mat, $Info, [bool]$Wooden, [bool]$Trapped) {
             })
     }
     if ($Trapped) {
-        # Java TrappedChestBlock: weak power on every side = viewers (max 15), strong power downwards
-        for ($p = 1; $p -le 15; $p++) {
+        # Java TrappedChestBlock: weak power on every side = viewers (max 15), strong power downwards.
+        # Power 0 keeps a (silent) producer, so the circuit component exists in every state; the
+        # module sets its strength natively whenever the viewers change.
+        for ($p = 0; $p -le 15; $p++) {
             $perms.Add([ordered]@{
                     condition  = "q.block_state('lepton:power') == $p"
                     components = [ordered]@{ 'minecraft:redstone_producer' = [ordered]@{ power = $p; strongly_powered_face = 'down' } }

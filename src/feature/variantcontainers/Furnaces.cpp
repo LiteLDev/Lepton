@@ -11,6 +11,7 @@
 #include <cmath>
 #include <map>
 #include <random>
+#include <set>
 #include <unordered_map>
 
 #include "ll/api/event/EventBus.h"
@@ -59,7 +60,27 @@ namespace lp::feature::variantcontainers {
 
 namespace bs = game::blockstates;
 
+/// Client mod -> server after the handshake: its block registry gives our furnaces the furnace block
+/// actor (then the furnace screen needs no stand-in block).
+struct FurnaceSupport {
+    static constexpr std::string_view kId = "variantcontainers:furnaces";
+    bool blockActors = false;
+};
+LP_REGISTER_MESSAGE(FurnaceSupport);
+
 namespace {
+
+std::set<std::string>& patchedClients() {
+    static std::set<std::string> s;
+    return s;
+}
+
+#ifdef LP_CLIENT
+bool registryHasFurnaceActors() {
+    auto const* b = bs::of("lepton:deepslate_furnace");
+    return b && b->getBlockType().getBlockEntityType() == BlockActorType::Furnace;
+}
+#endif
 
 uint64_t gTick = 0;
 
@@ -160,9 +181,11 @@ LL_TYPE_INSTANCE_HOOK(FurnaceTickHook, ll::memory::HookPriority::Normal, Furnace
 // ---- vanilla clients: a vanilla furnace block while the screen is open --------------------------------
 
 struct Fake {
-    int      dim;
-    BlockPos pos;
-    uint64_t since;
+    int          dim;
+    BlockPos     pos;
+    uint64_t     since;
+    Block const* shown  = nullptr; ///< our block state the stand-in was made for
+    int          resend = 0;       ///< ticks left to send it again after a state change
 };
 std::unordered_map<int64_t, Fake>& fakes() { ///< player unique id -> faked furnace
     static std::unordered_map<int64_t, Fake> m;
@@ -202,6 +225,19 @@ void tickFakes() {
         auto* p     = level ? level->getPlayer(uid) : nullptr;
         bool  open  = p && hasFurnaceOpen(*p, it->second.pos);
         if (open || (p && gTick - it->second.since < 10)) {
+            // a state change (lit / soul) sent our block to the client and replaced the stand-in:
+            // send the stand-in again (twice: the game's own update may go out after ours)
+            if (auto* r = game::regionOf(it->second.dim); p && r) {
+                auto const& cur = r->getBlock(it->second.pos);
+                if (&cur != it->second.shown) {
+                    it->second.shown  = &cur;
+                    it->second.resend = 2;
+                }
+                if (it->second.resend > 0) {
+                    --it->second.resend;
+                    if (auto const* v = vanillaFurnaceFor(cur)) sendBlock(*p, it->second.pos, *v);
+                }
+            }
             ++it;
             continue;
         }
@@ -268,11 +304,12 @@ bool openFurnace(Player& player, BlockPos const& pos) {
     if (!isVariantFurnace(b) || !furnaceAt(region, pos)) return false;
     if (player.mContainerManager.get()) return false;
     auto& sp = static_cast<ServerPlayer&>(player);
-    if (!net::hasClientMod(player)) {
-        // the client needs a furnace block actor at the position to show the screen
+    if (!patchedClients().contains(player.getUuid().asString())) {
+        // the client needs a furnace block actor at the position to show the screen: a client
+        // without our registry patch (vanilla, or an old client mod) gets a vanilla furnace there
         if (auto const* v = vanillaFurnaceFor(b)) {
             sendBlock(player, pos, *v);
-            fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick};
+            fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick, &b, 0};
         }
     }
     // what the game does for its own furnaces: a furnace container manager on the server, then the
@@ -302,6 +339,13 @@ public:
     void install() {
         FurnaceSetLitHook::hook();
         FurnaceTickHook::hook();
+        mSupport = net::onServer<FurnaceSupport>([](Player& p, FurnaceSupport const& m) {
+            if (m.blockActors) patchedClients().insert(p.getUuid().asString());
+            else patchedClients().erase(p.getUuid().asString());
+        });
+#ifdef LP_CLIENT
+        net::onServerModReady([] { net::sendToServer(FurnaceSupport{registryHasFurnaceActors()}); });
+#endif
         auto& bus = ll::event::EventBus::getInstance();
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
             ++gTick;
@@ -356,6 +400,7 @@ public:
         game::db::onWorldClosed([] {
             fakes().clear();
             recentOpen().clear();
+            patchedClients().clear();
             pendingOpens().clear();
             soulChecks().clear();
         });
@@ -363,6 +408,7 @@ public:
     void uninstall() {
         FurnaceSetLitHook::unhook();
         FurnaceTickHook::unhook();
+        net::removeHandler(mSupport);
         auto& bus = ll::event::EventBus::getInstance();
         for (auto& l : mListeners) bus.removeListener(l);
         mListeners.clear();
@@ -370,6 +416,7 @@ public:
 
 private:
     std::vector<ll::event::ListenerPtr> mListeners;
+    net::HandlerId                      mSupport = 0;
 };
 
 } // namespace lp::feature::variantcontainers

@@ -2,10 +2,15 @@
 
 #include <format>
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/server/ServerPlayer.h"
 #include "mc/server/SimulatedPlayer.h"
+#include "mc/server/sim/LookDuration.h"
+#include "mc/world/actor/ActorFlags.h"
+#include "mc/world/level/block/actor/ChestBlockActor.h"
+#include "mc/world/level/block/actor/RandomizableBlockActorContainerBase.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
@@ -33,6 +38,8 @@
 #include "game/Entities.h"
 #include "game/Items.h"
 #include "game/VirtualContainer.h"
+#include "game/WorldDb.h"
+#include "mod/Config.h"
 #include "selftest/SelfTest.h"
 
 namespace {
@@ -258,75 +265,50 @@ LP_REGISTER_SELFTEST("variantcontainers.hopper", [](Context& ctx) -> ll::coro::C
     vc::takeAll(chest);
 });
 
-LP_REGISTER_SELFTEST("variantcontainers.probe_crafter", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto pos = ctx.testPos(985, 2);
-    pos.y += 2;
-    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+// Crafting (resolved on the server by a crafter, like the crafting table on the client): eight
+// equal planks / stones make the variant, mixed ones the vanilla chest / furnace.
+LP_REGISTER_SELFTEST("variantcontainers.recipes", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(960, 4);
+    base.y += 2;
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto& region = ctx.player().getDimensionBlockSource();
-    for (std::string plank : {"minecraft:oak_planks", "minecraft:mangrove_planks", "minecraft:cobbled_deepslate"}) {
-        ctx.cleanupBlock(pos);
-        lp::game::clearBlock(region, bp(pos));
-        co_await ctx.ticks(1);
-        ctx.setBlock(pos, "minecraft:crafter");
+    struct Case {
+        std::string a, b, want;
+    };
+    std::vector<Case> cases{
+        {"minecraft:oak_planks", "minecraft:oak_planks", "lepton:oak_chest"},
+        {"minecraft:mangrove_planks", "minecraft:mangrove_planks", "lepton:mangrove_chest"},
+        {"minecraft:crimson_planks", "minecraft:crimson_planks", "lepton:crimson_chest"},
+        {"minecraft:nether_brick", "minecraft:nether_brick", "lepton:nether_brick_chest"},
+        {"minecraft:oak_planks", "minecraft:spruce_planks", "minecraft:chest"},
+        {"minecraft:cobbled_deepslate", "minecraft:cobbled_deepslate", "lepton:deepslate_furnace"},
+        {"minecraft:blackstone", "minecraft:blackstone", "lepton:blackstone_furnace"},
+        {"minecraft:cobblestone", "minecraft:blackstone", "minecraft:furnace"},
+    };
+    for (size_t i = 0; i < cases.size(); ++i) {
+        auto const& k   = cases[i];
+        auto        pos = lp::core::GlobalPos{base.dim, base.x + static_cast<int>(i) * 3, base.y, base.z};
+        auto        red = lp::core::GlobalPos{pos.dim, pos.x, pos.y + 1, pos.z};
+        ctx.require(ctx.setBlock(pos, "minecraft:crafter"), "crafter placed");
         co_await ctx.ticks(1);
         auto* c = containerAt(region, bp(pos));
-        if (!c) {
-            ctx.info("no crafter container");
-            co_return;
-        }
-        for (int i = 0; i < 9; ++i)
-            if (i != 4) c->setItem(i, makeItem(plank, 1));
-        auto red = lp::core::GlobalPos{pos.dim, pos.x + 1, pos.y, pos.z};
+        ctx.require(c != nullptr, "crafter container");
+        for (int s = 0; s < 9; ++s)
+            if (s != 4) c->setItem(s, makeItem(s == 0 ? k.b : k.a, 1));
         clearItemsAround(region, bp(pos));
         ctx.setBlock(red, "minecraft:redstone_block");
-        co_await ctx.ticks(10);
-        AABB box{Vec3{pos.x - 3.f, pos.y - 3.f, pos.z - 3.f}, Vec3{pos.x + 4.f, pos.y + 4.f, pos.z + 4.f}};
-        for (auto* d : lp::game::entities::inBox(region, box, "minecraft:item"))
-            ctx.info(std::format("crafter {} -> {}", plank, lp::game::itemId(static_cast<ItemActor*>(d)->item())));
+        std::string got;
+        for (int t = 0; t < 20 && got.empty(); ++t) {
+            co_await ctx.ticks(1);
+            AABB box{Vec3{pos.x - 2.f, pos.y - 2.f, pos.z - 2.f}, Vec3{pos.x + 3.f, pos.y + 3.f, pos.z + 3.f}};
+            for (auto* d : lp::game::entities::inBox(region, box, "minecraft:item")) got = lp::game::itemId(static_cast<ItemActor*>(d)->item());
+        }
+        ctx.check(got == k.want, std::format("{} + {} crafts {} (got {})", k.a, k.b, k.want, got));
         clearItemsAround(region, bp(pos));
         lp::game::clearBlock(region, bp(red));
+        lp::game::clearBlock(region, bp(pos));
     }
 });
-
-LP_REGISTER_SELFTEST("variantcontainers.probe_comparator", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto chest = ctx.testPos(990, 2);
-    auto comp  = lp::core::GlobalPos{chest.dim, chest.x, chest.y, chest.z + 1};
-    ctx.require(co_await ctx.ensureLoaded(chest), "test area loaded");
-    auto& region = ctx.player().getDimensionBlockSource();
-    for (std::string kind : {"minecraft:chest", "lepton:prismarine_chest", "lepton:deepslate_furnace"}) {
-        ctx.cleanupBlock(chest);
-        ctx.cleanupBlock(comp);
-        if (kind == "minecraft:chest") {
-            ctx.setBlock(chest, "minecraft:chest");
-            co_await ctx.ticks(1);
-            if (auto* c = containerAt(region, bp(chest))) c->setItem(0, makeItem("minecraft:cobblestone", 64));
-        } else if (kind == "lepton:deepslate_furnace") {
-            ctx.setBlock(chest, kind);
-            co_await ctx.ticks(1);
-            if (auto* c = containerAt(region, bp(chest))) c->setItem(0, makeItem("minecraft:cobblestone", 64));
-        } else {
-            placeChest(ctx, chest, kind, "north", "single");
-            vc::setItems(chest, {makeItem("minecraft:cobblestone", 64)});
-        }
-        for (std::string dir : {"north", "south", "east", "west"}) {
-            auto const* cmp = bs::of("minecraft:unpowered_comparator", {{"minecraft:cardinal_direction", dir}});
-            if (!cmp) {
-                ctx.info("no comparator state " + dir);
-                continue;
-            }
-            lp::game::clearBlock(region, bp(comp));
-            co_await ctx.ticks(1);
-            lp::game::setBlock(region, bp(comp), *cmp);
-            co_await ctx.ticks(8);
-            auto* actor = region.getBlockEntity(bp(comp));
-            int   out   = actor ? static_cast<ComparatorBlockActor*>(actor)->mOutput : -1;
-            ctx.info(std::format("{} comparator {} -> {} ({})", kind, dir, out, region.getBlock(bp(comp)).getTypeName()));
-        }
-        lp::game::clearBlock(region, bp(comp));
-        vc::takeAll(chest);
-    }
-});
-
 LP_REGISTER_SELFTEST("variantcontainers.comparator", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto chest = ctx.testPos(930, 2);
     auto comp  = lp::core::GlobalPos{chest.dim, chest.x, chest.y, chest.z + 1};
@@ -429,4 +411,316 @@ LP_REGISTER_SELFTEST("variantcontainers.soul", [](Context& ctx) -> ll::coro::Cor
     ctx.setBlock(below, "minecraft:stone");
     co_await ctx.ticks(3);
     ctx.check(bs::getBool(region.getBlock(bp(pos)), "lepton:soul") == false, "no soul state on stone");
+});
+
+// A player places chests (Java ChestBlock#getStateForPlacement): next to an equal chest facing the
+// same way they pair up, sneaking keeps the new chest single.
+LP_REGISTER_SELFTEST("variantcontainers.placement", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto a = ctx.testPos(983, 6);
+    auto b = lp::core::GlobalPos{a.dim, a.x + 1, a.y, a.z};
+    auto c = lp::core::GlobalPos{a.dim, a.x + 2, a.y, a.z};
+    ctx.require(co_await ctx.ensureLoaded(a), "test area loaded");
+    auto* sp     = static_cast<SimulatedPlayer*>(&ctx.player());
+    auto& region = sp->getDimensionBlockSource();
+    for (auto const& p : {a, b, c}) {
+        ctx.cleanupBlock(p);
+        lp::game::clearBlock(region, bp(p));
+        vc::takeAll(p);
+    }
+    auto place = [&](lp::core::GlobalPos const& p, bool sneak) {
+        sp->teleport(Vec3{p.x + 0.5f, static_cast<float>(p.y), p.z + 3.5f}, DimensionType(p.dim));
+        sp->simulateLookAt(Vec3{p.x + 0.5f, p.y - 0.5f, p.z + 0.5f}, sim::LookDuration::Instant);
+        sp->setSneaking(sneak);
+        auto chest = makeItem("lepton:spruce_chest", 1);
+        bool ok = sp->simulateUseItemOnBlock(chest, BlockPos{p.x, p.y - 1, p.z}, ScriptModuleMinecraft::ScriptFacing::Up, Vec3{0.5f, 1.f, 0.5f});
+        sp->setSneaking(false);
+        return ok;
+    };
+    ctx.require(place(a, false), "first chest placed");
+    co_await ctx.ticks(12);
+    auto sa = vcf::chestState(region.getBlock(bp(a)));
+    ctx.require(sa.has_value(), "the first chest is there");
+    ctx.check(sa->facing == 0, std::format("it faces the player (south), got {}", sa->facing));
+    ctx.require(place(b, false), "second chest placed");
+    co_await ctx.ticks(12);
+    sa      = vcf::chestState(region.getBlock(bp(a)));
+    auto sb = vcf::chestState(region.getBlock(bp(b)));
+    ctx.require(sa && sb, "both chests are there");
+    ctx.check(sb->type == vcf::ChestType::Left && sa->type == vcf::ChestType::Right, "placed next to it, the chests pair");
+    ctx.require(place(c, true), "third chest placed while sneaking");
+    co_await ctx.ticks(12);
+    auto sc = vcf::chestState(region.getBlock(bp(c)));
+    ctx.check(sc && sc->type == vcf::ChestType::Single, "a sneaking placement stays single");
+    sb = vcf::chestState(region.getBlock(bp(b)));
+    ctx.check(sb && sb->type == vcf::ChestType::Left, "the pair is unchanged");
+    // a vanilla chest placed the same way: its cardinal direction is its front (structure chests
+    // turn vanilla fronts into ours)
+    auto d = lp::core::GlobalPos{a.dim, a.x + 4, a.y, a.z};
+    ctx.cleanupBlock(d);
+    sp->teleport(Vec3{d.x + 0.5f, static_cast<float>(d.y), d.z + 3.5f}, DimensionType(d.dim));
+    sp->simulateLookAt(Vec3{d.x + 0.5f, d.y - 0.5f, d.z + 0.5f}, sim::LookDuration::Instant);
+    auto vchest = makeItem("minecraft:chest", 1);
+    sp->simulateUseItemOnBlock(vchest, BlockPos{d.x, d.y - 1, d.z}, ScriptModuleMinecraft::ScriptFacing::Up, Vec3{0.5f, 1.f, 0.5f});
+    co_await ctx.ticks(3);
+    auto vcard = bs::getString(region.getBlock(bp(d)), "minecraft:cardinal_direction").value_or("?");
+    ctx.check(vcf::dirIndex(vcard) == sa->facing, std::format("a vanilla chest placed the same way has cardinal direction {} (our front {})", vcard, sa->facing));
+});
+
+// Trapped chests power redstone while open (weak power around, strong power below).
+LP_REGISTER_SELFTEST("variantcontainers.trapped_redstone", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto chest = ctx.testPos(993, 2);
+    chest.y += 1;
+    auto lamp = lp::core::GlobalPos{chest.dim, chest.x + 1, chest.y, chest.z};
+    ctx.require(co_await ctx.ensureLoaded(chest), "test area loaded");
+    auto& p      = ctx.player();
+    auto& region = p.getDimensionBlockSource();
+    vc::takeAll(chest);
+    ctx.require(placeChest(ctx, chest, "lepton:trapped_warped_chest", "north", "single"), "trapped chest placed");
+    ctx.require(ctx.setBlock(lamp, "minecraft:redstone_lamp"), "lamp next to it");
+    co_await ctx.ticks(4);
+    ctx.check(region.getBlock(bp(lamp)).getTypeName() == "minecraft:redstone_lamp", "the lamp is off while the chest is closed");
+    ctx.require(vcf::openChest(p, bp(chest)), "the chest opens");
+    co_await ctx.ticks(10);
+    ctx.check(region.getBlock(bp(lamp)).getTypeName() == "minecraft:lit_redstone_lamp", "the open trapped chest lights the lamp");
+    vc::closeAll(chest);
+    co_await ctx.ticks(16);
+    ctx.check(region.getBlock(bp(lamp)).getTypeName() == "minecraft:redstone_lamp", "closing turns the lamp off");
+});
+
+// Donk chest: a wooden variant chest goes onto a tamed donkey and drops back as itself.
+LP_REGISTER_SELFTEST("variantcontainers.donk", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(987, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto* sp     = static_cast<SimulatedPlayer*>(&ctx.player());
+    auto& region = sp->getDimensionBlockSource();
+    clearItemsAround(region, bp(pos));
+    Vec3  at{pos.x + 0.5f, static_cast<float>(pos.y), pos.z + 0.5f};
+    auto* donkey = lp::game::entities::spawn(region, "minecraft:donkey", at);
+    ctx.require(donkey != nullptr, "donkey spawned");
+    auto id = lp::game::entities::idOf(*donkey);
+    if (donkey->isBaby()) lp::game::entities::triggerEvent(*donkey, "minecraft:ageable_grow_up");
+    lp::game::entities::triggerEvent(*donkey, "minecraft:on_tame");
+    co_await ctx.ticks(3);
+    donkey = lp::game::entities::find(id);
+    ctx.require(donkey != nullptr, "donkey still there");
+    ctx.check(donkey->getStatusFlag(ActorFlags::Tamed), "the donkey is tamed");
+    sp->teleport(Vec3{at.x + 1.5f, at.y, at.z}, donkey->getDimensionId());
+    sp->simulateSetItem(makeItem("lepton:birch_chest", 2), true, 0);
+    co_await ctx.ticks(2);
+    donkey = lp::game::entities::find(id);
+    ctx.require(donkey != nullptr, "donkey still there");
+    ctx.check(sp->simulateInteract(*donkey), "interacted with the donkey");
+    co_await ctx.ticks(3);
+    donkey = lp::game::entities::find(id);
+    ctx.require(donkey != nullptr, "donkey still there");
+    ctx.check(donkey->getStatusFlag(ActorFlags::Chested), "the donkey carries a chest");
+    ctx.check(sp->isCreative() || sp->getSelectedItem().mCount == 1, "one chest was used");
+    donkey->kill();
+    co_await ctx.ticks(10);
+    auto dropAt = bp(pos);
+    ctx.check(itemsAround(region, dropAt, "lepton:birch_chest") == 1, "the donkey dropped the birch chest");
+    ctx.check(itemsAround(region, dropAt, "minecraft:chest") == 0, "and no vanilla chest");
+    clearItemsAround(region, dropAt);
+});
+
+// Structure chests: a vanilla chest that gets a structure loot table becomes the structure's
+// variant (desert pyramid: birch) and rolls the loot when first opened.
+LP_REGISTER_SELFTEST("variantcontainers.worldgen", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(990, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p      = ctx.player();
+    auto& region = p.getDimensionBlockSource();
+    vc::takeAll(pos);
+    auto const* v = bs::of("minecraft:chest", {{"minecraft:cardinal_direction", std::string("west")}});
+    ctx.require(v != nullptr, "vanilla chest state");
+    ctx.cleanupBlock(pos);
+    ctx.require(lp::game::setBlock(region, bp(pos), *v), "vanilla chest placed");
+    co_await ctx.ticks(1);
+    auto* actor = region.getBlockEntity(bp(pos));
+    ctx.require(actor && actor->mType == BlockActorType::Chest, "chest block actor");
+    static_cast<RandomizableBlockActorContainerBase*>(static_cast<ChestBlockActor*>(actor))->setLootTable("loot_tables/chests/desert_pyramid.json", 1234);
+    co_await ctx.ticks(3);
+    auto const& b = region.getBlock(bp(pos));
+    ctx.check(b.getTypeName() == "lepton:birch_chest", std::format("the desert pyramid chest became a birch chest ({})", b.getTypeName()));
+    auto s = vcf::chestState(b);
+    ctx.check(s && s->facing == 1, std::format("it keeps the vanilla chest's facing (front west = 1, got {})", s ? s->facing : -1));
+    ctx.check(!vc::hasItems(pos), "the loot is not rolled yet");
+    ctx.require(vcf::openChest(p, bp(pos)), "the chest opens");
+    co_await ctx.ticks(2);
+    ctx.check(vc::hasItems(pos), "opening rolled the loot");
+    vc::closeAll(pos);
+    co_await ctx.ticks(12);
+    vc::takeAll(pos);
+});
+
+// Piglins: Bedrock's piglin AI turns on players that have a container screen open (the
+// `has_container_open` filter). A variant chest's screen is a container screen like the vanilla
+// chest's, so the player counts as having a container open while it shows.
+LP_REGISTER_SELFTEST("variantcontainers.piglins", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(996, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    vc::takeAll(pos);
+    ctx.require(placeChest(ctx, pos, "lepton:dark_oak_chest", "north", "single"), "chest placed");
+    ctx.require(vcf::openChest(p, bp(pos)), "the chest opens");
+    bool open = false;
+    for (int i = 0; i < 10 && !open; ++i) {
+        co_await ctx.ticks(1);
+        open = p.mContainerManager.get() != nullptr;
+    }
+    ctx.check(open, "the player has a container open while the chest screen shows");
+    vc::closeAll(pos);
+    co_await ctx.ticks(12);
+});
+LP_REGISTER_SELFTEST("variantcontainers.gating", [](Context& ctx) {
+    auto& c     = lp::config::mut<vcf::Config>();
+    auto  saved = c;
+    c.enableRevertingWoodenChests = false;
+    ctx.check(!vcf::recipeAllowed("oak_chest_revert") && vcf::recipeAllowed("oak_chest"), "reverting off removes only the revert recipes");
+    c.enableVariantChests = false;
+    ctx.check(!vcf::recipeAllowed("oak_chest") && !vcf::recipeAllowed("trapped_dark_oak_chest") && !vcf::itemAllowed("lepton:oak_chest"),
+        "chests off removes their recipes and creative entries");
+    ctx.check(vcf::recipeAllowed("deepslate_furnace") && vcf::itemAllowed("lepton:deepslate_furnace"), "furnaces stay");
+    c.enableVariantFurnaces = false;
+    ctx.check(!vcf::recipeAllowed("deepslate_furnace") && !vcf::recipeAllowed("blackstone_smoker") && !vcf::itemAllowed("lepton:blackstone_furnace"),
+        "furnaces off removes theirs");
+    ctx.check(vcf::recipeAllowed("some_other_recipe") && vcf::itemAllowed("lepton:something_else"), "other units' content is untouched");
+    c = saved;
+});
+
+// A chest renamed in an anvil shows its name as the screen title.
+LP_REGISTER_SELFTEST("variantcontainers.name", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(998, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    vc::takeAll(pos);
+    ctx.require(placeChest(ctx, pos, "lepton:cherry_chest", "north", "single"), "chest placed");
+    lp::game::db::save("lp:variantcontainers:name:" + pos.key(), {{"name", "Loot"}});
+    ctx.require(vcf::openChest(p, bp(pos)), "the chest opens");
+    std::string title;
+    for (int i = 0; i < 10 && title.empty(); ++i) {
+        co_await ctx.ticks(1);
+        for (auto* h : lp::game::entities::ofType(vc::kHelperEntity, pos.dim)) title = h->getNameTag();
+    }
+    ctx.check(title == "Loot", std::format("the screen title is the chest's name ({})", title));
+    vc::closeAll(pos);
+    co_await ctx.ticks(12);
+    lp::game::db::erase("lp:variantcontainers:name:" + pos.key());
+});
+
+// Every block of the unit in front of the (real) player, for the client scenario's screenshots:
+// all chests, all trapped chests, the lid frames, double chests from the front and the back,
+// the furnaces (unlit, lit, soul) and both screens. On a dedicated server it is only built.
+LP_REGISTER_SELFTEST("variantcontainers.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(900, -8);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto& region = ctx.player().getDimensionBlockSource();
+    auto  at     = [&](int dx, int dz) { return lp::core::GlobalPos{base.dim, base.x + dx, base.y, base.z + dz}; };
+    auto  put    = [&](lp::core::GlobalPos const& p, std::string const& id, bs::Changes const& ch) {
+        ctx.cleanupBlock(p);
+        auto const* b = bs::of(id, ch);
+        return b && lp::game::setBlock(region, bp(p), *b);
+    };
+    auto const& mats = vcf::chestMaterials();
+    for (size_t i = 0; i < mats.size(); ++i) {
+        int dx = static_cast<int>(i) * 2;
+        ctx.check(put(at(dx, 0), "lepton:" + mats[i] + "_chest", {{"minecraft:cardinal_direction", std::string("north")}}), mats[i] + " chest");
+        ctx.check(put(at(dx, -3), "lepton:trapped_" + mats[i] + "_chest", {{"minecraft:cardinal_direction", std::string("north")}}),
+            mats[i] + " trapped chest");
+    }
+    // lid frames 0..4, a double oak chest, a double nether brick chest, an open trapped chest
+    for (int f = 0; f <= 4; ++f)
+        put(at(f * 2, -6), "lepton:oak_chest", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:lid", f}});
+    put(at(11, -6), "lepton:oak_chest", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:type", std::string("right")}});
+    put(at(12, -6), "lepton:oak_chest", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:type", std::string("left")}});
+    put(at(14, -6), "lepton:nether_brick_chest", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:type", std::string("right")}, {"lepton:lid", 4}});
+    put(at(15, -6), "lepton:nether_brick_chest", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:type", std::string("left")}, {"lepton:lid", 4}});
+    put(at(17, -6), "lepton:trapped_oak_chest", {{"minecraft:cardinal_direction", std::string("east")}, {"lepton:lid", 2}});
+    // furnaces: deepslate unlit / lit, blackstone unlit / lit / soul lit (on soul soil)
+    put(at(0, -9), "lepton:deepslate_furnace", {{"minecraft:cardinal_direction", std::string("north")}});
+    put(at(2, -9), "lepton:deepslate_furnace", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:lit", true}});
+    put(at(4, -9), "lepton:blackstone_furnace", {{"minecraft:cardinal_direction", std::string("north")}});
+    put(at(6, -9), "lepton:blackstone_furnace", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:lit", true}});
+    auto soulBase = lp::core::GlobalPos{base.dim, base.x + 8, base.y - 1, base.z - 9};
+    ctx.setBlock(soulBase, "minecraft:soul_soil");
+    put(at(8, -9), "lepton:blackstone_furnace", {{"minecraft:cardinal_direction", std::string("north")}, {"lepton:lit", true}, {"lepton:soul", true}});
+    // the lit furnaces burn for real (an idle furnace goes out at once)
+    for (int dx : {2, 6, 8}) {
+        if (auto* c = containerAt(region, bp(at(dx, -9)))) {
+            c->setItem(0, makeItem("minecraft:raw_iron", 64));
+            c->setItem(1, makeItem("minecraft:coal", 64));
+        }
+    }
+    co_await ctx.ticks(4);
+    // nothing re-paired or changed what was placed
+    auto s = vcf::chestState(region.getBlock(bp(at(11, -6))));
+    ctx.check(s && s->type == vcf::ChestType::Right, "the gallery's double chest stays paired");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) {
+        for (int dx : {0, 2, 4, 6, 8})
+            if (auto* c = containerAt(region, bp(at(dx, -9)))) c->removeAllItems();
+        co_return;
+    }
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](float dx, float dz, float yaw, float pitch) {
+        if (auto* v = ctx.player().getLevel().getPlayer(uid))
+            v->teleport(Vec3{base.x + dx, base.y + 1.f, base.z + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
+    };
+    // the fronts face south (+z): look north from the south
+    ctx.info("VCGALLERY chests-left");
+    view(6.5f, 5.f, 180.f, 25.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY chests-right");
+    view(20.5f, 5.f, 180.f, 25.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY trapped-left");
+    view(6.5f, 2.f, 180.f, 25.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY trapped-right");
+    view(20.5f, 2.f, 180.f, 25.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY lids");
+    view(9.f, -1.5f, 180.f, 30.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY lids-back");
+    view(9.f, -10.5f, 0.f, 30.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY furnaces");
+    view(4.5f, -5.5f, 180.f, 20.f);
+    co_await ctx.ticks(100);
+    ctx.info("VCGALLERY chest-screen");
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
+        view(6.5f, 2.f, 180.f, 25.f);
+        vc::setItems(at(0, 0), {makeItem("minecraft:diamond", 5), makeItem("minecraft:oak_log", 32)});
+        vcf::openChest(*v, bp(at(0, 0)));
+    }
+    co_await ctx.ticks(100);
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
+    co_await ctx.ticks(20);
+    ctx.info("VCGALLERY double-screen");
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) vcf::openChest(*v, bp(at(11, -6)));
+    co_await ctx.ticks(100);
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
+    co_await ctx.ticks(20);
+    ctx.info("VCGALLERY furnace-screen");
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
+        if (auto* c = containerAt(region, bp(at(2, -9)))) {
+            c->setItem(0, makeItem("minecraft:raw_copper", 8));
+            c->setItem(1, makeItem("minecraft:coal", 4));
+        }
+        view(2.5f, -6.5f, 180.f, 20.f);
+        vcf::openFurnace(*v, bp(at(2, -9)));
+    }
+    co_await ctx.ticks(120);
+    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
+    co_await ctx.ticks(10);
+    vc::takeAll(at(0, 0));
+    ctx.info("VCGALLERY done");
+    for (int dx : {0, 2, 4, 6, 8})
+        if (auto* c = containerAt(region, bp(at(dx, -9)))) c->removeAllItems();
 });
