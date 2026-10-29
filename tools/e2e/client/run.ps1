@@ -182,6 +182,7 @@ try {
         }
         if (-not $KeepOtherMods) { Move-OtherModsAside }
         Remove-HeadlessInputLeftover   # of a killed run
+        Clear-CachedLeptonPack         # remote modes: download this build's RP from the host
         if ($script:Headless) { Install-HeadlessInputMod -ModsDir $script:ModsDir -PipeName $script:HeadlessPipe -Trace:$HeadlessTrace }
         if ($remote) { Set-ExternalServer $hostInfo.port } else {
             Restore-TestWorld
