@@ -113,9 +113,9 @@ $m = Get-LogMark
 Close-Screen
 Wait-LogLine 'inventory: .* closed a held shulker box' 15 -Since $m | Out-Null
 
-# Hotbar changer: Z slides the rows up, 1 swaps the hotbar with the first row.
+# Hotbar changer: H slides the rows up, 1 swaps the hotbar with the first row.
 $m = Get-LogMark
-Press-Key Z
+Press-Key H
 Wait-LogLine 'inventory: hotbar changer opened' 10 -Since $m | Out-Null
 Start-Sleep -Milliseconds 900
 Save-Screenshot 'hotbar' | Out-Null

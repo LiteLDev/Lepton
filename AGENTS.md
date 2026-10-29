@@ -202,6 +202,48 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
   the parameter (`param([double]$rot)`) or write `(-45)`. `Write-PackJson` and the build (`assemble.lua`) reject such geometry; the
   client scenario `renderprobe` puts one block per model kind in its own sub-chunk next to a canary.
   (Per-cube and per-bone `rotation` with numbers both render fine.)
+- **Comparator output of a custom block**: data-driven blocks can't declare one, and
+  `BlockType::$hasComparatorSignal` / `$getComparatorSignal` are `MCFOLD` (shared with unrelated
+  functions), so don't hook them. Give that one block type its own vtable copy instead (`patchVirtual`
+  in `src/feature/redstone/Common.cpp`): take the slot from the vcall thunk of
+  `&BlockType::hasComparatorSignal` (`disp / 8`), copy the vtable including the RTTI entry at -1
+  (`VirtualQuery` to stay in readable memory), replace the slot with a free function taking
+  `(BlockType const* self, ...)`, point the type's vptr at the copy. Do it per world
+  (`db::onWorldReady`; the client re-creates block types), forget it on world close, restore on
+  uninstall. Works for any other `BlockType` virtual of one custom block.
+- A data-driven `minecraft:redstone_producer` keeps the output faces of the permutation it was first
+  created for. When a block changes its faces, remove its circuit component (`CircuitSceneGraph::remove`)
+  and call `BlockRedstoneProducerComponent::setupRedstoneComponent` again.
+- A looping `minecraft:tick` doesn't start for blocks placed with `BlockSource::setBlock` (commands,
+  world gen, natively placed): queue the first tick with `addToTickingQueue` and re-queue it in a
+  `Block::queuedTick` hook.
+- `BlockMovableComponent::mMovementType` of a block's permutations can be changed at runtime to
+  change what pistons move.
+- The server can't close vanilla block screens (anvil, smithing table) on the client: mod clients
+  close them when the server sends a net message (U13).
+- **Never call a static / free game function that returns `ActorUniqueID` (or another type that is an
+  aggregate in LeviLamina but has constructors in the game) by value.** The game returns it through
+  a hidden result pointer, clang-cl expects it in RAX, so the game writes the result over the first
+  argument (`MapItem::getMapId` overwrote the map tag's vtable and crashed the client later). Read
+  the value another way (for maps: `map_uuid` from the item's tag).
+- A custom item with `minecraft:dyeable` has an invisible UI icon unless `minecraft:icon` also has a
+  grey `dyed` texture (tinted with the colour).
+- Block states have at most 16 values each (and a block at most 16 bits of states in total).
+- Record items (`minecraft:record`) only accept vanilla sound events.
+- Bedrock rejects a resource pack animation file whose animation has an empty `bones` object: leave
+  the key out.
+- `NetherGenerator` and `TheEndGenerator` share `$decorateWorldGenPostProcess`: a hook on it must check
+  the dimension itself.
+- Calling `getOffers()` inside a `_generateTrades` hook recurses into the hook.
+- Vanilla flower pots holding a custom plant (`minecraft:flower_pottable`) crash the client while it
+  builds the pot's mesh: swap the pot for a custom potted block (U7 `Potted.cpp`, U8, U28).
+- The dedicated server builds some texts with its own I18n, which only knows the vanilla strings
+  (e.g. the `/give` feedback): `PackDeployer` appends the pack's `texts/<lang>.lang` to it at install.
+  Pass translation keys to clients wherever possible instead of server-translated names.
+- A container screen only opens on the client after the client asked for it, and the game drops a
+  screen that opens while another one is still closing (wait ~0.5 s after a close). The client shows
+  an entity container's contents only after the server sends them: resend right after opening and a
+  few ticks later (U14, `VirtualContainer`).
 
 ## Conventions
 

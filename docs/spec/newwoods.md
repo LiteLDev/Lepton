@@ -283,7 +283,7 @@ The client mod shows the hints in the item tooltips (Quark shows them in JEI).
 - **Boats and chest boats** (`<w>_boat`, `<w>_chest_boat`): Bedrock boats are a vanilla entity with a
   fixed set of wood variants rendered by the game; not ported.
 - **Chests and trapped chests** (`<w>_chest`, `trapped_<w>_chest`): VariantChests is U9's
-  behaviour (block tag contract); the chests of these woods are added once U9's generator exists.
+  behaviour and U9 owns these chests (`lepton:azalea_chest`, `lepton:blossom_chest`, `lepton:ancient_chest` and the trapped ones; `docs/spec/variantcontainers.md`).
 - **Potted saplings** are custom blocks the vanilla pot is swapped for (§2.2), not the vanilla pot
   holding the sapling: `minecraft:flower_pottable` makes the 1.26.51 client crash while it builds the
   mesh of a pot holding a custom block.

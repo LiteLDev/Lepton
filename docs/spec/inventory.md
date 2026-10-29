@@ -201,7 +201,7 @@ an item card next to the chat for 10 s.
 
 Keybinds (`config/keybinds.json`, Controls screen): `sort_player` (unbound), `sort_container`
 (unbound), `transfer_insert` (unbound), `transfer_extract` (unbound), `shift_lock` (unbound),
-`change_hotbar` (Z), `share_item` (T; Quark uses the chat key).
+`change_hotbar` (H; Quark uses Z, which is Bedrock's Mob Effects key), `share_item` (Shift + T over a slot; Quark uses the chat key).
 
 ## 5. Config
 

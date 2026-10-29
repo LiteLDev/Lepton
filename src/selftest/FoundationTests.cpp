@@ -3,7 +3,10 @@
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/world/actor/player/Player.h"
 
+#include "mc/world/item/ItemStack.h"
+
 #include "game/Blocks.h"
+#include "game/Items.h"
 #include "game/WorldDb.h"
 #include "mod/Config.h"
 #include "mod/I18n.h"
@@ -36,6 +39,29 @@ LP_REGISTER_SELFTEST("foundation.i18n", [](Context& ctx) {
     ctx.check(lp::translate("lp.mod.name", "?", "zh_CN") != "?", "zh_CN lang file is loaded");
     ctx.check(!lp::config::configDir().empty(), "config directory is set");
     ctx.check(lp::config::get<lp::ModConfig>().version >= 1, "mod config is loaded");
+});
+
+// The server builds some texts with item names itself (`/give` feedback): they must not be raw keys
+// (PackDeployer appends the pack's names to the server's I18n on BDS; the client has them).
+LP_REGISTER_SELFTEST("foundation.item_names", [](Context& ctx) {
+    int checked = 0;
+    for (auto [id, name] : {std::pair{"lepton:ancient_tome", "Ancient Tome"}, {"lepton:apple_crate", "Apple Crate"}}) {
+        auto item = lp::game::makeItem(id, 1, 0);
+        if (lp::game::isEmpty(item)) {
+            ctx.info(std::string(id) + " is not registered, skipped");
+            continue;
+        }
+        auto shown = item.getName();
+        ++checked;
+        ctx.check(shown.find("lepton:") == std::string::npos, std::string(id) + " has a translated name: " + shown);
+#ifdef LP_SERVER // the client uses the game's language
+        if (lp::config::get<lp::ModConfig>().language == "en_US")
+            ctx.check(shown == name, std::string(id) + " is named " + name + ": " + shown);
+#else
+        (void)name;
+#endif
+    }
+    ctx.info("checked " + std::to_string(checked) + " names");
 });
 
 LP_REGISTER_SELFTEST("foundation.blocks", [](Context& ctx) -> ll::coro::CoroTask<> {

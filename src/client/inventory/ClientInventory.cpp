@@ -754,7 +754,7 @@ LP_REGISTER_KEYBIND("transfer_extract", Key::Unbound, [] {
 LP_REGISTER_KEYBIND("shift_lock", Key::Unbound, [] {
     if (inContainerScreen() && cfg().enableShiftLock) gShiftLocked = !gShiftLocked;
 }, {}, true);
-LP_REGISTER_KEYBIND("change_hotbar", Key::Z, [] {
+LP_REGISTER_KEYBIND("change_hotbar", Key::H, [] { // Quark: Z, which is Bedrock's Mob Effects key
     if (!cfg().enableHotbarChanger || topScreen() != "hud_screen" || spectator()) return;
     gHotbarOpen = !gHotbarOpen;
     log().info("inventory: hotbar changer {}", gHotbarOpen ? "opened" : "closed");
