@@ -28,7 +28,11 @@
 #include "mc/world/containers/managers/models/ContainerManagerModel.h"
 #include "mc/network/MinecraftPacketIds.h"
 #include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/BlockActorDataPacket.h"
 #include "mc/network/packet/ContainerOpenPacket.h"
+#include "mc/network/packet/UpdateBlockPacket.h"
+#include "mc/deps/nbt/CompoundTag.h"
+#include "mc/deps/core/string/HashedString.h"
 #include "mc/world/ContainerID.h"
 #include "mc/world/inventory/network/ContainerScreenContext.h"
 #include "mc/world/item/ItemStack.h"
@@ -66,6 +70,7 @@ struct Session {
     std::map<std::string, int> grace; ///< viewer -> ticks before the screen must be seen open
     int                      readyTick = 0; ///< first tick the helper is known to clients
     std::set<std::string>    pending;       ///< viewers whose screen opens in a few ticks
+    std::map<std::string, int> requested;   ///< viewer -> tick its screen was last requested
 };
 
 std::map<GlobalPos, std::vector<ItemStack>>& cache() {
@@ -152,6 +157,36 @@ Player* playerByUuid(std::string const& uuid) {
     return level->getPlayer(mce::UUID::fromString(uuid));
 }
 
+/// Sends `player` the block at `at` as it is in the world (ends a fake dispenser, see showDispenser).
+void resendBlock(Player& player, GlobalPos const& at) {
+    auto* region = regionOf(at.dim);
+    if (!region) return;
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::UpdateBlock);
+    if (!pkt) return;
+    auto& upd        = static_cast<UpdateBlockPacket&>(*pkt);
+    upd.mPos         = blockPos(at);
+    upd.mLayer       = 0;
+    upd.mUpdateFlags = 3;
+    upd.mRuntimeId   = region->getBlock(blockPos(at)).mNetworkId;
+    upd.sendTo(player);
+}
+
+bool                  fakeBlockScreen(Spec const& spec);
+std::vector<BlockPos> fakeBlockPositions(Spec const& spec, GlobalPos const& pos);
+
+/// A viewer left a session: undo what only that client was shown.
+void viewerLeft(Spec const& spec, GlobalPos const& pos, std::string const& uuid) {
+    if (!fakeBlockScreen(spec)) return;
+    auto* p = playerByUuid(uuid);
+    if (!p) return;
+    for (auto const& b : fakeBlockPositions(spec, pos)) resendBlock(*p, GlobalPos{pos.dim, b.x, b.y, b.z});
+}
+
+/// The player is not looking at the screen of the session it views (it used a block or asked for
+/// another container: a client with a screen open does neither); the client dropped the screen
+/// or never showed it. Close it on the server too and drop the viewer, so the session can end.
+void dropStaleViewer(Player& player);
+
 void emptyAndRemove(Actor& helper) {
     if (auto* c = containerOf(helper)) c->removeAllItems();
     entities::despawn(helper);
@@ -163,6 +198,7 @@ void finish(GlobalPos const& pos) {
     if (it == sessions().end()) return;
     auto session = std::move(it->second);
     sessions().erase(it);
+    for (auto const& v : session.viewers) viewerLeft(session.spec, pos, v);
     if (auto* helper = entities::find(session.entity)) {
         if (auto* c = containerOf(*helper)) session.last = inv::snapshot(*c, inv::all(*c));
         emptyAndRemove(*helper);
@@ -232,6 +268,7 @@ void tickSessions() {
                 ++vit;
             } else {
                 s.grace.erase(*vit);
+                viewerLeft(s.spec, pos, *vit);
                 vit = s.viewers.erase(vit);
             }
         }
@@ -285,39 +322,109 @@ constexpr int kSpawnToOpenTicks = 3;
 /// Ticks for a changed name tag (the screen title) to reach the clients before the screen opens.
 constexpr int kNameSyncTicks = 2;
 
-/// The game opens an entity's container only as a chest or hopper screen (its dispenser screen
-/// model needs a dispenser block). A 3x3 screen is the chest model of the helper (same
-/// server-authoritative slots, `LevelEntity` container) announced to the client as a dispenser.
-void showDispenser(ServerPlayer& player, Actor& helper, GlobalPos const& pos) {
+/// Screens the client shows only for a block entity: a dispenser (3x3) and a double chest (54).
+bool fakeBlockScreen(Spec const& spec) {
+    return spec.screen == Screen::Dispenser || (spec.screen == Screen::Chest && sizeOf(spec) > 27);
+}
+
+/// Positions of the client-only blocks of `fakeBlockScreen` (the second half of a double chest
+/// stands east of the container).
+std::vector<BlockPos> fakeBlockPositions(Spec const& spec, GlobalPos const& pos) {
+    auto at = blockPos(pos);
+    if (spec.screen == Screen::Dispenser) return {at};
+    return {at, BlockPos{at.x + 1, at.y, at.z}};
+}
+
+void sendBlock(Player& player, BlockPos const& at, Block const& block, CompoundTag tag) {
+    if (auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::UpdateBlock)) {
+        auto& upd        = static_cast<UpdateBlockPacket&>(*pkt);
+        upd.mPos         = at;
+        upd.mLayer       = 0;
+        upd.mUpdateFlags = 3;
+        upd.mRuntimeId   = block.mNetworkId;
+        upd.sendTo(player);
+    }
+    if (auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::BlockActorData)) {
+        auto& data = static_cast<BlockActorDataPacket&>(*pkt);
+        data.mPos  = at;
+        data.mData = std::move(tag);
+        data.sendTo(player);
+    }
+}
+
+/// The game opens an entity's container only as a chest (27) or hopper screen: its dispenser and
+/// double chest screens need block entities, on the server and on the client. Those screens use
+/// the chest model of the helper on the server (same server-authoritative `LevelEntity` slots,
+/// any size), and on the client a dispenser / a pair of chests at the container's position,
+/// shown to this player only (block + block entity data with the title) and replaced by the real
+/// blocks when the viewer leaves.
+void showFakeBlockScreen(ServerPlayer& player, Actor& helper, Spec const& spec, GlobalPos const& pos, std::string const& title) {
+    bool dispenser = spec.screen == Screen::Dispenser;
+    auto block     = Block::tryGetFromRegistry(HashedString(dispenser ? "minecraft:dispenser" : "minecraft:chest"));
+    if (!block) return;
+    auto at = fakeBlockPositions(spec, pos);
+    for (size_t i = 0; i < at.size(); ++i) {
+        CompoundTag tag;
+        tag["id"]         = std::string(dispenser ? "Dispenser" : "Chest");
+        tag["x"]          = at[i].x;
+        tag["y"]          = at[i].y;
+        tag["z"]          = at[i].z;
+        tag["isMovable"]  = static_cast<uchar>(1);
+        tag["CustomName"] = title;
+        if (!dispenser) {
+            auto const& other = at[1 - i];
+            tag["pairx"]    = other.x;
+            tag["pairz"]    = other.z;
+            tag["pairlead"] = static_cast<uchar>(i == 0 ? 1 : 0);
+        }
+        sendBlock(player, at[i], *block, std::move(tag));
+    }
     ContainerID& counter = player.mContainerCounter;
-    auto  next    = static_cast<int>(counter) + 1;
+    auto         next    = static_cast<int>(counter) + 1;
     if (next >= static_cast<int>(ContainerID::Last)) next = static_cast<int>(ContainerID::First);
-    counter = static_cast<ContainerID>(next);
+    counter    = static_cast<ContainerID>(next);
+    auto type  = dispenser ? SharedTypes::Legacy::ContainerType::Dispenser : SharedTypes::Legacy::ContainerType::Container;
     auto model = std::make_shared<ChestContainerManagerModel>(counter, player, helper.getOrCreateUniqueID());
     model->postInit();
-    model->setContainerType(SharedTypes::Legacy::ContainerType::Dispenser);
+    model->setContainerType(type);
     player._setContainerManagerModel(model);
     auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::ContainerOpen);
     if (!pkt) return;
     auto& open           = static_cast<ContainerOpenPacket&>(*pkt);
     open.mContainerId    = counter;
-    open.mType           = SharedTypes::Legacy::ContainerType::Dispenser;
-    open.mPos            = blockPos(pos);
-    open.mEntityUniqueID = helper.getOrCreateUniqueID();
+    open.mType           = type;
+    open.mPos            = at[0];
+    open.mEntityUniqueID = ActorUniqueID{-1}; // a block screen for the client
     open.sendTo(player);
-    player.refreshContainer(*model);
+}
+
+/// Sends the open screen's contents (the client shows an empty window otherwise: the contents of
+/// an entity container only reach it with changes).
+void sendContents(Player& player, int64_t entity) {
+    if (!hasOpen(player, entity)) return;
+    if (auto const& manager = player.mContainerManager.get()) static_cast<ServerPlayer&>(player).refreshContainer(*manager);
 }
 
 /// Opens the helper's screen for the player now (the helper and its name are known to the client).
 void showScreen(Player& player, Actor& helper, Spec const& spec, GlobalPos const& pos) {
     auto* comp = componentOf(helper);
     if (!comp) return;
-    comp->setCustomName(trFor(player, spec.titleKey, spec.titleFallback));
-    if (spec.screen == Screen::Dispenser) showDispenser(static_cast<ServerPlayer&>(player), helper, pos);
+    auto title = trFor(player, spec.titleKey, spec.titleFallback);
+    comp->setCustomName(title);
+    if (fakeBlockScreen(spec)) showFakeBlockScreen(static_cast<ServerPlayer&>(player), helper, spec, pos, title);
     else helper.openContainerComponent(player);
     log().info("virtual container {} opened by {}", pos.key(), player.getRealName());
+    // Contents now and again once the client surely shows the screen.
+    int64_t entity = entities::idOf(helper);
+    sendContents(player, entity);
+    auto uuid = player.getUuid().asString();
+    ll::coro::keepThis([uuid, entity]() -> ll::coro::CoroTask<> {
+        for (int wait : {4, 16}) {
+            co_await ll::chrono::ticks(wait);
+            if (auto* p = playerByUuid(uuid)) sendContents(*p, entity);
+        }
+    }).launch(ll::thread::ServerThreadExecutor::getDefault());
 }
-
 /// Opens the screen once the client can show it: the helper spawned at least kSpawnToOpenTicks ago
 /// and its name tag carries the title. Clients title an entity's container screen with the
 /// entity's name tag (synced actor data, shared by all viewers: the last opener's language wins).
@@ -336,7 +443,8 @@ void requestShow(Player& player, Session& session, Actor& helper, Spec const& sp
         helper.setNameTag(title);
         wait = std::max(wait, kNameSyncTicks);
     }
-    session.grace[uuid] = wait + 10;
+    session.grace[uuid]     = wait + 10;
+    session.requested[uuid] = gTick;
     if (wait == 0) {
         showScreen(player, helper, spec, pos);
         return;
@@ -427,7 +535,10 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
     if (!region || !region->hasChunksAt(blockPos(pos), 0, false)) return false;
     auto uuid = player.getUuid().asString();
     if (auto open = openBy(player)) {
-        if (*open != pos) return false;
+        if (*open != pos) {
+            dropStaleViewer(player);
+            return lp::game::vc::open(player, pos, spec);
+        }
         // Asked again: the client may not have shown the screen (it rejects a container opened
         // while another of its screens, e.g. the chat, is still closing). Send it again, unless
         // another container screen took its place meanwhile.
@@ -528,6 +639,23 @@ std::optional<GlobalPos> openBy(Player const& player) {
     return std::nullopt;
 }
 
+namespace {
+void dropStaleViewer(Player& player) {
+    auto at = openBy(player);
+    if (!at) return;
+    auto it   = sessions().find(*at);
+    auto uuid = player.getUuid().asString();
+    // Its screen is still on its way, or just sent (a click sends several use packets).
+    if (it->second.pending.contains(uuid)) return;
+    if (auto r = it->second.requested.find(uuid); r != it->second.requested.end() && gTick - r->second < 20) return;
+    if (hasOpen(player, it->second.entity)) static_cast<ServerPlayer&>(player).initiateContainerClose();
+    it->second.grace.erase(uuid);
+    it->second.viewers.erase(uuid);
+    viewerLeft(it->second.spec, *at, uuid);
+    log().info("virtual container {}: {} no longer views it (screen dropped by the client)", at->key(), player.getRealName());
+}
+} // namespace
+
 // ---- block binding -------------------------------------------------------------------------------
 
 void bindBlock(std::string const& blockId, Spec spec) { bindings()[blockId] = std::move(spec); }
@@ -545,6 +673,7 @@ public:
         mListeners.push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& ev) {
             auto& player = ev.self();
             if (player.isClientSide()) return;
+            dropStaleViewer(player);
             if (bindings().empty()) return;
             auto bit = bindings().find(blockIdAt(player.getDimensionBlockSource(), ev.blockPos()));
             if (bit == bindings().end()) return;
