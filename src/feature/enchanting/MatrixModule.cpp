@@ -1,13 +1,18 @@
 // MatrixEnchanting: hooks the enchanting tables (vanilla with automaticallyConvert, and
 // lepton:matrix_enchanter), the companion-protocol handlers and the session tick.
 
+#include "ll/api/command/CommandHandle.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerInteractBlockEvent.h"
 #include "ll/api/event/world/BlockChangedEvent.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 
+#include "mc/deps/core/math/Vec3.h"
+#include "mc/server/commands/CommandOrigin.h"
+#include "mc/server/commands/CommandOutput.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
+#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
@@ -20,6 +25,8 @@
 #include "game/Blocks.h"
 #include "game/Items.h"
 #include "game/WorldDb.h"
+#include "feature/enchanting/Enchants.h"
+#include "mod/Commands.h"
 #include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -132,6 +139,49 @@ private:
     std::vector<ll::event::ListenerPtr> mListeners;
     std::vector<net::HandlerId>         mHandlers;
 };
+
+/// `/quark enchanting demo` (operators): builds a matrix enchanter with bookshelves and a candle
+/// next to the player, puts a sword and lapis in, rolls and places pieces, and opens it. Used by
+/// the client e2e scenario for screenshots.
+LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
+    cmd.overload().text("enchanting").text("demo").execute([](CommandOrigin const& origin, CommandOutput& output) {
+        auto* p = commands::playerOf(origin);
+        if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+        auto& region = p->getDimensionBlockSource();
+        auto  eye    = p->getPosition();
+        auto  feet   = game::blockPosOf(Vec3{eye.x, eye.y - 1.5f, eye.z});
+        BlockPos center{feet.x + 4, feet.y, feet.z};
+        auto set = [&](int dx, int dy, int dz, char const* id) {
+            if (auto const* b = game::blockstates::of(id)) game::setBlock(region, {center.x + dx, center.y + dy, center.z + dz}, *b);
+        };
+        for (int dx = -2; dx <= 2; ++dx)
+            for (int dz = -2; dz <= 2; ++dz) {
+                set(dx, -1, dz, "minecraft:stone");
+                for (int dy = 0; dy <= 2; ++dy) set(dx, dy, dz, "minecraft:air");
+            }
+        for (int dz = -1; dz <= 1; ++dz)
+            for (int dy = 0; dy <= 1; ++dy) set(2, dy, dz, "minecraft:bookshelf");
+        if (auto const* c = game::blockstates::of("minecraft:red_candle", {{"lit", true}, {"candles", 3}}))
+            game::setBlock(region, {center.x + 2, center.y + 2, center.z}, *c);
+        set(0, 0, 0, "minecraft:enchanting_table");
+        auto pos = game::globalPos(region, center);
+        auto& d  = table::data(pos);
+        d.item   = game::makeItem("minecraft:diamond_sword");
+        d.lapis  = game::makeItem("minecraft:lapis_lazuli", 16);
+        table::markDirty(pos);
+        addLevels(*p, 30);
+        if (!table::open(*p, pos)) return output.error("Matrix enchanting is disabled.");
+        for (int i = 0; i < 4; ++i) table::operate(*p, OperAdd, 0, 0, 0);
+        if (auto m = table::matrixOf(table::data(pos).item); m && !m->benched.empty()) {
+            int  id     = m->benched.back();
+            bool placed = false;
+            for (int x = 1; x < 4 && !placed; ++x)
+                for (int y = 1; y < 4 && !placed; ++y) placed = table::operate(*p, OperPlace, id, x, y);
+        }
+        log().info("enchanting: demo table ready at {}", pos.key());
+        output.success("Matrix enchanter demo opened.");
+    });
+});
 
 } // namespace
 
