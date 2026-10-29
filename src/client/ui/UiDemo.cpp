@@ -106,6 +106,9 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
              ctr("lp.ui.demo.button_tip", "Lepton overlay button"));
     o.textField("ui_demo_search", {cx + 92, cy - 64, 70, 12}, ctr("lp.ui.demo.search", "Search..."),
                 [](std::string const& text) { log().info("ui demo: search '{}'", text); });
+    // At the right edge of the screen: its tooltip flips to the left of the mouse.
+    Rect edge{s.size.x - 22, 4, 18, 14};
+    o.button(edge, "?", [] { log().info("ui demo: edge button clicked"); }, ctr("lp.ui.demo.edge_tip", "A tooltip that stays on the screen"));
     int greyed = 0;
     for (auto const& slot : s.slots) {
         if (slot.index != 0 || slot.collection.find("inventory") == std::string::npos) continue;
@@ -121,6 +124,7 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
         log().info("ui demo: inventory overlay drawn ({} slots found, {} greyed)", s.slots.size(), greyed);
         log().info("ui demo: button at {:.4f},{:.4f}", (cx + 112) / s.size.x, (cy - 75) / s.size.y);
         log().info("ui demo: field at {:.4f},{:.4f}", (cx + 127) / s.size.x, (cy - 58) / s.size.y);
+        log().info("ui demo: edge button at {:.4f},{:.4f}", (edge.x + edge.w / 2) / s.size.x, (edge.y + edge.h / 2) / s.size.y);
         for (auto const& slot : s.slots) {
             if (slot.index != 0 || slot.collection.find("hotbar") == std::string::npos) continue;
             log().info("ui demo: slot {}:0 at {:.4f},{:.4f}", slot.collection, (slot.rect.x + slot.rect.w / 2) / s.size.x,
