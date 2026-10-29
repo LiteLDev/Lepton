@@ -15,7 +15,7 @@
 #include "mc/world/attribute/AttributeModifier.h"
 #include "mc/world/attribute/MutableAttributeWithContext.h"
 #include "mc/world/attribute/SharedAttributes.h"
-#include "mc/world/gamemode/GameMode.h"
+#include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/world/item/Item.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/crafting/Recipes.h"
@@ -316,7 +316,7 @@ LP_REGISTER_SELFTEST("bricks.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
 LP_REGISTER_SELFTEST("bricks.tool_drops", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto p = ctx.testPos(430);
     ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
-    auto& pl = ctx.player();
+    auto& pl = static_cast<SimulatedPlayer&>(ctx.player());
     pl.setPlayerGameType(GameType::Survival);
     auto drops = [&](GlobalPos const& at) {
         AABB box{Vec3{at.x - 1.f, at.y - 1.f, at.z - 1.f}, Vec3{at.x + 2.f, at.y + 2.f, at.z + 2.f}};
@@ -339,14 +339,19 @@ LP_REGISTER_SELFTEST("bricks.tool_drops", [](Context& ctx) -> ll::coro::CoroTask
         auto at = off(p, c.dx, 0, 0);
         ctx.require(put(ctx, at, c.block), std::string("placed ") + c.block);
         auto tool = lp::game::makeItem(c.tool);
-        if (c.lastDurability) tool.setDamageValue(static_cast<short>(tool.mItem->getMaxDamage() - 1));
+        if (c.lastDurability) tool.setDamageValue(tool.mItem->getMaxDamage()); // Bedrock breaks the tool once its damage passes the maximum
         pl.setSelectedItem(tool);
         pl.teleport(Vec3{at.x + 0.5f, at.y + 1.f, at.z + 1.5f}, DimensionType(at.dim));
-        // the end of a survival break: the game mode damages the tool and destroys the block
-        pl.mGameMode.get()->destroyBlock(lp::game::blockPos(at), 1);
+        // a real survival break: the player mines until the block is gone (the game mode then damages the
+        // tool and destroys the block)
+        ctx.require(pl.simulateDestroyBlock(lp::game::blockPos(at), ScriptModuleMinecraft::ScriptFacing::Up), "started mining");
+        for (int t = 0; t < 400 && idAt(ctx, at) != "minecraft:air"; t += 5) {
+            if (!pl.isSimulatingDestroyingBlock()) pl.simulateDestroyBlock(lp::game::blockPos(at), ScriptModuleMinecraft::ScriptFacing::Up);
+            co_await ctx.ticks(5);
+        }
+        pl.simulateStopDestroyingBlock();
         co_await ctx.ticks(3);
-        if (c.lastDurability)
-            ctx.info(pl.getSelectedItem().isNull() ? "the last-durability pickaxe broke" : "the pickaxe survived the break");
+        if (c.lastDurability) ctx.check(pl.getSelectedItem().isNull(), "the last-durability pickaxe broke");
         auto items = drops(at);
         ctx.check(idAt(ctx, at) == "minecraft:air", std::string(c.block) + " broken");
         ctx.check(items.empty() != c.drops, std::string(c.block) + " with " + c.tool + (c.drops ? " drops" : " drops nothing"));
