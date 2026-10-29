@@ -90,12 +90,13 @@ private:
 
 LP_REGISTER_HUD([](DrawContext& dc) {
     if (!demo()) return;
-    Rect panel{4, 40, 120, 30};
+    Rect panel{4, 40, 120, 40};
     dc.fill(panel, colors::panel);
     dc.outline(panel, colors::yellow);
     dc.item(game::makeItem("minecraft:diamond", 5), panel.x + 4, panel.y + 7);
     dc.text(ctr("lp.ui.demo.hud", "Lepton HUD demo"), panel.x + 24, panel.y + 5, colors::yellow);
     dc.text(ctr("lp.ui.demo.hud_sub", "text, rects, items"), panel.x + 24, panel.y + 17, colors::gray, 0.75f);
+    dc.text(ctr("lp.ui.demo.codes", "§aGreen §cRed §lBold§r §oItalic"), panel.x + 4, panel.y + 28, colors::white, 0.75f);
 });
 
 LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& s) {
