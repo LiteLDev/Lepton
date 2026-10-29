@@ -60,7 +60,7 @@ Loot tables (`bp/loot_tables/entities/`):
 | `stoneling.json` | 1 Heart of Diamond (used while `enableDiamondHeart`; else `empty.json`). The carried item is dropped natively. |
 | `stoneling_carry.json` | Spawn item (equipment table, 1 roll): diamond 100, ender pearl 200, redstone 10-15 x300, gold ingot 2-6 x300, iron ingot 4-7 x300, emerald 1-3 x200, coal 18-26 x300, zombie head 250, creeper head 250, lapis 4-8 x200, golden apple 50, saddle 50, iron/golden/diamond horse armour 50/40/30, name tag 100. |
 | `forgotten.json` | 4-8 arrows (+0-2 per looting level), 2-3 bones (+0-1 per looting level), Forgotten Hat (killed by player). |
-| `forgotten_gear.json` | Bow with mob-spawn enchantments (`enchant_random_gear`). |
+| `forgotten_gear.json` | A plain bow (the native spawn code replaces the gear with an enchanted bow and sword, Quark's `prepareEquipment`). |
 | `foxhound.json` | 0-3 leather (+0-1 looting), 1-2 coal (+0-2 looting). |
 | `wraith.json` | 1 Soul Bead (+0-1 looting). |
 

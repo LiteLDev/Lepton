@@ -5,7 +5,13 @@
       "identifier": "lepton:forgotten",
       "is_spawnable": true,
       "is_summonable": true,
-      "is_experimental": false
+      "is_experimental": false,
+      "properties": {
+        "lepton:init": {
+          "type": "bool",
+          "default": false
+        }
+      }
     },
     "component_groups": {
       "lepton:ranged": {
@@ -196,6 +202,11 @@
           "component_groups": [
             "lepton:ranged"
           ]
+        }
+      },
+      "lepton:init": {
+        "set_property": {
+          "lepton:init": true
         }
       }
     }

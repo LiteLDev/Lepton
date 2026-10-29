@@ -6,13 +6,7 @@
         {
           "type": "item",
           "name": "minecraft:bow",
-          "weight": 1,
-          "functions": [
-            {
-              "function": "enchant_random_gear",
-              "chance": 0.25
-            }
-          ]
+          "weight": 1
         }
       ]
     }

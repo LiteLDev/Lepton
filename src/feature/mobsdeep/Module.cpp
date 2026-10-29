@@ -250,7 +250,7 @@ void hearts(Actor& a, int n) {
     }
 }
 
-void blockCrumbs(Actor& a, Block const& block, Vec3 const& pos, int n) {
+void blockCrumbs(Block const& block, Vec3 const& pos, int n) {
     auto level = ll::service::getLevel();
     if (!level) return;
     for (int i = 0; i < std::max(1, n / 8); ++i)
@@ -404,7 +404,7 @@ std::optional<InteractionResult> MobsdeepModule::preInteract(Player& p, Actor& t
                 int cur = intProp(target, "lepton:variant");
                 hearts(target, 1);
                 if (v != cur) {
-                    if (auto const* b = game::blockWith(heldId)) blockCrumbs(target, *b, Vec3{pos.x, pos.y + 0.45f, pos.z}, 16);
+                    if (auto const* b = game::blockWith(heldId)) blockCrumbs(*b, Vec3{pos.x, pos.y + 0.45f, pos.z}, 16);
                     playSoundAt(target, "lepton.stoneling.eat", pos);
                     ent::triggerEvent(target, "lepton:variant_" + std::to_string(v));
                 }
