@@ -131,8 +131,11 @@ LL_TYPE_INSTANCE_HOOK(
     int                     dim = static_cast<int>(holder->getDimensionId());
     std::optional<BlockPos> target;
     if (dim == 2 && c.enableEnd) target = BlockPos(0, 0, 0);
-    else if (dim == 1 && c.enableNether && hasFlag(data, compasses::kPosSet))
-        target = BlockPos(getInt(*data, compasses::kNetherX).value_or(0), 0, getInt(*data, compasses::kNetherZ).value_or(0));
+    else if (dim == 1 && c.enableNether) {
+        auto const* nether = dataStack(holder, stack, compasses::kPosSet); // the compass that stored a portal
+        if (hasFlag(nether, compasses::kPosSet))
+            target = BlockPos(getInt(*nether, compasses::kNetherX).value_or(0), 0, getInt(*nether, compasses::kNetherZ).value_or(0));
+    }
     if (!target) return origin(holder, a, stack, b);
     auto* getCalc = *mGetSpriteCalculator;
     if (!getCalc) return origin(holder, a, stack, b);

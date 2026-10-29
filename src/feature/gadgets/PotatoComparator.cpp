@@ -14,6 +14,7 @@
 
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockType.h"
 
@@ -79,6 +80,10 @@ bool patchSlot(BlockType& type, void* thunk, void* fn) {
         gRetired.push_back(std::move(gPatch.table));
         gPatch = {};
     }
+    if (gPatch.type && gPatch.type != &type) { // another world's block type: keep its table alive
+        gRetired.push_back(std::move(gPatch.table));
+        gPatch = {};
+    }
     if (gPatch.type != &type) {
         size_t n = readablePointers(vptr - 1, 600);
         if (n < static_cast<size_t>(slot) + 2) return false;
@@ -94,6 +99,7 @@ bool patchSlot(BlockType& type, void* thunk, void* fn) {
 // The replacements (MSVC x64 member functions: `this` first).
 bool hasSignal(BlockType const*) { return true; }
 int  signal(BlockType const*, BlockSource& region, BlockPos const& pos, Block const&, uchar) {
+    if (region.getLevel().isClientSide()) return 0; // the potato data lives on the server thread
     if (!cfg().enableTinyPotato) return 0;
     auto data = dataAt(game::globalPos(region, pos));
     return data ? comparatorSignal(*data) : 0;

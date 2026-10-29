@@ -42,6 +42,7 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/phys/AABB.h"
 #include "mc/world/phys/HitResult.h"
 
 #include "core/GlobalPos.h"
@@ -242,6 +243,7 @@ std::map<GlobalPos, Tater> gTaters; ///< every known potato of the world
 std::set<GlobalPos>        gDirty;
 std::set<GlobalPos>        gCreativeBreaks; ///< broken by a creative player this tick
 std::set<GlobalPos>        gPendingBreaks;  ///< removed, drops not spawned yet
+uint64_t                   gDisplaysFrom = 0; ///< no display sync before (saved displays load after their chunk)
 std::unordered_map<int64_t, uint64_t> gLastUse;
 struct Looking {
     std::string name;
@@ -362,6 +364,12 @@ void despawnDisplays(Tater& t) {
 
 void syncDisplays(BlockSource& region, GlobalPos const& pos, Tater& t) {
     t.displaysDirty = false;
+    {   // displays of this potato we lost track of (e.g. saved ids not loaded yet when respawned)
+        std::set<int64_t> owned(t.displays.begin(), t.displays.end());
+        AABB box{Vec3{static_cast<float>(pos.x), static_cast<float>(pos.y), static_cast<float>(pos.z)}, Vec3{pos.x + 1.f, pos.y + 1.f, pos.z + 1.f}};
+        for (auto* a : game::entities::inBox(region, box, kItemDisplay))
+            if (!owned.contains(game::entities::idOf(*a))) game::entities::despawn(*a);
+    }
     auto const& block  = region.getBlock(game::blockPos(pos));
     int         facing = facingOf(block);
     Vec3        at{pos.x + 0.5f, static_cast<float>(pos.y), pos.z + 0.5f};
@@ -410,7 +418,8 @@ void updateComparators(BlockSource& region, GlobalPos const& pos) {
     region.updateNeighborsAt(bp);
     // comparators re-read their input in their queued tick (as when a container changes)
     for (auto [dx, dz] : {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
-        for (int dist = 1; dist <= 2; ++dist) { // directly, or through one block
+        for (int dist = 1; dist <= 2; ++dist) { // directly, or through one (solid) block
+            if (dist == 2 && region.getBlock(BlockPos{bp.x + dx, bp.y, bp.z + dz}).isAir()) break;
             BlockPos    at{bp.x + dx * dist, bp.y, bp.z + dz * dist};
             auto const& b = region.getBlock(at);
             if (b.getTypeName().find("comparator") != std::string::npos) region.addToTickingQueue(at, b, 2);
@@ -723,6 +732,7 @@ void uninstall() {
 }
 
 void tick() {
+    if (now() % 200 == 0 && cfg().enableTinyPotato) sweepDisplays();
     if (gTaters.empty() && now() % 30 != 0) return;
     if (cfg().enableTinyPotato) {
         std::vector<GlobalPos> gone;
@@ -750,7 +760,7 @@ void tick() {
             if (!t.displaysDirty && now() % 100 == 0)
                 for (int i = 0; i < 6 && !t.displaysDirty; ++i)
                     if (!t.items[static_cast<size_t>(i)].empty() && !game::entities::find(t.displays[static_cast<size_t>(i)])) t.displaysDirty = true;
-            if (t.displaysDirty) syncDisplays(*r, pos, t);
+            if (t.displaysDirty && now() >= gDisplaysFrom) syncDisplays(*r, pos, t);
         }
         for (auto const& pos : gone) {
             despawnDisplays(gTaters[pos]);
@@ -758,13 +768,13 @@ void tick() {
             markDirty(pos);
         }
     }
-    if (now() % 200 == 0 && cfg().enableTinyPotato) sweepDisplays();
     if (now() % 5 == 0) tickNames();
     if (now() % 30 == 0 && cfg().enableTinyPotato) tickWrongNeighbourhood();
 }
 
 void onWorldReady() {
     installComparator();
+    gDisplaysFrom = now() + 100;
     gTaters.clear();
     gDirty.clear();
     std::vector<std::string> keys;
@@ -780,6 +790,7 @@ void onWorldReady() {
 void onWorldSave() { flush(); }
 
 void onWorldClosed() {
+    uninstallComparator(); // the block types belong to this world
     gTaters.clear();
     gDirty.clear();
     gCreativeBreaks.clear();
