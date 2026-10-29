@@ -5,13 +5,16 @@
 // config/misctweaks.json (as Quark reads its client config).
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/input/MouseInputEvent.h"
 #include "ll/api/event/render/UIRenderEvent.h"
 #include "ll/api/memory/Hook.h"
 
@@ -65,7 +68,7 @@ ChatShift gChat;
 UIControl const* gChatMissRoot = nullptr; ///< HUD root searched without finding the chat panel
 
 std::shared_ptr<UIControl> findControl(std::shared_ptr<UIControl> const& c, std::string_view name, int depth = 0) {
-    if (!c || depth > 24) return nullptr;
+    if (!c || depth > 40) return nullptr;
     if (c->mName.get() == name) return c;
     for (auto const& child : c->mChildren.get())
         if (auto found = findControl(child, name, depth + 1)) return found;
@@ -126,8 +129,10 @@ struct Hover {
     Clock::time_point when;
 };
 Hover             gHover;
-std::string       gScreen     = "hud_screen";
-bool              gContainer  = false; ///< the top screen shows item slots
+std::set<std::string> gSlotScreens; ///< screens seen with item slots (container screens)
+/// The game builds an item's hover text once when the mouse reaches its slot: the text is current
+/// until the mouse moves again.
+std::atomic<Clock::rep> gLastMouseMove{0}; ///< written on the window thread
 Clock::time_point gLastReadout{};
 
 std::string stripFormatting(std::string_view s) {
@@ -171,8 +176,7 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LP_REGISTER_SCREEN_OVERLAY("*", [](ui::Overlay&, ui::ScreenInfo const& s) {
-    gScreen    = s.name;
-    gContainer = !s.slots.empty();
+    if (!s.slots.empty()) gSlotScreens.insert(s.name);
 });
 
 std::string blockName(Block const& block) {
@@ -229,8 +233,8 @@ std::string readout(bool full) {
             auto food = player->getAttribute(Player::HUNGER());
             sb += ctr("quark.readout.food", "Food {}", food.mPtr ? static_cast<int>(food.mPtr->mCurrentValue) : 0);
         }
-    } else if (gContainer && screen == gScreen) {
-        bool hovering = !gHover.text.empty() && Clock::now() - gHover.when < std::chrono::milliseconds(500);
+    } else if (bool hovering = !gHover.text.empty() && gHover.when.time_since_epoch().count() >= gLastMouseMove.load();
+               hovering || gSlotScreens.contains(screen)) {
         if (!hovering) sb += ctr("quark.readout.no_item", "No item");
         else {
             for (auto const& line : splitLines(gHover.text)) {
@@ -293,24 +297,51 @@ LP_REGISTER_SCREEN_OVERLAY("anvil_screen", [](ui::Overlay&, ui::ScreenInfo const
     if (!s.settled || logged) return;
     logged = true;
     for (auto const& slot : s.slots) {
-        if (slot.collection.find("anvil") == std::string::npos && !(slot.collection == "hotbar_items")) continue;
+        if (slot.collection != "hotbar_items") continue;
         log().info("misctweaks: anvil slot {}:{} at {:.4f},{:.4f}", slot.collection, slot.index,
                    (slot.rect.x + slot.rect.w / 2) / s.size.x, (slot.rect.y + slot.rect.h / 2) / s.size.y);
     }
 });
 
+/// e2e aid: the anvil's own slots are plain controls (no item collection), found by name.
+void logAnvilSlots(ScreenView& view) {
+    static int                                   frames = 0;
+    static std::chrono::steady_clock::time_point last;
+    auto const&                                  tree = view.mVisualTree.get();
+    if (!tree || tree->mRootControlName.get().find("anvil_screen") == std::string::npos) return;
+    auto now = std::chrono::steady_clock::now();
+    if (now - last > std::chrono::milliseconds(500)) frames = 0; // a new opening (other screens render too)
+    last = now;
+    if (++frames != 90) return; // once per opening, after the screen slid in
+    auto const& size = view.mSize.get();
+    for (auto name : {"input_item_slot", "material_item_slot", "result_item_slot"}) {
+        auto slot = findControl(tree->mRootControl, name);
+        if (!slot) continue;
+        auto const& p = slot->mCachedPosition.get();
+        auto const& s = slot->mSize.get();
+        log().info("misctweaks: anvil slot {}:0 at {:.4f},{:.4f}", name, (p.x + s.x / 2) / size.x, (p.y + s.y / 2) / size.y);
+    }
+}
 class ClientTweaksModule {
 public:
     void install() {
         mRender = ll::event::EventBus::getInstance().emplaceListener<ll::event::BeforeUIRenderEvent>(
-            [](ll::event::BeforeUIRenderEvent& ev) { shiftChat(ev.screenView()); }
+            [](ll::event::BeforeUIRenderEvent& ev) {
+                shiftChat(ev.screenView());
+                logAnvilSlots(ev.screenView());
+            }
         );
+        mMouse = ll::event::EventBus::getInstance().emplaceListener<ll::event::MouseInputEvent>([](ll::event::MouseInputEvent& ev) {
+            if (ev.actionButtonId() == 0) gLastMouseMove = Clock::now().time_since_epoch().count(); // 0 = movement
+        });
         HoverTextHook::hook();
         UnlockedRecipesHook::hook();
     }
     void uninstall() {
         if (mRender) ll::event::EventBus::getInstance().removeListener(mRender);
         mRender = nullptr;
+        if (mMouse) ll::event::EventBus::getInstance().removeListener(mMouse);
+        mMouse = nullptr;
         UnlockedRecipesHook::unhook();
         HoverTextHook::unhook();
         stopSpeech();
@@ -318,6 +349,7 @@ public:
 
 private:
     ll::event::ListenerPtr mRender;
+    ll::event::ListenerPtr mMouse;
 };
 
 } // namespace
