@@ -713,8 +713,7 @@ LP_REGISTER_SELFTEST("palette.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         {15, 0, 4, "lepton:nether_brick_fence_gate",        {{"minecraft:cardinal_direction", "north"}}},
         {16, 0, 4, "lepton:thatch",                         {}                                         },
         {16, 1, 4, "lepton:thatch_stairs",                  {{"minecraft:cardinal_direction", "north"}}},
-        {17, 1, 4, "lepton:grate",                          {}                                         },
-        {17, 0, 4, "minecraft:water",                       {}                                         },
+        {17, 0, 4, "lepton:grate",                          {}                                         },
     };
     items.insert(items.end(), misc.begin(), misc.end());
     // a floor under the gallery so carpets and ladders have support
