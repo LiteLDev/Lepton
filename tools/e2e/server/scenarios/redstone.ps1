@@ -4,7 +4,7 @@
 $mark = Get-LogMark
 $r = Invoke-SelfTest 'redstone.*' -TimeoutSeconds 600
 if ($r.Fail -gt 0) { throw "$($r.Fail) redstone selftest(s) failed" }
-if ($r.Pass -lt 22) { throw "expected 22 redstone selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 23) { throw "expected 23 redstone selftests to pass, got $($r.Pass)" }
 Wait-LogLine 'redstone: gravisand comparator output installed' 5 | Out-Null
 Wait-LogLine 'redstone: gravisand at .* falls up' 5 -Since $mark | Out-Null
 Wait-LogLine 'redstone: randomizer at .* -> left' 5 -Since $mark | Out-Null

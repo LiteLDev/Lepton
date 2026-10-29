@@ -116,9 +116,10 @@ resolver) and runs it in `PistonBlockActor::_checkAttachedBlocks` on the server:
   result is kept, so vanilla machines behave exactly as in vanilla Bedrock.
 
 ### Gravisand
-- Power: the block has `minecraft:redstone_consumer` (any side). When the circuit evaluates it powered,
-  or a neighbour changes while it is powered (Java `neighborChanged` + `hasNeighborSignal`), a tick is
-  scheduled in 2 ticks. The tick tries to fall down, else up; when it falls it schedules a tick in 2
+- Power: the block has `minecraft:redstone_consumer` (any side), so the circuit knows which wires and
+  sources power it. When the circuit evaluates it powered (`ConsumerComponent::$evaluate` hook), or a
+  neighbour changes while it is powered (`Block::neighborChanged` hook; Java `neighborChanged` +
+  `hasNeighborSignal`), a tick is scheduled in 2 ticks. The tick tries to fall down, else up; when it falls it schedules a tick in 2
   ticks for every adjacent gravisand.
 - A fall direction is free when the target is air or a block falling blocks fall through (air, fire,
   water, lava, replaceable plants, ...).
@@ -137,13 +138,17 @@ shared contract by this unit).
   placing) sends towards it: redstone wire power, producers (torches, levers, blocks of redstone,
   buttons, plates, observers facing away), repeaters / comparators pointing at it, powered blocks,
   and Lepton's randomizers / ender watchers.
-- Checked every tick (`minecraft:tick`). A change is applied 2 ticks later if it still holds; turning
+- Checked every tick (`minecraft:tick`; blocks that arrive without a pending tick, e.g. from
+  `/setblock`, get one queued). A change is applied 2 ticks later if it still holds; turning
   on picks left (`facing` clockwise, the player's left) or right with 50 % each.
-- Output: `minecraft:redstone_producer` power 15, strongly powering the chosen side only.
+- Output: `minecraft:redstone_producer` power 15, strongly powering the chosen side only. A data-driven
+  producer keeps the faces of the permutation it was created for, so the circuit component is removed
+  when it turns off and set up again for the new side when it turns on.
 
 ### Ender Watcher
 Every tick (`minecraft:tick`): for each player within 80 blocks (per axis) of the block centre whose
-head isn't a carved pumpkin, ray-trace 64 blocks from the eyes (block outlines, no liquids). When the
+head isn't a carved pumpkin, ray-trace 64 blocks from the eyes along the player's look rotation
+(block outlines, no liquids). When the
 hit block is the watcher: `fract = 1 - |offset in the face plane from the face centre| / 0.7071`,
 `watch = ceil(fract * 15)`; the strongest player wins. `lepton:watched` = any player looking,
 `lepton:power` = the strongest watch (state changes only when they differ). Red dust particles while
@@ -155,8 +160,10 @@ one), the block is placed at the dispenser's front if that spot can be replaced 
 placed there (`mayPlace` / survival: seeds need farmland, ...). Orientation: logs and other pillars
 along the dispenser axis; `facing_direction` blocks face along the dispenser; horizontally-facing
 blocks face back towards the dispenser (stairs: their back to the dispenser); slabs bottom half;
-doors place both halves; tall plants both halves. The item count goes down by one. Failure plays the
-dispenser fail sound and keeps the item.
+doors place both halves; tall plants both halves. Items without a block of their own on Bedrock use a
+table (seeds -> crops, carrot -> carrots, redstone -> redstone wire, string -> trip wire, sugar cane
+-> reeds, sweet / glow berries, kelp, ...) or the block with the item's id (doors, cakes, pots). The
+item count goes down by one. Failure plays the dispenser fail sound and keeps the item.
 
 ## 4. Screens
 None. Everything works the same for vanilla clients (block states, entities and vanilla sounds).
@@ -176,7 +183,7 @@ Section `redstone` (`config/redstone.json`):
 | `movementBlacklist` | string[] | Quark's list (§SPEC 5.1) | ids or `#tags` of blocks pistons can't move |
 | `namespaceMovementBlacklist` | string[] | `[]` | namespaces pistons can't move |
 | `delayedUpdateList` | string[] | `["minecraft:dispenser", "minecraft:dropper"]` | blocks updated a tick after landing |
-| `pistonPushLimit` | int | 12 | Zeta general config: blocks a piston can move (min 1) |
+| `pistonPushLimit` | int | 12 | Zeta's general config "Changes the piston push limit": blocks a piston can move (min 1) |
 | `enableGravisand` | bool | true | Gravisand |
 | `enableMetalButtons` | bool | true | MetalButtons |
 | `enableIron` | bool | true | iron button |
@@ -229,20 +236,29 @@ Names (RP `texts.d`): the block names of §2, `entity.lepton:gravisand.name` = F
 - Dispensers: Bedrock has no "optional behaviour" flag; items whose own Bedrock dispense behaviour
   succeeds keep it, the placement runs when it fails (`wrapExistingBehaviors`), and with
   `wrapExistingBehaviors` false the placement is skipped for shulker boxes, carved pumpkins and heads
-  (Java's optional block behaviours). Beds are placed with both halves; banners, signs and other
-  blocks that need a placer's rotation use their default rotation.
+  (Java's optional block behaviours). Beds keep Bedrock's behaviour (thrown out): their head part and
+  colour need a placing player. Banners, signs and other blocks that need a placer's rotation use their
+  default rotation.
+- Bedrock 1.26.51 marks beacons, jukeboxes and the sculk sensor / calibrated sculk sensor / catalyst /
+  shrieker immovable; on Java only their block entity stops pistons, so with PistonsMoveTileEntities on
+  Lepton gives them the push_pull movement type (restored when the module is off). Lodestones are
+  immovable on Bedrock for their own reasons (compass links) and stay so.
+- A recipe disabled by the config is removed when a world loads; turning the module back on brings it
+  back after a restart (the world's recipe list is built once).
 - Recipes: Bedrock has no wooden-button item tag, so the metal buttons have one recipe per vanilla
   wooden button (Lepton's own wooden buttons are not ingredients).
 - Advancement triggers (`watcher_center`) and JEI hints are not ported (SPEC §8).
 
 ## 8. Tests
-Selftests (dx 1000..1099): `redstone.blocks` (ids, states, tags), `redstone.recipes`,
-`redstone.iron_rod_breaks`, `redstone.iron_rod_prevent`, `redstone.chain_drags`,
-`redstone.chain_axis`, `redstone.push_limit`, `redstone.te_blacklist`, `redstone.chests_together`,
-`redstone.gravisand_falls`, `redstone.gravisand_floats`, `redstone.gravisand_chain`,
-`redstone.gravisand_comparator`, `redstone.metal_buttons`, `redstone.obsidian_plate`,
-`redstone.randomizer`, `redstone.ender_watcher`, `redstone.dispenser_places`,
-`redstone.dispenser_seeds`, `redstone.dispenser_blacklist`.
+Selftests (dx 1000..1099): `redstone.blocks` (ids, states, tags, Bedrock's immovable block entities),
+`redstone.recipes`, `redstone.iron_rod_breaks`, `redstone.iron_rod_prevent`, `redstone.chain_drags`,
+`redstone.chain_axis`, `redstone.push_limit`, `redstone.te_blacklist`, `redstone.te_movable`,
+`redstone.chests_together`, `redstone.gravisand_falls`, `redstone.gravisand_floats`,
+`redstone.gravisand_chain`, `redstone.gravisand_comparator`, `redstone.metal_buttons`,
+`redstone.obsidian_plate`, `redstone.randomizer`, `redstone.ender_watcher`,
+`redstone.dispenser_places`, `redstone.dispenser_seeds`, `redstone.dispenser_door`,
+`redstone.dispenser_blacklist`, `redstone.gallery` (builds the row for the client screenshots).
 E2E: `tools/e2e/server/scenarios/redstone.ps1` (all selftests + log lines);
-`tools/e2e/client/scenarios/redstone.ps1` (gallery of every block, a falling gravisand, a watched
-ender watcher, a powered randomizer; screenshots).
+`tools/e2e/client/scenarios/redstone.ps1` (screenshots `watcher`: the watched ender watcher next to an
+idle one; `row`: iron rods in three facings, gravisand, watchers, idle / powered randomizers, buttons,
+plate; `floating`: a gravisand entity floating up).

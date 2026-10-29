@@ -23,6 +23,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockChangeContext.h"
 #include "mc/world/level/block/BlockType.h"
 #include "mc/world/level/block/DispenserBlock.h"
 #include "mc/world/phys/AABB.h"
@@ -163,14 +164,20 @@ bool place(BlockSource& region, BlockPos const& pos, Block const& block, int fac
         if (up.y >= region.getMaxHeight() || !game::replaceable(region, up)) return false;
         if (auto const* lower = bs::with(*b, {{"upper_block_bit", false}})) b = lower;
     }
-    if (bs::get(*b, "head_piece_bit")) return false; // beds need the placer's rotation and colour data
     if (!b->getBlockType().mayPlace(region, pos)) return false;
-    if (!b->canSurvive(region, pos)) return false;
+    // a lone lower half never survives; mayPlace already checked the support and the space above
+    if (!upperPart && !b->canSurvive(region, pos)) return false;
     if (obstructed(region, pos, *b)) return false;
-    if (!game::setBlock(region, pos, *b)) return false;
     if (upperPart) {
-        if (auto const* upper = bs::with(*b, {{"upper_block_bit", true}})) game::setBlock(region, offset(pos, 1), *upper);
-    }
+        // both halves first (no updates in between, a lone half would pop), then the neighbour updates
+        auto const* upper = bs::with(*b, {{"upper_block_bit", true}});
+        if (!upper) return false;
+        BlockChangeContext ctx{};
+        if (!region.setBlock(pos, *b, 2, nullptr, ctx)) return false;
+        region.setBlock(offset(pos, 1), *upper, 2, nullptr, ctx);
+        region.updateNeighborsAt(pos);
+        region.updateNeighborsAt(offset(pos, 1));
+    } else if (!game::setBlock(region, pos, *b)) return false;
     placeSound(region, pos, *b);
     return true;
 }
@@ -199,7 +206,10 @@ LL_TYPE_STATIC_HOOK(
     Block const* block  = nullptr;
     if (auto planted = plantedBlock(itemId); !planted.empty()) block = bs::of(planted);
     else if (item.mBlock && !item.mBlock->isAir()) block = item.mBlock;
+    else block = bs::of(itemId); // items placing the block of the same id (doors, cakes, flower pots, ...)
     if (!block) return origin(region, pos, face, item, container, slot, countLimit);
+    // beds need a placer for their head part and colour: Bedrock's own behaviour (throwing) stays
+    if (bs::get(*block, "head_piece_bit")) return origin(region, pos, face, item, container, slot, countLimit);
     auto const& blockId = block->getTypeName();
     if (blacklisted(blockId, itemId) || (!c.wrapExistingBehaviors && hasOptionalBehaviour(itemId)))
         return origin(region, pos, face, item, container, slot, countLimit);

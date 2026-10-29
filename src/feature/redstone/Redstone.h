@@ -89,12 +89,14 @@ void onTick(std::function<void()> fn);
 bool destroyBlock(BlockSource& region, BlockPos const& pos, bool drop);
 /// Spawns an item entity at the centre of `pos`.
 void dropItem(BlockSource& region, BlockPos const& pos, std::string_view id, int count = 1);
-/// Sends a redstone-dust particle (`minecraft:redstone_wire_dust_particle`) at `pos`.
+/// Sends a red dust particle (`minecraft:redstone_ore_dust_particle`) at the position.
 void dustParticle(BlockSource& region, float x, float y, float z);
 /// Plays a level event (LevelEvent id) at `pos`.
 void levelEvent(BlockSource& region, int event, BlockPos const& pos, int data = 0);
 
 // ---- redstone --------------------------------------------------------------------------------------
+/// The dimension (0..2) whose circuit system is `sys`, -1 if none (cached per tick).
+[[nodiscard]] int dimOfCircuitSystem(void const* sys);
 /// Strength of the circuit component at `pos` (consumers: the power they receive), nullopt when the
 /// position has none. Read from the dimension's circuit scene graph (cached per tick).
 [[nodiscard]] std::optional<int> componentStrength(BlockSource& region, BlockPos const& pos);
@@ -118,6 +120,8 @@ void unpatchAll();
 void installPistons();
 void uninstallPistons();
 void onWorldClosedPistons();
+void onWorldClosedGravisand();
+void onWorldClosedDiodes();
 void installGravisand();
 void uninstallGravisand();
 void onWorldReadyGravisand();

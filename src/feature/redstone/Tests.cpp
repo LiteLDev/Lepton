@@ -504,6 +504,18 @@ LP_REGISTER_SELFTEST("redstone.dispenser_seeds", [](Context& ctx) -> ll::coro::C
     ctx.check(idAt(ctx, off(p, 1, 0, 0)) == "minecraft:wheat", "seeds were planted on the farmland (got " + idAt(ctx, off(p, 1, 0, 0)) + ")");
 });
 
+LP_REGISTER_SELFTEST("redstone.dispenser_door", [](Context& ctx) -> ll::coro::CoroTask<> {
+    GP p = co_await area(ctx, 1082);
+    clearBox(ctx, off(p, 0, 0, -1), 2, 3, 2);
+    put(ctx, off(p, 1, -1, 0), "minecraft:stone");
+    ctx.require(co_await dispense(ctx, p, 5, lp::game::makeItem("minecraft:wooden_door", 1)), "dispenser container");
+    ctx.check(idAt(ctx, off(p, 1, 0, 0)) == "minecraft:wooden_door", "the lower door half (got " + idAt(ctx, off(p, 1, 0, 0)) + ")");
+    ctx.check(idAt(ctx, off(p, 1, 1, 0)) == "minecraft:wooden_door", "the upper door half");
+    ctx.check(bs::getBool(regionOf(ctx).getBlock(bp(off(p, 1, 1, 0))), "upper_block_bit").value_or(false), "upper bit set");
+    put(ctx, off(p, 1, 1, 0), "minecraft:air");
+    put(ctx, off(p, 1, 0, 0), "minecraft:air");
+});
+
 LP_REGISTER_SELFTEST("redstone.dispenser_blacklist", [](Context& ctx) -> ll::coro::CoroTask<> {
     ConfigGuard guard;
     lp::config::mut<RConfig>().blacklist.push_back("minecraft:cobblestone");

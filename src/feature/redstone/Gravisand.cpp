@@ -50,7 +50,7 @@ struct Falling {
 struct State {
     std::set<core::GlobalPos>                     scheduled; ///< pending fall ticks
     std::set<core::GlobalPos>                     checks;    ///< power checks for the next tick
-    std::vector<std::pair<CircuitSystem*, BlockPos>> powered; ///< consumers the circuit evaluated powered
+    std::vector<std::pair<int, BlockPos>>         powered;   ///< gravisand the circuit evaluated powered
     std::unordered_map<int64_t, Falling>          falling;
     int                                           lastTicked = 0;
     bool                                          hooked     = false;
@@ -116,19 +116,11 @@ void fallTick(core::GlobalPos const& gp) {
     }
 }
 
+/// Java hasNeighborSignal: the block's own consumer component (the circuit knows which wires point
+/// into it); without one (not set up yet) the neighbours' signals.
 bool powered(BlockSource& region, BlockPos const& pos) {
-    if (auto s = componentStrength(region, pos); s && *s > 0) return true;
+    if (auto s = componentStrength(region, pos)) return *s > 0;
     return hasNeighborSignal(region, pos);
-}
-
-int dimOfCircuit(CircuitSystem* sys) {
-    auto level = ll::service::getLevel();
-    if (!level) return -1;
-    for (int d = 0; d < 3; ++d) {
-        auto dim = level->getDimension(d).lock();
-        if (dim && dim->mCircuitSystem.get() == sys) return d;
-    }
-    return -1;
 }
 
 void processChecks() {
@@ -136,10 +128,7 @@ void processChecks() {
     if (!s.powered.empty()) {
         auto list = std::move(s.powered);
         s.powered.clear();
-        for (auto const& [sys, pos] : list) {
-            int d = dimOfCircuit(sys);
-            if (d >= 0) s.checks.insert(game::globalPos(d, pos));
-        }
+        for (auto const& [d, pos] : list) s.checks.insert(game::globalPos(d, pos));
     }
     if (s.checks.empty()) return;
     auto checks = std::move(s.checks);
@@ -187,6 +176,23 @@ void tickEntity(Actor& e) {
     Vec3  pos    = e.getPosition();
     Vec3  next{pos.x + f.velocity.x * scale, pos.y + f.velocity.y * scale, pos.z + f.velocity.z * scale};
     int   bx = static_cast<int>(std::floor(next.x)), bz = static_cast<int>(std::floor(next.z));
+    {
+        // unloaded ahead: wait (don't fall through); a wall in the way: stop sideways motion
+        BlockPos column{bx, static_cast<int>(std::floor(next.y)), bz};
+        if (!region.hasChunksAt(column, 1, false)) {
+            f.velocity = Vec3{0, 0, 0};
+            return;
+        }
+        int cx = static_cast<int>(std::floor(pos.x)), cz = static_cast<int>(std::floor(pos.z));
+        if ((bx != cx || bz != cz) && collisionBox(region, BlockPos{bx, static_cast<int>(std::floor(pos.y + 0.5f)), bz})) {
+            next.x = pos.x;
+            next.z = pos.z;
+            f.velocity.x = 0;
+            f.velocity.z = 0;
+            bx = cx;
+            bz = cz;
+        }
+    }
     bool  landed = false;
     if (!up) {
         int from = static_cast<int>(std::floor(pos.y - 0.001f)), to = static_cast<int>(std::floor(next.y));
@@ -231,6 +237,11 @@ void tickEntity(Actor& e) {
 
 void tick() {
     processChecks();
+    // scan for falling gravisand while some fall, and once a second for ones loaded from disk
+    if (st().falling.empty() && now() % 20 != 0) {
+        st().lastTicked = 0;
+        return;
+    }
     auto list = game::entities::ofType(kEntity);
     st().lastTicked = static_cast<int>(list.size());
     for (auto* e : list) {
@@ -263,11 +274,23 @@ LL_TYPE_INSTANCE_HOOK(
     BlockPos const& pos
 ) {
     bool r = origin(system, pos);
-    if (installed() && getStrength() > 0 && onServerThread()) st().powered.emplace_back(&system, pos);
+    if (!installed() || getStrength() <= 0 || !onServerThread() || !cfg().enableGravisand) return r;
+    int d = dimOfCircuitSystem(&system);
+    if (d < 0) return r;
+    auto* region = game::regionOf(d);
+    if (region && region->hasChunksAt(pos, 0, false) && isGravisand(region->getBlock(pos))) st().powered.emplace_back(d, pos);
     return r;
 }
 
 } // namespace
+
+void onWorldClosedGravisand() {
+    auto& s = st();
+    s.scheduled.clear();
+    s.checks.clear();
+    s.powered.clear();
+    s.falling.clear();
+}
 
 void gravisandNeighborChanged(BlockSource& region, BlockPos const& pos) {
     if (!cfg().enableGravisand) return;

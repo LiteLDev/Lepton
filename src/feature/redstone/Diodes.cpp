@@ -168,6 +168,8 @@ void watcherTick(BlockSource& region, BlockPos const& pos, Block const& block) {
     }
 }
 
+void onWorldClosedDiodes() { pendingRandomizers().clear(); }
+
 void testing::forceRandomizerSide(int side) { gForcedSide = side; }
 std::array<float, 4> testing::lastWatcherHit() { return gLastHit; }
 

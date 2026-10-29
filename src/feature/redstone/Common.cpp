@@ -12,6 +12,7 @@
 #include <set>
 #include <thread>
 #include <tuple>
+#include <unordered_map>
 #include <windows.h>
 
 #include "ll/api/event/EventBus.h"
@@ -84,16 +85,26 @@ struct CompInfo {
     uint64_t type;
     int      direction;
 };
+struct PosHash {
+    size_t operator()(std::tuple<int, int, int> const& t) const noexcept {
+        auto [x, y, z] = t;
+        return (static_cast<size_t>(static_cast<uint32_t>(x)) * 73856093u) ^ (static_cast<size_t>(static_cast<uint32_t>(y)) * 19349663u)
+             ^ (static_cast<size_t>(static_cast<uint32_t>(z)) * 83492791u);
+    }
+};
+using CompMap = std::unordered_map<std::tuple<int, int, int>, CompInfo, PosHash>;
 struct PowerCache {
-    uint64_t                                              tick[3]{~0ull, ~0ull, ~0ull};
-    std::map<std::tuple<int, int, int>, CompInfo>         byPos[3];
+    uint64_t tick[3]{~0ull, ~0ull, ~0ull};
+    CompMap  byPos[3];
+    uint64_t circuitTick = ~0ull;
+    void*    circuits[3]{};
 };
 PowerCache& powerCache() {
     static PowerCache c;
     return c;
 }
 
-std::map<std::tuple<int, int, int>, CompInfo> const* componentsOf(BlockSource& region) {
+CompMap const* componentsOf(BlockSource& region) {
     int d = dimOf(region);
     if (d < 0 || d > 2) return nullptr;
     auto& c = powerCache();
@@ -335,6 +346,8 @@ public:
             game::db::onWorldClosed([] {
                 ts().tasks.clear();
                 onWorldClosedPistons();
+                onWorldClosedGravisand();
+                onWorldClosedDiodes();
                 // the client destroys the world's block types: forget them without touching them
                 for (auto& p : patched()) oldTables().push_back(std::move(p.table));
                 patched().clear();
@@ -367,6 +380,8 @@ public:
         RedstoneNeighborHook::unhook();
         RedstoneQueuedTickHook::unhook();
         ts().tasks.clear();
+        onWorldClosedGravisand();
+        onWorldClosedDiodes();
     }
 
 private:
@@ -484,6 +499,22 @@ void levelEvent(BlockSource& region, int event, BlockPos const& pos, int data) {
 
 // ---- redstone ------------------------------------------------------------------------------------------
 
+int dimOfCircuitSystem(void const* sys) {
+    auto& c = powerCache();
+    if (c.circuitTick != ts().tick) {
+        c.circuitTick = ts().tick;
+        auto level    = ll::service::getLevel();
+        for (int d = 0; d < 3; ++d) {
+            c.circuits[d] = nullptr;
+            if (!level) continue;
+            if (auto dim = level->getDimension(d).lock()) c.circuits[d] = dim->mCircuitSystem.get();
+        }
+    }
+    for (int d = 0; d < 3; ++d)
+        if (sys && c.circuits[d] == sys) return d;
+    return -1;
+}
+
 std::optional<int> componentStrength(BlockSource& region, BlockPos const& pos) {
     auto const* m = componentsOf(region);
     if (!m) return std::nullopt;
@@ -507,6 +538,7 @@ int signalFrom(BlockSource& region, BlockPos const& receiver, int face) {
     }
     if (name == "lepton:ender_watcher") return std::clamp(bs::getInt(b, "lepton:power").value_or(0), 0, 15);
     if (name == "minecraft:redstone_wire") return std::clamp(bs::getInt(b, "redstone_signal").value_or(0), 0, 15);
+    if (b.isAir()) return 0;
     auto const* m = componentsOf(region);
     if (!m) return 0;
     auto it = m->find({n.x, n.y, n.z});
