@@ -371,42 +371,40 @@
           {
             "add": {
               "component_groups": [
-                "lepton:wild"
+                "lepton:wild",
+                "lepton:red"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "test": "has_biome_tag",
+              "value": "soulsand_valley"
+            },
+            "remove": {
+              "component_groups": [
+                "lepton:red"
+              ]
+            },
+            "add": {
+              "component_groups": [
+                "lepton:blue"
               ]
             }
           },
           {
             "randomize": [
               {
-                "weight": 255,
-                "sequence": [
-                  {
-                    "filters": {
-                      "test": "has_biome_tag",
-                      "value": "soulsand_valley"
-                    },
-                    "add": {
-                      "component_groups": [
-                        "lepton:blue"
-                      ]
-                    }
-                  },
-                  {
-                    "filters": {
-                      "test": "has_biome_tag",
-                      "value": "soulsand_valley",
-                      "operator": "!="
-                    },
-                    "add": {
-                      "component_groups": [
-                        "lepton:red"
-                      ]
-                    }
-                  }
-                ]
+                "weight": 255
               },
               {
                 "weight": 1,
+                "remove": {
+                  "component_groups": [
+                    "lepton:red",
+                    "lepton:blue"
+                  ]
+                },
                 "add": {
                   "component_groups": [
                     "lepton:black"

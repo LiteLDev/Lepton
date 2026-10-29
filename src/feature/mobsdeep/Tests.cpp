@@ -445,6 +445,18 @@ LP_REGISTER_SELFTEST("mobsdeep.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     ctx.check(forgotten && itemId(forgotten->getOffhandSlot()) == "minecraft:iron_sword", "the Forgotten carries its sword");
     auto* blue = ent::find(ids[7]);
     ctx.check(blue && blue->getVariant() == 1, "a blue soulhound");
+    auto* black = ent::find(ids[6]);
+    ctx.check(black && black->getVariant() == 2, "a black foxhound");
+    // a plain spawn outside a Soul Sand Valley is red (1 in 256 is black: spawn again then)
+    auto* red = ent::find(ids[8]);
+    for (int retry = 0; retry < 3 && red && red->getVariant() == 2; ++retry) {
+        ent::despawn(*red);
+        red     = ent::spawn(region, slots[8].type, at(slots[8].dx));
+        ids[8]  = red ? ent::idOf(*red) : 0;
+        co_await ctx.ticks(2);
+        red = ent::find(ids[8]);
+    }
+    ctx.check(red && red->getVariant() == 0, "a red foxhound (got " + std::to_string(red ? red->getVariant() : -1) + ")");
     auto* resting = ent::find(ids[9]);
     ctx.check(resting && md::boolProp(*resting, "lepton:resting"), "the tame foxhound rests");
     ctx.check(bead != 0, "a soul bead flies");

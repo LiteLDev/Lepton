@@ -300,12 +300,10 @@ $foxComponents = O `
     'minecraft:behavior.random_look_around' (O priority 14)
 $foxEvents = O `
     'minecraft:entity_spawned' (O sequence @(
-        (O add (O component_groups @('lepton:wild'))),
-        (O randomize @(
-            (O weight 255 sequence @(
-                (O filters (O test 'has_biome_tag' value 'soulsand_valley') add (O component_groups @('lepton:blue'))),
-                (O filters (O test 'has_biome_tag' value 'soulsand_valley' operator '!=') add (O component_groups @('lepton:red'))))),
-            (O weight 1 add (O component_groups @('lepton:black'))))))) `
+        (O add (O component_groups @('lepton:wild', 'lepton:red'))),
+        (O filters (O test 'has_biome_tag' value 'soulsand_valley') remove (O component_groups @('lepton:red')) add (O component_groups @('lepton:blue'))),
+        (O randomize @((O weight 255),
+            (O weight 1 remove (O component_groups @('lepton:red', 'lepton:blue')) add (O component_groups @('lepton:black'))))))) `
     'minecraft:entity_born' (O add (O component_groups @('lepton:tame', 'lepton:baby'))) `
     'minecraft:ageable_grow_up' (O remove (O component_groups @('lepton:baby'))) `
     'lepton:on_tame' (O remove (O component_groups @('lepton:wild')) add (O component_groups @('lepton:tame'))) `
