@@ -144,6 +144,8 @@ void installPlants();
 void uninstallPlants();
 /// PetalsOnWater: place / add a petal at `pos` (water source or water petals). Returns true if done.
 bool placePetal(Player& player, BlockSource& region, BlockPos pos, int face, bool fromBlockClick);
+/// Places a block without the water layer the game adds to waterloggable blocks (coral fans).
+void placeDry(BlockSource& region, BlockPos const& pos, Block const& block);
 /// RenewableSporeBlossoms: returns true if handled (bone meal consumed by the caller's rules).
 bool boneMealSporeBlossom(BlockSource& region, BlockPos const& pos);
 

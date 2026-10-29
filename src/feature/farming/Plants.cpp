@@ -94,7 +94,19 @@ void playPlace(BlockSource& region, BlockPos const& pos, Block const& block, Pla
     );
 }
 
+bool isWater(std::string const& id) { return id == "minecraft:water" || id == "minecraft:flowing_water"; }
+
 } // namespace
+
+/// Places a block without the water layer the game adds to waterloggable blocks such as coral
+/// fans (a fan put on a cactus in the air must not bring a water source with it).
+void placeDry(BlockSource& region, BlockPos const& pos, Block const& block) {
+    bool wet = isWater(region.getExtraBlock(pos).getTypeName()) || isWater(region.getBlock(pos).getTypeName());
+    game::setBlock(region, pos, block);
+    if (!wet && isWater(region.getExtraBlock(pos).getTypeName())) {
+        if (auto const* air = bs::of("minecraft:air")) region.setExtraBlock(pos, *air, 3);
+    }
+}
 
 // ---- PetalsOnWater -------------------------------------------------------------------------------
 
@@ -213,7 +225,7 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
             if (!game::replaceable(r, above) || !onCactus(r, above)) return;
             auto const* fan = bs::of(itemId);
             if (!fan) return;
-            game::setBlock(r, above, *fan);
+            placeDry(r, above, *fan);
             playPlace(r, above, *fan, *p);
             consumeOne(*p, p->getSelectedItem());
             log().info("farming: {} placed {} on a cactus", p->getRealName(), itemId);

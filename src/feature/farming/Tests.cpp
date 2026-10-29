@@ -303,9 +303,12 @@ LP_REGISTER_SELFTEST("farming.coral_on_cactus", [](Context& ctx) -> ll::coro::Co
     auto& region = p.getDimensionBlockSource();
     put(ctx, region, bp(base, 0, 0, 1), "minecraft:sand");
     put(ctx, region, bp(base, 0, 1, 1), "minecraft:cactus");
-    put(ctx, region, bp(base, 0, 2, 1), "minecraft:tube_coral_fan");
     put(ctx, region, bp(base, 2, 0, 1), "minecraft:stone");
-    put(ctx, region, bp(base, 2, 1, 1), "minecraft:tube_coral_fan");
+    // dry fans (as placed in the air), one on the cactus and a control on stone
+    for (auto [dx, dy] : {std::pair{0, 2}, {2, 1}}) {
+        ctx.cleanupBlock(lp::game::globalPos(0, bp(base, dx, dy, 1)));
+        if (auto const* fan = bs::of("minecraft:tube_coral_fan")) farm::placeDry(region, bp(base, dx, dy, 1), *fan);
+    }
     // a neighbour update runs the survival/alive checks
     put(ctx, region, bp(base, 1, 2, 1), "minecraft:stone");
     put(ctx, region, bp(base, 3, 1, 1), "minecraft:stone");
@@ -314,7 +317,7 @@ LP_REGISTER_SELFTEST("farming.coral_on_cactus", [](Context& ctx) -> ll::coro::Co
         co_await ctx.ticks(10);
         controlDied = idAt(region, bp(base, 2, 1, 1)) != "minecraft:tube_coral_fan";
     }
-    ctx.info(controlDied ? "a fan on stone died" : "the fan on stone did not die within 15 s");
+    ctx.check(controlDied, "a dry fan on stone dies");
     ctx.check(idAt(region, bp(base, 0, 2, 1)) == "minecraft:tube_coral_fan", "the fan on the cactus stays alive");
 
     // placing a fan on a cactus
@@ -328,10 +331,7 @@ LP_REGISTER_SELFTEST("farming.coral_on_cactus", [](Context& ctx) -> ll::coro::Co
     sim.simulateUseItemOnBlock(fan, bp(base, 4, 1, 1), Facing::Up, Vec3{0.5f, 1.0f, 0.5f});
     for (int i = 0; i < 10 && idAt(region, bp(base, 4, 2, 1)) != "minecraft:brain_coral_fan"; ++i) co_await ctx.ticks(1);
     ctx.check(idAt(region, bp(base, 4, 2, 1)) == "minecraft:brain_coral_fan", "a coral fan can be placed on a cactus");
-    for (auto [dx, dy] : {std::pair{0, 2}, {2, 1}, {4, 2}}) {
-        auto const& liquid = region.getExtraBlock(bp(base, dx, dy, 1)).getTypeName();
-        if (liquid != "minecraft:air") ctx.info("liquid layer at fan " + std::to_string(dx) + ": " + liquid);
-    }
+    ctx.check(region.getExtraBlock(bp(base, 4, 2, 1)).getTypeName() == "minecraft:air", "the placed fan brings no water");
     drain(region, bp(base, -1, 0, 0), bp(base, 6, 3, 2));
     hand(p, ItemStack{});
 });
@@ -436,6 +436,8 @@ LP_REGISTER_SELFTEST("farming.poison_potato", [](Context& ctx) -> ll::coro::Coro
     ctx.require(baby && control && adult, "pigs spawned");
     auto babyId = ent::idOf(*baby), controlId = ent::idOf(*control), adultId = ent::idOf(*adult);
     co_await ctx.ticks(2);
+    growUp(ent::find(adultId));
+    co_await ctx.ticks(2);
     baby = ent::find(babyId);
     ctx.require(baby && baby->isBaby(), "the entity_born pig is a baby");
     hand(p, makeItem("minecraft:poisonous_potato", 3));
@@ -479,6 +481,9 @@ LP_REGISTER_SELFTEST("farming.pig_litters", [](Context& ctx) -> ll::coro::CoroTa
     auto* b = ent::spawn(region, "minecraft:pig", Vec3{at.x + 2, at.y, at.z});
     ctx.require(a && b, "pigs spawned");
     auto ida = ent::idOf(*a), idb = ent::idOf(*b);
+    co_await ctx.ticks(2);
+    growUp(ent::find(ida));
+    growUp(ent::find(idb));
     co_await ctx.ticks(2);
     auto& c                = lp::config::mut<farm::FarmingConfig>();
     c.minPigLitterSize     = 3;
@@ -674,10 +679,12 @@ LP_REGISTER_SELFTEST("farming.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     }
     put(ctx, region, bp(base, 10, 0, 2), "minecraft:sand");
     put(ctx, region, bp(base, 10, 1, 2), "minecraft:cactus");
-    put(ctx, region, bp(base, 10, 2, 2), "minecraft:fire_coral_fan");
+    ctx.cleanupBlock(lp::game::globalPos(0, bp(base, 10, 2, 2)));
+    if (auto const* fan = bs::of("minecraft:fire_coral_fan")) farm::placeDry(region, bp(base, 10, 2, 2), *fan);
     put(ctx, region, bp(base, 11, 0, 2), "minecraft:sand");
     put(ctx, region, bp(base, 11, 1, 2), "minecraft:cactus");
-    put(ctx, region, bp(base, 11, 2, 2), "minecraft:horn_coral_fan");
+    ctx.cleanupBlock(lp::game::globalPos(0, bp(base, 11, 2, 2)));
+    if (auto const* fan = bs::of("minecraft:horn_coral_fan")) farm::placeDry(region, bp(base, 11, 2, 2), *fan);
     // the test player carries a chicken next to the farm
     p.teleport(
         Vec3{static_cast<float>(base.x) + 2.5f, static_cast<float>(base.y), static_cast<float>(base.z) + 3.5f},
@@ -727,7 +734,7 @@ LP_REGISTER_SELFTEST("farming.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         c->stopRiding(true, false, false, false);
         ent::despawn(*c);
     }
-    drain(region, bp(base, 3, 0, -1), bp(base, 9, 2, 5));
+    drain(region, bp(base, 3, 0, -1), bp(base, 12, 2, 5));
     co_await ctx.ticks(2);
     clearEntities(region, around(bp(base), bp(base, 11, 2, 4)), "minecraft:item");
 });
