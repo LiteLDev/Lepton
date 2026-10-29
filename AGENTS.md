@@ -94,8 +94,9 @@ Registrations live in .cpp files linked directly into the DLL, so they are never
   `ctx.testPos(dx)` (distinct `dx` per test; unit U<n> owns dx 100n..100n+99; the run keeps the
   area loaded with a ticking area), `ctx.setBlock(pos, id, states)`, `ctx.cleanupBlock`, `ctx.give`,
   `co_await ctx.ticks(n)`, `co_await ctx.ensureLoaded(pos)`, `ctx.check/require/fail/info`.
-  `/quark selftest` (no glob) and the server scenario `full` run every unit's tests together:
-  keep them passing there.
+  `/quark selftest` (no glob) and the server and client scenarios `full` run every unit's tests
+  together: keep them passing there. A test that waits for a client scenario's input (real clicks)
+  does that only when `selftest::runSize() == 1` (it runs on its own).
 - **Companion protocol** (`net/Net.h`): LeviLamina runtime packets (one per direction) carrying
   `(kId, JSON)`. The client mod says `lp:hello` after joining; the server answers `lp:welcome`.
   The server sends Lepton messages **only** to `net::hasClientMod(player)` players (`sendToClient`
