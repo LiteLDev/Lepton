@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_crimsoncrimson_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_crimson_ladder",
       "minecraft:block_placer": {
         "block": "lepton:crimson_ladder",
         "replace_block_item": true

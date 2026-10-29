@@ -51,7 +51,7 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_dark_oakdark_oak_ladder",
+          "texture": "lepton_woodvariants_woodvariants_dark_oak_ladder",
           "render_method": "alpha_test"
         }
       },

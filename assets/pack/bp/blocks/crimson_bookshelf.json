@@ -22,23 +22,23 @@
       "minecraft:geometry": "minecraft:geometry.full_block",
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_crimsoncrimson_bookshelf",
+          "texture": "lepton_woodvariants_woodvariants_crimson_bookshelf",
           "render_method": "opaque"
         },
         "north": {
-          "texture": "lepton_woodvariants_crimsoncrimson_bookshelf",
+          "texture": "lepton_woodvariants_woodvariants_crimson_bookshelf",
           "render_method": "opaque"
         },
         "south": {
-          "texture": "lepton_woodvariants_crimsoncrimson_bookshelf",
+          "texture": "lepton_woodvariants_woodvariants_crimson_bookshelf",
           "render_method": "opaque"
         },
         "east": {
-          "texture": "lepton_woodvariants_crimsoncrimson_bookshelf",
+          "texture": "lepton_woodvariants_woodvariants_crimson_bookshelf",
           "render_method": "opaque"
         },
         "west": {
-          "texture": "lepton_woodvariants_crimsoncrimson_bookshelf",
+          "texture": "lepton_woodvariants_woodvariants_crimson_bookshelf",
           "render_method": "opaque"
         },
         "up": {

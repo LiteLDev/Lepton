@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_sprucespruce_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_spruce_ladder",
       "minecraft:block_placer": {
         "block": "lepton:spruce_ladder",
         "replace_block_item": true

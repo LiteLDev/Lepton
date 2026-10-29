@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_acaciaacacia_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_acacia_ladder",
       "minecraft:block_placer": {
         "block": "lepton:acacia_ladder",
         "replace_block_item": true

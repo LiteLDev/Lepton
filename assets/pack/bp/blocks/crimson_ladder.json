@@ -47,7 +47,7 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_crimsoncrimson_ladder",
+          "texture": "lepton_woodvariants_woodvariants_crimson_ladder",
           "render_method": "alpha_test"
         }
       },

@@ -1,4 +1,6 @@
 {
   "block.quark.oak_bookshelf": "Oak Bookshelf",
-  "block.quark.oak_ladder": "Oak Ladder"
+  "block.quark.oak_ladder": "Oak Ladder",
+  "quark.jei.hint.hollow_logs": "Can be crawled into by sneaking while walking towards the hollow side, can also be climbed when you're inside.",
+  "quark.jei.hint.posts": "Can be placed in any axis. Chains and Lanterns can connect to this block."
 }

@@ -11,10 +11,13 @@
 
 #include "mc/locale/Localization.h"
 #include "mc/locale/OptionalString.h"
+#include "mc/world/item/ItemStackBase.h"
+#include "mc/world/level/block/Block.h"
 
 #include "client/Client.h"
 #include "client/ui/Ui.h"
 #include "feature/woodvariants/WoodVariants.h"
+#include "game/BlockStates.h"
 #include "mod/Module.h"
 
 namespace lp::client::woodvariants {
@@ -79,6 +82,20 @@ int gFrames = 0;
 LP_REGISTER_HUD([](ui::DrawContext&) {
     if (++gFrames % 60 != 0 || !client::inLevel()) return;
     wv::applyKnownBlockProperties();
+});
+
+// Quark's JEI hints of the posts and hollow logs, shown in the item tooltip (docs §6).
+LP_REGISTER_TOOLTIP([](ItemStackBase const& item, std::vector<std::string>& lines) {
+    if (item.isNull()) return;
+    auto const& name = item.getTypeName();
+    if (!name.starts_with("lepton:")) return;
+    auto const* block = game::blockstates::of(name);
+    if (!block || !wv::moduleEnabled(*block)) return;
+    if (wv::hasTag(*block, "lepton:post")) {
+        lines.push_back("§7" + client::ctr("quark.jei.hint.posts", "Can be placed in any axis. Chains and Lanterns can connect to this block."));
+    } else if (wv::hasTag(*block, "lepton:hollow_log")) {
+        lines.push_back("§7" + client::ctr("quark.jei.hint.hollow_logs", "Can be crawled into by sneaking while walking towards the hollow side, can also be climbed when you're inside."));
+    }
 });
 
 class WoodVariantsClientModule {

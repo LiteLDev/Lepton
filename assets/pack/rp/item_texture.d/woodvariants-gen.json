@@ -1,32 +1,32 @@
 {
-  "lepton_woodvariants_acaciaacacia_ladder": {
-    "textures": "acaciaacacia_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_acacia_ladder": {
+    "textures": "textures/blocks/woodvariants/acacia_ladder"
   },
-  "lepton_woodvariants_bamboobamboo_ladder": {
-    "textures": "bamboobamboo_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_bamboo_ladder": {
+    "textures": "textures/blocks/woodvariants/bamboo_ladder"
   },
-  "lepton_woodvariants_birchbirch_ladder": {
-    "textures": "birchbirch_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_birch_ladder": {
+    "textures": "textures/blocks/woodvariants/birch_ladder"
   },
-  "lepton_woodvariants_cherrycherry_ladder": {
-    "textures": "cherrycherry_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_cherry_ladder": {
+    "textures": "textures/blocks/woodvariants/cherry_ladder"
   },
-  "lepton_woodvariants_crimsoncrimson_ladder": {
-    "textures": "crimsoncrimson_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_crimson_ladder": {
+    "textures": "textures/blocks/woodvariants/crimson_ladder"
   },
-  "lepton_woodvariants_dark_oakdark_oak_ladder": {
-    "textures": "dark_oakdark_oak_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_dark_oak_ladder": {
+    "textures": "textures/blocks/woodvariants/dark_oak_ladder"
   },
-  "lepton_woodvariants_junglejungle_ladder": {
-    "textures": "junglejungle_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_jungle_ladder": {
+    "textures": "textures/blocks/woodvariants/jungle_ladder"
   },
-  "lepton_woodvariants_mangrovemangrove_ladder": {
-    "textures": "mangrovemangrove_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_mangrove_ladder": {
+    "textures": "textures/blocks/woodvariants/mangrove_ladder"
   },
-  "lepton_woodvariants_sprucespruce_ladder": {
-    "textures": "sprucespruce_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_spruce_ladder": {
+    "textures": "textures/blocks/woodvariants/spruce_ladder"
   },
-  "lepton_woodvariants_warpedwarped_ladder": {
-    "textures": "warpedwarped_ladder"
+  "lepton_woodvariants_textures_blocks_woodvariants_warped_ladder": {
+    "textures": "textures/blocks/woodvariants/warped_ladder"
   }
 }

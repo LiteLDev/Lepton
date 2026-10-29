@@ -390,7 +390,7 @@ function Invoke-WoodVariantsPack {
     $texDir = Join-Path $script:RP 'textures/blocks/woodvariants'
     foreach ($p in (Write-WoodVariantTextures $texDir)) { $null = Add-PackFile $p }
     $T = 'textures/blocks/'
-    $W = 'textures/blocks/woodvariants/'
+    $WvTex = 'textures/blocks/woodvariants/'
 
     # name, zh wood, planks texture, log side/top, stripped side/top, sounds, nether
     $woods = [ordered]@{
@@ -420,20 +420,20 @@ function Invoke-WoodVariantsPack {
         $common = @{ MapColor = $d.color; NonFlammable = $nether }
 
         # VerticalPlanks (ALL)
-        New-WvVerticalPlanks -Id "lepton:vertical_${w}_planks" -Texture "${W}vertical_${w}_planks" -Planks $planks -Sound $sound @common `
+        New-WvVerticalPlanks -Id "lepton:vertical_${w}_planks" -Texture "${WvTex}vertical_${w}_planks" -Planks $planks -Sound $sound @common `
             -Name @{ en = "Vertical $($d.en) Planks"; zh = $verticalZh[$w] }
 
         # VariantBookshelves / VariantLadders (NON_OAK)
         if ($w -ne 'oak') {
-            New-WvBookshelf -Id "lepton:${w}_bookshelf" -SideTexture "${W}${w}_bookshelf" -TopTexture "$T$($d.planks)" -Planks $planks -Sound $sound @common `
+            New-WvBookshelf -Id "lepton:${w}_bookshelf" -SideTexture "${WvTex}${w}_bookshelf" -TopTexture "$T$($d.planks)" -Planks $planks -Sound $sound @common `
                 -Name @{ en = "$($d.en) Bookshelf"; zh = "$($d.zh)书架" }
-            New-WvLadder -Id "lepton:${w}_ladder" -Texture "${W}${w}_ladder" -Planks $planks -Sound $sound @common `
+            New-WvLadder -Id "lepton:${w}_ladder" -Texture "${WvTex}${w}_ladder" -Planks $planks -Sound $sound @common `
                 -Name @{ en = "$($d.en) Ladder"; zh = "$($d.zh)梯子" }
         }
 
         # WoodenPosts (ALL): from the wood / hyphae / bamboo block
         if ($w -eq 'bamboo') {
-            $postTex = "${W}bamboo_post"; $sPostTex = "${W}stripped_bamboo_post"
+            $postTex = "${WvTex}bamboo_post"; $sPostTex = "${WvTex}stripped_bamboo_post"
             $woodItem = 'minecraft:bamboo_block'; $sWoodItem = 'minecraft:stripped_bamboo_block'
         } else {
             $postTex = "$T$($d.log)"; $sPostTex = "$T$($d.slog)"

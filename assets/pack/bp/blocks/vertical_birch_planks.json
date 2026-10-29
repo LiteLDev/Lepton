@@ -27,31 +27,31 @@
       "minecraft:geometry": "minecraft:geometry.full_block",
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "north": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "south": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "east": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "west": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "up": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         },
         "down": {
-          "texture": "lepton_woodvariants_birchvertical_birch_planks",
+          "texture": "lepton_woodvariants_woodvariants_vertical_birch_planks",
           "render_method": "opaque"
         }
       },

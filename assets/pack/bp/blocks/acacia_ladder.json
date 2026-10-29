@@ -51,7 +51,7 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_acaciaacacia_ladder",
+          "texture": "lepton_woodvariants_woodvariants_acacia_ladder",
           "render_method": "alpha_test"
         }
       },

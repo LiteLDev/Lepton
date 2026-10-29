@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_birchbirch_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_birch_ladder",
       "minecraft:block_placer": {
         "block": "lepton:birch_ladder",
         "replace_block_item": true

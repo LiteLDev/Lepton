@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_junglejungle_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_jungle_ladder",
       "minecraft:block_placer": {
         "block": "lepton:jungle_ladder",
         "replace_block_item": true

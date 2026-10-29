@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_warpedwarped_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_warped_ladder",
       "minecraft:block_placer": {
         "block": "lepton:warped_ladder",
         "replace_block_item": true

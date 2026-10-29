@@ -51,7 +51,7 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_cherrycherry_ladder",
+          "texture": "lepton_woodvariants_woodvariants_cherry_ladder",
           "render_method": "alpha_test"
         }
       },

@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_bamboobamboo_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_bamboo_ladder",
       "minecraft:block_placer": {
         "block": "lepton:bamboo_ladder",
         "replace_block_item": true

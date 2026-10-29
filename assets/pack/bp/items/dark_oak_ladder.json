@@ -8,7 +8,7 @@
       }
     },
     "components": {
-      "minecraft:icon": "lepton_woodvariants_dark_oakdark_oak_ladder",
+      "minecraft:icon": "lepton_woodvariants_textures_blocks_woodvariants_dark_oak_ladder",
       "minecraft:block_placer": {
         "block": "lepton:dark_oak_ladder",
         "replace_block_item": true

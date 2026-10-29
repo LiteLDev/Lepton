@@ -76,11 +76,11 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "lepton_woodvariants_bamboobamboo_post",
+          "texture": "lepton_woodvariants_woodvariants_bamboo_post",
           "render_method": "opaque"
         },
         "side": {
-          "texture": "lepton_woodvariants_bamboobamboo_post",
+          "texture": "lepton_woodvariants_woodvariants_bamboo_post",
           "render_method": "opaque"
         },
         "chain": {
