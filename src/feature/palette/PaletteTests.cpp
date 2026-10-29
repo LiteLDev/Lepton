@@ -749,13 +749,13 @@ LP_REGISTER_SELFTEST("palette.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     view(8.5f, 1.f, -5.f, 0.f, 15.f); // north of row 0, looking south
     co_await ctx.ticks(150);
     ctx.info("PALETTE view glass");
-    view(8.5f, 3.f, -3.f, 0.f, 35.f);
+    view(8.5f, 3.5f, 7.5f, 180.f, 25.f); // over row 2, looking north at the glass row
     co_await ctx.ticks(150);
     ctx.info("PALETTE view misc");
     view(9.f, 2.f, 10.f, 180.f, 20.f); // south of row 2, looking north
     co_await ctx.ticks(150);
     ctx.info("PALETTE view misc-close");
-    view(13.f, 1.5f, 7.f, 180.f, 25.f);
+    view(15.5f, 2.f, 7.5f, 180.f, 30.f); // gate, thatch, grate
     co_await ctx.ticks(150);
     ctx.info("PALETTE done");
 });
