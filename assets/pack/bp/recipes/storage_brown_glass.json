@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_brown_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:brown_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:brown_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:brown_stained_glass",
+      "count": 1
+    }
+  }
+}

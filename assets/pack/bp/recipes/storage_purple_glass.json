@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_purple_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:purple_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:purple_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:purple_stained_glass",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_gray_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:gray_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:gray_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:gray_stained_glass",
+      "count": 1
+    }
+  }
+}

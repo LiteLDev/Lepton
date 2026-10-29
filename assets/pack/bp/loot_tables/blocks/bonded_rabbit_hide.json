@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:bonded_rabbit_hide",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

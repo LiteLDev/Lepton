@@ -1,0 +1,34 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_nether_wart_block_4x4"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:nether_wart"
+      },
+      {
+        "item": "minecraft:nether_wart"
+      },
+      {
+        "item": "minecraft:nether_wart"
+      },
+      {
+        "item": "minecraft:nether_wart"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:nether_wart"
+      }
+    ],
+    "result": {
+      "item": "minecraft:nether_wart_block",
+      "count": 1
+    }
+  }
+}

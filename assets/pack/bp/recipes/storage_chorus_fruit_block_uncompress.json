@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_chorus_fruit_block_uncompress"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:chorus_fruit_block"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:chorus_fruit_block"
+      }
+    ],
+    "result": {
+      "item": "minecraft:chorus_fruit",
+      "count": 9
+    }
+  }
+}

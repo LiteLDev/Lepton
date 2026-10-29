@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_clear_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:clear_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:clear_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:glass",
+      "count": 1
+    }
+  }
+}

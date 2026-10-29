@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_apple_crate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:apple"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:apple"
+      }
+    ],
+    "result": {
+      "item": "lepton:apple_crate",
+      "count": 1
+    }
+  }
+}

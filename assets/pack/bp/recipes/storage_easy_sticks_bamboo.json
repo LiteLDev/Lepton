@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_easy_sticks_bamboo"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:bamboo_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:bamboo_block"
+      }
+    ],
+    "result": {
+      "item": "minecraft:stick",
+      "count": 8
+    }
+  }
+}

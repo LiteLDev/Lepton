@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_easy_hopper"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "IWI",
+      "IWI",
+      " I "
+    ],
+    "key": {
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "W": {
+        "tag": "minecraft:logs"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:iron_ingot"
+      }
+    ],
+    "result": {
+      "item": "minecraft:hopper",
+      "count": 1
+    }
+  }
+}
