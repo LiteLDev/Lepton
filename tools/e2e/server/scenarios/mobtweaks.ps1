@@ -2,7 +2,7 @@
 $mark = Get-LogMark
 $r = Invoke-SelfTest 'mobtweaks.*' -TimeoutSeconds 600
 if ($r.Fail -gt 0) { throw "$($r.Fail) mobtweaks selftest(s) failed" }
-if ($r.Pass -lt 14) { throw "expected 14 mobtweaks selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 15) { throw "expected 15 mobtweaks selftests to pass, got $($r.Pass)" }
 foreach ($line in @(
         'mobtweaks: slime of size \d split into \d+ magma cubes',
         'mobtweaks: snow golem head Vazkii',

@@ -18,6 +18,10 @@
 #include "mc/world/inventory/network/ItemStackNetResult.h"
 #include "mc/world/inventory/network/crafting/CraftHandlerBase.h"
 #include "mc/world/inventory/network/crafting/CraftHandlerCrafting.h"
+#include "mc/world/inventory/network/crafting/CraftHandlerEnchant.h"
+#include "mc/world/inventory/network/crafting/CraftHandlerGrindstone.h"
+#include "mc/deps/core/math/IRandom.h"
+#include "mc/world/item/enchanting/EnchantResult.h"
 #include "mc/world/inventory/simulation/ContainerScreenValidation.h"
 #include "mc/world/inventory/simulation/ContainerValidationCraftInputs.h"
 #include "mc/world/inventory/simulation/ContainerValidationCraftResult.h"
@@ -58,6 +62,108 @@ namespace lp::feature::mobtweaks {
 namespace {
 
 // ---- GoldToolsHaveFortune ------------------------------------------------------------------------
+
+/// Java bakes the enchantments into the effects only: the anvil, the enchanting table and the
+/// grindstone see the item's real enchantments. While the game runs one of those, the baked levels
+/// are off (per thread: server and client predict separately).
+thread_local int tGearDepth = 0;
+struct GearScope {
+    GearScope() { ++tGearDepth; }
+    ~GearScope() { --tGearDepth; }
+    GearScope(GearScope const&)            = delete;
+    GearScope& operator=(GearScope const&) = delete;
+};
+
+LL_STATIC_HOOK(
+    CanEnchantHook,
+    ll::memory::HookPriority::Normal,
+    &EnchantUtils::canEnchant,
+    EnchantResult,
+    ItemStackBase const&       item,
+    EnchantmentInstance const& enchant,
+    bool                       allowNonVanilla
+) {
+    GearScope scope;
+    return origin(item, enchant, allowNonVanilla);
+}
+
+LL_STATIC_HOOK(
+    CombineHook,
+    ll::memory::HookPriority::Normal,
+    &EnchantUtils::combineEnchantedItems,
+    int,
+    ItemStack const& first,
+    ItemStack const& second,
+    ItemStack&       out,
+    bool             bookEnchant
+) {
+    GearScope scope;
+    return origin(first, second, out, bookEnchant);
+}
+
+LL_STATIC_HOOK(
+    EnchantCostsHook,
+    ll::memory::HookPriority::Normal,
+    &EnchantUtils::getEnchantCosts,
+    std::vector<int>,
+    IRandom&             random,
+    ItemStackBase const& item,
+    int                  bookcases
+) {
+    GearScope scope;
+    return origin(random, item, bookcases);
+}
+
+LL_STATIC_HOOK(
+    RandomlyEnchantHook,
+    ll::memory::HookPriority::Normal,
+    &EnchantUtils::randomlyEnchant,
+    void,
+    IRandom&       random,
+    ItemStackBase& out,
+    int            cost,
+    int            valueBuff,
+    bool           treasure
+) {
+    GearScope scope;
+    origin(random, out, cost, valueBuff, treasure);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    EnchantCraftHook,
+    ll::memory::HookPriority::Normal,
+    CraftHandlerEnchant,
+    &CraftHandlerEnchant::$_handleCraftAction,
+    ItemStackNetResult,
+    ItemStackRequestActionCraftBase const& action
+) {
+    GearScope scope;
+    return origin(action);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    GrindstoneCraftHook,
+    ll::memory::HookPriority::Normal,
+    CraftHandlerGrindstone,
+    &CraftHandlerGrindstone::$_handleCraftAction,
+    ItemStackNetResult,
+    ItemStackRequestActionCraftBase const& action
+) {
+    GearScope scope;
+    return origin(action);
+}
+
+LL_TYPE_STATIC_HOOK(
+    GrindstoneXpHook,
+    ll::memory::HookPriority::Normal,
+    CraftHandlerGrindstone,
+    &CraftHandlerGrindstone::_getExperienceFromItem,
+    int,
+    ItemStack const& stack
+) {
+    GearScope scope;
+    return origin(stack);
+}
 
 /// Java EnchantmentHelper.isEnchantmentCompatible: the baked enchantment applies only if it is
 /// compatible with every other enchantment on the item.
@@ -200,6 +306,7 @@ LL_TYPE_INSTANCE_HOOK(
         if (sparesAnvil(material)) sparedCrafts()[id] = tickNow();
         else sparedCrafts().erase(id);
     }
+    GearScope scope; // the anvil sees the real enchantments
     return origin(screenContext, screenValidation, std::move(craftInputs), numCrafts);
 }
 
@@ -212,15 +319,26 @@ LL_STATIC_HOOK(
     BlockPos const& pos,
     IRandom&        random
 ) {
-    if (consumeSparedCraft(player.getOrCreateUniqueID().rawID)) return;
+    if (consumeSparedCraft(player.getOrCreateUniqueID().rawID)) {
+        log().info("mobtweaks: anvil spared at {} {} {}", pos.x, pos.y, pos.z);
+        return;
+    }
     origin(player, pos, random);
 }
 
 // ---- DragonScales: elytra duplication ------------------------------------------------------------
 
-/// Elytras consumed by an elytra_duplication craft, per craft handler, given back on success.
-std::unordered_map<CraftHandlerBase const*, std::pair<int64_t, std::vector<ItemStack>>>& pendingElytras() {
-    static std::unordered_map<CraftHandlerBase const*, std::pair<int64_t, std::vector<ItemStack>>> m;
+/// What one crafting request consumed, per craft handler. The handler's recipe net id does not
+/// resolve to the recipe while the inputs are consumed (measured: null), so the duplication is
+/// recognised by its inputs: only elytras and dragon scales, as many of each (one per craft).
+struct ConsumedInputs {
+    int64_t                player = 0;
+    std::vector<ItemStack> elytras;
+    int                    scales = 0;
+    bool                   other  = false;
+};
+std::unordered_map<CraftHandlerBase const*, ConsumedInputs>& consumedInputs() {
+    static std::unordered_map<CraftHandlerBase const*, ConsumedInputs> m;
     return m;
 }
 
@@ -235,17 +353,22 @@ LL_TYPE_INSTANCE_HOOK(
     ItemStack const&         consumed
 ) {
     Player& player = mPlayer;
-    if (!player.isClientSide()) {
-        auto const* recipe = player.getLevel().getRecipes().getRecipeByNetId(mRecipeNetId);
-        if (recipe && recipe->mRecipeId.get() == kElytraRecipe) {
-            if (!cfg().enableDragonScales) return ItemStackNetResult::Error;
-            if (game::itemId(consumed) == "minecraft:elytra") {
-                auto& entry = pendingElytras()[this];
-                entry.first = player.getOrCreateUniqueID().rawID;
-                ItemStack copy(consumed);
-                copy.set(1);
-                entry.second.push_back(std::move(copy));
-            }
+    if (!player.isClientSide() && !game::isEmpty(consumed)) {
+        auto& in  = consumedInputs()[this];
+        in.player = player.getOrCreateUniqueID().rawID;
+        auto id   = game::itemId(consumed);
+        if (id == "minecraft:elytra") {
+            ItemStack copy(consumed);
+            copy.set(1);
+            for (int i = 0; i < consumed.mCount; ++i) in.elytras.push_back(copy);
+        } else if (id == "lepton:dragon_scale") {
+            in.scales += consumed.mCount;
+        } else {
+            in.other = true;
+        }
+        // DragonScales off: the duplication recipe must not work (scales can still exist in a world).
+        if (!cfg().enableDragonScales && !in.other && !in.elytras.empty() && in.scales > 0) {
+            return ItemStackNetResult::Error;
         }
     }
     return origin(container, slot, consumed);
@@ -260,14 +383,15 @@ LL_TYPE_INSTANCE_HOOK(
     bool wasSuccess
 ) {
     origin(wasSuccess);
-    auto it = pendingElytras().find(this);
-    if (it == pendingElytras().end()) return;
-    auto [playerId, items] = std::move(it->second);
-    pendingElytras().erase(it);
-    if (!wasSuccess) return;
+    auto it = consumedInputs().find(this);
+    if (it == consumedInputs().end()) return;
+    auto in = std::move(it->second);
+    consumedInputs().erase(it);
+    bool duplication = !in.other && !in.elytras.empty() && static_cast<int>(in.elytras.size()) == in.scales;
+    if (!wasSuccess || !duplication || !cfg().enableDragonScales) return;
     // Give the original elytra back once the craft request is done (next tick: the request's own
     // inventory changes are sent first).
-    later(1, [playerId, items = std::move(items)]() mutable {
+    later(1, [playerId = in.player, items = std::move(in.elytras)]() mutable {
         auto* actor = game::entities::find(playerId);
         if (!actor || !actor->isPlayer()) return;
         giveOrDrop(static_cast<Player&>(*actor), items);
@@ -280,6 +404,7 @@ LL_TYPE_INSTANCE_HOOK(
 // ---- shared --------------------------------------------------------------------------------------
 
 int effectiveBakedLevel(int type, ItemStackBase const& stack, int realLevel) {
+    if (tGearDepth > 0 && testing::gearScopes()) return 0;
     int baked = bakedLevel(type, stack);
     if (baked <= realLevel) return baked;
     return compatibleWithItem(type, stack) ? baked : 0;
@@ -308,6 +433,13 @@ bool sparesAnvil(ItemStackBase const& material) {
     if (game::isEmpty(material)) return true;
     return c.allowCosmeticItems && material.mItem && material.mItem->hasTag(HashedString(kCosmeticTag));
 }
+
+namespace testing {
+bool& gearScopes() {
+    static bool on = true;
+    return on;
+}
+} // namespace testing
 
 void noteSparedCraft(int64_t playerId) { sparedCrafts()[playerId] = tickNow(); }
 
@@ -345,6 +477,13 @@ public:
         WolfArmorRepairHook::hook();
         AnvilResultHook::hook();
         AnvilDamageHook::hook();
+        CanEnchantHook::hook();
+        CombineHook::hook();
+        EnchantCostsHook::hook();
+        RandomlyEnchantHook::hook();
+        EnchantCraftHook::hook();
+        GrindstoneCraftHook::hook();
+        GrindstoneXpHook::hook();
         CraftConsumeHook::hook();
         CraftPostHook::hook();
     }
@@ -363,10 +502,17 @@ public:
         WolfArmorRepairHook::unhook();
         AnvilResultHook::unhook();
         AnvilDamageHook::unhook();
+        CanEnchantHook::unhook();
+        CombineHook::unhook();
+        EnchantCostsHook::unhook();
+        RandomlyEnchantHook::unhook();
+        EnchantCraftHook::unhook();
+        GrindstoneCraftHook::unhook();
+        GrindstoneXpHook::unhook();
         CraftConsumeHook::unhook();
         CraftPostHook::unhook();
         sparedCrafts().clear();
-        pendingElytras().clear();
+        consumedInputs().clear();
     }
 };
 

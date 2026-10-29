@@ -29,6 +29,7 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/enchanting/Enchant.h"
 #include "mc/world/item/enchanting/EnchantUtils.h"
+#include "mc/world/item/enchanting/EnchantResult.h"
 #include "mc/world/item/enchanting/EnchantmentInstance.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -487,6 +488,50 @@ LP_REGISTER_SELFTEST("mobtweaks.gold_tools", [](Context& ctx) -> ll::coro::CoroT
     ctx.check(diamonds > 12, "a golden pickaxe mines diamonds with Fortune");
     clearItems(ctx, pos, 10);
     p.setSelectedItem(ItemStack{});
+});
+
+// Baked enchantments are effects only (Java): anvil, enchanting table and grindstone see the real ones.
+LP_REGISTER_SELFTEST("mobtweaks.gold_tools_tables", [](Context& ctx) {
+    ConfigGuard guard;
+    auto        enchant = [](Enchant::Type t, int lvl) {
+        EnchantmentInstance e;
+        e.mEnchantType = t;
+        e.mLevel       = lvl;
+        return e;
+    };
+    auto book = makeItem("minecraft:enchanted_book");
+    EnchantUtils::applyEnchant(book, enchant(Enchant::Type::Fortune, 3), true);
+    struct Outcome {
+        int         silk, fortune, cost;
+        std::string out;
+        bool        enchanted;
+    };
+    auto measure = [&] {
+        auto    gold = makeItem("minecraft:golden_pickaxe");
+        Outcome o;
+        o.silk    = static_cast<int>(EnchantUtils::canEnchant(gold, enchant(Enchant::Type::SilkTouch, 1), false).result);
+        o.fortune = static_cast<int>(EnchantUtils::canEnchant(gold, enchant(Enchant::Type::Fortune, 1), false).result);
+        ItemStack out;
+        o.cost = EnchantUtils::combineEnchantedItems(gold, book, out, true);
+        o.out       = lp::game::itemToSnbt(out);
+        o.enchanted = gold.isEnchanted();
+        return o;
+    };
+    testing::gearScopes() = false;
+    auto raw              = measure();
+    testing::gearScopes() = true;
+    auto on               = measure();
+    ctx.info("without the table guards: canEnchant silk " + std::to_string(raw.silk) + ", fortune " + std::to_string(raw.fortune)
+             + ", anvil cost " + std::to_string(raw.cost) + (raw.out == on.out ? " (same result)" : " (different result)"));
+    mutCfg().enableGoldToolsHaveFortune = false;
+    auto off                            = measure();
+    ctx.info("canEnchant silk " + std::to_string(on.silk) + "/" + std::to_string(off.silk) + ", fortune "
+             + std::to_string(on.fortune) + "/" + std::to_string(off.fortune) + ", anvil cost " + std::to_string(on.cost)
+             + "/" + std::to_string(off.cost));
+    ctx.check(on.silk == off.silk, "Silk Touch can still be put on a golden pickaxe");
+    ctx.check(on.fortune == off.fortune, "Fortune can still be put on a golden pickaxe");
+    ctx.check(on.cost == off.cost && on.out == off.out, "the anvil combines a Fortune III book as on a plain pickaxe");
+    ctx.check(!on.enchanted, "a golden pickaxe doesn't count as enchanted");
 });
 
 // ---- DiamondRepair ----------------------------------------------------------------------------------
