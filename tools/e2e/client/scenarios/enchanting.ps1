@@ -103,9 +103,14 @@ Invoke-Chat '/quark enchanting demo fill'
 Open-Station 'anvil'
 Wait-LogLine 'enchanting: demo station filled' 10 -Since $m | Out-Null
 if ($vanilla) {
-    Wait-LogLine 'enchanting: .* sent the tome form' 15 -Since $m | Out-Null
-    Start-Sleep -Milliseconds 1500
+    # The vanilla client keeps the station screen open: the player is asked to close it.
+    Wait-LogLine 'enchanting: .* was asked to close the station' 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 800
     Save-Screenshot 'anvil' | Out-Null
+    Press-Key ESC
+    Wait-LogLine 'enchanting: .* was sent the tome form' 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 1500
+    Save-Screenshot 'anvil-form' | Out-Null
     Press-Key ESC
 } else {
     $apply = Get-Fraction (Wait-LogLine 'enchanting: craft overlay drawn on .*anvil.*, apply at' 15 -Since $m)
@@ -114,6 +119,7 @@ if ($vanilla) {
     $c = Get-LogMark
     Click $apply[0] $apply[1] -Relative
     Wait-LogLine 'enchanting: .* applied tome -> minecraft:diamond_sword' 10 -Since $c | Out-Null
+    Wait-LogLine 'enchanting: closed the .* after applying' 10 -Since $c | Out-Null
     Start-Sleep -Milliseconds 1000
     Save-Screenshot 'anvil-done' | Out-Null
 }
@@ -126,9 +132,14 @@ Invoke-Chat '/quark enchanting demo fill'
 Open-Station 'smithing'
 Wait-LogLine 'enchanting: demo station filled' 10 -Since $m | Out-Null
 if ($vanilla) {
-    Wait-LogLine 'enchanting: .* sent the rune form' 15 -Since $m | Out-Null
-    Start-Sleep -Milliseconds 1500
+    # The vanilla client keeps the station screen open: the player is asked to close it.
+    Wait-LogLine 'enchanting: .* was asked to close the station' 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 800
     Save-Screenshot 'smithing' | Out-Null
+    Press-Key ESC
+    Wait-LogLine 'enchanting: .* was sent the rune form' 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 1500
+    Save-Screenshot 'smithing-form' | Out-Null
     Press-Key ESC
 } else {
     $apply = Get-Fraction (Wait-LogLine 'enchanting: craft overlay drawn on .*smithing.*, apply at' 15 -Since $m)
@@ -137,6 +148,7 @@ if ($vanilla) {
     $c = Get-LogMark
     Click $apply[0] $apply[1] -Relative
     Wait-LogLine 'enchanting: .* applied rune -> minecraft:diamond_sword' 10 -Since $c | Out-Null
+    Wait-LogLine 'enchanting: closed the .* after applying' 10 -Since $c | Out-Null
     Start-Sleep -Milliseconds 1000
     Save-Screenshot 'smithing-done' | Out-Null
 }

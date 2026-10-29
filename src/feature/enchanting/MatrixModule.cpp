@@ -174,9 +174,15 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         d.lapis  = game::makeItem("minecraft:lapis_lazuli", 16);
         table::markDirty(pos);
         addLevels(*p, 30);
-        if (!table::open(*p, pos)) return output.error("Matrix enchanting is disabled.");
-        // Three pieces on the bench; the grid stays empty (the client scenario places one).
-        for (int i = 0; i < 3; ++i) table::operate(*p, OperAdd, 0, 0, 0);
+        if (!cfg().enableMatrixEnchanting) return output.error("Matrix enchanting is disabled.");
+        // Three pieces on the bench (rolled before opening, so the vanilla form shows them); the
+        // grid stays empty (the client scenario places one).
+        if (auto m = table::matrixOf(d.item)) {
+            auto env = table::envFor(d.item, table::computePower(region, center));
+            for (int i = 0; i < 3; ++i) m->generatePiece(env, false);
+            table::writeMatrix(d.item, *m);
+        }
+        table::open(*p, pos);
         log().info("enchanting: demo table ready at {}", pos.key());
         output.success("Matrix enchanter demo opened.");
     });

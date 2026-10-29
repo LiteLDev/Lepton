@@ -44,6 +44,8 @@
   "lp.enchanting.craft.cost": "花费：{}",
   "lp.enchanting.craft.yes": "应用",
   "lp.enchanting.craft.no": "取消",
+  "lp.enchanting.craft.close_tome": "§e关闭铁砧以应用古卷。",
+  "lp.enchanting.craft.close_rune": "§e关闭锻造台以应用符文。",
   "lp.enchanting.craft.rune_title": "应用符文？",
   "lp.enchanting.craft.tome_title": "应用古卷？",
   "lp.enchanting.craft.too_expensive": "§c需要{}级经验。",

@@ -43,7 +43,7 @@ struct MatrixStateMsg {
 /// `kind` "" = nothing to offer (hide the overlay).
 struct CraftPreviewMsg {
     static constexpr std::string_view kId = "enchanting:craft_preview";
-    std::string                       kind; ///< "tome", "overlevel", "rune" or ""
+    std::string                       kind; ///< "tome", "overlevel", "rune", "" (nothing) or "applied" (done: leave the screen)
     std::string                       result; ///< SNBT of the result
     int                               cost       = 0;
     bool                              affordable = false;

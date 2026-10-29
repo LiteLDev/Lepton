@@ -348,6 +348,11 @@ bool applyOffer(Player& p, Offer const& o) {
                   static_cast<int>(SharedTypes::Legacy::LevelSoundEvent::SmithingTableUse));
     }
     log().info("enchanting: {} applied {} -> {}", p.getRealName(), o.craft.kind, game::itemId(result));
+    if (net::hasClientMod(p)) {
+        CraftPreviewMsg done;
+        done.kind = "applied";
+        net::sendToClient(p, done);
+    }
     closeStationScreen(p);
     forcedStations().erase(uuidOf(p));
     return true;
@@ -376,6 +381,11 @@ void offerForm(Player& p, Offer const& o) {
         .onClose([](Player& pl) { pendingForms().erase(uuidOf(pl)); })
         .sendTo(p);
     log().info("enchanting: {} was sent the {} form", p.getRealName(), o.craft.kind == "rune" ? "rune" : "tome");
+}
+
+std::map<std::string, Offer>& waitingForms() {
+    static std::map<std::string, Offer> m;
+    return m;
 }
 
 std::set<std::string>& armedFills() {
@@ -417,11 +427,19 @@ void tickStations() {    auto level = ll::service::getLevel();
         auto uuid = uuidOf(p);
         seen.push_back(uuid);
         if (armedFills().contains(uuid) && fillStation(p)) armedFills().erase(uuid);
+        // Vanilla clients: the form is sent once the station screen is closed (a form can't show
+        // over it; the inputs go back to the inventory and the form re-finds them there).
+        if (auto it = waitingForms().find(uuid); it != waitingForms().end() && !p.mContainerManager) {
+            auto o = it->second;
+            waitingForms().erase(it);
+            offerForm(p, o);
+        }
         auto offer = currentOffer(p);
         auto sig   = offer ? offer->signature + "|" + std::to_string(creative(p) || playerLevel(p) >= offer->craft.cost) : std::string{};
         auto& last = lastSignature()[uuid];
         if (sig == last) return true;
         last = sig;
+        if (!offer && p.mContainerManager) waitingForms().erase(uuid); // the combination was taken apart
         if (net::hasClientMod(p)) {
             CraftPreviewMsg m;
             if (offer) {
@@ -432,12 +450,15 @@ void tickStations() {    auto level = ll::service::getLevel();
             }
             net::sendToClient(p, m);
         } else if (offer && !p.isSimulated()) {
-            // Vanilla clients can't show the result in the vanilla screen: ask with a form.
-            closeStationScreen(p);
-            auto o = *offer;
-            later(10, [uuid, o] {
-                if (auto* pl = playerByUuid(uuid)) offerForm(*pl, o);
-            });
+            // Vanilla clients can't show the result in the vanilla screen: ask with a form once
+            // the screen is closed (the vanilla client keeps the anvil / smithing screen open
+            // against server close packets, so the player is told to close it).
+            // (Closing it server side would end the container while the client still shows it.)
+            waitingForms()[uuid] = *offer;
+            p.sendMessage(trFor(p, offer->craft.kind == "rune" ? "lp.enchanting.craft.close_rune" : "lp.enchanting.craft.close_tome",
+                                offer->craft.kind == "rune" ? "§eClose the smithing table to apply the rune."
+                                                            : "§eClose the anvil to apply the Ancient Tome."));
+            log().info("enchanting: {} was asked to close the station", p.getRealName());
         }
         return true;
     });
@@ -543,6 +564,7 @@ public:
                 forcedStations().clear();
                 exchangedVillagers().clear();
                 armedFills().clear();
+                waitingForms().clear();
             });
         }
     }
