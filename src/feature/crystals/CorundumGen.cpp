@@ -26,6 +26,8 @@
 #include "mc/world/level/levelgen/v1/NetherGenerator.h"
 #include "mc/world/level/levelgen/v1/OverworldGeneratorMultinoise.h"
 #include "mc/world/level/levelgen/v1/TheEndGenerator.h"
+#include "mc/world/level/levelgen/WorldGenerator.h"
+#include "mc/world/level/dimension/Dimension.h"
 
 #include "feature/crystals/Common.h"
 #include "feature/crystals/Noise.h"
@@ -41,6 +43,10 @@ namespace bs = game::blockstates;
 namespace {
 
 bool gInstalled = false;
+struct GenStats {
+    uint64_t chunks = 0, sources = 0, accepted = 0, placed = 0;
+};
+GenStats gStats;
 
 // ---- Zeta ClusterShape ----------------------------------------------------------------------------
 
@@ -160,6 +166,7 @@ struct Gen {
     void set(BlockPos const& p, Block const& b) {
         bool water = isWater(region.getBlock(p));
         region.setBlock(p, b, 2, nullptr, BlockChangeContext{});
+        ++gStats.placed;
         if (water && isCluster(b)) {
             if (auto const* w = bs::of("minecraft:water")) region.setExtraBlock(p, *w, 2);
         }
@@ -225,6 +232,21 @@ struct Gen {
     }
 };
 
+/// Quark UndergroundStyleGenerator#getSourcesInChunk checks: the biome at the top of the world
+/// passes the filter and the source is underground (WORLD_SURFACE_WG >= y).
+bool sourceAccepted(WorldGenerator const& gen, int sx, int sy, int sz, int maxY, GenerationSettings const& g) {
+    BoundingBox box;
+    box.min            = BlockPos{sx, maxY - 1, sz};
+    box.max            = BlockPos{sx + 1, maxY, sz + 1}; // an empty box returns no biome
+    auto        area   = gen.getBiomeArea(box, 1);
+    auto const& biomes = area.mBiomes.get();
+    if (biomes.empty() || !biomes[0] || !biomeAllowed(biomes[0]->mHash->getString(), g.biomes)) return false;
+    auto surface = gen.getPreliminarySurfaceLevel(DividedPos2d<4>(sx >> 2, sz >> 2));
+    if (surface && *surface < sy) return false;
+    ++gStats.accepted;
+    return true;
+}
+
 /// Generates the corundum caves for chunk (cx, cz). `gen` answers biome and surface queries for
 /// sources outside the loaded area.
 template <class Generator>
@@ -233,6 +255,7 @@ void generateChunk(Generator const& gen, BlockSource& region, int cx, int cz, st
     auto const& g = c.generationSettings;
     if (!gInstalled || !c.enableCorundum || g.rarity <= 0) return;
     if (!dimensionAllowed(dimName, g.dimensions)) return;
+    ++gStats.chunks;
     int radius = g.horizontalSize + g.horizontalVariation;
     if (radius <= 0) return;
     auto level = ll::service::getLevel();
@@ -260,15 +283,8 @@ void generateChunk(Generator const& gen, BlockSource& region, int cx, int cz, st
             int sx = (x << 4) + cr.nextInt(16);
             int sy = g.maxYLevel > g.minYLevel ? cr.nextInt(g.minYLevel, g.maxYLevel) : g.minYLevel;
             int sz = (z << 4) + cr.nextInt(16);
-            // biome at the top of the world, and only underground sources
-            BoundingBox box;
-            box.min = BlockPos{sx, maxY - 1, sz};
-            box.max = BlockPos{sx, maxY - 1, sz};
-            auto area = gen.getBiomeArea(box, 1);
-            auto const& biomes = area.mBiomes.get();
-            if (biomes.empty() || !biomes[0] || !biomeAllowed(biomes[0]->mHash->getString(), g.biomes)) continue;
-            auto surface = gen.getPreliminarySurfaceLevel(DividedPos2d<4>(sx >> 2, sz >> 2));
-            if (surface && *surface < sy) continue;
+            ++gStats.sources;
+            if (!sourceAccepted(gen, sx, sy, sz, maxY, g)) continue;
 
             BlockPos src{sx, sy, sz};
             ctx.source  = src;
@@ -367,6 +383,35 @@ std::pair<int, int> caveColors(BlockPos const& src) {
     return {floor, hi >= floor ? hi + 1 : hi};
 }
 bool caveBiomeAllowed(std::string const& biome) { return biomeAllowed(biome, cfg().generationSettings.biomes); }
+std::string caveGenStats() {
+    return "chunks=" + std::to_string(gStats.chunks) + " sources=" + std::to_string(gStats.sources) + " accepted="
+         + std::to_string(gStats.accepted) + " placed=" + std::to_string(gStats.placed);
+}
+std::vector<BlockPos> caveSourcesNear(int cx, int cz, int radius) {
+    std::vector<BlockPos> out;
+    auto const& g     = cfg().generationSettings;
+    auto        level = ll::service::getLevel();
+    if (!level || g.rarity <= 0) return out;
+    int64_t    seed = static_cast<int64_t>(level->getSeed());
+    int64_t    xor_ = static_cast<int64_t>(javaHash("corundum"));
+    JavaRandom worldRandom(seed);
+    int64_t    xSeed = worldRandom.nextLong(), zSeed = worldRandom.nextLong();
+    for (int x = cx - radius; x <= cx + radius; ++x) {
+        for (int z = cz - radius; z <= cz + radius; ++z) {
+            JavaRandom cr(static_cast<int64_t>(static_cast<uint64_t>(xSeed) * static_cast<uint64_t>(x)
+                                               + static_cast<uint64_t>(zSeed) * static_cast<uint64_t>(z))
+                          ^ seed ^ xor_);
+            if (cr.nextInt(g.rarity) != 0) continue;
+            int sx = (x << 4) + cr.nextInt(16);
+            int sy = g.maxYLevel > g.minYLevel ? cr.nextInt(g.minYLevel, g.maxYLevel) : g.minYLevel;
+            int sz = (z << 4) + cr.nextInt(16);
+            auto dim = level->getDimension(0).lock();
+            if (!dim || !dim->mWorldGenerator) continue;
+            if (sourceAccepted(*dim->mWorldGenerator, sx, sy, sz, dim->mHeightRange->mMax, g)) out.push_back({sx, sy, sz});
+        }
+    }
+    return out;
+}
 
 } // namespace lp::feature::crystals
 

@@ -14,6 +14,8 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
+#include "mc/world/level/GameType.h"
+#include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/block/actor/component/IVanillaMainBlockActorComponent.h"
@@ -33,6 +35,8 @@ namespace lp::feature::crystals {
 bool                caveShapeContains(BlockPos const& src, BlockPos const& p);
 std::pair<int, int> caveColors(BlockPos const& src);
 bool                caveBiomeAllowed(std::string const& biome);
+std::vector<BlockPos> caveSourcesNear(int cx, int cz, int radius);
+std::string           caveGenStats();
 } // namespace lp::feature::crystals
 
 namespace {
@@ -465,4 +469,45 @@ LP_REGISTER_SELFTEST("crystals.magnet_stonecutter", [](Context& ctx) -> ll::coro
         lp::game::entities::despawn(*e);
     }
     ctx.check(planks >= 1, "it dropped the planks (silk touch)");
+});
+
+// Real world generation: the corundum caves around the nearest sources of a non-flat overworld
+// (the flat e2e world has no caves: run the server scenario crystals-worldgen).
+LP_REGISTER_SELFTEST("crystals.worldgen_live", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto& p     = ctx.player();
+    auto& level = p.getLevel();
+    if (level.getLevelData().getGenerator() != GeneratorType::Overworld) {
+        ctx.info("not a generated overworld: skipped");
+        co_return;
+    }
+    p.setPlayerGameType(GameType::Creative);
+    auto spawn   = ctx.testPos(1299);
+    auto sources = caveSourcesNear(spawn.x >> 4, spawn.z >> 4, 64);
+    std::sort(sources.begin(), sources.end(), [&](BlockPos const& a, BlockPos const& b) {
+        auto d = [&](BlockPos const& q) { return (q.x - spawn.x) * (q.x - spawn.x) + (q.z - spawn.z) * (q.z - spawn.z); };
+        return d(a) < d(b);
+    });
+    ctx.require(!sources.empty(), "corundum sources near the spawn");
+    int found = 0, tried = 0;
+    for (auto const& src : sources) {
+        if (tried++ >= 16 || found > 0) break;
+        GlobalPos top{0, src.x, 200, src.z};
+        if (!co_await ctx.ensureLoaded(top)) continue;
+        co_await ctx.ticks(60); // neighbours generate, post-processing runs
+        auto& region = regionOf(ctx);
+        int   here   = 0;
+        for (int x = -24; x <= 24; ++x)
+            for (int z = -24; z <= 24; ++z)
+                for (int y = -14; y <= 14; ++y) {
+                    BlockPos q{src.x + x, src.y + y, src.z + z};
+                    if (!region.hasChunksAt(q, 0, false)) continue;
+                    auto const& b = region.getBlock(q);
+                    if (isCorundum(b) || isCluster(b)) ++here;
+                }
+        ctx.info("source " + std::to_string(src.x) + " " + std::to_string(src.y) + " " + std::to_string(src.z) + ": "
+                 + std::to_string(here) + " crystals");
+        found += here;
+    }
+    ctx.info("generator: " + caveGenStats());
+    ctx.check(found > 0, "corundum generated in a cave blob");
 });
