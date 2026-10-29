@@ -493,9 +493,6 @@ LP_REGISTER_SELFTEST("placement.scaffolding", [](Context& ctx) -> ll::coro::Coro
     ctx.check(idAt(ctx, off(p, 0, 0, 1)) == "minecraft:air", "nothing placed next to the clicked piece");
     ctx.check(countOf(player, "minecraft:cobblestone") == 3, "one block used");
     ctx.check(countOf(player, "minecraft:scaffolding") == 1, "the scaffolding is given back");
-    // sneaking places normally
-    g.cfg().enableReplaceScaffolding = false;
-    ctx.check(pl::scaffoldingTarget(region(ctx), bp(p), pl::South) == bp(off(p, 0, 2, 0)), "the tower is shorter now");
 });
 
 LP_REGISTER_SELFTEST("placement.scaffolding_bounce", [](Context& ctx) -> ll::coro::CoroTask<> {

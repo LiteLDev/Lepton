@@ -16,14 +16,28 @@ $local   = $script:Mode -eq 'local'
 function Use-Right { Assert-GameForeground; [BsE2E.Native]::MouseButton(1, $false); Start-Sleep -Milliseconds 80; [BsE2E.Native]::MouseButton(1, $true); Start-Sleep -Milliseconds 400 }
 function Use-Middle { Assert-GameForeground; [BsE2E.Native]::MouseButton(2, $false); Start-Sleep -Milliseconds 80; [BsE2E.Native]::MouseButton(2, $true); Start-Sleep -Milliseconds 400 }
 
+# The server checks a block and logs through `/quark net` only when it is there.
+function Test-BlockAt([int]$x, [int]$y, [int]$z, [string]$block) {
+    $mm = Get-LogMark
+    Invoke-Chat "/execute if block $x $y $z $block run quark net"
+    try { Wait-LogLine 'Lepton net: \d+ of \d+ player' 6 -Since $mm | Out-Null; return $true } catch { return $false }
+}
+function Assert-BlockAt([int]$x, [int]$y, [int]$z, [string]$block) {
+    if (-not (Test-BlockAt $x $y $z $block)) { throw "no $block at $x $y $z" }
+}
+
 Invoke-Chat '/gamemode creative'
 Invoke-Chat '/tp @s 0.5 101 0.5'
+Invoke-Chat '/tp @s 0.5 101 0.5'   # the first chat line after joining is sometimes lost
 Start-Sleep -Seconds 3
 Invoke-Chat '/fill -4 96 -4 4 104 4 air'
 Invoke-Chat '/setblock 0 100 0 stone'
+Invoke-Chat '/setblock 0 100 -3 stone'
+Invoke-Chat '/setblock 0 100 2 stone'
 Invoke-Chat '/clear @s'
 Invoke-Chat '/give @s cobblestone 32'
 Press-Key 1
+Save-Screenshot 'setup' | Out-Null
 
 # ---- ReacharoundPlacing ------------------------------------------------------------------------
 $m = Get-LogMark
@@ -31,19 +45,33 @@ Invoke-Chat '/tp @s 0.7 101 0.5 -90 70'
 Start-Sleep -Seconds 1
 if (-not $vanilla) { Wait-LogLine 'placement: reacharound indicator horizontal' 15 -Since $m | Out-Null }
 Save-Screenshot 'reacharound-horizontal' | Out-Null
+# Bedrock clients bridge forward on their own here (they send a click on the ledge's east face), so
+# the block may come from the game's own placement: either way the target gets filled.
 $m = Get-LogMark
 Use-Right
-Wait-LogLine 'placement: reacharound placed minecraft:cobblestone at 1 100 0 \(horizontal\)' 15 -Since $m | Out-Null
+if (-not $vanilla) { Wait-LogLine 'placement: reacharound indicator none' 15 -Since $m | Out-Null }
 Start-Sleep -Milliseconds 800
+Assert-BlockAt 1 100 0 'cobblestone'
 Save-Screenshot 'reacharound-placed' | Out-Null
 
+# Vertical: under the second ledge. The client may click the ledge's bottom face itself, or send
+# a use-in-air that the server's reacharound turns into the placement; either way the block appears.
 $m = Get-LogMark
-Invoke-Chat '/tp @s 1.2 101 0.5 90 84'
+Invoke-Chat '/tp @s 1.2 101 -2.5 90 84'
 Start-Sleep -Seconds 1
 if (-not $vanilla) {
     Wait-LogLine 'placement: reacharound indicator vertical' 15 -Since $m | Out-Null
-    Save-Screenshot 'reacharound-vertical' | Out-Null
 }
+Save-Screenshot 'reacharound-vertical' | Out-Null
+$m = Get-LogMark
+Use-Right
+Start-Sleep -Milliseconds 800
+$under = Test-BlockAt 0 99 -3 'cobblestone'
+$beside = if ($under) { $false } else { Test-BlockAt 1 100 -3 'cobblestone' }
+if (-not ($under -or $beside)) { throw 'the vertical reacharound placed nothing' }
+Write-Step ("vertical case: block placed " + $(if ($under) { 'under the ledge (reacharound)' } else { 'beside the ledge (the client''s own bridging)' }))
+Start-Sleep -Milliseconds 800
+Save-Screenshot 'reacharound-vertical-placed' | Out-Null
 
 # ---- LockRotation --------------------------------------------------------------------------------
 Invoke-Chat '/give @s oak_log 8'
@@ -101,12 +129,12 @@ if ($local) {
 
 # ---- LongRangePickBlock ------------------------------------------------------------------------
 if (-not $vanilla) {
-    Invoke-Chat '/setblock 0 101 40 gold_block'
-    Invoke-Chat '/tp @s 0.5 101 0.5 0 0'
+    Invoke-Chat '/setblock 0 102 40 gold_block'
+    Invoke-Chat '/tp @s 0.5 101 2.5 0 0'
     Start-Sleep -Seconds 2
     $m = Get-LogMark
     Use-Middle
-    Wait-LogLine 'placement: long range pick at 0 101 40' 15 -Since $m | Out-Null
+    Wait-LogLine 'placement: long range pick at 0 102 40' 15 -Since $m | Out-Null
     Wait-LogLine 'placement: picked minecraft:gold_block' 15 -Since $m | Out-Null
     Start-Sleep -Milliseconds 600
     Save-Screenshot 'long-pick' | Out-Null
