@@ -1,5 +1,6 @@
 #include "game/VirtualContainer.h"
 
+#include <cmath>
 #include <map>
 #include <set>
 #include <unordered_map>
@@ -23,7 +24,12 @@
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/containers/managers/models/ChestContainerManagerModel.h"
 #include "mc/world/containers/managers/models/ContainerManagerModel.h"
+#include "mc/network/MinecraftPacketIds.h"
+#include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/ContainerOpenPacket.h"
+#include "mc/world/ContainerID.h"
 #include "mc/world/inventory/network/ContainerScreenContext.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
@@ -31,6 +37,8 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockType.h"
+#include "mc/world/phys/AABB.h"
 #include "mc/world/level/dimension/Dimension.h"
 
 #include "game/Blocks.h"
@@ -247,8 +255,7 @@ SharedTypes::Legacy::ContainerType typeOf(Screen s) {
     switch (s) {
     case Screen::Hopper:
         return SharedTypes::Legacy::ContainerType::Hopper;
-    case Screen::Dispenser:
-        return SharedTypes::Legacy::ContainerType::Dispenser;
+    case Screen::Dispenser: // the helper's own container: see showDispenser
     default:
         return SharedTypes::Legacy::ContainerType::Container;
     }
@@ -278,12 +285,36 @@ constexpr int kSpawnToOpenTicks = 3;
 /// Ticks for a changed name tag (the screen title) to reach the clients before the screen opens.
 constexpr int kNameSyncTicks = 2;
 
+/// The game opens an entity's container only as a chest or hopper screen (its dispenser screen
+/// model needs a dispenser block). A 3x3 screen is the chest model of the helper (same
+/// server-authoritative slots, `LevelEntity` container) announced to the client as a dispenser.
+void showDispenser(ServerPlayer& player, Actor& helper, GlobalPos const& pos) {
+    ContainerID& counter = player.mContainerCounter;
+    auto  next    = static_cast<int>(counter) + 1;
+    if (next >= static_cast<int>(ContainerID::Last)) next = static_cast<int>(ContainerID::First);
+    counter = static_cast<ContainerID>(next);
+    auto model = std::make_shared<ChestContainerManagerModel>(counter, player, helper.getOrCreateUniqueID());
+    model->postInit();
+    model->setContainerType(SharedTypes::Legacy::ContainerType::Dispenser);
+    player._setContainerManagerModel(model);
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::ContainerOpen);
+    if (!pkt) return;
+    auto& open           = static_cast<ContainerOpenPacket&>(*pkt);
+    open.mContainerId    = counter;
+    open.mType           = SharedTypes::Legacy::ContainerType::Dispenser;
+    open.mPos            = blockPos(pos);
+    open.mEntityUniqueID = helper.getOrCreateUniqueID();
+    open.sendTo(player);
+    player.refreshContainer(*model);
+}
+
 /// Opens the helper's screen for the player now (the helper and its name are known to the client).
 void showScreen(Player& player, Actor& helper, Spec const& spec, GlobalPos const& pos) {
     auto* comp = componentOf(helper);
     if (!comp) return;
     comp->setCustomName(trFor(player, spec.titleKey, spec.titleFallback));
-    helper.openContainerComponent(player);
+    if (spec.screen == Screen::Dispenser) showDispenser(static_cast<ServerPlayer&>(player), helper, pos);
+    else helper.openContainerComponent(player);
     log().info("virtual container {} opened by {}", pos.key(), player.getRealName());
 }
 
@@ -411,7 +442,22 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
     Actor* helper = it != sessions().end() ? entities::find(it->second.entity) : nullptr;
     if (!helper) {
         if (it != sessions().end()) finish(pos);
+        // A container entity inside a solid block (a full-cube container block such as a crate)
+        // loses its contents once its screen is open: the helper stands in the block only when the
+        // block is not solid, else on top of it, else at the viewer's feet.
         Vec3 at{pos.x + 0.5f, pos.y + 0.25f, pos.z + 0.5f};
+        auto solidAt = [&](Vec3 const& v) {
+            BlockPos    b{static_cast<int>(std::floor(v.x)), static_cast<int>(std::floor(v.y)), static_cast<int>(std::floor(v.z))};
+            auto const& blk = region->getBlock(b);
+            AABB        box = blk.getBlockType().getCollisionShape(blk, *region, b, nullptr);
+            return box.max.y > box.min.y && box.min.x <= v.x && v.x <= box.max.x && box.min.y <= v.y && v.y <= box.max.y
+                && box.min.z <= v.z && v.z <= box.max.z;
+        };
+        if (solidAt(at)) {
+            Vec3 above{pos.x + 0.5f, pos.y + 1.05f, pos.z + 0.5f};
+            if (!solidAt(above)) at = above;
+            else if (static_cast<int>(player.getDimensionId()) == pos.dim) at = player.getFeetPos();
+        }
         helper = entities::spawn(*region, kHelperEntity, at);
         if (!helper) {
             log().error("virtual container: could not spawn {} (behaviour pack missing?)", kHelperEntity);
