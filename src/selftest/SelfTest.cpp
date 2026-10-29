@@ -28,8 +28,9 @@
 namespace lp::selftest {
 
 namespace {
-bool gRunning       = false;
-int  gPlayerCounter = 0;
+bool        gRunning       = false;
+std::size_t gRunSize       = 0; // tests in the current run
+int         gPlayerCounter = 0;
 
 BlockSource* overworld();
 
@@ -158,7 +159,8 @@ void Context::fail(std::string const& message) {
 
 void Context::info(std::string const& message) const { log().info("SELFTEST INFO {}: {}", mName, message); }
 
-bool running() { return gRunning; }
+bool        running() { return gRunning; }
+std::size_t runSize() { return gRunSize; }
 
 namespace {
 constexpr char const* kTestArea = "lp_selftest";
@@ -205,6 +207,7 @@ void runAll(std::string const& glob, std::function<void(std::string const&)> out
     }
     std::sort(tests.begin(), tests.end(), [](auto* a, auto* b) { return a->name < b->name; });
     gRunning  = true;
+    gRunSize  = tests.size();
     auto emit = [out](std::string const& line) {
         log().info("{}", line);
         if (out) out(line);

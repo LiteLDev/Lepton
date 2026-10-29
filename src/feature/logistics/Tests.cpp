@@ -463,7 +463,7 @@ LP_REGISTER_SELFTEST("logistics.drops_recipes", [](Context& ctx) -> ll::coro::Co
 // Showcase for the client e2e scenario: builds a chute, a pipe line with items moving, a trough with
 // a cow and a crate, moves the real player in front of them and waits for the client scenario to use
 // the trough and the crate (real right clicks), scroll the crate and close the screens.
-// On a server without a real player it only builds and checks the setup.
+// On a server without a real player, or in a run of several tests, it only builds and checks the setup.
 LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTask<> {
     namespace crate = lg::crate;
     auto base = ctx.testPos(1170, -3);
@@ -505,7 +505,8 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
         if (!p.isSimulated()) viewer = &p;
         return viewer == nullptr;
     });
-    if (viewer) {
+    // Only when run on its own (the client scenario drives it); in a full run nobody clicks.
+    if (viewer && lp::selftest::runSize() == 1) {
         // The real player is moved in front of each block; the client scenario uses the blocks with
         // a real right click (the path a player takes), takes screenshots and closes the screens.
         auto uid  = viewer->getOrCreateUniqueID();
@@ -585,7 +586,8 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
         co_await ctx.ticks(2);
         ctx.check(stateOf(region, crateA, "lepton:open") == 0, "the crate lid closed");
         ctx.info("LOGISTICS done");
-    }    if (cow) ent::despawn(*cow);
+    }
+    if (cow) ent::despawn(*cow);
     crate::setContents(crateA, {});
     lp::game::vc::takeAll(trough);
     if (auto* c = container(region, chest)) c->removeAllItems();
