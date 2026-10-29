@@ -218,6 +218,9 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
 - A looping `minecraft:tick` doesn't start for blocks placed with `BlockSource::setBlock` (commands,
   world gen, natively placed): queue the first tick with `addToTickingQueue` and re-queue it in a
   `Block::queuedTick` hook.
+- A block that re-schedules itself from its own `Block::queuedTick` must not check
+  `BlockTickingQueue::getNextUpdateForPos` first: the running tick still counts as scheduled, so the
+  chain would stop after one tick (U7 leaves, U29 chorus).
 - `BlockMovableComponent::mMovementType` of a block's permutations can be changed at runtime to
   change what pistons move.
 - The server can't close vanilla block screens (anvil, smithing table) on the client: mod clients

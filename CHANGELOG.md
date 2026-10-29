@@ -121,8 +121,11 @@ container screens in place of the client mod's screens. Bedrock limits are liste
 
 #### World
 
-- Azalea, trumpet (blossom) and ashen (ancient) woods with their trees, saplings, falling leaves and
-  the Enchanted Fruit (AzaleaWood, BlossomTrees, AncientWood).
+- Azalea, trumpet (blossom) and ashen (ancient) woods: full wood sets with vertical planks,
+  bookshelves, ladders, posts, hollow logs, hedges, leaf carpets and chests; trumpet trees in five
+  colours (snowy, swamp, savanna, plains and badlands biomes) and the ashen tree, with leaf decay,
+  saplings, potted saplings and falling leaves; azalea trees grow azalea logs; the Enchanted Fruit;
+  sniffers dig up ashen saplings (AzaleaWood, BlossomTrees, AncientWood).
 - Limestone, jasper, shale and myalite, permafrost, big stone clusters (NewStoneTypes, Permafrost,
   BigStoneClusters).
 - Corundum in nine colours, growing in caves (Corundum).
