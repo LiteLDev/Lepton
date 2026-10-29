@@ -6,6 +6,21 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/deps/core/math/Vec3.h"
+#include "mc/scripting/modules/minecraft/ScriptFacing.h"
+#include "mc/world/actor/player/PlayerUISlot.h"
+#include "mc/world/containers/managers/models/ContainerManagerModel.h"
+#include "mc/world/effect/EffectDuration.h"
+#include "mc/world/effect/MobEffectInstance.h"
+#include "mc/world/item/ItemInstance.h"
+#include "mc/world/item/trading/MerchantRecipe.h"
+#include "mc/world/item/trading/MerchantRecipeList.h"
+#include "mc/world/level/block/actor/ChestBlockActor.h"
+#include "mc/world/level/Level.h"
+#include "mc/world/inventory/FillingContainer.h"
+#include "game/Entities.h"
+#include "mc/world/actor/ActorDataIDs.h"
+#include "mc/world/actor/SynchedActorDataEntityWrapper.h"
 
 #include "feature/enchanting/Config.h"
 #include "feature/enchanting/Enchants.h"
@@ -64,7 +79,7 @@ LP_REGISTER_SELFTEST("enchanting.registry", [](Context& ctx) {
     ctx.check(fe::roman(6) == "VI" && fe::roman(10) == "X", "roman numerals");
     auto sword = lp::game::makeItem("minecraft:diamond_sword");
     ctx.check(fe::isMatrixTarget(sword) && fe::applicable(sword, *sharp), "a diamond sword takes sharpness");
-    ctx.check(!fe::applicable(sword, *fe::defById("minecraft:efficiency")) || true, "efficiency on swords follows Bedrock slots");
+    ctx.check(!fe::applicable(sword, *fe::defById("minecraft:protection")), "a sword does not take protection");
     ctx.check(fe::isMatrixTarget(lp::game::makeItem("minecraft:book")), "a book is a matrix target");
     ctx.check(!fe::isMatrixTarget(lp::game::makeItem("minecraft:stone")), "stone is not a matrix target");
     ctx.check(!fe::isMatrixTarget(enchanted("minecraft:diamond_sword", {{sharp->type, 1}})), "enchanted items are not targets");
@@ -350,5 +365,275 @@ LP_REGISTER_SELFTEST("enchanting.rune_smithing", [](Context& ctx) {
     ctx.check(!fe::smithingCraft(rune, lp::game::makeItem("minecraft:diamond_sword"), lp::game::makeItem("minecraft:red_dye")),
               "unenchanted items can't take runes");
     ctx.check(!fe::smithingCraft(rune, sword, lp::game::makeItem("minecraft:stone")), "other additions don't work");
-    ctx.check(fe::canHaveRune(lp::game::makeItem("minecraft:lodestone_compass")) || true, "lodestone compasses take runes");
+    ctx.check(fe::canHaveRune(lp::game::makeItem("minecraft:lodestone_compass")), "lodestone compasses take runes");
+});
+
+// ---- in-game paths (real events, containers, loot, effects) -------------------------------------
+
+namespace {
+/// Moves the simulated player next to `pos` (test areas are far from the spawn).
+void moveNear(Player& p, lp::core::GlobalPos const& pos) {
+    p.teleport(Vec3{pos.x + 0.5f, static_cast<float>(pos.y), pos.z - 1.5f}, p.getDimensionId());
+}
+bool useBlock(Player& p, lp::core::GlobalPos const& pos, char const* hand = "minecraft:stick") {
+    auto item = lp::game::makeItem(hand);
+    return static_cast<SimulatedPlayer&>(p).simulateUseItemOnBlock(item, lp::game::blockPos(pos), ScriptModuleMinecraft::ScriptFacing::Up,
+                                                                  Vec3{0.5f, 1.0f, 0.5f});
+}
+} // namespace
+
+LP_REGISTER_SELFTEST("enchanting.table_use", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(1350, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    moveNear(p, pos);
+    co_await ctx.ticks(2);
+    for (char const* id : {"minecraft:enchanting_table", "lepton:matrix_enchanter"}) {
+        ctx.require(ctx.setBlock(pos, id), std::string("placed ") + id);
+        lp::net::testing::setClientMod(p, true);
+        (void)lp::net::testing::takeOutbox(p);
+        co_await ctx.ticks(10);
+        useBlock(p, pos);
+        for (int i = 0; i < 10 && !table::openBy(p); ++i) co_await ctx.ticks(1);
+        ctx.check(table::openBy(p).has_value(), std::string("using ") + id + " opens the matrix enchanter");
+        bool state = false;
+        for (auto const& [mid, payload] : lp::net::testing::takeOutbox(p)) state = state || mid == "enchanting:state";
+        ctx.check(state, "the mod client gets the screen state");
+        // Walking away closes the session (tick every 20 ticks).
+        p.teleport(Vec3{pos.x + 30.5f, static_cast<float>(pos.y), pos.z + 0.5f}, p.getDimensionId());
+        for (int i = 0; i < 30 && table::openBy(p); ++i) co_await ctx.ticks(1);
+        ctx.check(!table::openBy(p), "moving away closes the matrix enchanter");
+        moveNear(p, pos);
+        co_await ctx.ticks(2);
+    }
+    lp::net::testing::setClientMod(p, false);
+    co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.config_off", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigGuard guard;
+    auto        pos = ctx.testPos(1390, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    moveNear(p, pos);
+    mutCfg().automaticallyConvert = false;
+    ctx.check(!table::isTableId("minecraft:enchanting_table") && table::isTableId(table::kBlockId),
+              "automaticallyConvert = false: only the matrix enchanter block");
+    mutCfg().enableMatrixEnchanting = false;
+    ctx.check(!table::open(p, pos), "disabled module: no matrix screen");
+    ctx.require(ctx.setBlock(pos, table::kBlockId), "matrix enchanter placed");
+    co_await ctx.ticks(10);
+    useBlock(p, pos);
+    co_await ctx.ticks(5);
+    auto* region = lp::game::regionOf(pos.dim);
+    ctx.check(region && lp::game::blockIdAt(*region, lp::game::blockPos(pos)) == "minecraft:enchanting_table",
+              "disabled module: the matrix enchanter turns back into a vanilla table");
+    ctx.check(!table::openBy(p), "... and no session is opened");
+    mutCfg().enableAncientTomes = false;
+    mutCfg().enableColorRunes   = false;
+    ctx.check(fe::lootExtrasFor("loot_tables/chests/simple_dungeon.json").empty(), "disabled tomes and runes: no loot");
+    ctx.check(!fe::smithingCraft(lp::game::makeItem(fe::kRuneId), enchanted("minecraft:diamond_sword", {{typeOf("minecraft:sharpness"), 1}}),
+                                 lp::game::makeItem("minecraft:red_dye")),
+              "disabled runes: no smithing");
+    co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.anvil_helper", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(1360, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    moveNear(p, pos);
+    auto& inv = lp::game::inv::playerInventory(p);
+    for (int i = 0; i < 36; ++i) inv.setItem(i, ItemStack{});
+    lp::net::testing::setClientMod(p, true);
+    (void)lp::net::testing::takeOutbox(p);
+    ctx.require(ctx.setBlock(pos, "minecraft:anvil"), "anvil placed");
+    co_await ctx.ticks(10);
+    // Simulated players get no server-side container manager (checked: using the block opens nothing),
+    // so the test names the open station; real players are covered by the client scenario.
+    fe::testing::openStation(p, true, lp::game::blockPos(pos));
+    int  sharp = typeOf("minecraft:sharpness");
+    Container& ui = p.mPlayerUIContainer;
+    ui.setItem(static_cast<int>(PlayerUISlot::AnvilInput), enchanted("minecraft:diamond_sword", {{sharp, 5}}));
+    ui.setItem(static_cast<int>(PlayerUISlot::AnvilMaterial), fe::makeTome(sharp));
+    fe::addLevels(p, 40);
+    int levels = fe::playerLevel(p);
+    std::string preview;
+    for (int i = 0; i < 12 && preview.empty(); ++i) {
+        co_await ctx.ticks(1);
+        for (auto const& [mid, payload] : lp::net::testing::takeOutbox(p))
+            if (mid == "enchanting:craft_preview") preview = payload;
+    }
+    ctx.require(preview.find("tome") != std::string::npos, "the mod client gets the tome preview");
+    lp::net::testing::receiveFromClient(p, fe::CraftMsg{});
+    co_await ctx.ticks(2);
+    int found = lp::game::inv::count(inv, [&](ItemStack const& s) {
+        auto e = fe::enchantsOf(s);
+        return lp::game::itemId(s) == "minecraft:diamond_sword" && e.contains(sharp) && e.at(sharp) == 6;
+    }, lp::game::inv::kPlayerAll);
+    ctx.check(found == 1, "Craft gives the Sharpness VI sword");
+    ctx.check(fe::playerLevel(p) == levels - 30, "the upgrade costs 30 levels");
+    ctx.check(lp::game::isEmpty(ui.getItem(static_cast<int>(PlayerUISlot::AnvilInput)))
+                  && lp::game::isEmpty(ui.getItem(static_cast<int>(PlayerUISlot::AnvilMaterial))),
+              "the inputs are consumed");
+    lp::net::testing::setClientMod(p, false);
+    for (int i = 0; i < 36; ++i) inv.setItem(i, ItemStack{});
+    co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.smithing_helper", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(1365, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    moveNear(p, pos);
+    auto& inv = lp::game::inv::playerInventory(p);
+    for (int i = 0; i < 36; ++i) inv.setItem(i, ItemStack{});
+    lp::net::testing::setClientMod(p, true);
+    (void)lp::net::testing::takeOutbox(p);
+    ctx.require(ctx.setBlock(pos, "minecraft:smithing_table"), "smithing table placed");
+    co_await ctx.ticks(10);
+    // Simulated players get no server-side container manager (checked: using the block opens nothing),
+    // so the test names the open station; real players are covered by the client scenario.
+    fe::testing::openStation(p, false, lp::game::blockPos(pos));
+    Container& ui = p.mPlayerUIContainer;
+    ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableTemplate), lp::game::makeItem(fe::kRuneId));
+    ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableInput), enchanted("minecraft:diamond_sword", {{typeOf("minecraft:sharpness"), 1}}));
+    ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial), lp::game::makeItem("minecraft:lime_dye", 4));
+    std::string preview;
+    for (int i = 0; i < 12 && preview.empty(); ++i) {
+        co_await ctx.ticks(1);
+        for (auto const& [mid, payload] : lp::net::testing::takeOutbox(p))
+            if (mid == "enchanting:craft_preview") preview = payload;
+    }
+    ctx.require(preview.find("rune") != std::string::npos, "the mod client gets the rune preview");
+    lp::net::testing::receiveFromClient(p, fe::CraftMsg{});
+    co_await ctx.ticks(2);
+    int found = lp::game::inv::count(inv, [](ItemStack const& s) { return fe::appliedRune(s) == "lime"; }, lp::game::inv::kPlayerAll);
+    ctx.check(found == 1, "the sword gets the lime rune");
+    auto const& dye = ui.getItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial));
+    ctx.check(dye.mCount == 3 || lp::game::inv::count(inv, [](ItemStack const& s) { return lp::game::itemId(s) == "minecraft:lime_dye"; },
+                                                       lp::game::inv::kPlayerAll) == 3,
+              "one dye is used");
+    lp::net::testing::setClientMod(p, false);
+    for (int i = 0; i < 36; ++i) inv.setItem(i, ItemStack{});
+    co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.loot_chest", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigGuard guard;
+    auto        pos = ctx.testPos(1370, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    mutCfg().lootTables    = {"minecraft:chests/simple_dungeon,100000"};
+    mutCfg().dungeonWeight = 0;
+    auto& p      = ctx.player();
+    auto& region = p.getDimensionBlockSource();
+    int   tomes = 0, others = 0;
+    for (int n = 0; n < 3; ++n) {
+        if (n == 0) ctx.require(ctx.setBlock(pos, "minecraft:chest"), "chest placed");
+        auto* be = region.getBlockEntity(lp::game::blockPos(pos));
+        ctx.require(be != nullptr, "the chest has a block entity");
+        auto& chest = static_cast<ChestBlockActor&>(*be);
+        chest.setLootTable("loot_tables/chests/simple_dungeon.json", 1234 + n);
+        chest.unPackLootTable(region.getLevel(), static_cast<FillingContainer&>(chest), p.getDimensionId(), &p);
+        auto& c = static_cast<FillingContainer&>(chest);
+        for (int i = 0; i < c.getContainerSize(); ++i) {
+            auto const& s = c.getItem(i);
+            if (lp::game::isEmpty(s)) continue;
+            if (fe::isTome(s) && fe::tomeEnchant(s)) ++tomes;
+            else ++others;
+        }
+        for (int i = 0; i < c.getContainerSize(); ++i) c.setItem(i, ItemStack{});
+    }
+    ctx.info("tomes " + std::to_string(tomes) + ", other stacks " + std::to_string(others));
+    ctx.check(tomes >= 3, "a huge tome weight puts tomes into real dungeon chests");
+    ctx.setBlock(pos, "minecraft:air");
+    co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.deepslate", [](Context& ctx) {
+    auto& p     = ctx.player();
+    auto* block = lp::game::blockstates::of("minecraft:deepslate");
+    ctx.require(block != nullptr, "deepslate");
+    int  eff  = typeOf("minecraft:efficiency");
+    auto pick = enchanted("minecraft:diamond_pickaxe", {{eff, 6}});
+    p.setSelectedItem(pick);
+    p.removeAllEffects();
+    float without = p.getDestroyProgress(*block);
+    ctx.check(without < 1.0f, "no Haste II: no instamine");
+    MobEffectInstance haste(3u, EffectDuration{200});
+    haste.mAmplifier = 1;
+    p.addEffect(haste);
+    ctx.check(p.getDestroyProgress(*block) >= 1.0f, "Efficiency VI + Haste II instamines deepslate");
+    p.setSelectedItem(enchanted("minecraft:diamond_pickaxe", {{eff, 5}}));
+    ctx.check(p.getDestroyProgress(*block) < 1.0f, "Efficiency V does not");
+    p.removeAllEffects();
+    p.setSelectedItem(ItemStack{});
+});
+
+LP_REGISTER_SELFTEST("enchanting.librarian", [](Context& ctx) -> ll::coro::CoroTask<> {
+    int  sharp = typeOf("minecraft:sharpness");
+    auto r     = fe::exchangeRecipe(sharp);
+    ctx.require(r.has_value(), "the exchange recipe");
+    ctx.check(fe::isTome(*r->mBuyA) && !fe::tomeEnchant(*r->mBuyA), "buy A: any ancient tome");
+    ctx.check(r->mMaxUses == 3 && r->mTraderExp == 3 && r->mTier == 4, "3 uses, 3 XP, master tier");
+    auto pos = ctx.testPos(1380, 2);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& p = ctx.player();
+    moveNear(p, pos);
+    // Professions are random: spawn villagers until one is a librarian (trades are generated on interaction).
+    Actor*              v      = nullptr;
+    MerchantRecipeList* offers = nullptr;
+    for (int attempt = 0; attempt < 80 && !offers; ++attempt) {
+        auto* a = lp::game::entities::spawn(p.getDimensionBlockSource(), "minecraft:villager_v2",
+                                            Vec3{pos.x + 0.5f, static_cast<float>(pos.y), pos.z + 0.5f});
+        ctx.require(a != nullptr, "a villager spawns");
+        auto id = lp::game::entities::idOf(*a);
+        co_await ctx.ticks(2);
+        if (auto* a2 = lp::game::entities::find(id)) static_cast<SimulatedPlayer&>(p).simulateInteract(*a2);
+        co_await ctx.ticks(2);
+        auto* a3 = lp::game::entities::find(id);
+        if (!a3) continue;
+        auto* o = a3->getTradeOffers();
+        if (o && fe::isLibrarian(*o)) {
+            v      = a3;
+            offers = o;
+        } else {
+            lp::game::entities::despawn(*a3);
+        }
+    }
+    ctx.require(v != nullptr && offers != nullptr, "a librarian with trades");
+    {
+        std::string sells;
+        for (auto const& rr : *offers->mRecipeList)
+            sells += lp::game::itemId(*rr.mBuyA) + "+" + lp::game::itemId(*rr.mBuyB) + "->" + lp::game::itemId(*rr.mSell) + "(t" + std::to_string(rr.mTier) + ") ";
+        ctx.info("trades: " + sells);
+    }
+    ctx.check(fe::isLibrarian(*offers), "it is recognised as a librarian");
+    ctx.check(!fe::isMaster(*v), "a fresh librarian is not a master");
+    ctx.check(!fe::addLibrarianExchange(*v), "... and gets no exchange");
+    // Matching: any tome with the max-level book buys the trade.
+    auto unlocked = *r;
+    unlocked.mTier = 0;
+    offers->mRecipeList->push_back(unlocked);
+    auto book = lp::game::makeItem("minecraft:enchanted_book");
+    fe::setEnchants(book, {{sharp, 5}});
+    int   last  = static_cast<int>(offers->mRecipeList->size()) - 1;
+    auto* match = offers->getRecipeFor(ItemInstance(fe::makeTome(typeOf("minecraft:efficiency"))), ItemInstance(book), last);
+    ctx.check(match != nullptr && fe::tomeEnchant(*match->mSell) == sharp, "an efficiency tome + Sharpness V book buy the sharpness tome");
+    auto* exact = offers->getRecipeFor(ItemInstance(fe::makeTome(sharp)), ItemInstance(book), last);
+    auto* plain = offers->getRecipeFor(*r->mBuyA, *r->mBuyB, last);
+    {
+        auto wrong = lp::game::makeItem("minecraft:enchanted_book");
+        fe::setEnchants(wrong, {{typeOf("minecraft:unbreaking"), 1}});
+        auto low = lp::game::makeItem("minecraft:enchanted_book");
+        fe::setEnchants(low, {{sharp, 4}});
+        auto* w = offers->getRecipeFor(ItemInstance(fe::makeTome(sharp)), ItemInstance(wrong), last);
+        auto* l = offers->getRecipeFor(ItemInstance(fe::makeTome(sharp)), ItemInstance(low), last);
+        auto* s = offers->getRecipeFor(ItemInstance(lp::game::makeItem("minecraft:stick")), ItemInstance(book), last);
+        ctx.check(!w && !l && !s, "other books, lower levels and other items do not buy it");
+    }
+    ctx.check(exact && plain, "the tome of the same enchantment buys it too");
+    offers->mRecipeList->pop_back();
+    lp::game::entities::despawn(*v);
+    co_return;
 });

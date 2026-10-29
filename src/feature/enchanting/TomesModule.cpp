@@ -16,6 +16,8 @@
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/world/actor/ActorDataIDs.h"
+#include "mc/world/actor/SynchedActorDataEntityWrapper.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/actor/player/PlayerUISlot.h"
 #include "mc/world/containers/managers/models/AnvilContainerManagerModel.h"
@@ -207,10 +209,25 @@ std::map<std::string, Offer>& pendingForms() {
 
 Container& uiContainer(Player& p) { return p.mPlayerUIContainer; }
 
+/// Selftests: simulated players get no server-side container manager, so a test names the open station.
+std::map<std::string, std::pair<SharedTypes::Legacy::ContainerType, BlockPos>>& forcedStations() {
+    static std::map<std::string, std::pair<SharedTypes::Legacy::ContainerType, BlockPos>> m;
+    return m;
+}
+
 std::optional<Offer> currentOffer(Player& p) {
     auto const& cm = p.mContainerManager;
-    if (!cm) return std::nullopt;
-    auto type = cm->getContainerType();
+    SharedTypes::Legacy::ContainerType type;
+    BlockPos                           stationPos;
+    if (cm) {
+        type = cm->getContainerType();
+        if (type == SharedTypes::Legacy::ContainerType::Anvil) stationPos = static_cast<AnvilContainerManagerModel&>(*cm).mBlockPos;
+    } else if (auto it = forcedStations().find(uuidOf(p)); it != forcedStations().end()) {
+        type       = it->second.first;
+        stationPos = it->second.second;
+    } else {
+        return std::nullopt;
+    }
     auto& ui  = uiContainer(p);
     Offer o;
     if (type == SharedTypes::Legacy::ContainerType::Anvil) {
@@ -222,7 +239,7 @@ std::optional<Offer> currentOffer(Player& p) {
         o.anvil   = true;
         o.left    = game::itemToSnbt(left);
         o.right   = game::itemToSnbt(right);
-        o.station = game::globalPos(p.getDimensionBlockSource(), static_cast<AnvilContainerManagerModel&>(*cm).mBlockPos);
+        o.station = game::globalPos(p.getDimensionBlockSource(), stationPos);
     } else if (type == SharedTypes::Legacy::ContainerType::SmithingTable) {
         auto const& base     = ui.getItem(static_cast<int>(PlayerUISlot::SmithingTableInput));
         auto const& addition = ui.getItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial));
@@ -317,7 +334,8 @@ bool applyOffer(Player& p, Offer const& o) {
                   static_cast<int>(SharedTypes::Legacy::LevelSoundEvent::SmithingTableUse));
     }
     log().info("enchanting: {} applied {} -> {}", p.getRealName(), o.craft.kind, game::itemId(result));
-    static_cast<ServerPlayer&>(p).initiateContainerClose();
+    if (p.mContainerManager) static_cast<ServerPlayer&>(p).initiateContainerClose();
+    forcedStations().erase(uuidOf(p));
     return true;
 }
 
@@ -381,43 +399,66 @@ void tickStations() {
 
 // ---- librarians --------------------------------------------------------------------------------
 
-bool isMasterLibrarian(MerchantRecipeList const& list) {
-    bool librarian = false, master = false;
-    for (auto const& r : *list.mRecipeList) {
-        if (r.mTier >= 4) master = true;
-        if (game::itemId(r.mSell) == "minecraft:bookshelf") librarian = true;
-    }
-    return librarian && master;
+} // namespace
+
+bool isLibrarian(MerchantRecipeList const& list) {
+    // Bedrock lists every tier's trades (locked ones too); only librarians sell enchanted books.
+    for (auto const& r : *list.mRecipeList)
+        if (game::itemId(*r.mSell) == "minecraft:enchanted_book" && game::itemId(*r.mBuyB) == "minecraft:book") return true;
+    return false;
 }
+
+bool isMaster(Actor const& villager) {
+    // The unlocked trade tier (0 novice .. 4 master), synched as actor data.
+    return villager.mEntityData->getInt(static_cast<ushort>(ActorDataIDs::TradeTier)) >= 4;
+}
+
+std::optional<MerchantRecipe> exchangeRecipe(int type) {
+    auto const* d = defOf(type);
+    if (!d) return std::nullopt;
+    auto book = game::makeItem("minecraft:enchanted_book", 1);
+    setEnchants(book, {{type, d->maxLevel}});
+    auto anyTome = game::makeItem(kTomeId, 1);
+    auto out     = makeTome(type);
+    if (game::isEmpty(book) || game::isEmpty(anyTome) || game::isEmpty(out)) return std::nullopt;
+    MerchantRecipe r{ItemInstance(anyTome), ItemInstance(book), ItemInstance(out)};
+    r.mTier             = 4;
+    r.mMaxUses          = 3;
+    r.mTraderExp        = 3;
+    r.mPriceMultiplierA = 0.2f;
+    r.mPriceMultiplierB = 0.2f;
+    return r;
+}
+
+namespace testing {
+void openStation(Player& player, bool anvil, BlockPos const& pos) {
+    forcedStations()[uuidOf(player)] = {anvil ? SharedTypes::Legacy::ContainerType::Anvil : SharedTypes::Legacy::ContainerType::SmithingTable, pos};
+}
+void closeStation(Player& player) { forcedStations().erase(uuidOf(player)); }
+} // namespace testing
+
+bool addLibrarianExchange(Actor& villager) {
+    if (!cfg().enableAncientTomes || !cfg().librariansExchangeAncientTomes) return false;
+    auto key    = "lp:enchanting:librarian:" + std::to_string(game::entities::idOf(villager));
+    auto* offers = villager.getTradeOffers();
+    if (!offers || !isLibrarian(*offers) || !isMaster(villager) || game::db::load(key)) return false;
+    auto valid = validTomeEnchants();
+    if (valid.empty()) return false;
+    int  type = valid[static_cast<size_t>(randInt(static_cast<int>(valid.size())))];
+    auto r    = exchangeRecipe(type);
+    if (!r) return false;
+    offers->mRecipeList->push_back(*r);
+    game::db::save(key, {{"enchant", defOf(type)->id}});
+    log().info("enchanting: a master librarian now exchanges {} tomes", defOf(type)->id);
+    return true;
+}
+
+namespace {
 
 void tickLibrarians() {
     if (!cfg().enableAncientTomes || !cfg().librariansExchangeAncientTomes) return;
-    auto valid = validTomeEnchants();
-    if (valid.empty()) return;
-    for (auto* a : game::entities::ofType("minecraft:villager_v2")) {
-        if (!a) continue;
-        auto key = "lp:enchanting:librarian:" + std::to_string(game::entities::idOf(*a));
-        auto* offers = a->getTradeOffers();
-        if (!offers || !isMasterLibrarian(*offers)) continue;
-        if (game::db::load(key)) continue;
-        int  type  = valid[static_cast<size_t>(randInt(static_cast<int>(valid.size())))];
-        auto const* d = defOf(type);
-        if (!d) continue;
-        auto book = game::makeItem("minecraft:enchanted_book", 1);
-        setEnchants(book, {{type, d->maxLevel}});
-        auto anyTome = game::makeItem(kTomeId, 1);
-        auto out     = makeTome(type);
-        if (game::isEmpty(anyTome) || game::isEmpty(out)) continue;
-        MerchantRecipe r{ItemInstance(anyTome), ItemInstance(book), ItemInstance(out)};
-        r.mTier             = 4;
-        r.mMaxUses          = 3;
-        r.mTraderExp        = 3;
-        r.mPriceMultiplierA = 0.2f;
-        r.mPriceMultiplierB = 0.2f;
-        offers->mRecipeList->push_back(r);
-        game::db::save(key, {{"enchant", d->id}});
-        log().info("enchanting: a master librarian now exchanges {} tomes", d->id);
-    }
+    for (auto* a : game::entities::ofType("minecraft:villager_v2"))
+        if (a) addLibrarianExchange(*a);
 }
 
 int64_t gTick = 0;
@@ -443,6 +484,7 @@ public:
             game::db::onWorldClosed([] {
                 lastSignature().clear();
                 pendingForms().clear();
+                forcedStations().clear();
             });
         }
     }

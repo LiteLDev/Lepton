@@ -10,6 +10,10 @@
 #include "mc/world/item/ItemStack.h"
 
 class Player;
+class Actor;
+class MerchantRecipe;
+class MerchantRecipeList;
+class BlockPos;
 
 namespace lp::feature::enchanting {
 
@@ -61,5 +65,20 @@ struct LootExtra {
 };
 [[nodiscard]] std::vector<LootExtra> lootExtrasFor(std::string const& tableDir);
 [[nodiscard]] ItemStack              makeLootItem(std::string const& what);
+
+// ---- librarians (TomesModule.cpp) ----------------------------------------------------------------
+/// Quark's ExchangeAncientTomesTrade: any tome + a max-level book of `type` -> that tome.
+[[nodiscard]] std::optional<MerchantRecipe> exchangeRecipe(int type);
+[[nodiscard]] bool isLibrarian(MerchantRecipeList const& offers);
+[[nodiscard]] bool isMaster(Actor const& villager);
+/// Adds the exchange to a master librarian once (returns true when added).
+bool addLibrarianExchange(Actor& villager);
+
+namespace testing {
+/// Simulated players get no server-side container manager: pretend `player` has an anvil
+/// (`anvil`) or smithing table screen open at `pos` until closeStation or a craft.
+void openStation(Player& player, bool anvil, BlockPos const& pos);
+void closeStation(Player& player);
+} // namespace testing
 
 } // namespace lp::feature::enchanting
