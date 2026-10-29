@@ -1,0 +1,147 @@
+{
+  "lepton.ambient.chatter": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_chatter",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.clock": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_clock",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.crickets": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_crickets",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.drips": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_drips",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.fire": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_fire",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.ocean": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_ocean",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.rain": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_rain",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.ambient.wind": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/ambient_wind",
+        "stream": true,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.music.endermosh": {
+    "category": "record",
+    "min_distance": 0,
+    "max_distance": 64,
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/endermosh",
+        "stream": true,
+        "volume": 0.6
+      }
+    ]
+  },
+  "lepton.music.endermosh_fight": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/endermosh",
+        "stream": true,
+        "volume": 0.6
+      }
+    ]
+  },
+  "lepton.block.potato.do_it": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/potato_do_it",
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.block.potato.soda": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/potato_soda",
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.block.potato.yung": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "sounds/lepton/gadgets/potato_yung",
+        "volume": 1.0
+      }
+    ]
+  }
+}
