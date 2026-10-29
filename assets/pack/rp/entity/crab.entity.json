@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:crab",
+      "materials": { "default": "entity_alphatest" },
+      "textures": {
+        "red": "textures/entity/lepton/crab_red",
+        "blue": "textures/entity/lepton/crab_blue",
+        "green": "textures/entity/lepton/crab_green",
+        "mold": "textures/entity/lepton/crab_mold"
+      },
+      "geometry": { "default": "geometry.lepton.crab" },
+      "animations": {
+        "walk": "animation.lepton.crab.walk",
+        "idle": "animation.lepton.crab.idle",
+        "rave": "animation.lepton.crab.rave"
+      },
+      "scripts": {
+        "animate": [
+          { "walk": "q.modified_move_speed > 0.01 && !q.property('lepton:raving')" },
+          { "idle": "!q.property('lepton:raving')" },
+          { "rave": "q.property('lepton:raving')" }
+        ]
+      },
+      "render_controllers": ["controller.render.lepton.crab", { "controller.render.lepton.crab_mold": "q.mark_variant == 1" }],
+      "spawn_egg": { "base_color": "#893c22", "overlay_color": "#916548" }
+    }
+  }
+}

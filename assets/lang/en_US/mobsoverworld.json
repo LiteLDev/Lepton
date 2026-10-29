@@ -1,0 +1,11 @@
+{
+  "effect.quark.resilience": "Resilience",
+  "quark.jei.hint.crab_info": "Crabs can be found in Beaches, and bred with Wheat, Chicken, or any type of Fish.",
+  "quark.jei.hint.shiba_find_low_light": "If you're holding a torch, Shibas will point out dark spots for you to light up.",
+  "lp.mobsoverworld.effect_start": "You feel steadier ({0})",
+  "lp.mobsoverworld.effect_end": "Resilience has worn off",
+  "lp.mobsoverworld.effect_hud": "{0} {1}",
+  "lp.mobsoverworld.level_2": "II",
+  "lp.mobsoverworld.potion_tooltip": "Resilience{0} ({1})",
+  "lp.mobsoverworld.potion_attr": "+{0} Knockback Resistance"
+}

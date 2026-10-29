@@ -1,0 +1,16 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "lepton:cooked_crab_leg"
+    },
+    "tags": [
+      "furnace",
+      "smoker",
+      "campfire",
+      "soul_campfire"
+    ],
+    "input": "lepton:crab_leg",
+    "output": "lepton:cooked_crab_leg"
+  }
+}
