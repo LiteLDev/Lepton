@@ -56,6 +56,7 @@ struct Session {
     std::vector<ItemStack>   last;
     std::set<std::string>    viewers; ///< player UUIDs
     std::map<std::string, int> grace; ///< viewer -> ticks before the screen must be seen open
+    int                      readyTick = 0; ///< first tick the helper is known to clients
 };
 
 std::map<GlobalPos, std::vector<ItemStack>>& cache() {
@@ -268,6 +269,55 @@ std::map<std::string, int>& recentOpen() { ///< player uuid -> tick of the last 
 }
 int gTick = 0;
 
+/// Ticks between spawning the helper and opening its screen. The container-open packet names the
+/// helper entity, so the client must have received the entity first (it is sent with the next
+/// entity sync); a client that does not know the entity ignores the packet and shows nothing.
+constexpr int kSpawnToOpenTicks = 3;
+
+/// Ticks for a changed name tag (the screen title) to reach the clients before the screen opens.
+constexpr int kNameSyncTicks = 2;
+
+/// Opens the helper's screen for the player now (the helper and its name are known to the client).
+void showScreen(Player& player, Actor& helper, Spec const& spec, GlobalPos const& pos) {
+    auto* comp = componentOf(helper);
+    if (!comp) return;
+    comp->setCustomName(trFor(player, spec.titleKey, spec.titleFallback));
+    helper.openContainerComponent(player);
+    log().info("virtual container {} opened by {}", pos.key(), player.getRealName());
+}
+
+/// Opens the screen once the client can show it: the helper spawned at least kSpawnToOpenTicks ago
+/// and its name tag carries the title. Clients title an entity's container screen with the
+/// entity's name tag (synced actor data, shared by all viewers: the last opener's language wins).
+void requestShow(Player& player, Session& session, Actor& helper, Spec const& spec, GlobalPos const& pos) {
+    auto uuid  = player.getUuid().asString();
+    auto title = trFor(player, spec.titleKey, spec.titleFallback);
+    int  wait  = std::max(0, session.readyTick - gTick);
+    if (helper.getNameTag() != title) {
+        helper.setNameTag(title);
+        wait = std::max(wait, kNameSyncTicks);
+    }
+    session.grace[uuid] = wait + 10;
+    if (wait == 0) {
+        showScreen(player, helper, spec, pos);
+        return;
+    }
+    int64_t entity = session.entity;
+    ll::coro::keepThis([uuid, pos, spec, entity, wait]() -> ll::coro::CoroTask<> {
+        co_await ll::chrono::ticks(wait);
+        auto it = sessions().find(pos);
+        if (it == sessions().end() || it->second.entity != entity || !it->second.viewers.contains(uuid)) co_return;
+        auto* p      = playerByUuid(uuid);
+        auto* helper = entities::find(entity);
+        if (!p || !helper || (p->mContainerManager.get() && !hasOpen(*p, entity))) {
+            it->second.viewers.erase(uuid); // left, or another screen opened meanwhile
+            it->second.grace.erase(uuid);
+            co_return;
+        }
+        showScreen(*p, *helper, spec, pos);
+    }).launch(ll::thread::ServerThreadExecutor::getDefault());
+}
+
 } // namespace
 
 // ---- contents ------------------------------------------------------------------------------------
@@ -333,12 +383,16 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
     if (player.isClientSide()) return false;
     auto* region = regionOf(pos.dim);
     if (!region || !region->hasChunksAt(blockPos(pos), 0, false)) return false;
-    if (player.mContainerManager.get()) return false; // another screen is open
     auto uuid = player.getUuid().asString();
     if (auto open = openBy(player)) {
-        if (*open == pos) return true;
-        return false;
+        if (*open != pos) return false;
+        // Asked again: the client may not have shown the screen (it rejects a container opened
+        // while another of its screens, e.g. the chat, is still closing). Send it again.
+        auto it = sessions().find(pos);
+        if (auto* helper = entities::find(it->second.entity)) requestShow(player, it->second, *helper, spec, pos);
+        return true;
     }
+    if (player.mContainerManager.get()) return false; // another screen is open
 
     auto it = sessions().find(pos);
     Actor* helper = it != sessions().end() ? entities::find(it->second.entity) : nullptr;
@@ -363,9 +417,10 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
         auto& c = comp->mContainer.get();
         for (int i = 0; i < size; ++i) c.setItem(i, stored[static_cast<size_t>(i)]);
         Session s;
-        s.entity = entities::idOf(*helper);
-        s.spec   = spec;
-        s.last   = inv::snapshot(c, inv::all(c));
+        s.entity    = entities::idOf(*helper);
+        s.spec      = spec;
+        s.readyTick = gTick + kSpawnToOpenTicks;
+        s.last      = inv::snapshot(c, inv::all(c));
         // A smaller screen than before (config change): drop what no longer fits.
         bool dropped = false;
         for (size_t i = static_cast<size_t>(size); i < stored.size(); ++i) {
@@ -380,12 +435,9 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
         }
         it = sessions().insert_or_assign(pos, std::move(s)).first;
     }
-    auto* comp = componentOf(*helper);
-    comp->setCustomName(trFor(player, spec.titleKey, spec.titleFallback));
-    helper->openContainerComponent(player);
+    // The player is a viewer from now on, also while the screen waits for the client.
     it->second.viewers.insert(uuid);
-    it->second.grace[uuid] = 10;
-    log().info("virtual container {} opened by {}", pos.key(), player.getRealName());
+    requestShow(player, it->second, *helper, spec, pos);
     return true;
 }
 
