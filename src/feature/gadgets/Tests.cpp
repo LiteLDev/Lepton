@@ -8,6 +8,7 @@
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/server/sim/LookDuration.h"
+#include "mc/deps/shared_types/legacy/Difficulty.h"
 #include "mc/deps/shared_types/legacy/actor/ActorDamageCause.h"
 #include "mc/util/LootTableUtils.h"
 #include "mc/world/Container.h"
@@ -269,6 +270,13 @@ LP_REGISTER_SELFTEST("gadgets.disc_drop", [](Context& ctx) -> ll::coro::CoroTask
     auto pos = ctx.testPos(2310);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     clearItemsNear(ctx, pos);
+    // the e2e worlds are peaceful: hostile mobs need another difficulty while the test runs
+    struct DifficultyGuard {
+        Level&                       level;
+        SharedTypes::Legacy::Difficulty saved;
+        ~DifficultyGuard() { level.setDifficulty(saved); }
+    } guard{static_cast<Level&>(ctx.player().getLevel()), ctx.player().getLevel().getDifficulty()};
+    guard.level.setDifficulty(SharedTypes::Legacy::Difficulty::Normal);
     auto* skeleton = lp::game::entities::spawn(pos.dim, "minecraft:skeleton", center(off(pos, 2, 1, 0)));
     auto* spider   = lp::game::entities::spawn(pos.dim, "minecraft:spider", center(off(pos, 0, 1, 0)));
     ctx.require(skeleton && spider, "skeleton and spider spawned");
@@ -278,6 +286,14 @@ LP_REGISTER_SELFTEST("gadgets.disc_drop", [](Context& ctx) -> ll::coro::CoroTask
     std::vector<ItemStack> discs;
     for (auto const& s : itemsNear(ctx, pos))
         if (!g::ambientNameOf(lp::game::itemId(s)).empty()) discs.push_back(s);
+    {
+        AABB box{Vec3{pos.x - 4.f, pos.y - 4.f, pos.z - 4.f}, Vec3{pos.x + 5.f, pos.y + 5.f, pos.z + 5.f}};
+        for (auto* a : lp::game::entities::inBox(regionOf(ctx), box)) {
+            auto ap = a->getPosition();
+            ctx.info("entity near: " + lp::game::entities::typeOf(*a) + " at " + std::to_string(ap.x) + " " + std::to_string(ap.y) + " " + std::to_string(ap.z));
+        }
+        ctx.info("test pos " + pos.key());
+    }
     ctx.check(discs.size() == 1, "one ambience disc dropped (" + std::to_string(discs.size()) + ")");
     if (!discs.empty()) ctx.check(!discs[0].getCustomLore().empty(), "the disc has its description");
     if (auto* sk = lp::game::entities::find(skId)) lp::game::entities::despawn(*sk);
@@ -302,18 +318,29 @@ LP_REGISTER_SELFTEST("gadgets.jukebox_loop", [](Context& ctx) -> ll::coro::CoroT
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     ctx.require(ctx.setBlock(pos, "minecraft:jukebox"), "jukebox placed");
     co_await ctx.ticks(1);
-    auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(pos));
-    ctx.require(be != nullptr, "the jukebox has a block actor");
-    auto* jb = static_cast<JukeboxBlockActor*>(be);
-    jb->setRecord(g::discs::makeDisc("rain", nullptr), true);
+    // the player puts the disc in, as by hand
+    teleport(ctx, Vec3{pos.x + 2.5f, static_cast<float>(pos.y + 1), pos.z + 0.5f}, pos.dim);
+    hold(ctx, g::discs::makeDisc("rain", nullptr));
+    co_await ctx.ticks(2);
+    auto* sp   = static_cast<SimulatedPlayer*>(&ctx.player());
+    auto  held = ctx.player().getSelectedItem();
+    ctx.check(sp->simulateUseItemOnBlock(held, lp::game::blockPos(pos), Facing::Up, Vec3{0.5f, 1.f, 0.5f}), "use the disc on the jukebox");
     co_await ctx.ticks(3);
+    auto* jb = static_cast<JukeboxBlockActor*>(regionOf(ctx).getBlockEntity(lp::game::blockPos(pos)));
+    ctx.require(jb != nullptr, "the jukebox has a block actor");
+    ctx.check(lp::game::itemId(*jb->mRecord) == "lepton:music_disc_rain", "the disc is in the jukebox");
     std::string name;
     ctx.check(g::discs::isTracked(pos, &name) && name == "rain", "an ambience disc in a jukebox is tracked");
     g::discs::ageForTest(pos, 24 * 20);
     co_await ctx.ticks(2);
     ctx.check(g::discs::replaysAt(pos) >= 1, "the ambience restarts after its 24 s loop");
-    if (auto* be2 = regionOf(ctx).getBlockEntity(lp::game::blockPos(pos))) static_cast<JukeboxBlockActor*>(be2)->setRecord(ItemStack{}, false);
+    // using the jukebox again takes the disc out
+    co_await ctx.ticks(10);
+    hold(ctx, lp::game::makeItem("minecraft:stick"));
+    held = ctx.player().getSelectedItem();
+    sp->simulateUseItemOnBlock(held, lp::game::blockPos(pos), Facing::Up, Vec3{0.5f, 1.f, 0.5f});
     co_await ctx.ticks(3);
+    hold(ctx, ItemStack{});
     ctx.check(!g::discs::isTracked(pos), "taking the disc out stops it");
     clearItemsNear(ctx, pos);
 });
@@ -409,20 +436,28 @@ LP_REGISTER_SELFTEST("gadgets.potato_place", [](Context& ctx) -> ll::coro::CoroT
     hold(ctx, potato);
     co_await ctx.ticks(2);
     auto* sp   = static_cast<SimulatedPlayer*>(&ctx.player());
+    sp->simulateLookAt(lp::game::blockPos(pos), sim::LookDuration::Instant); // looking north
+    co_await ctx.ticks(1);
     auto  held = ctx.player().getSelectedItem();
     ctx.check(sp->simulateUseItemOnBlock(held, lp::game::blockPos(pos), Facing::Up, Vec3{0.5f, 1.f, 0.5f}), "place the potato");
     co_await ctx.ticks(4);
     auto const& b = regionOf(ctx).getBlock(lp::game::blockPos(above));
     ctx.require(lp::game::blockId(b) == g::kPotato, "the tiny potato is placed");
-    ctx.check(bs::getInt(b, "lepton:variant") == 10, "the name selects the look (dinnerbone)");
+    ctx.check(g::potato::variantOf(b) == 10, "the name selects the look (dinnerbone)");
+    ctx.info("facing: " + bs::getString(b, "minecraft:cardinal_direction").value_or("?"));
     ctx.check(bs::getString(b, "minecraft:cardinal_direction").value_or("") == "south", "it faces the player");
     auto data = g::potato::dataAt(above);
     ctx.check(data && data->name == "Dinnerbone", "the name is stored");
     hold(ctx, ItemStack{});
+    lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(above));
+    co_await ctx.ticks(3);
+    ctx.check(itemsNear(ctx, above, g::kPotato).size() == 1, "breaking drops the potato");
+    ctx.check(itemsNear(ctx, above, g::kPotato).empty() || itemsNear(ctx, above, g::kPotato)[0].getCustomName() == "Dinnerbone", "the dropped potato keeps its name");
+    clearItemsNear(ctx, above);
 });
 
 LP_REGISTER_SELFTEST("gadgets.potato_slots", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto pos = ctx.testPos(2322);
+    auto pos = ctx.testPos(2330);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     clearItemsNear(ctx, pos);
     ctx.require(ctx.setBlock(pos, std::string(g::kPotato)), "potato placed");
@@ -456,13 +491,14 @@ LP_REGISTER_SELFTEST("gadgets.potato_slots", [](Context& ctx) -> ll::coro::CoroT
     lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(pos));
     co_await ctx.ticks(3);
     ctx.check(itemsNear(ctx, pos, "minecraft:stick").size() == 1, "the held stick drops");
+    for (auto const& s : itemsNear(ctx, pos)) ctx.info("item near: " + lp::game::itemId(s) + " x" + std::to_string(s.mCount) + " " + s.getCustomName());
     ctx.check(itemsNear(ctx, pos, g::kPotato).size() == 2, "the held potato and the potato itself drop");
     ctx.check(!g::potato::dataAt(pos).has_value(), "the data is gone");
     clearItemsNear(ctx, pos);
 });
 
 LP_REGISTER_SELFTEST("gadgets.potato_jump", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto pos = ctx.testPos(2324);
+    auto pos = ctx.testPos(2340);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     ctx.require(ctx.setBlock(pos, std::string(g::kPotato)), "potato placed");
     g::potato::registerAt(pos, "", false);
@@ -475,6 +511,9 @@ LP_REGISTER_SELFTEST("gadgets.potato_jump", [](Context& ctx) -> ll::coro::CoroTa
     }
     ctx.check(firstFrame == 10, "a jump starts at frame 10 (" + std::to_string(firstFrame) + ")");
     ctx.check(sawZero, "the jump ends at frame 0");
+    lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(pos));
+    co_await ctx.ticks(3);
+    clearItemsNear(ctx, pos);
 });
 
 LP_REGISTER_SELFTEST("gadgets.recipes", [](Context& ctx) {

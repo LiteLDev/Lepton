@@ -10,3 +10,5 @@ Wait-LogLine 'gadgets: a skeleton killed a minecraft:spider' 5 -Since $mark | Ou
 Wait-LogLine 'gadgets: ambience disc rain looped' 5 -Since $mark | Out-Null
 Wait-LogLine 'gadgets: Endermosh added to an End City chest' 5 -Since $mark | Out-Null
 Wait-LogLine 'gadgets: tiny potato placed' 5 -Since $mark | Out-Null
+Wait-LogLine 'gadgets: jukebox playback of lepton:music_disc_rain replaced' 5 -Since $mark | Out-Null
+

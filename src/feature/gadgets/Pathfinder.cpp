@@ -37,6 +37,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/biome/Biome.h"
+#include "mc/world/level/biome/GetBiomeOptions.h"
 #include "mc/world/level/biome/source/BiomeArea.h"
 #include "mc/world/level/biome/source/BiomeSource.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -293,11 +294,12 @@ std::vector<int> searchHeights(int y, int minY, int maxY) {
 std::string biomeAt(Dimension& dim, int x, int y, int z) {
     auto* gen = dim.mWorldGenerator;
     if (!gen) return {};
-    BoundingBox box(BlockPos(x, y, z), BlockPos(x, y, z));
-    auto        area = gen->getBiomeSource().getBiomeArea(box, 1);
-    auto const& v    = *area.mBiomes;
-    if (v.empty() || !v[0]) return {};
-    return v[0]->mHash->getString();
+    GetBiomeOptions opts{BlockPos(x, y, z), false};
+    auto const*     biome = gen->getBiomeSource()._getBiome(opts);
+    if (!biome) return {};
+    auto const& name = biome->mHash->getString();
+    auto        c    = name.find(':');
+    return c == std::string::npos ? name : name.substr(c + 1); // "minecraft:plains" -> "plains"
 }
 
 std::optional<BlockPos> searchSteps(

@@ -15,7 +15,7 @@
       "minecraft:record": {
         "comparator_signal": 15,
         "duration": 1000000,
-        "sound_event": "lepton.ambient.drips"
+        "sound_event": "record.13"
       }
     }
   }

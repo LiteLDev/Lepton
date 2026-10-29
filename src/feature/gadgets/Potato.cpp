@@ -213,6 +213,10 @@ std::string genderFor(std::string_view rawName) {
     return "son";
 }
 
+int variantOf(Block const& block) {
+    return bs::getInt(block, "lepton:look").value_or(0) + 16 * bs::getInt(block, "lepton:look_page").value_or(0);
+}
+
 int jumpFrame(int ticksLeft) { return ticksLeft <= 0 ? 0 : std::min(10, (ticksLeft + 1) / 2); }
 
 // ---- per-block data ---------------------------------------------------------------------------------------
@@ -224,6 +228,7 @@ constexpr char const* kDbPrefix = "lp:gadgets:tater:";
 std::map<GlobalPos, Tater> gTaters; ///< every known potato of the world
 std::set<GlobalPos>        gDirty;
 std::set<GlobalPos>        gCreativeBreaks; ///< broken by a creative player this tick
+std::set<GlobalPos>        gPendingBreaks;  ///< removed, drops not spawned yet
 std::unordered_map<int64_t, uint64_t> gLastUse;
 struct Looking {
     std::string name;
@@ -285,8 +290,9 @@ void applyStates(BlockSource& region, GlobalPos const& pos, Tater const& t) {
     if (!isPotato(cur)) return;
     int variant = variantFor(t.name, t.angry, isHalloween(), t.jumpTicks > 0);
     int frame   = jumpFrame(t.jumpTicks);
-    if (bs::getInt(cur, "lepton:variant") == variant && bs::getInt(cur, "lepton:jump") == frame) return;
-    if (auto const* b = bs::with(cur, {{"lepton:variant", variant}, {"lepton:jump", frame}})) game::setBlock(region, bp, *b);
+    if (variantOf(cur) == variant && bs::getInt(cur, "lepton:jump") == frame) return;
+    if (auto const* b = bs::with(cur, {{"lepton:look", variant % 16}, {"lepton:look_page", variant / 16}, {"lepton:jump", frame}}))
+        game::setBlock(region, bp, *b);
 }
 
 std::string customNameOf(ItemStackBase const& s) {
@@ -312,6 +318,7 @@ void onBroken(int dim, GlobalPos pos) {
     if (!creative && cfg().enableTinyPotato) spawnItem(*region, pos, makePotatoItem(t.name, t.angry, nullptr));
     if (it != gTaters.end()) gTaters.erase(it);
     markDirty(pos);
+    log().info("gadgets: tiny potato at {} broken{}", pos.key(), creative ? " (creative)" : "");
 }
 
 // ---- events -------------------------------------------------------------------------------------------------
@@ -367,8 +374,12 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     if (region.getLevel().isClientSide()) return;
     if (!isPotato(ev.previousBlock()) || isPotato(ev.newBlock())) return;
     auto pos = game::globalPos(region, ev.pos());
-    int  dim = pos.dim;
-    later(1, [dim, pos] { onBroken(dim, pos); });
+    if (!gPendingBreaks.insert(pos).second) return; // one break can report several changes
+    int dim = pos.dim;
+    later(1, [dim, pos] {
+        gPendingBreaks.erase(pos);
+        onBroken(dim, pos);
+    });
 }
 
 void sendNameTo(Player& p, std::string const& name) {
@@ -613,6 +624,7 @@ void onWorldClosed() {
     gTaters.clear();
     gDirty.clear();
     gCreativeBreaks.clear();
+    gPendingBreaks.clear();
     gLastUse.clear();
     gLooking.clear();
 }

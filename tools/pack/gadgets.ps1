@@ -57,16 +57,18 @@ function Write-Item([string]$Path, [string]$Icon, [hashtable]$Name, $Menu, $Extr
 Write-Item 'abacus' 'abacus' @{ en = 'Abacus'; zh = '算盘' } ([ordered]@{ category = 'equipment' })
 Write-Item 'pathfinders_quill' 'pathfinders_quill' @{ en = "Pathfinder's Quill"; zh = '寻路羽毛笔' } ([ordered]@{ category = 'equipment' })
 
+# Record items only accept vanilla sound events: the discs name record.13 and Lepton replaces its playback
+# natively (src/feature/gadgets/Discs.cpp) with the lepton.ambient.* / lepton.music.endermosh sounds.
 $discMenu = [ordered]@{ category = 'items'; group = 'minecraft:itemGroup.name.record' }
 foreach ($d in 'drips', 'ocean', 'rain', 'wind', 'fire', 'clock', 'crickets', 'chatter') {
     Write-Item "music_disc_$d" "music_disc_$d" @{ en = 'Ambience Disc'; zh = '环境唱片' } $discMenu ([ordered]@{
             'minecraft:rarity' = 'rare'
-            'minecraft:record' = [ordered]@{ comparator_signal = 15; duration = 1000000; sound_event = "lepton.ambient.$d" }
+            'minecraft:record' = [ordered]@{ comparator_signal = 15; duration = 1000000; sound_event = 'record.13' }
         })
 }
 Write-Item 'music_disc_endermosh' 'music_disc_endermosh' @{ en = 'Music Disc'; zh = '音乐唱片' } $discMenu ([ordered]@{
         'minecraft:rarity' = 'rare'
-        'minecraft:record' = [ordered]@{ comparator_signal = 14; duration = 189.4; sound_event = 'lepton.music.endermosh' }
+        'minecraft:record' = [ordered]@{ comparator_signal = 14; duration = 189.4; sound_event = 'record.13' }
     })
 
 # ---- recipes ------------------------------------------------------------------------------------
@@ -86,7 +88,7 @@ Write-ShapedRecipe 'tiny_potato_no_heart' @('D', 'P') @{ D = 'minecraft:diamond'
 Write-ShapedRecipe 'tiny_potato_no_heart_emerald' @('D', 'P') @{ D = 'minecraft:emerald'; P = 'minecraft:potato' } 'lepton:tiny_potato' 1
 
 # ---- tiny potato ----------------------------------------------------------------------------------
-# Looks (lepton:variant) -> texture and shape. Keep in sync with src/feature/gadgets/TinyPotato.cpp.
+# Looks (variant index) -> texture and shape. Keep in sync with src/feature/gadgets/Potato.cpp.
 $variants = @(
     @('default', 'base'), @('angry', 'base'), @('halloween', 'base'), @('ace', 'base'), @('agender', 'base'),
     @('aro', 'base'), @('aureylian', 'base'), @('bi', 'base'), @('bob', 'bob'), @('bosnia', 'base'),
@@ -175,7 +177,8 @@ $geometries.Add([ordered]@{
     })
 Write-PackJson (Join-Path $script:RP 'models/blocks/lepton_gadgets_tiny_potato.geo.json') ([ordered]@{ format_version = '1.12.0'; 'minecraft:geometry' = @($geometries) })
 
-$vc = { param($v) "q.block_state('lepton:variant') == $v" }
+# Block states hold at most 16 values: the look is lepton:look (0..15) + 16 * lepton:look_page (0..1).
+$vc = { param($v) "(q.block_state('lepton:look') == $($v % 16) && q.block_state('lepton:look_page') == $([Math]::Floor($v / 16)))" }
 $mat = { param($look) [ordered]@{ texture = (Add-TerrainTexture "$btex/tiny_potato_$look"); render_method = 'alpha_test' } }
 $glasses = & $mat 'sus'
 $box = [ordered]@{ origin = @(-2, 0, -2); size = @(4, 6, 4) }
@@ -216,7 +219,7 @@ foreach ($shape in $shapes + @('invisible')) {
     }
 }
 Write-BlockJson -Id 'lepton:tiny_potato' -Menu ([ordered]@{ category = 'items' }) `
-    -States ([ordered]@{ 'lepton:variant' = @(0..($variants.Count - 1)); 'lepton:jump' = @(0..$frames) }) `
+    -States ([ordered]@{ 'lepton:look' = @(0..15); 'lepton:look_page' = @(0, 1); 'lepton:jump' = @(0..$frames) }) `
     -Traits ([ordered]@{ 'minecraft:placement_direction' = [ordered]@{ enabled_states = @('minecraft:cardinal_direction'); y_rotation_offset = 180 } }) `
     -Components $c -Permutations $perms
 Register-BlockClient 'lepton:tiny_potato' 'cloth' @{ en = 'Tiny Potato'; zh = '小土豆' }

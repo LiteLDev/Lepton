@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 
+class Block;
 class BlockPos;
 class ItemStack;
 class Player;
@@ -25,11 +26,14 @@ struct NameInfo {
 };
 [[nodiscard]] NameInfo cleanName(std::string_view raw);
 
-/// `lepton:variant` (the look) of a potato with this custom name.
+/// The look (0..24, see docs/spec/gadgets.md §2.2) of a potato with this custom name.
 [[nodiscard]] int variantFor(std::string_view rawName, bool angry, bool halloween, bool jumping);
 
 /// "son", "daughter", "child", "children", "tomato" for a held potato named `rawName`.
 [[nodiscard]] std::string genderFor(std::string_view rawName);
+
+/// The look of a placed potato block (`lepton:look` + 16 * `lepton:look_page`).
+[[nodiscard]] int variantOf(Block const& block);
 
 /// Jump animation frame (`lepton:jump`) for `ticksLeft` ticks of jump left (20..0).
 [[nodiscard]] int jumpFrame(int ticksLeft);

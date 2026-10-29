@@ -15,7 +15,7 @@
       "minecraft:record": {
         "comparator_signal": 14,
         "duration": 189.4,
-        "sound_event": "lepton.music.endermosh"
+        "sound_event": "record.13"
       }
     }
   }
