@@ -56,9 +56,12 @@ bool recipesEmpty(EconomyTradeableComponent& comp) {
 /// replacing the job site regenerates the same trades. Bedrock's trade generation does not take a
 /// random we can seed, so the same result is reached by keeping the first trades generated for
 /// each trade table (profession) and handing them out again on every later first generation.
+// High: runs outside the other units' _generateTrades hooks (U3 mason, U20 fisherman, U23
+// cartographer trades), so what they add is part of the kept first trades and is not re-randomized
+// after the kept list is handed out again.
 LL_TYPE_INSTANCE_HOOK(
     GenerateTradesHook,
-    ll::memory::HookPriority::Normal,
+    ll::memory::HookPriority::High,
     EconomyTradeableComponent,
     &EconomyTradeableComponent::_generateTrades,
     bool
