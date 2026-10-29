@@ -3,7 +3,7 @@
 $mark = Get-LogMark
 $r = Invoke-SelfTest 'mobsoverworld.*' -TimeoutSeconds 600
 if ($r.Fail -gt 0) { throw "$($r.Fail) mobsoverworld selftest(s) failed" }
-if ($r.Pass -lt 14) { throw "expected 14 mobsoverworld selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 15) { throw "expected 15 mobsoverworld selftests to pass, got $($r.Pass)" }
 $lines = Get-ServerLog $mark
 foreach ($want in @(
         'crab struck by lightning grows to scale 3',

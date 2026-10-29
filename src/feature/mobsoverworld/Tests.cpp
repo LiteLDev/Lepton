@@ -157,7 +157,8 @@ LP_REGISTER_SELFTEST("mobsoverworld.crab_bucket", [](Context& ctx) -> ll::coro::
     co_await ctx.ticks(2);
     back = entities::find(backId);
     ctx.require(back != nullptr, "the released crab exists");
-    ctx.check(back->getVariant() == variant && back->getMarkVariant() == mold, "colour and mould are kept");
+    ctx.check(back->getVariant() == variant && back->getMarkVariant() == mold, "colour and mould are kept (" + std::to_string(variant) + "/" + std::to_string(mold) + " -> " +
+                  std::to_string(back->getVariant()) + "/" + std::to_string(back->getMarkVariant()) + ")");
     ctx.check(mo::boolProperty(*back, "lepton:from_bucket"), "the released crab is marked FromBucket");
     hold(ctx, player, "minecraft:air", 0);
 });

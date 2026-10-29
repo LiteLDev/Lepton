@@ -72,6 +72,7 @@
       "lepton:color_1": { "minecraft:variant": { "value": 1 } },
       "lepton:color_2": { "minecraft:variant": { "value": 2 } },
       "lepton:mold": { "minecraft:mark_variant": { "value": 1 } },
+      "lepton:clean": { "minecraft:mark_variant": { "value": 0 } },
       "lepton:persistent": { "minecraft:persistent": {} },
       "lepton:size_1": {
         "minecraft:scale": { "value": 3 },
@@ -165,7 +166,7 @@
               { "weight": 1, "add": { "component_groups": ["lepton:color_2"] } }
             ]
           },
-          { "randomize": [{ "weight": 2 }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
+          { "randomize": [{ "weight": 2, "add": { "component_groups": ["lepton:clean"] } }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
         ]
       },
       "minecraft:entity_born": {
@@ -178,7 +179,7 @@
               { "weight": 1, "add": { "component_groups": ["lepton:color_2"] } }
             ]
           },
-          { "randomize": [{ "weight": 2 }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
+          { "randomize": [{ "weight": 2, "add": { "component_groups": ["lepton:clean"] } }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
         ]
       },
       "minecraft:ageable_grow_up": {
@@ -193,8 +194,8 @@
       "lepton:color_0": { "remove": { "component_groups": ["lepton:color_1", "lepton:color_2"] }, "add": { "component_groups": ["lepton:color_0"] } },
       "lepton:color_1": { "remove": { "component_groups": ["lepton:color_0", "lepton:color_2"] }, "add": { "component_groups": ["lepton:color_1"] } },
       "lepton:color_2": { "remove": { "component_groups": ["lepton:color_0", "lepton:color_1"] }, "add": { "component_groups": ["lepton:color_2"] } },
-      "lepton:mold": { "add": { "component_groups": ["lepton:mold"] } },
-      "lepton:no_mold": { "remove": { "component_groups": ["lepton:mold"] } },
+      "lepton:mold": { "remove": { "component_groups": ["lepton:clean"] }, "add": { "component_groups": ["lepton:mold"] } },
+      "lepton:no_mold": { "remove": { "component_groups": ["lepton:mold"] }, "add": { "component_groups": ["lepton:clean"] } },
       "lepton:size_1": { "remove": { "component_groups": ["lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_1"] }, "set_property": { "lepton:size": 1 } },
       "lepton:size_2": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_2"] }, "set_property": { "lepton:size": 2 } },
       "lepton:size_3": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_3"] }, "set_property": { "lepton:size": 3 } },
