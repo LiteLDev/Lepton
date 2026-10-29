@@ -727,9 +727,9 @@ void ensureInstalled() {
         return;
     }
     using ll::memory::FuncPtr;
-    ll::memory::hook(gExecTarget, reinterpret_cast<FuncPtr>(&execDetour), reinterpret_cast<FuncPtr*>(&gExecOrig), ll::memory::HookPriority::Normal);
-    ll::memory::hook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour), reinterpret_cast<FuncPtr*>(&gPresentOrig), ll::memory::HookPriority::Normal);
-    ll::memory::hook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour), reinterpret_cast<FuncPtr*>(&gPresent1Orig), ll::memory::HookPriority::Normal);
+    ll::memory::hook(gExecTarget, reinterpret_cast<FuncPtr>(&execDetour), reinterpret_cast<FuncPtr*>(&gExecOrig), ll::memory::HookPriority::Normal, false);
+    ll::memory::hook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour), reinterpret_cast<FuncPtr*>(&gPresentOrig), ll::memory::HookPriority::Normal, false);
+    ll::memory::hook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour), reinterpret_cast<FuncPtr*>(&gPresent1Orig), ll::memory::HookPriority::Normal, false);
     gHooked = true;
     log().info("cosmetics: camera filter hooks installed");
 }
@@ -737,9 +737,9 @@ void ensureInstalled() {
 void shutdown() {
     if (!gHooked.exchange(false)) return;
     using ll::memory::FuncPtr;
-    ll::memory::unhook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour));
-    ll::memory::unhook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour));
-    ll::memory::unhook(gExecTarget, reinterpret_cast<FuncPtr>(&execDetour));
+    ll::memory::unhook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour), false);
+    ll::memory::unhook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour), false);
+    ll::memory::unhook(gExecTarget, reinterpret_cast<FuncPtr>(&execDetour), false);
     gR.reset();
     gInstalled = false;
 }

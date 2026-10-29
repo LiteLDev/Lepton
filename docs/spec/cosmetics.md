@@ -192,7 +192,7 @@ so component groups that reset synced data are corrected at once):
   with the game's hide-GUI option (restored on exit) and the vanilla HUD screen is not drawn
   (`BeforeUIRenderEvent` cancelled for `hud_screen`) while Lepton's HUD hooks still draw the camera HUD. The filter is a full-screen pixel-shader pass over
   the swap chain image before it is presented (Direct3D 12 hooks on `IDXGISwapChain::Present` and
-  `ID3D12CommandQueue::ExecuteCommandLists`, installed the first time camera mode is used). Enter plays
+  `ID3D12CommandQueue::ExecuteCommandLists`, installed at game start when `enableCamera` is on; they do nothing until a filter or a shot is requested). Enter plays
   the shutter, hides the rulers/settings for 10 frames and grabs the next presented frame (filter
   included) into `mods/Lepton/screenshots/yyyy-MM-dd_HH.mm.ss.png`, with Quark-style chat feedback.
 
