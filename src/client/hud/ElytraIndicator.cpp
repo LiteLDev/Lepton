@@ -77,15 +77,18 @@ LL_TYPE_INSTANCE_HOOK(
     mNumEmptyIcons = savedEmpty;
 
     auto  base = screenPos(owner);
-    float x    = base.x + savedPos[0].x - 8 + shift;
-    float y    = base.y + savedPos[0].y;
+    // The renderer draws its icons at owner + icon position, moved by the armour height offset (the
+    // bar sits one row above the hearts).
+    float x = base.x + savedPos[0].x - 8 + shift;
+    float y = base.y + savedPos[0].y + mArmorHeightOffset;
     if (!gLogged) {
-        gLogged = true;
+        gLogged          = true;
+        auto const& aabb = mRenderAABB.get();
         log().info(
-            "hud: elytra indicator drawn (armor {}, shift {}, owner {:.1f},{:.1f} size {:.1f}x{:.1f}, icon0 {:.1f},{:.1f}, icon1 "
-            "{:.1f},{:.1f}, icons {}/{}/{})",
-            armor, shift, base.x, base.y, owner.mSize.get().x, owner.mSize.get().y, savedPos[0].x, savedPos[0].y, savedPos[1].x,
-            savedPos[1].y, savedFull, savedHalf, savedEmpty
+            "hud: elytra indicator drawn (armor {}, shift {}, owner {:.1f},{:.1f}, icon0 {:.1f},{:.1f}, height offset {:.1f}, "
+            "aabb {:.1f},{:.1f}-{:.1f},{:.1f}, icons {}/{}/{})",
+            armor, shift, base.x, base.y, savedPos[0].x, savedPos[0].y, static_cast<float>(mArmorHeightOffset),
+            static_cast<float>(aabb._x0), static_cast<float>(aabb._y0), static_cast<float>(aabb._x1), static_cast<float>(aabb._y1), savedFull, savedHalf, savedEmpty
         );
     }
     Painter p(rc);
