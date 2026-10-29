@@ -456,7 +456,16 @@ LP_REGISTER_SELFTEST("backpack.net", [](Context& ctx) -> ll::coro::CoroTask<> {
     co_await ctx.ticks(1);
     ctx.check(!bp::backpackOpen(p), "a switch request closes the backpack screen");
     co_await ctx.ticks(4);
-    static_cast<ServerPlayer&>(p).openInventory(); // the "Backpack" button: the vanilla request
+    static_cast<ServerPlayer&>(p).openInventory(); // the client's own inventory request
+    co_await ctx.ticks(1);
+    ctx.check(!bp::backpackOpen(p), "the inventory request after a switch opens the normal inventory");
+    if (p.mContainerManager.get()) static_cast<ServerPlayer&>(p).initiateContainerClose();
+    co_await ctx.ticks(2);
+    // The "Backpack" button: "backpack", then the vanilla request.
+    lp::net::testing::receiveFromClient(p, bp::BackpackSwitchMsg{"inventory"}); // ignored: not open
+    lp::net::testing::receiveFromClient(p, bp::BackpackSwitchMsg{"backpack"});
+    co_await ctx.ticks(1);
+    static_cast<ServerPlayer&>(p).openInventory();
     co_await ctx.ticks(1);
     ctx.check(bp::backpackOpen(p), "an inventory request opens the backpack again");
     lp::net::testing::receiveFromClient(p, bp::BackpackSwitchMsg{"bogus"});

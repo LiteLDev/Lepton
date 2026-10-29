@@ -152,7 +152,7 @@ int ravagerHideDrop(int lootingLevel, double random) {
 
 namespace {
 
-constexpr int kOpenDelay = 2; ///< ticks between spawning the helper and opening its screen
+constexpr int kOpenDelay = 3; ///< ticks between spawning the helper and opening its screen
 
 struct Session {
     int64_t                helper = 0;
@@ -293,8 +293,10 @@ bool openBackpack(Player& player) {
     if (player.isClientSide() || !cfg().enableBackpack || !wearsBackpack(player)) return false;
     auto uuid = player.getUuid().asString();
     if (sessions().contains(uuid)) {
-        finish(uuid, true); // already open: closing it is all a second request does
-        return false;
+        // A second request (the client lost the screen, or asked twice): close the session, the
+        // next request opens a fresh one. Handled: no vanilla inventory opens behind it.
+        finish(uuid, true);
+        return true;
     }
     if (player.mContainerManager.get()) return false; // another screen is open
     auto  pos    = player.getFeetPos();
@@ -470,6 +472,22 @@ void tickPlayer(Player& p) {
 
 int gTick = 0;
 
+/// uuid -> last tick in which the player's inventory request opens the normal inventory: set by the
+/// mod client's "Inventory" button (the client then opens its inventory; if that sends the vanilla
+/// request, it must not reopen the backpack), cleared by its "Backpack" button.
+std::map<std::string, int>& inventoryBypass() {
+    static std::map<std::string, int> m;
+    return m;
+}
+
+bool takeBypass(Player const& p) {
+    auto it = inventoryBypass().find(p.getUuid().asString());
+    if (it == inventoryBypass().end()) return false;
+    bool active = it->second >= gTick;
+    inventoryBypass().erase(it);
+    return active;
+}
+
 LL_TYPE_INSTANCE_HOOK(
     OpenInventoryHook,
     ll::memory::HookPriority::Normal,
@@ -477,7 +495,9 @@ LL_TYPE_INSTANCE_HOOK(
     &ServerPlayer::$openInventory,
     void
 ) {
-    if (cfg().enableBackpack && wearsBackpack(*this) && !isCreative() && !isSpectator() && !isSneaking()) {
+    if (takeBypass(*this)) {
+        log().info("backpack: {} opened the inventory", getRealName());
+    } else if (cfg().enableBackpack && wearsBackpack(*this) && !isCreative() && !isSpectator() && !isSneaking()) {
         if (openBackpack(*this)) return;
     }
     origin();
@@ -616,14 +636,21 @@ public:
         game::db::onWorldClosed([] {
             sessions().clear(); // helpers of a closed world are gone with it
             wornFull().clear();
+            inventoryBypass().clear();
         });
 
         // The mod client's "Inventory" button: the backpack screen closes and the client opens its
         // own inventory (the game shows no inventory the server opens by itself). Its "Backpack"
-        // button sends the vanilla inventory request, which the hook above answers.
+        // button sends "backpack" and then the vanilla inventory request, which the hook answers.
         mSwitch = net::onServer<BackpackSwitchMsg>([](Player& p, BackpackSwitchMsg const& m) {
+            auto uuid = p.getUuid().asString();
+            if (m.target == "backpack") {
+                inventoryBypass().erase(uuid);
+                return;
+            }
             if (m.target != "inventory" || !backpackOpen(p)) return;
             log().info("backpack: {} switched to the inventory", p.getRealName());
+            inventoryBypass()[uuid] = gTick + 40;
             closeBackpack(p);
         });
     }

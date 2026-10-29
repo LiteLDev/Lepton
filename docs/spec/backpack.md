@@ -156,7 +156,8 @@ Contents (user NBT `lepton:pouch` = `{Item, Count}`): one item type with count 0
   (red). Nothing is planted around the chest.
 - **Display.** Quark shows the contents in the name ("Seed Pouch (Wheat Seeds)"), a fill bar
   (`round(count * 13 / maxItems)`, blue for seeds, light grey for fertilizer) and an icon tooltip.
-  Lepton writes a lore line `<item name> x<count>` (white) and a text fill bar for every client;
+  Lepton writes a lore line `<item name> x<count>` (white; the name in the server's language, as lore
+  is stored text) and a text fill bar for every client;
   mod clients get a tooltip line "<count>/<maxItems>".
 - **Creative** (`showAllVariantsInCreative`): Quark lists a full pouch of every holdable seed in the
   creative tab. Bedrock's creative inventory is built from item JSON without per-stack data, so this
@@ -173,6 +174,15 @@ Existing items stay (inert), like Quark.
 | Screen | Mod client | Vanilla client |
 |---|---|---|
 | Backpack inventory | vanilla chest screen "Backpack" (27 slots + inventory + hotbar), plus an overlay button "Inventory" (opens the normal inventory with armour/crafting); the normal inventory gets a "Backpack" button while a backpack is worn | the same chest screen; sneak + E opens the normal inventory |
+
+Switching (mod clients; buttons to the right of the inventory slots): "Inventory" closes the backpack
+screen and the client opens its own inventory (the server lets one inventory request through for
+two seconds); "Backpack" closes the inventory and sends the vanilla inventory request, which the
+server answers with the backpack screen. (Clients do not show a container the server opens without
+a request while another screen is open or closing.)
+
+| Screen | Mod client | Vanilla client |
+|---|---|---|
 | Seed pouch | inventory overlay buttons "Insert" / "Take" for the selected pouch + tooltip line | item use / sneak-use (§3.3) |
 | Totem | none (entity) | none |
 
@@ -228,6 +238,8 @@ Names (RP texts): `item.lepton:backpack` Backpack, `item.lepton:ravager_hide` Ra
   crafting stay in the normal inventory (sneak + E, or the mod client's button).
 - **Binding curse** is enforced natively (the backpack is put back) instead of a real hidden
   enchantment, which Bedrock would render with a glint and an enchantment line.
+- **Dyeable icon**: a dyeable custom item's icon comes from the `dyed` icon texture (grey levels,
+  tinted with the colour); the worn model is the attachable, only for the chest slot.
 - **Lock icon** (`has_items` model) and the **fill bar**: Bedrock item icons can't depend on item data
   for custom items, and a durability bar would make the pouch repairable (the crafting repair recipe
   would merge two pouches and lose contents). Lepton uses lore lines and tooltips instead.

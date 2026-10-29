@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 
 #include "mc/client/game/ClientInstance.h"
 #include "mc/client/gui/screens/interfaces/ISceneStack.h"
@@ -36,9 +37,16 @@ namespace {
 std::atomic<bool> gBackpackScreen{false};
 /// "Inventory" was clicked: 1 = waiting for the server to close the backpack screen, 2 = closed,
 /// open the inventory as soon as no screen is shown. "Backpack" was clicked: 3 = ask the server for
-/// the backpack screen as soon as the inventory is gone. Frames left before giving up in gSwitchFrames.
-std::atomic<int> gSwitchState{0};
-std::atomic<int> gSwitchFrames{0};
+/// the backpack screen as soon as the inventory is gone. A switch gives up after kSwitchTimeout.
+enum SwitchState : int { kIdle = 0, kAwaitClose = 1, kOpenInventory = 2, kAskBackpack = 3 };
+std::atomic<int>                                   gSwitchState{kIdle};
+std::atomic<std::chrono::steady_clock::rep>        gSwitchDeadline{0};
+constexpr std::chrono::seconds                     kSwitchTimeout{5};
+
+void startSwitch(SwitchState state) {
+    gSwitchDeadline = (std::chrono::steady_clock::now() + kSwitchTimeout).time_since_epoch().count();
+    gSwitchState    = state;
+}
 
 bool wearsBackpack() {
     auto* p = currentPlayer();
@@ -46,7 +54,8 @@ bool wearsBackpack() {
 }
 
 void report(char const* what, Rect const& r, Vec size, std::string const& screen) {
-    log().info("backpack client: {} button at {:.4f},{:.4f} ({})", what, (r.x + r.w / 2) / size.x, (r.y + r.h / 2) / size.y, screen);
+    float fx = (r.x + r.w / 2) / size.x, fy = (r.y + r.h / 2) / size.y;
+    log().info("backpack client: {} button at {:.4f},{:.4f} ({})", what, fx, fy, screen);
 }
 
 constexpr float kButtonW = 58, kButtonH = 16, kButtonGap = 4;
@@ -80,9 +89,8 @@ LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](Overlay& o, ScreenInfo const& s) 
     Rect r{a.x, a.y, kButtonW, kButtonH};
     o.button(r, ctr("lp.backpack.button.inventory", "Inventory"), [] {
         log().info("backpack client: switching to the inventory");
-        gSwitchFrames = 600;
-        gSwitchState  = 1;
-        if (!net::sendToServer(bp::BackpackSwitchMsg{"inventory"})) gSwitchState = 0;
+        startSwitch(kAwaitClose);
+        if (!net::sendToServer(bp::BackpackSwitchMsg{"inventory"})) gSwitchState = kIdle;
     }, ctr("lp.backpack.button.inventory_tip", "Armor and crafting"));
     static bool reported = false;
     reportOnce(reported, "inventory", r, s);
@@ -99,9 +107,9 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
             // The inventory screen may be the client's own (the server does not know it): close it
             // here; once it is gone the server is asked for the backpack screen (the game ignores a
             // container the server opens over another screen).
+            // (Overlay buttons only get clicks on the top screen: the pop closes this inventory.)
             if (auto* c = currentClient()) c->getClientSceneStack()->schedulePopScreen(1);
-            gSwitchFrames = 600;
-            gSwitchState  = 3;
+            startSwitch(kAskBackpack);
         }, ctr("lp.backpack.button.backpack_tip", "Open the backpack"));
         static bool reported = false;
         reportOnce(reported, "backpack", r, s);
@@ -130,19 +138,21 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
 // inventory request through right after the switch).
 LP_REGISTER_HUD([](DrawContext&) {
     int state = gSwitchState;
-    if (state == 0) return;
+    if (state == kIdle) return;
     auto* c = currentClient();
     auto* p = currentPlayer();
-    if (--gSwitchFrames <= 0) {
-        gSwitchState = 0;
-        log().warn("backpack client: could not switch screens (state {}, top screen {})", state, topScreen());
+    if (std::chrono::steady_clock::now().time_since_epoch().count() > gSwitchDeadline) {
+        if (gSwitchState.compare_exchange_strong(state, kIdle))
+            log().warn("backpack client: could not switch screens (state {}, top screen {})", state, topScreen());
         return;
     }
-    if (state == 1 || !c || !p || topScreen() != "hud_screen") return;
-    gSwitchState = 0;
-    if (state == 3) {
+    if (state == kAwaitClose || !c || !p || topScreen() != "hud_screen") return;
+    if (!gSwitchState.compare_exchange_strong(state, kIdle)) return;
+    if (state == kAskBackpack) {
         // The request the E key sends: the server answers it with the backpack screen. (A screen
-        // the server opens without a request from the client is not shown.)
+        // the server opens without a request from the client is not shown.) "backpack" first: it
+        // cancels the server's pass for the inventory request of a previous "Inventory" click.
+        net::sendToServer(bp::BackpackSwitchMsg{"backpack"});
         if (auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::Interact)) {
             auto& interact      = static_cast<InteractPacket&>(*pkt);
             interact.mAction    = InteractPacketPayload::Action::OpenInventory;
@@ -168,13 +178,14 @@ public:
     void install() {
         mScreen = net::onClient<bp::BackpackScreenMsg>([](bp::BackpackScreenMsg const& m) {
             gBackpackScreen = m.open;
-            if (!m.open && gSwitchState == 1) gSwitchState = 2;
+            int awaiting = kAwaitClose;
+            if (!m.open) gSwitchState.compare_exchange_strong(awaiting, kOpenInventory);
             log().info("backpack client: screen {}", m.open ? "open" : "closed");
         });
         // A new connection (another world / server) starts without an open backpack screen.
         net::onServerModReady([] {
             gBackpackScreen = false;
-            gSwitchState    = 0;
+            gSwitchState    = kIdle;
         });
     }
     void uninstall() { net::removeHandler(mScreen); }

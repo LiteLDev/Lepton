@@ -13,8 +13,10 @@ struct BackpackScreenMsg {
     bool open = false;
 };
 
-/// Client -> server: leave the backpack screen for the normal inventory (`target` = "inventory"; the
-/// client opens its inventory itself once the screen closed). Other targets are ignored.
+/// Client -> server: `target` = "inventory": leave the backpack screen for the normal inventory (the
+/// client opens its inventory once the screen closed; the server lets one inventory request through
+/// for two seconds). "backpack": sent before the client's own inventory request that should open
+/// the backpack (cancels that pass). Other targets are ignored.
 struct BackpackSwitchMsg {
     static constexpr std::string_view kId = "backpack:switch";
     std::string target;

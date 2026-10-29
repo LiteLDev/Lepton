@@ -76,7 +76,8 @@ void setBackpackItems(ItemStack& backpack, std::vector<ItemStack> const& items);
 [[nodiscard]] bool backpackHasItems(ItemStackBase const& backpack);
 /// Wears a backpack in the chest slot.
 [[nodiscard]] bool wearsBackpack(Player const& player);
-/// Opens the backpack screen (false when not wearing one, busy, already open, ...).
+/// Opens the backpack screen (false when not wearing one, busy, ...). A request while a backpack
+/// session exists closes it (and returns true: handled).
 bool openBackpack(Player& player);
 /// Closes the backpack screen (if open), writing the contents back.
 void closeBackpack(Player& player);
