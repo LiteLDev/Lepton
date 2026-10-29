@@ -152,6 +152,8 @@ int ravagerHideDrop(int lootingLevel, double random) {
 
 namespace {
 
+constexpr int kOpenDelay = 2; ///< ticks between spawning the helper and opening its screen
+
 struct Session {
     int64_t                helper = 0;
     std::vector<ItemStack> last;
@@ -313,10 +315,25 @@ bool openBackpack(Player& player) {
     Session s;
     s.helper = game::entities::idOf(*helper);
     s.last   = game::inv::snapshot(c, game::inv::all(c));
+    s.grace       = 10 + kOpenDelay;
+    auto helperId = s.helper;
     sessions()[uuid] = std::move(s);
-    helper->openContainerComponent(player);
-    net::sendToClient(player, BackpackScreenMsg{true});
-    log().info("backpack: opened by {}", player.getRealName());
+    // The client ignores the screen of an actor it has not been told about yet: open it once the
+    // helper's spawn has reached the client.
+    ll::coro::keepThis([uuid, helperId]() -> ll::coro::CoroTask<> {
+        co_await ll::chrono::ticks(kOpenDelay);
+        auto it = sessions().find(uuid);
+        if (it == sessions().end() || it->second.helper != helperId) co_return;
+        auto* pl     = playerByUuid(uuid);
+        auto* helper = game::entities::find(helperId);
+        if (!pl || !helper || pl->mContainerManager.get()) {
+            finish(uuid, false);
+            co_return;
+        }
+        helper->openContainerComponent(*pl);
+        net::sendToClient(*pl, BackpackScreenMsg{true});
+        log().info("backpack: opened by {}", pl->getRealName());
+    }).launch(ll::thread::ServerThreadExecutor::getDefault());
     return true;
 }
 

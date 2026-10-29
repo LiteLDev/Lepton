@@ -447,6 +447,7 @@ LP_REGISTER_SELFTEST("backpack.net", [](Context& ctx) -> ll::coro::CoroTask<> {
     (void)lp::net::testing::takeOutbox(p);
     p.setArmor(ArmorSlot::Torso, fullBackpack());
     ctx.require(bp::openBackpack(p), "backpack opened");
+    co_await ctx.ticks(4); // the screen opens once the helper reached the client
     bool told = false;
     for (auto const& [id, payload] : lp::net::testing::takeOutbox(p))
         told = told || (id == bp::BackpackScreenMsg::kId && payload.find("true") != std::string::npos);

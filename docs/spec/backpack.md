@@ -216,7 +216,6 @@ Section `backpack` (`config/backpack.json`):
 | `lp.backpack.button.insert` | Insert |
 | `lp.backpack.button.take` | Take |
 | `lp.backpack.pouch_count` | {}/{} |
-| `lp.backpack.pouch_lore` | {} x{} |
 
 Names (RP texts): `item.lepton:backpack` Backpack, `item.lepton:ravager_hide` Ravager Hide,
 `item.lepton:seed_pouch` Seed Pouch, `tile.lepton:bonded_ravager_hide.name` Bonded Ravager Hide,
