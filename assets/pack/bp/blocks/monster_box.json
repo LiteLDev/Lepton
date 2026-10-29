@@ -1,0 +1,39 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:monster_box",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 25.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 25.0
+      },
+      "minecraft:map_color": "#a7a7a7",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:monster_box": {},
+      "minecraft:geometry": "geometry.lepton.worldsurface_monster_box",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldsurface_monster_box",
+          "render_method": "alpha_test"
+        },
+        "cage": {
+          "texture": "lepton_worldsurface_monster_box",
+          "render_method": "alpha_test"
+        },
+        "core": {
+          "texture": "lepton_worldsurface_monster_box_core",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/monster_box.json"
+    }
+  }
+}

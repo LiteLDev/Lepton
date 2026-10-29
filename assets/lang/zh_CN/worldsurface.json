@@ -1,0 +1,10 @@
+{
+  "biome.quark.glimmering_weald": "微光荒野",
+  "quark.jei.hint.glow_shroom": "可以在稀有的微光荒野生物群系（位于深层地底）中找到。可以用骨粉制造大型变种。",
+  "quark.jei.hint.glow_lichen_growth": "可以在稀有的微光荒野生物群系（位于深层地底）中找到。",
+  "tag.item.quark.glow_shroom_feedables": "发光菇石灵食物",
+  "lp.worldsurface.monster_box": "怪物盒子",
+  "lp.worldsurface.locate.found": "最近的{0}位于 {1}（{2} 格外）",
+  "lp.worldsurface.locate.none": "无法在 {1} 格内找到{0}",
+  "lp.worldsurface.locate.unsupported": "{0}需要普通（非超平坦）的主世界"
+}

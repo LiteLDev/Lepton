@@ -1,0 +1,134 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:glow_shroom_ring",
+      "menu_category": {
+        "category": "nature"
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "minecraft:map_color": "#a7a7a7",
+      "tag:lepton:glow_shroom_ring": {},
+      "tag:plant": {},
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.worldsurface_ring",
+        "bone_visibility": {
+          "ring_north": "q.block_state('minecraft:block_face') == 'north'",
+          "ring_south": "q.block_state('minecraft:block_face') == 'south'",
+          "ring_west": "q.block_state('minecraft:block_face') == 'west'",
+          "ring_east": "q.block_state('minecraft:block_face') == 'east'"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldsurface_glow_shroom_ring",
+          "render_method": "alpha_test"
+        },
+        "ring": {
+          "texture": "lepton_worldsurface_glow_shroom_ring",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -8.0,
+          4.0,
+          -3.0
+        ],
+        "size": [
+          16.0,
+          8.0,
+          11.0
+        ]
+      },
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "side"
+            ]
+          }
+        ]
+      },
+      "minecraft:liquid_detection": {
+        "detection_rules": [
+          {
+            "liquid_type": "water",
+            "can_contain_liquid": true,
+            "on_liquid_touches": "no_reaction"
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/glow_shroom_ring.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -8.0,
+              4.0,
+              -8.0
+            ],
+            "size": [
+              16.0,
+              8.0,
+              11.0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -3.0,
+              4.0,
+              -8.0
+            ],
+            "size": [
+              11.0,
+              8.0,
+              16.0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -8.0,
+              4.0,
+              -8.0
+            ],
+            "size": [
+              11.0,
+              8.0,
+              16.0
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
