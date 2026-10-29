@@ -1,0 +1,68 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.forgotten.walk": {
+      "loop": true,
+      "bones": {
+        "rightLeg": {
+          "rotation": [
+            "math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leftLeg": {
+          "rotation": [
+            "-(math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed)",
+            0,
+            0
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "query.has_target ? 0 : -(math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed) * 0.8",
+            0,
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "query.has_target ? 0 : (math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed) * 0.8",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.forgotten.aim": {
+      "loop": true,
+      "bones": {
+        "rightArm": {
+          "rotation": [
+            "query.has_target ? -90.0 + math.sin(query.life_time * 60) * 3 : 0",
+            "query.has_target ? -6 : 0",
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "query.has_target ? -90.0 : 0",
+            "query.has_target ? 30 : 0",
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.forgotten.spell": {
+      "loop": true,
+      "animation_length": 0.1,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "spell"
+          }
+        ]
+      }
+    }
+  }
+}

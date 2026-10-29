@@ -1,0 +1,53 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:stoneling",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "v0": "textures/entity/mobsdeep/stoneling_stone",
+        "v1": "textures/entity/mobsdeep/stoneling_andesite",
+        "v2": "textures/entity/mobsdeep/stoneling_diorite",
+        "v3": "textures/entity/mobsdeep/stoneling_granite",
+        "v4": "textures/entity/mobsdeep/stoneling_limestone",
+        "v5": "textures/entity/mobsdeep/stoneling_calcite",
+        "v6": "textures/entity/mobsdeep/stoneling_shale",
+        "v7": "textures/entity/mobsdeep/stoneling_jasper",
+        "v8": "textures/entity/mobsdeep/stoneling_deepslate",
+        "v9": "textures/entity/mobsdeep/stoneling_tuff",
+        "v10": "textures/entity/mobsdeep/stoneling_dripstone",
+        "lichen": "textures/entity/mobsdeep/stoneling_lichen"
+      },
+      "geometry": {
+        "default": "geometry.lepton.stoneling",
+        "lichen": "geometry.lepton.stoneling_lichen"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.hold_angle = math.random(-45, 45);"
+        ],
+        "animate": [
+          "walk",
+          "hold"
+        ]
+      },
+      "animations": {
+        "walk": "animation.lepton.stoneling.walk",
+        "hold": "animation.lepton.stoneling.hold"
+      },
+      "render_controllers": [
+        "controller.render.lepton.stoneling",
+        {
+          "controller.render.lepton.stoneling_lichen": "query.property('lepton:lichen')"
+        }
+      ],
+      "enable_attachables": true,
+      "spawn_egg": {
+        "base_color": "#a1a1a1",
+        "overlay_color": "#505050"
+      }
+    }
+  }
+}

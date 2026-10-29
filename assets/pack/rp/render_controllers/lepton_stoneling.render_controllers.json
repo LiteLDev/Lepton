@@ -1,0 +1,44 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton.stoneling": {
+      "arrays": {
+        "textures": {
+          "Array.variants": [
+            "Texture.v0",
+            "Texture.v1",
+            "Texture.v2",
+            "Texture.v3",
+            "Texture.v4",
+            "Texture.v5",
+            "Texture.v6",
+            "Texture.v7",
+            "Texture.v8",
+            "Texture.v9",
+            "Texture.v10"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.variants[query.property('lepton:variant')]"
+      ]
+    },
+    "controller.render.lepton.stoneling_lichen": {
+      "geometry": "Geometry.lichen",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.lichen"
+      ]
+    }
+  }
+}

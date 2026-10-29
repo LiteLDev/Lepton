@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:wraith",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/mobsdeep/wraith"
+      },
+      "geometry": {
+        "default": "geometry.lepton.wraith"
+      },
+      "scripts": {
+        "animate": [
+          "float",
+          "fx"
+        ]
+      },
+      "animations": {
+        "float": "animation.lepton.wraith.float",
+        "fx": "animation.lepton.wraith.fx"
+      },
+      "particle_effects": {
+        "mist": "lepton:wraith_mist",
+        "soul": "lepton:wraith_soul"
+      },
+      "render_controllers": [
+        "controller.render.lepton.wraith"
+      ],
+      "spawn_egg": {
+        "base_color": "#ececec",
+        "overlay_color": "#bdbdbd"
+      }
+    }
+  }
+}

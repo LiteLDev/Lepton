@@ -1,0 +1,41 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:forgotten",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/mobsdeep/forgotten"
+      },
+      "geometry": {
+        "default": "geometry.lepton.forgotten"
+      },
+      "scripts": {
+        "scale": "1.2",
+        "animate": [
+          "walk",
+          "aim",
+          "spell"
+        ]
+      },
+      "animations": {
+        "walk": "animation.lepton.forgotten.walk",
+        "aim": "animation.lepton.forgotten.aim",
+        "spell": "animation.lepton.forgotten.spell"
+      },
+      "particle_effects": {
+        "spell": "lepton:forgotten_spell"
+      },
+      "render_controllers": [
+        "controller.render.lepton.forgotten"
+      ],
+      "enable_attachables": true,
+      "spawn_egg": {
+        "base_color": "#969487",
+        "overlay_color": "#3a3330"
+      }
+    }
+  }
+}

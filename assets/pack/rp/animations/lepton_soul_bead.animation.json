@@ -1,0 +1,19 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.soul_bead.trail": {
+      "loop": true,
+      "animation_length": 0.05,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "dust"
+          },
+          {
+            "effect": "fall"
+          }
+        ]
+      }
+    }
+  }
+}
