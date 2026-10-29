@@ -94,8 +94,25 @@ foreach ($c in $colors.Keys) {
         $tags = @('minecraft:is_pickaxe_item_destructible', 'lepton:corundum_any', "lepton:crystal_color_$c")
         if (-not $waxed) { $tags += 'lepton:corundum' } else { $tags += 'lepton:waxed_corundum' }
         & $tagged $comp $tags
-        Write-BlockJson -Id $bid -Menu ([ordered]@{ category = 'construction'; group = 'minecraft:itemGroup.name.glass' }) -Components $comp
+        $menu = [ordered]@{ category = 'construction'; group = 'minecraft:itemGroup.name.glass' }
+        Write-BlockJson -Id $bid -Menu $menu -Components $comp
         $nm = if ($waxed) { @{ en = "Waxed $($info.en) Corundum"; zh = "涂蜡$($info.zh)刚玉" } } else { @{ en = "$($info.en) Corundum"; zh = "$($info.zh)刚玉" } }
+        if (-not $waxed) {
+            # the block's own item replaced by one with the item tag of Quark's #quark:corundum (the
+            # rune duplication recipe of U13 enchanting); without an icon the item shows the block
+            Add-PackText "item.$bid.name" $nm
+            Write-PackJson (Join-Path $script:BP "items/$(Get-Path $bid).json") ([ordered]@{
+                    format_version   = $script:ItemFormat
+                    'minecraft:item' = [ordered]@{
+                        description = [ordered]@{ identifier = $bid; menu_category = $menu }
+                        components  = [ordered]@{
+                            'minecraft:block_placer'   = [ordered]@{ block = $bid; replace_block_item = $true }
+                            'minecraft:max_stack_size' = 64
+                            'minecraft:tags'           = [ordered]@{ tags = @('lepton:corundum') }
+                        }
+                    }
+                })
+        }
         Register-BlockClient $bid 'amethyst_block' $nm
     }
     Write-ShapelessRecipe "${c}_waxed_corundum" @($id, 'minecraft:honeycomb') "lepton:waxed_${c}_corundum" 1

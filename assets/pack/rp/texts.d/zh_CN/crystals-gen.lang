@@ -1,3 +1,12 @@
+item.lepton:black_corundum.name=黑色刚玉
+item.lepton:blue_corundum.name=蓝色刚玉
+item.lepton:green_corundum.name=绿色刚玉
+item.lepton:indigo_corundum.name=靛蓝色刚玉
+item.lepton:orange_corundum.name=橙色刚玉
+item.lepton:red_corundum.name=红色刚玉
+item.lepton:violet_corundum.name=蓝紫色刚玉
+item.lepton:white_corundum.name=白色刚玉
+item.lepton:yellow_corundum.name=黄色刚玉
 tile.lepton:black_corundum.name=黑色刚玉
 tile.lepton:black_corundum_cluster.name=黑色刚玉簇
 tile.lepton:black_corundum_pane.name=黑色刚玉板

@@ -56,6 +56,7 @@ orange, yellow, green, light blue, blue, magenta, snow, black.
 Recipes (crafting table):
 - `<c>_corundum_pane`: `###`/`###` of `<c>_corundum` -> 16.
 - `waxed_<c>_corundum`: shapeless `<c>_corundum` + `minecraft:honeycomb`.
+- The nine plain corundum blocks carry the item tag `lepton:corundum` (Quark's `#quark:corundum`, item JSONs `bp/items/<c>_corundum.json`), used by U13 enchanting's rune duplication recipe `lepton:rune_duplication` (Corundum and `crystalsCraftRunes` on; otherwise U13's amethyst variant).
 - `<c>_corundum_lamp` (`useCorundum` and Corundum enabled): ` R `/`RCR`/` R ` (C = `<c>_corundum`, R = redstone) -> `<c>_crystal_lamp`.
 - `<c>_crystal_lamp` (otherwise): ` D `/`RAR`/` G ` (D = `<c>` dye, A = amethyst block, R = redstone,
   G = glowstone dust) -> `<c>_crystal_lamp`. Dyes: red/orange/yellow/lime(green)/light blue(blue)/blue(indigo)/magenta(violet)/white/black, as Quark's recipes.
@@ -189,7 +190,7 @@ Section `crystals` (`config/crystals.json`):
 | `crystalClusterOnSidesChance` | double | 0.6 | |
 | `doubleCrystalChance` | double | 0.2 | |
 | `caveCrystalGrowthChance` | int | 5 | 1 in X random ticks grows; 0 disables growth |
-| `crystalsCraftRunes` | bool | true | Quark's flag; no recipe in 4.1-488 reads it (kept for ColorRunes, U18) |
+| `crystalsCraftRunes` | bool | true | with `enableCorundum`: the corundum rune duplication recipe of U13 enchanting (§2) |
 | `enableCollateralMovement` | bool | true | clusters move with their corundum |
 | `enableRainbowLamps` | bool | true | RainbowLamps module |
 | `lightLevel` | int | 15 | light of lit lamps |
@@ -261,7 +262,7 @@ Mod text (`assets/lang/<locale>/crystals.json`), Quark's hint wording (shown by 
   vanilla clients still see the vanilla straight beam in addition. Beam colours mix in sRGB like Java.
 - **Advancements** (`redirect_beacon`, `get_all_corundum`) are not ported (SPEC §8); JEI hints are
   available as text through `/quark crystals info`.
-- `crystalsCraftRunes` has no effect in Quark 4.1-488 either.
+- `crystalsCraftRunes`: Quark declares it (flag `cave_corundum_runes`) but its rune recipe only checks the Corundum module; Lepton makes the option do what it says (default on: same recipes as Quark).
 
 ## 8. Tests
 Selftests (dx 1200..1299): `crystals.corundum_blocks`, `crystals.waxing`, `crystals.growth`,

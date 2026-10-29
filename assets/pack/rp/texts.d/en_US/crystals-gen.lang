@@ -1,3 +1,12 @@
+item.lepton:black_corundum.name=Black Corundum
+item.lepton:blue_corundum.name=Blue Corundum
+item.lepton:green_corundum.name=Green Corundum
+item.lepton:indigo_corundum.name=Indigo Corundum
+item.lepton:orange_corundum.name=Orange Corundum
+item.lepton:red_corundum.name=Red Corundum
+item.lepton:violet_corundum.name=Violet Corundum
+item.lepton:white_corundum.name=White Corundum
+item.lepton:yellow_corundum.name=Yellow Corundum
 tile.lepton:black_corundum.name=Black Corundum
 tile.lepton:black_corundum_cluster.name=Black Corundum Cluster
 tile.lepton:black_corundum_pane.name=Black Corundum Sheet

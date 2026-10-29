@@ -68,7 +68,8 @@ container screens in place of the client mod's screens. Bedrock limits are liste
 - Pickarang and Flamerang, torch arrows, parrot eggs, skull pikes, bottled clouds and slime in a
   bucket (Pickarang, TorchArrow, ParrotEggs, SkullPikes, BottledCloud, SlimeInABucket).
 - Ancient tomes push enchantments past their maximum level in the anvil; rune smithing templates
-  colour enchanted items (AncientTomes, ColorRunes).
+  colour enchanted items and are duplicated with corundum (or amethyst without the Corundum
+  module) and cobblestone (AncientTomes, ColorRunes).
 - Beacon beams bend through corundum clusters (BeaconRedirection).
 - The abacus, the Pathfinder's Quill and pathfinder maps, eight ambience discs, the Endermosh music
   disc (Abacus, PathfinderMaps, AmbientDiscs, EndermoshMusicDisc).

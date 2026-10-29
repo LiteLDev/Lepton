@@ -585,7 +585,7 @@ The blossom tree objects (`blue`, `lavender`, `orange`, `yellow`, `red`) have th
 | `crystalClusterOnSidesChance` | double | `0.6` | Corundum |
 | `doubleCrystalChance` | double | `0.2` | Corundum |
 | `caveCrystalGrowthChance` | int | `5` | Corundum: The chance that a crystal can grow, this is on average 1 in X world ticks, set to a higher value to make th... |
-| `crystalsCraftRunes` | bool | `true` | Corundum (gates the corundum variant of the rune duplication recipe, `#S#` / `#C#` / `###` with `#` = corundum, `S` = `minecraft:stone_tool_materials`, `C` = `lepton:smithing_template_rune` -> 2 templates; U13 ships the amethyst variant. Not in 0.1.0) |
+| `crystalsCraftRunes` | bool | `true` | Corundum (with `enableCorundum` and U13 `enableColorRunes`: the corundum variant of the rune duplication recipe `lepton:rune_duplication`, `#S#` / `#C#` / `###` with `#` = item tag `lepton:corundum` (the nine plain corundum blocks), `S` = `minecraft:stone_tool_materials`, `C` = `lepton:smithing_template_rune` -> 2 templates; otherwise the amethyst variant. Quark declares the flag `cave_corundum_runes` but its recipe only checks the module; Lepton honours the option) |
 | `enableCollateralMovement` | bool | `true` | Corundum |
 | `enableRainbowLamps` | bool | true | RainbowLamps module |
 | `lightLevel` | int | `15` | RainbowLamps |

@@ -13,6 +13,11 @@
 #include "mc/world/effect/EffectDuration.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/item/ItemInstance.h"
+#include "mc/world/item/Item.h"
+#include "mc/world/item/crafting/Recipe.h"
+#include "mc/world/item/crafting/RecipeIngredient.h"
+#include "mc/world/item/crafting/Recipes.h"
+#include "mc/deps/core/string/HashedString.h"
 #include "mc/world/item/trading/MerchantRecipe.h"
 #include "mc/world/item/trading/MerchantRecipeList.h"
 #include "mc/world/level/block/actor/ChestBlockActor.h"
@@ -636,4 +641,47 @@ LP_REGISTER_SELFTEST("enchanting.librarian", [](Context& ctx) -> ll::coro::CoroT
     offers->mRecipeList->pop_back();
     lp::game::entities::despawn(*v);
     co_return;
+});
+
+LP_REGISTER_SELFTEST("enchanting.rune_duplication", [](Context& ctx) {
+    // Quark enables exactly one of the two rune duplication recipes (flags color_runes, corundum)
+    using V = std::vector<std::string>;
+    ctx.check(fe::disabledRuneRecipes(true, true) == V{"lepton:rune_duplication_no_corundum"}, "corundum on: the corundum recipe");
+    ctx.check(fe::disabledRuneRecipes(true, false) == V{"lepton:rune_duplication"}, "corundum off: the amethyst recipe");
+    ctx.check(
+        fe::disabledRuneRecipes(false, true).size() == 2 && fe::disabledRuneRecipes(false, false).size() == 2,
+        "no ColorRunes: neither"
+    );
+    // the world's recipe list follows the current config
+    auto&      recipes = ctx.player().getLevel().getRecipes();
+    auto const find    = [&](std::string const& id) -> Recipe const* {
+        for (auto const& [tag, byId] : recipes.mRecipes.get())
+            if (auto it = byId.find(id); it != byId.end()) return it->second.get();
+        return nullptr;
+    };
+    auto off = fe::disabledRuneRecipes(fe::cfg().enableColorRunes, fe::corundumRunesEnabled());
+    for (std::string id : {"lepton:rune_duplication", "lepton:rune_duplication_no_corundum"}) {
+        bool want = std::find(off.begin(), off.end(), id) == off.end();
+        ctx.check((find(id) != nullptr) == want, id + (want ? " is craftable" : " is taken out"));
+    }
+    // the corundum recipe: any of the nine corundum blocks (item tag lepton:corundum) around the template
+    auto tagged = [](char const* id) {
+        auto item = lp::game::makeItem(id);
+        return !lp::game::isEmpty(item) && item.mItem.get() && item.mItem.get()->hasTag(HashedString("lepton:corundum"));
+    };
+    for (char const* c : {"red", "orange", "yellow", "green", "blue", "indigo", "violet", "white", "black"}) {
+        auto id = std::string("lepton:") + c + "_corundum";
+        ctx.check(tagged(id.c_str()), id + " has the item tag");
+    }
+    ctx.check(!tagged("lepton:waxed_red_corundum"), "waxed corundum is not in the tag (as in Quark)");
+    if (auto const* r = find("lepton:rune_duplication")) {
+        auto const& corner = r->getIngredient(0, 0);
+        ctx.check(corner.sameItem(lp::game::makeItem("lepton:violet_corundum"), false), "corundum fits the corners");
+        ctx.check(!corner.sameItem(lp::game::makeItem("minecraft:amethyst_block"), false), "amethyst does not fit the corundum recipe");
+        ctx.check(r->getIngredient(1, 1).sameItem(lp::game::makeItem(fe::kRuneId), false), "the rune template in the middle");
+        auto const& out = r->getResultItems();
+        ctx.check(out.size() == 1 && lp::game::itemId(out[0]) == fe::kRuneId && out[0].mCount == 2, "two rune templates");
+    } else {
+        ctx.info("the corundum rune recipe is disabled by the config: its contents are not checked");
+    }
 });

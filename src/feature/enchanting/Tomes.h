@@ -56,6 +56,16 @@ void addRandomCurse(ItemStack& stack);
 /// Quark's SmithingRuneRecipe (nullopt = not a rune recipe / same colour).
 [[nodiscard]] std::optional<Craft> smithingCraft(ItemStack const& templ, ItemStack const& base, ItemStack const& addition);
 
+// ---- rune duplication recipes (Recipes.cpp) ------------------------------------------------------
+
+/// Quark enables exactly one rune duplication recipe: the corundum one (`#lepton:corundum`) when
+/// the Corundum module (U12 crystals `enableCorundum`, here also its `crystalsCraftRunes`) is on,
+/// else the amethyst one; neither without ColorRunes. Returns the recipe ids (with "lepton:") to
+/// take out of the world's recipe list.
+[[nodiscard]] std::vector<std::string> disabledRuneRecipes(bool colorRunes, bool corundumRunes);
+/// Whether the corundum variant is on with the current U12 crystals config.
+[[nodiscard]] bool corundumRunesEnabled();
+
 // ---- loot --------------------------------------------------------------------------------------
 
 /// Extra entries of a loot table's first pool for the given table path ("loot_tables/chests/x.json").

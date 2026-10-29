@@ -40,17 +40,19 @@ amethyst + cobblestone) changes the colour of an enchanted item's glint in the s
 | `lepton:ancient_tome` | Ancient Tome | Stack 1, uncommon rarity (yellow name), enchantment glint. The tome's enchantment is stored as the item's `ench` list (one entry, the enchantment's max level) plus the marker `lepton:tome = 1`. Creative: Items group (the plain tome, "(Any Enchantment)"); `/quark enchanting tome <enchant>` gives a specific one. |
 | `lepton:smithing_template_rune` | Smithing Template | Quark's rune template, glint. Creative next to the spire armor trim template (Items group, `itemGroup.name.smithing_templates`). |
 
-Recipes (crafting table, `tools/pack/enchanting.ps1`):
+Recipes (crafting table, `bp/recipes/rune_duplication*.json`):
 
 | Recipe | Pattern | Result |
 |---|---|---|
-| `lepton:rune_duplication_no_corundum` | `#S#` / `#C#` / `###`, `#` = `minecraft:amethyst_block`, `S` = cobblestone (tag `minecraft:stone_tool_materials`), `C` = rune template | 2 rune templates |
+| `lepton:rune_duplication` | `#S#` / `#C#` / `###`, `#` = item tag `lepton:corundum` (U12's nine plain corundum blocks, Quark's `#quark:corundum`), `S` = cobblestone (tag `minecraft:stone_tool_materials`), `C` = rune template | 2 rune templates |
+| `lepton:rune_duplication_no_corundum` | same, `#` = `minecraft:amethyst_block` | 2 rune templates |
 
-Quark enables exactly one of two recipes: the corundum one (`#` = any corundum crystal) when the
-Corundum module and its `crystalsCraftRunes` option are on, else the amethyst one above. The
-corundum variant and `crystalsCraftRunes` belong to U12 crystals (its config key and items), so U12
-ships that recipe; a recipe referencing a tag nobody defines makes the game log a content error at
-every start, so it is not in this unit.
+Quark enables exactly one of the two (recipe flags `color_runes` and `corundum`): the corundum one
+when the Corundum module is on, else the amethyst one; neither without ColorRunes. Lepton also
+honours U12's `crystalsCraftRunes` (Quark declares that option but its recipe does not read it):
+the corundum recipe needs `enableColorRunes`, U12 `enableCorundum` and `crystalsCraftRunes`, the
+amethyst one `enableColorRunes` and not the corundum one. The disabled recipe is taken out of the
+world's recipe list at world load (`src/feature/enchanting/Recipes.cpp`).
 
 Smithing "recipes" (applied natively, §3.3): template `lepton:smithing_template_rune` + base =
 any enchanted item or lodestone compass + addition = dye of a colour (→ that colour), blaze powder
@@ -311,7 +313,9 @@ inversion, dx 1300..1310), `enchanting.table_flow` (use a table, slot moves, gen
 XP and lapis paid; mod client via net testing; dx 1320), `enchanting.table_form` (vanilla fallback
 forms; dx 1330), `enchanting.table_drop` (breaking drops the contents; dx 1340),
 `enchanting.tome_anvil` (tome upgrade, limit break, cost, incompatible), `enchanting.tome_loot`
-(loot injection rules), `enchanting.rune_smithing`, `enchanting.config_off` (dx 1390),
+(loot injection rules), `enchanting.rune_smithing`, `enchanting.rune_duplication` (which of the
+two recipes the config enables, the world's recipe list, the corundum item tag, the corundum
+recipe's ingredients and result), `enchanting.config_off` (dx 1390),
 `enchanting.table_use` (a simulated player uses both table blocks; walking away closes; dx 1350),
 `enchanting.anvil_helper` / `enchanting.smithing_helper` (preview message, Craft, cost, consumed
 inputs; dx 1360 / 1365; simulated players get no server-side container manager, so these name the

@@ -46,6 +46,15 @@ assets/pack/bp/blocks/yellow_corundum_cluster.json
 assets/pack/bp/blocks/yellow_corundum_pane.json
 assets/pack/bp/blocks/yellow_crystal_lamp.json
 assets/pack/bp/entities/beacon_beam.json
+assets/pack/bp/items/black_corundum.json
+assets/pack/bp/items/blue_corundum.json
+assets/pack/bp/items/green_corundum.json
+assets/pack/bp/items/indigo_corundum.json
+assets/pack/bp/items/orange_corundum.json
+assets/pack/bp/items/red_corundum.json
+assets/pack/bp/items/violet_corundum.json
+assets/pack/bp/items/white_corundum.json
+assets/pack/bp/items/yellow_corundum.json
 assets/pack/bp/loot_tables/blocks/black_corundum.json
 assets/pack/bp/loot_tables/blocks/black_corundum_cluster.json
 assets/pack/bp/loot_tables/blocks/black_corundum_pane.json
