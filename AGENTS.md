@@ -113,8 +113,12 @@ Registrations live in .cpp files linked directly into the DLL, so they are never
   native behaviour from their tags (`lepton:stairs`, `lepton:slab`, ...) automatically; don't
   re-implement it. Vertical slabs: `lepton:type` (north|south|west|east|double).
 - **Client UI** (`client/ui/Ui.h`, client build): immediate-mode drawing in UI units on top of the
-  game's screens; screen names are the JSON-UI root names (the first time a screen is seen, its
-  control tree is logged at debug level: use it to find slot collections and positions). Text
+  game's screens; screen names are the JSON-UI root element names without the namespace
+  (`inventory_screen` for the game's `crafting.inventory_screen`; `ScreenInfo::qualifiedName` has
+  both; the 20th frame of a screen logs its control tree at debug level: use it to find slot
+  collections and positions). Screens animate in: slot rects follow the animation every frame;
+  wait for `ScreenInfo::settled` before one-shot work with positions. Only the top screen's
+  widgets take input; key and mouse releases always reach the game. Text
   fields take key presses (letters, digits, space, `-`, `.`). Custom screens: subclass
   `ui::CustomScreen`, `ui::openScreen(...)`; Esc closes them. The demo (`config/ui.json`
   `"demo": true`, client scenario `ui`) shows every feature.
