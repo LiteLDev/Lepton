@@ -240,9 +240,9 @@ Write-Entity 'forgotten' @{ en = 'Forgotten'; zh = '遗忘者' } (O properties (
 # ---- Foxhound ---------------------------------------------------------------------------------
 $healItems = @($Meats | ForEach-Object { O item $_ heal_amount $Heal[$_] })
 $restBlocks = @('minecraft:lit_furnace', 'minecraft:lit_blast_furnace', 'minecraft:lit_smoker', 'minecraft:furnace', 'minecraft:blast_furnace',
-    'minecraft:smoker', 'minecraft:magma', 'minecraft:glowstone', 'minecraft:sea_lantern', 'minecraft:shroomlight', 'minecraft:redstone_lamp',
+    'minecraft:smoker', 'minecraft:magma', 'minecraft:glowstone', 'minecraft:sea_lantern', 'minecraft:shroomlight',
     'minecraft:lit_redstone_lamp', 'minecraft:ochre_froglight', 'minecraft:verdant_froglight', 'minecraft:pearlescent_froglight',
-    'minecraft:jack_o_lantern', 'minecraft:crying_obsidian', 'minecraft:respawn_anchor', 'minecraft:beacon', 'minecraft:campfire', 'minecraft:soul_campfire')
+    'minecraft:jack_o_lantern', 'minecraft:crying_obsidian', 'minecraft:beacon', 'minecraft:campfire', 'minecraft:soul_campfire')
 $foxGroups = O `
     'lepton:wild' (O `
         'minecraft:type_family' (O family @('foxhound', 'monster', 'mob')) `
@@ -299,9 +299,12 @@ $foxComponents = O `
     'minecraft:behavior.random_look_around' (O priority 14)
 $foxEvents = O `
     'minecraft:entity_spawned' (O sequence @(
-        (O add (O component_groups @('lepton:wild', 'lepton:red'))),
-        (O randomize @((O weight 255), (O weight 1 add (O component_groups @('lepton:black'))))),
-        (O filters (O test 'has_biome_tag' value 'soulsand_valley') add (O component_groups @('lepton:blue'))))) `
+        (O add (O component_groups @('lepton:wild'))),
+        (O randomize @(
+            (O weight 255 sequence @(
+                (O filters (O test 'has_biome_tag' value 'soulsand_valley') add (O component_groups @('lepton:blue'))),
+                (O filters (O test 'has_biome_tag' value 'soulsand_valley' operator '!=') add (O component_groups @('lepton:red'))))),
+            (O weight 1 add (O component_groups @('lepton:black'))))))) `
     'minecraft:entity_born' (O add (O component_groups @('lepton:tame', 'lepton:baby'))) `
     'minecraft:ageable_grow_up' (O remove (O component_groups @('lepton:baby'))) `
     'lepton:on_tame' (O remove (O component_groups @('lepton:wild')) add (O component_groups @('lepton:tame'))) `

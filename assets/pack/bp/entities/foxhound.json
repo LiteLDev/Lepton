@@ -215,14 +215,12 @@
             "minecraft:glowstone",
             "minecraft:sea_lantern",
             "minecraft:shroomlight",
-            "minecraft:redstone_lamp",
             "minecraft:lit_redstone_lamp",
             "minecraft:ochre_froglight",
             "minecraft:verdant_froglight",
             "minecraft:pearlescent_froglight",
             "minecraft:jack_o_lantern",
             "minecraft:crying_obsidian",
-            "minecraft:respawn_anchor",
             "minecraft:beacon",
             "minecraft:campfire",
             "minecraft:soul_campfire"
@@ -373,15 +371,39 @@
           {
             "add": {
               "component_groups": [
-                "lepton:wild",
-                "lepton:red"
+                "lepton:wild"
               ]
             }
           },
           {
             "randomize": [
               {
-                "weight": 255
+                "weight": 255,
+                "sequence": [
+                  {
+                    "filters": {
+                      "test": "has_biome_tag",
+                      "value": "soulsand_valley"
+                    },
+                    "add": {
+                      "component_groups": [
+                        "lepton:blue"
+                      ]
+                    }
+                  },
+                  {
+                    "filters": {
+                      "test": "has_biome_tag",
+                      "value": "soulsand_valley",
+                      "operator": "!="
+                    },
+                    "add": {
+                      "component_groups": [
+                        "lepton:red"
+                      ]
+                    }
+                  }
+                ]
               },
               {
                 "weight": 1,
@@ -392,17 +414,6 @@
                 }
               }
             ]
-          },
-          {
-            "filters": {
-              "test": "has_biome_tag",
-              "value": "soulsand_valley"
-            },
-            "add": {
-              "component_groups": [
-                "lepton:blue"
-              ]
-            }
           }
         ]
       },

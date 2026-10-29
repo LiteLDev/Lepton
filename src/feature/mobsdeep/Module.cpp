@@ -291,7 +291,6 @@ public:
     std::unordered_map<int64_t, Voice>          voices;
     std::unordered_map<int64_t, int>            taters;
     std::unordered_map<int64_t, BeadState>      beads;
-    std::unordered_set<int64_t>                 hatWearers;
     std::deque<PendingLeap>                     leaps;
     std::deque<PendingHeart>                    heartUses;
     std::deque<PendingForgotten>                forgottenSpawns;
@@ -371,7 +370,6 @@ void MobsdeepModule::clear() {
     voices.clear();
     taters.clear();
     beads.clear();
-    hatWearers.clear();
     leaps.clear();
     heartUses.clear();
     forgottenSpawns.clear();
@@ -755,18 +753,17 @@ void MobsdeepModule::tickHats(std::vector<Player*> const& players) {
         auto attr    = p->getMutableAttribute(SharedAttributes::LUCK());
         auto* inst   = attr.mInstance->mPtr;
         if (!inst) continue;
-        auto pid = ent::idOf(*p);
-        bool has = hatWearers.contains(pid);
+        // read the modifier from the attribute itself: it is not saved, so a rejoining player has none
+        bool has = false;
+        for (auto const& m : inst->getModifiers())
+            if (*m.mId == kLuckId) has = true;
         if (wearing == has) continue;
-        if (wearing) {
+        if (wearing)
             inst->addModifier(AttributeModifier(kLuckId, "lepton:forgotten_hat_luck", 1.0f, AttributeModifierOperation::OperationAddition,
                                                 AttributeOperands::OperandCurrent, false),
                               attr.mContext);
-            hatWearers.insert(pid);
-        } else {
+        else
             inst->removeModifier(kLuckId, attr.mContext);
-            hatWearers.erase(pid);
-        }
     }
 }
 
@@ -831,6 +828,9 @@ void MobsdeepModule::onTick() {
         if (t.starts_with("lepton:") && (t == kStoneling || t == kForgotten || t == kFoxhound || t == kWraith || t == kSoulBead))
             mine.push_back(a);
     }
+    std::unordered_set<int64_t> alive; // ids before ticking: a tick may despawn the actor
+    if (tick % 1200 == 0)
+        for (auto* a : mine) alive.insert(ent::idOf(*a));
     std::unordered_set<uint64_t> boosted;
     for (auto* a : mine) {
         auto const& t = a->getTypeName();
@@ -841,6 +841,12 @@ void MobsdeepModule::onTick() {
         else tickSoulBead(*a);
     }
     if (tick % 10 == 0 && config().enableForgotten) tickHats(players);
+    if (tick % 1200 == 0) {
+        // forget the transient state of mobs that despawned or were unloaded (no death event)
+        std::erase_if(stonelings, [&](auto const& kv) { return !alive.contains(kv.first); });
+        std::erase_if(foxes, [&](auto const& kv) { return !alive.contains(kv.first); });
+        std::erase_if(wraiths, [&](auto const& kv) { return !alive.contains(kv.first); });
+    }
 }
 
 // ---- events -----------------------------------------------------------------------------------

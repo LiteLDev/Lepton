@@ -181,7 +181,7 @@ the Nether Fortress.
   resting. Hurt, death.
 - Spawning: `foxhoundSpawnConfig` (weight 30, 1-2, Nether Wastes and Basalt Deltas) and
   `lesserSpawnConfig` (weight 2, 1, Soul Sand Valley); not on Peaceful; on foxhound-spawnable
-  blocks. Blue when spawned in a Soul Sand Valley; 1 in 256 black.
+  blocks. Blue when spawned in a Soul Sand Valley, otherwise red; 1 in 256 (either biome) black.
 
 ### Wraith
 - Zombie-based: 20 HP, follow range 35, speed 0.28, attack 3, knockback resistance 1, armour 0, no
@@ -192,7 +192,7 @@ the Nether Fortress.
   back: velocity `normalize(normalize(dx, 0, dz) + (0, 0.5, 0)) * 0.85` away from the target.
 - Voice: on spawn it picks one entry of `wraithSounds` (idle|hurt|death; empty = silent), kept with
   the entity; pitch 0.75-0.85. Java ids are mapped to Bedrock sounds (table in
-  `src/feature/mobsdeep/Sounds.cpp`); unknown ids are used as Bedrock sound names.
+  `src/feature/mobsdeep/Common.cpp`); unknown ids are used as Bedrock sound names.
 - Prefers walking on soul sand / soul soil. Mycelium-like and soul particles.
 - Spawning: `wraithSpawnConfig` (weight 5, 1-3, Soul Sand Valley), monster light rules, on soul sand
   / soul soil.
@@ -290,7 +290,9 @@ vanilla wolf sounds and the wraith the vanilla sounds of its voice.
 - **Startle chain**: as in Quark only the hurt stoneling is startled.
 - **Foxhound resting targets** are one `minecraft:behavior.move_to_block` (Bedrock allows one per
   entity): lit furnaces, furnaces and light-emitting blocks share one list and the nearest wins, where
-  Quark tries the three groups in priority order.
+  Quark tries the three groups in priority order. The light-emitting group is a fixed list (Bedrock
+  can't filter by light level): magma, glowstone, sea lantern, shroomlight, lit redstone lamp,
+  froglights, jack o'lantern, crying obsidian, beacon, campfires.
 - **Natural despawn** of a stoneling does not delete its non-player passengers (poofing does).
 - **Owner ignition** when a foxhound "needs pets" (PatTheDogs' `dogsWantLove`, U19) is not wired:
   U19 owns that state.
@@ -306,19 +308,19 @@ Selftests (`src/feature/mobsdeep/Tests.cpp`, dx 2100..2199):
 
 | Name | dx | Checks |
 |---|---|---|
-| `mobsdeep.config` | - | defaults, variant table, Java->Bedrock wraith sound mapping |
+| `mobsdeep.config` | - | defaults, variant table, Java->Bedrock wraith sound mapping, skeleton replacement decision, soul bead trail |
 | `mobsdeep.stoneling.heart` | 2100 | heart on andesite: block removed, player-made andesite stoneling, heart used |
 | `mobsdeep.stoneling.items` | 2110 | give / take swap, feeding a variant block changes the variant |
 | `mobsdeep.stoneling.tame` | 2120 | tempt food tames a wild stoneling |
 | `mobsdeep.stoneling.startle` | 2130 | a non-sneaking player startles a wild stoneling, which poofs |
 | `mobsdeep.stoneling.drops` | 2140 | killing drops the carried item and the heart |
 | `mobsdeep.forgotten.swap` | 2150 | bow without target, sword when the target is blind |
-| `mobsdeep.forgotten.replace` | - | skeleton replacement decision |
 | `mobsdeep.foxhound.tame` | 2160 | coal without fire resistance does nothing; with it (chance forced to 1) tames |
 | `mobsdeep.foxhound.furnace` | 2170 | tame foxhound on a cooking furnace speeds it up |
 | `mobsdeep.foxhound.ignite` | 2175 | a wild foxhound's bite ignites |
 | `mobsdeep.wraith.aggro` | 2180 | neutral until hit, slowness + leap after its hit, sound set stored |
 | `mobsdeep.soulbead` | 2190 | soul bead entity follows the trail formula and expires |
+| `mobsdeep.gallery` | 2195 | builds the screenshot row (all variants, resting foxhound, hat); with a real player online shows it for the client scenario |
 
 E2E: `tools/e2e/server/scenarios/mobsdeep.ps1` (runs `mobsdeep.*`), `tools/e2e/client/scenarios/mobsdeep.ps1`
 (summons each mob and variant next to the player and takes screenshots: stonelings of several

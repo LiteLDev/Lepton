@@ -376,3 +376,97 @@ LP_REGISTER_SELFTEST("mobsdeep.soulbead", [](Context& ctx) -> ll::coro::CoroTask
     co_await ctx.ticks(6);
     ctx.check(ent::find(id) == nullptr && md::testing::soulBeadAge(id) == -1, "it vanishes after 6000 ticks");
 });
+
+// A row of every mob and variant for screenshots (client scenario `mobsdeep`): stonelings of several
+// variants holding items (one with lichen), the Forgotten with its bow and sheathed sword, black / blue /
+// red foxhounds and a resting tame one, a wraith, a soul bead and the test player wearing the Forgotten
+// Hat. With a real player online, that player gets the three items in the hotbar and is moved in front
+// of the row (two views, mobs pinned in place); on a dedicated server the row is only built and checked.
+LP_REGISTER_SELFTEST("mobsdeep.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(2195, -4);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto& sp = simOf(ctx);
+    sp.setPlayerGameType(GameType::Creative); // nothing startles, nothing attacks
+    auto& region = sp.getDimensionBlockSource();
+
+    struct Slot {
+        float                    dx;
+        std::string              type;
+        std::vector<std::string> events;
+        std::string              carried;
+    };
+    std::string const       heartMade = std::string(md::kStoneling) + "<lepton:from_heart>";
+    std::vector<Slot> const slots     = {
+        {0.0f,  heartMade,                  {"lepton:variant_0"},                  "minecraft:diamond"    },
+        {1.5f,  heartMade,                  {"lepton:variant_1"},                  "minecraft:ender_pearl"},
+        {3.0f,  heartMade,                  {"lepton:variant_3"},                  "minecraft:gold_ingot" },
+        {4.5f,  heartMade,                  {"lepton:variant_8", "lepton:lichen"}, "minecraft:emerald"    },
+        {6.0f,  heartMade,                  {"lepton:variant_10"},                 ""                     },
+        {8.0f,  std::string(md::kForgotten), {},                                   ""                     },
+        {10.5f, std::string(md::kFoxhound),  {"lepton:set_black"},                 ""                     },
+        {12.0f, std::string(md::kFoxhound),  {"lepton:set_blue"},                  ""                     },
+        {13.5f, std::string(md::kFoxhound),  {},                                   ""                     },
+        {15.0f, std::string(md::kFoxhound),  {"lepton:on_tame", "lepton:rest"},    ""                     },
+        {17.0f, std::string(md::kWraith),    {},                                   ""                     },
+    };
+    float const y  = static_cast<float>(base.y);
+    float const z  = static_cast<float>(base.z) + 0.5f;
+    auto        at = [&](float dx) { return Vec3{static_cast<float>(base.x) + 0.5f + dx, y, z}; };
+    std::vector<int64_t> ids;
+    for (auto const& s : slots) {
+        auto* a = ent::spawn(region, s.type, at(s.dx));
+        ctx.require(a != nullptr, "spawned " + s.type);
+        for (auto const& e : s.events) ent::triggerEvent(*a, e);
+        if (!s.carried.empty()) a->setCarriedItem(makeItem(s.carried));
+        ids.push_back(ent::idOf(*a));
+    }
+    int64_t bead = md::spawnSoulBead(sp, at(19.0f), base.x + 219, base.z);
+    ids.push_back(bead);
+    auto cleanup = [&] {
+        for (auto id : ids)
+            if (auto* a = ent::find(id)) ent::despawn(*a);
+    };
+    co_await ctx.ticks(4);
+    auto* lichen = ent::find(ids[3]);
+    ctx.check(lichen && md::intProp(*lichen, "lepton:variant") == 8 && md::boolProp(*lichen, "lepton:lichen"), "a deepslate stoneling with lichen");
+    auto* forgotten = ent::find(ids[5]);
+    ctx.check(forgotten && itemId(forgotten->getOffhandSlot()) == "minecraft:iron_sword", "the Forgotten carries its sword");
+    auto* blue = ent::find(ids[7]);
+    ctx.check(blue && md::molang(*blue, "query.variant") == 1.0f, "a blue soulhound");
+    auto* resting = ent::find(ids[9]);
+    ctx.check(resting && md::boolProp(*resting, "lepton:resting"), "the tame foxhound rests");
+    ctx.check(bead != 0, "a soul bead flies");
+
+    Player* viewer = nullptr;
+    sp.getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) {
+        cleanup();
+        co_return;
+    }
+    auto uid = viewer->getOrCreateUniqueID();
+    ctx.give(*viewer, makeItem(std::string(md::kDiamondHeart)), 0);
+    ctx.give(*viewer, makeItem(std::string(md::kForgottenHat)), 1);
+    ctx.give(*viewer, makeItem(std::string(md::kSoulBeadItem), 16), 2);
+    sp.setArmor(SharedTypes::Legacy::ArmorSlot::Head, makeItem(std::string(md::kForgottenHat)));
+    auto view = [&](float dx, float dist) {
+        if (auto* v = sp.getLevel().getPlayer(uid))
+            v->teleport(Vec3{static_cast<float>(base.x) + 0.5f + dx, y + 1.0f, z + dist}, DimensionType(base.dim), Vec2{15.f, 180.f});
+    };
+    for (int phase = 0; phase < 2; ++phase) {
+        ctx.info(phase == 0 ? "GALLERY view stonelings" : "GALLERY view mobs");
+        if (phase == 0) view(3.0f, 4.0f);
+        else view(13.0f, 7.0f);
+        for (int i = 0; i < 150; ++i) {
+            for (size_t k = 0; k < slots.size(); ++k)
+                if (auto* a = ent::find(ids[k])) a->teleport(at(slots[k].dx), DimensionType(base.dim), Vec2{0.f, 0.f});
+            if (auto* s = ent::find(ent::idOf(sp))) s->teleport(at(19.0f), DimensionType(base.dim), Vec2{0.f, 0.f});
+            co_await ctx.ticks(1);
+        }
+    }
+    ctx.info("GALLERY done");
+    sp.setArmor(SharedTypes::Legacy::ArmorSlot::Head, ItemStack{});
+    cleanup();
+});
