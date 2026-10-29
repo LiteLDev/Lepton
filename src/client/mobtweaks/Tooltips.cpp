@@ -3,6 +3,7 @@
 
 #ifdef LP_CLIENT
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -18,12 +19,19 @@
 #include "feature/mobtweaks/Items.h"
 #include "feature/mobtweaks/MobTweaks.h"
 #include "game/Items.h"
+#include "mod/Log.h"
 
 namespace lp::client::mobtweaks {
 
 namespace mt = lp::feature::mobtweaks;
 
 namespace {
+
+/// One log line per item and kind (the tooltip is rebuilt every frame), for the e2e scenario.
+void logOnce(char const* kind, std::string const& id) {
+    static std::set<std::string> seen;
+    if (seen.insert(std::string(kind) + id).second) log().info("mobtweaks: tooltip {} {}", kind, id);
+}
 
 int realLevel(ItemStackBase const& stack, int type) {
     if (!stack.mUserData) return 0;
@@ -44,6 +52,7 @@ void bakedLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
         if (baked <= real) continue; // the real enchantment line already shows the effective level
         auto name = EnchantUtils::getEnchantNameAndLevel(static_cast<Enchant::Type>(type), baked);
         lines.push_back(std::string("§7") + (c.italicTooltip ? "§o" : "") + name);
+        logOnce("baked", it->first);
     }
 }
 
@@ -55,6 +64,7 @@ void repairLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
         if (u == id) {
             lines.push_back("§8" + ctr("quark.jei.hint.repair_item_removed",
                                        "This item has been changed to not be repairable in an Anvil using repair materials."));
+            logOnce("repair", id);
             return;
         }
     }
@@ -74,6 +84,7 @@ void repairLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
         lines.push_back("§8" + ctr("quark.jei.hint.repair_item_changed_multiple",
                                    "This item's repair material in an Anvil has been changed to one of {}.", names));
     }
+    logOnce("repair", id);
 }
 
 } // namespace
