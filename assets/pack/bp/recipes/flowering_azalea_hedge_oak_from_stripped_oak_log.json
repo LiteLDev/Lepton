@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:flowering_azalea_hedge_oak_from_stripped_oak_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:azalea_leaves_flowered"
+      },
+      "W": {
+        "item": "minecraft:stripped_oak_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:azalea_leaves_flowered"
+      },
+      {
+        "item": "minecraft:stripped_oak_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:flowering_azalea_hedge",
+      "count": 2
+    }
+  }
+}

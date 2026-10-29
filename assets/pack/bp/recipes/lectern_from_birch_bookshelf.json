@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:lectern_from_birch_bookshelf"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SSS",
+      " B ",
+      " S "
+    ],
+    "key": {
+      "B": {
+        "item": "lepton:birch_bookshelf"
+      },
+      "S": {
+        "tag": "minecraft:wooden_slabs"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:birch_bookshelf"
+      }
+    ],
+    "result": {
+      "item": "minecraft:lectern",
+      "count": 1
+    }
+  }
+}

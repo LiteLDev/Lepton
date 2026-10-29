@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:spruce_hedge_from_spruce_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:spruce_leaves"
+      },
+      "W": {
+        "item": "minecraft:spruce_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:spruce_leaves"
+      },
+      {
+        "item": "minecraft:spruce_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:spruce_hedge",
+      "count": 2
+    }
+  }
+}

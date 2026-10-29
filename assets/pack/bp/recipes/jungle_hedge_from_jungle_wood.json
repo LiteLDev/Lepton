@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:jungle_hedge_from_jungle_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:jungle_leaves"
+      },
+      "W": {
+        "item": "minecraft:jungle_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:jungle_leaves"
+      },
+      {
+        "item": "minecraft:jungle_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:jungle_hedge",
+      "count": 2
+    }
+  }
+}

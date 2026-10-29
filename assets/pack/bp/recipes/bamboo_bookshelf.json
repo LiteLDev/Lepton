@@ -1,0 +1,37 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:bamboo_bookshelf"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "XXX",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:bamboo_planks"
+      },
+      "X": {
+        "item": "minecraft:book"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:bamboo_planks"
+      },
+      {
+        "item": "minecraft:book"
+      }
+    ],
+    "result": {
+      "item": "lepton:bamboo_bookshelf",
+      "count": 1
+    },
+    "priority": -1
+  }
+}

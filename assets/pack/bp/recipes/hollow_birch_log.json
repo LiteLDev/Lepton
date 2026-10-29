@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:hollow_birch_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " L ",
+      "L L",
+      " L "
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:birch_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:birch_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:hollow_birch_log",
+      "count": 4
+    }
+  }
+}

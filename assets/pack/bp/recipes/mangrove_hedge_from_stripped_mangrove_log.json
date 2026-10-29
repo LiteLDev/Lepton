@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mangrove_hedge_from_stripped_mangrove_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:mangrove_leaves"
+      },
+      "W": {
+        "item": "minecraft:stripped_mangrove_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:mangrove_leaves"
+      },
+      {
+        "item": "minecraft:stripped_mangrove_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:mangrove_hedge",
+      "count": 2
+    }
+  }
+}

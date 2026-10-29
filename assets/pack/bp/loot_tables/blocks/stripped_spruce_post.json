@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:stripped_spruce_post",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

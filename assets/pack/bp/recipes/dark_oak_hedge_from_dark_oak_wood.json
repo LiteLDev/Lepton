@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:dark_oak_hedge_from_dark_oak_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:dark_oak_leaves"
+      },
+      "W": {
+        "item": "minecraft:dark_oak_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:dark_oak_leaves"
+      },
+      {
+        "item": "minecraft:dark_oak_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:dark_oak_hedge",
+      "count": 2
+    }
+  }
+}

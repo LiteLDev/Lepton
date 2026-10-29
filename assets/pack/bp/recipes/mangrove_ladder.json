@@ -1,0 +1,37 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mangrove_ladder"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "# #",
+      "#W#",
+      "# #"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:stick"
+      },
+      "W": {
+        "item": "minecraft:mangrove_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:mangrove_planks"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "lepton:mangrove_ladder",
+      "count": 4
+    },
+    "priority": -1
+  }
+}

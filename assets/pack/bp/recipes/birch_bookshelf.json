@@ -1,0 +1,37 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:birch_bookshelf"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "XXX",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:birch_planks"
+      },
+      "X": {
+        "item": "minecraft:book"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:birch_planks"
+      },
+      {
+        "item": "minecraft:book"
+      }
+    ],
+    "result": {
+      "item": "lepton:birch_bookshelf",
+      "count": 1
+    },
+    "priority": -1
+  }
+}
