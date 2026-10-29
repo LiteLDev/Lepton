@@ -1,5 +1,6 @@
 #include "game/VirtualContainer.h"
 
+#include <cmath>
 #include <map>
 #include <set>
 #include <unordered_map>
@@ -31,6 +32,8 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockType.h"
+#include "mc/world/phys/AABB.h"
 #include "mc/world/level/dimension/Dimension.h"
 
 #include "game/Blocks.h"
@@ -398,7 +401,22 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
     Actor* helper = it != sessions().end() ? entities::find(it->second.entity) : nullptr;
     if (!helper) {
         if (it != sessions().end()) finish(pos);
+        // A container entity inside a solid block (a full-cube container block such as a crate)
+        // loses its contents once its screen is open: the helper stands in the block only when the
+        // block is not solid, else on top of it, else at the viewer's feet.
         Vec3 at{pos.x + 0.5f, pos.y + 0.25f, pos.z + 0.5f};
+        auto solidAt = [&](Vec3 const& v) {
+            BlockPos    b{static_cast<int>(std::floor(v.x)), static_cast<int>(std::floor(v.y)), static_cast<int>(std::floor(v.z))};
+            auto const& blk = region->getBlock(b);
+            AABB        box = blk.getBlockType().getCollisionShape(blk, *region, b, nullptr);
+            return box.max.y > box.min.y && box.min.x <= v.x && v.x <= box.max.x && box.min.y <= v.y && v.y <= box.max.y
+                && box.min.z <= v.z && v.z <= box.max.z;
+        };
+        if (solidAt(at)) {
+            Vec3 above{pos.x + 0.5f, pos.y + 1.05f, pos.z + 0.5f};
+            if (!solidAt(above)) at = above;
+            else if (static_cast<int>(player.getDimensionId()) == pos.dim) at = player.getFeetPos();
+        }
         helper = entities::spawn(*region, kHelperEntity, at);
         if (!helper) {
             log().error("virtual container: could not spawn {} (behaviour pack missing?)", kHelperEntity);

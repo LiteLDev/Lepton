@@ -382,7 +382,7 @@ private:
 vc::Spec specFor() {
     vc::Spec spec;
     spec.size          = kSize;
-    spec.screen        = vc::Screen::Dispenser;
+    spec.screen        = vc::Screen::Dispenser; // Quark: a dispenser-style 3x3 menu
     spec.titleKey      = "quark.container.feeding_trough";
     spec.titleFallback = "Feeding Trough";
     spec.onChanged     = [](GlobalPos const& p) { updateFull(p); };

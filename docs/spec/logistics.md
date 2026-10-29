@@ -48,7 +48,8 @@ it spills its contents (stacks merged).
 
 Block properties (Quark's): chute strength 2.5, wood sound, flammable (fire spread 5, flammability
 20), axe; pipes strength 3 / resistance 10, copper (glass for encased) sound, pickaxe, the copper
-pipe can be waterlogged; trough strength 0.6, wood, axe; crate as a barrel (2.5, wood, axe).
+pipe can be waterlogged; trough strength 0.6, wood, axe; crate as a barrel (2.5, wood, axe). Chute,
+trough and pipes let light through (light dampening 0), as Quark's non-occluding shapes.
 Textures are original pixel art (`tools/textures/logistics.ps1`); the trough's full state shows the
 vanilla hay block texture as its contents, the encased pipe the vanilla glass texture.
 
@@ -226,9 +227,12 @@ Selftests (dx 1100..1199): `logistics.config`, `logistics.chute_drops` (1100), `
 (1105), `logistics.pipe_transport` (1110), `logistics.pipe_eject_absorb` (1115),
 `logistics.pipe_limits` (1120), `logistics.pipe_encase` (1125), `logistics.trough` (1130),
 `logistics.crate_capacity` (1140), `logistics.crate_hoppers` (1145), `logistics.crate_screen`
-(1150), `logistics.crate_spill` (1155).
+(1150), `logistics.crate_spill` (1155), `logistics.drops_recipes` (1160: every block drops itself, the trough its
+contents, every recipe is registered), `logistics.showcase` (1170..1182, client scenario).
 
 E2E: `tools/e2e/server/scenarios/logistics.ps1` runs `logistics.*` and checks the pass count and the
 log lines. `tools/e2e/client/scenarios/logistics.ps1` builds a showcase (chute, pipes with items,
-trough, crate) and takes screenshots of the blocks, pipe items, the trough screen and the crate
-screen with its overlay.
+trough with a cow, crate); the scenario uses the trough and the crate with real right clicks and
+takes screenshots of the blocks, pipe items, the trough screen and the crate screen with its overlay
+(then scrolled with the overlay button); with `-Mode remote-vanilla` the row picker form and the
+crate window without overlay.

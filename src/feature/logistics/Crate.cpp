@@ -122,9 +122,17 @@ void compact(std::vector<ItemStack>& v) {
     std::erase_if(v, [](ItemStack const& s) { return game::isEmpty(s); });
 }
 
+/// Same item and data, whatever the count (unstackables such as tools compare their whole data).
+bool sameItem(ItemStack const& a, ItemStack const& b) {
+    if (game::isEmpty(a) || game::isEmpty(b)) return false;
+    if (a.getId() != b.getId() || a.getAuxValue() != b.getAuxValue()) return false;
+    if (game::canMerge(a, b)) return true;
+    return a.getMaxStackSize() == 1 && game::itemToSnbt(a) == game::itemToSnbt(b);
+}
+
 bool sameStack(ItemStack const& a, ItemStack const& b) {
     if (game::isEmpty(a) || game::isEmpty(b)) return game::isEmpty(a) && game::isEmpty(b);
-    return a.mCount == b.mCount && game::canMerge(a, b);
+    return a.mCount == b.mCount && sameItem(a, b);
 }
 
 /// CrateMenu#fullyOccupiedRows * numCols.
@@ -232,7 +240,7 @@ void onWindowChanged(GlobalPos const& p) {
         any        = true;
         size_t idx = static_cast<size_t>(s.scroll + i);
         if (stacks.size() <= idx) stacks.resize(idx + 1);
-        int before = game::canMerge(now, prev) && !game::isEmpty(prev) ? prev.mCount : 0;
+        int before = sameItem(now, prev) ? prev.mCount : 0;
         stacks[idx] = now;
         if (!game::isEmpty(now) && now.mCount > before) grown.push_back({idx, now.mCount - before});
     }

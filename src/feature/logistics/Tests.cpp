@@ -13,6 +13,7 @@
 #include "mc/world/level/dimension/DimensionType.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
 #include "mc/entity/components_json_legacy/BreedableComponent.h"
+#include "mc/entity/components_json_legacy/ContainerComponent.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/world/Container.h"
@@ -291,6 +292,14 @@ LP_REGISTER_SELFTEST("logistics.trough", [](Context& ctx) -> ll::coro::CoroTask<
     for (auto const& s : lp::game::vc::items(t, 9)) left += lp::game::itemId(s) == "minecraft:wheat" ? s.mCount : 0;
     ctx.check(left == 4, "it ate one wheat");
     if (auto* c = ent::find(cowId)) ent::despawn(*c);
+    // using the trough opens its screen (whether the game shows the dispenser screen for the helper
+    // entity is up to game/VirtualContainer; the client scenario checks it)
+    auto& p = ctx.player();
+    p.teleport(Vec3{t.x + 0.5f, t.y + 1.0f, t.z + 1.5f}, t.dim);
+    co_await ctx.ticks(3);
+    ctx.check(lg::trough::open(p, t), "trough open requested");
+    ctx.check(lp::game::vc::viewers(t) == 1, "the player views the trough");
+    lp::game::vc::closeAll(t);
     lp::game::vc::takeAll(t);
     co_await ctx.ticks(2);
 });
@@ -366,7 +375,9 @@ LP_REGISTER_SELFTEST("logistics.crate_screen", [](Context& ctx) -> ll::coro::Cor
     ctx.check(forms::testing::click(p, 1), "second page picked");
     co_await ctx.ticks(3);
     ctx.check(crate::scrollOf(c) == 54, "the window starts at rows 7-8 (stack 54)");
+    co_await ctx.ticks(6);
     ctx.check(lp::game::vc::viewers(c) == 1, "the crate screen is open");
+    ctx.check(p.mContainerManager.get() != nullptr, "the crate screen is open on the server");
     ctx.check(stateOf(region, c, "lepton:open") == 1, "the crate shows its open lid");
     int scroll = crate::scrollOf(c);
     auto* live = lp::game::vc::liveContainer(c);
@@ -475,6 +486,7 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
     container(region, feed)->setItem(0, lp::game::makeItem("minecraft:apple", 64));
     container(region, feed)->setItem(1, lp::game::makeItem("minecraft:diamond", 64));
     lp::game::vc::setItems(trough, {lp::game::makeItem("minecraft:wheat", 32), lp::game::makeItem("minecraft:carrot", 12)});
+    lg::trough::updateFull(trough);
     std::vector<ItemStack> stacks;
     for (int i = 0; i < 40; ++i) stacks.push_back(lp::game::makeItem(i % 3 ? "minecraft:iron_sword" : "minecraft:bread", i % 3 ? 1 : 16));
     for (int i = 0; i < 24; ++i) stacks.push_back(lp::game::makeItem("minecraft:oak_log", 16)); // 64 stacks, 634 items
@@ -523,7 +535,15 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
         for (; t < kWait && !vcOpen(trough); ++t) co_await ctx.ticks(1);
         ctx.check(vcOpen(trough), "using the trough opens its screen");
         if (vcOpen(trough)) ctx.info("LOGISTICS screen trough");
-        for (t = 0; t < kWait && vcOpen(trough); ++t) co_await ctx.ticks(1);
+        bool shown = false;
+        for (t = 0; t < kWait && vcOpen(trough); ++t) {
+            if (!shown && real() && real()->mContainerManager.get()) {
+                shown = true;
+                ctx.info(std::format("LOGISTICS trough container open on the server after {} ticks", t));
+            }
+            co_await ctx.ticks(1);
+        }
+        ctx.check(shown, "the trough's container was open for the player");
         ctx.check(!vcOpen(trough), "the trough screen was closed");
         lp::game::vc::closeAll(trough);
 

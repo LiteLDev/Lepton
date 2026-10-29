@@ -141,6 +141,8 @@ void refresh(BlockSource& region, BlockPos const& pos);
 namespace trough {
 /// Opens the trough's screen for `player` (as using the block does).
 bool open(Player& player, core::GlobalPos const& pos);
+/// Sets lepton:full from the trough's contents (after they were changed directly).
+void updateFull(core::GlobalPos const& pos);
 } // namespace trough
 
 } // namespace lp::feature::logistics
