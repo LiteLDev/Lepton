@@ -63,6 +63,12 @@ door ×3, trapdoor ×2, button ×1, pressure plate ×1; vertical planks ×3 (3 p
 to planks; bookshelf (`###` `XXX` `###`); ladder ×4 (`# #` `#W#` `# #`, # stick, W planks); post ×8
 from 3 wood (stripped post from stripped wood); hollow log ×4 (` L ` `L L` ` L `).
 
+Item tags (Java `#minecraft:logs`, `#planks`, `#wooden_slabs`): the items of the logs / wood /
+stripped logs / stripped wood carry `minecraft:logs` and `minecraft:logs_that_burn`, the planks and
+vertical planks `minecraft:planks`, the slabs `minecraft:wooden_slabs` (an item with
+`minecraft:block_placer` + `replace_block_item` replaces the block's own item), so the vanilla
+recipes taking any planks / logs / wooden slabs (sticks, crafting table, chests, tools, ...) accept them.
+
 Fuel (Java `#logs`, `#planks`, wooden blocks): logs/wood/planks/stairs/fences/gates/trapdoors/
 pressure plates/bookshelves/vertical planks/posts 300 ticks, slabs and vertical slabs 150, doors 200,
 buttons 100, saplings 100 (ladders: U6).
@@ -194,8 +200,11 @@ Java `BlossomLeavesBlock.animateTick`: each tick, for every player, 667 random b
 667 within 32 blocks are sampled (Java `ClientLevel.animateTick`); a trumpet leaf with air below
 spawns, 1 in 5, a leaf particle of its colour at its centre with velocity (windX, -1, windZ):
 `strength = 5 + cos(time / 2000) * 2`, `windX = cos(time / 1200) * strength`,
-`windZ = sin(time / 1000) * strength`. The server sends the particle (`lepton:<c>_blossom_leaf`,
-molang variables `variable.wind_x/z`) to that player only, so vanilla clients see it too.
+`windZ = sin(time / 1000) * strength`. The server sends the particle (`lepton:<c>_blossom_leaf`) to
+that player only, so vanilla clients see it too; the particle computes the wind itself from the world
+time (`(query.day + query.time_of_day) * 24000`), and Java's particle motion (random spread, speed,
++0.1 upward, gravity 0.04 / tick, friction 0.98, lifetime 4..40 ticks, a 4x4 px piece of the leaves
+texture tinted 0.6).
 
 ### 3.10 Disabled modules
 - Recipes of a disabled module are not loaded (`Recipes::_loadRecipe` hook, at world load).
@@ -272,9 +281,8 @@ The client mod shows the hints in the item tooltips (Quark shows them in JEI).
   behaviour (block tag contract); the chests of these woods are added once U9's generator exists.
 - **Potted saplings** are the vanilla flower pot holding our sapling (`minecraft:flower_pottable`),
   not separate `potted_*` blocks.
-- **Item tags**: our planks/logs/slabs are not in the vanilla item tags (`minecraft:planks`, ...), so
-  vanilla recipes taking "any planks" (sticks, crafting table, ...) don't accept them. Bedrock block
-  items can't carry item tags without replacing the block's item.
+- **Wind of the falling leaves** follows the world (day) time instead of the game time; they are the
+  same unless the time was changed.
 - **Leaf decay** is computed when logs/leaves change instead of from a stored `distance` state;
   decay timing has Java's mean, uniform instead of geometric.
 - **Biome tags** are mapped to Bedrock biome names (table in §3.5); Forge/NeoForge tags without a
@@ -291,24 +299,33 @@ Selftests (`newwoods.*`, dx 700..799):
 
 | Test | dx | Checks |
 |---|---|---|
-| `newwoods.blocks` | - | every block and item id is registered |
-| `newwoods.recipes` | - | recipes of the three modules are loaded |
+The tree tests grow their trees far out in z (dz 120..360) so the canopies stay clear of the other
+units' test rows.
+
+| Test | dx | Checks |
+|---|---|---|
+| `newwoods.blocks` | - | every block and item id is registered, module mapping, block classes, palette |
+| `newwoods.item_tags` | - | planks / logs / slabs carry Java's item tags |
+| `newwoods.recipes` | - | recipe gating by module (and the azalea hedge recipes need U6's hedge) |
 | `newwoods.strip` | 700 | an axe strips azalea logs keeping the axis |
-| `newwoods.leaf_drops` | - | the loot rules (shears, silk touch, fortune, explosion) |
-| `newwoods.leaf_decay` | 704 | leaves next to a removed log decay; persistent ones stay |
-| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it |
-| `newwoods.sapling_bonemeal` | 716 | bone meal advances the stage and grows a trumpet tree |
-| `newwoods.ancient_tree` | 730 | an ashen sapling grows the ashen tree shape (trunk, blobs, cap) |
+| `newwoods.leaf_drops` | - | the loot rules (shears, silk touch, fortune, explosion) by sampling |
+| `newwoods.leaf_decay` | 704 | leaves next to a removed log decay; persistent ones stay; distance 6 / 7 |
+| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it, go into a flower pot |
+| `newwoods.sapling_bonemeal` | 716 | the player's bone meal advances the sapling; it grows a trumpet tree, dirt below |
+| `newwoods.ancient_tree` | 730 | the ashen tree shape (trunk 18..28, blobs, cap, non-persistent leaves) |
 | `newwoods.blossom_tree` | 750 | a trumpet tree of every colour grows from its sapling |
 | `newwoods.tree_blocked` | 770 | a blocked sapling stays a sapling |
-| `newwoods.azalea_tree` | 780 | bone meal on an azalea grows azalea logs |
+| `newwoods.azalea_tree` | 780 | bone meal on an azalea grows azalea logs, no oak logs |
+| `newwoods.azalea_gen` | 784 | a generated azalea tree (rooted dirt, oak trunk, azalea leaves) gets azalea logs |
+| `newwoods.worldgen_live` | - | (generated worlds only) trumpet trees stand at the rolled columns near the spawn |
 | `newwoods.fruit_xp` | - | eating the fruit gives the configured XP |
-| `newwoods.loot_tables` | - | the sniffer table contains the sapling |
-| `newwoods.worldgen_filters` | - | biome filters and per-chunk determinism |
-| `newwoods.fuel_compost` | - | burn times and compost chances |
-| `newwoods.gallery` | 790 (+rows) | builds every block (visual check in the client scenario) |
+| `newwoods.loot_tables` | - | loot additions by config; the game's sniffer table has 3 entries |
+| `newwoods.worldgen_filters` | - | biome filters, dimensions, per-chunk determinism and rarity |
+| `newwoods.fuel_compost` | - | burn times and compost chances (through the game's functions) |
+| `newwoods.gallery` | 790 (+rows) | builds every block and the grown trees; with a real player, shows each part |
 
 E2E: `tools/e2e/server/scenarios/newwoods.ps1` runs `newwoods.*`; `newwoods-worldgen.ps1` runs in a
-generated (non-flat) world and checks that trumpet trees generate. The client scenario
-`tools/e2e/client/scenarios/newwoods.ps1` builds the gallery and screenshots the wood sets, leaves,
-saplings, trees and the falling leaves.
+generated (DEFAULT) world and checks that trumpet trees generate. The client scenario
+`tools/e2e/client/scenarios/newwoods.ps1` runs the gallery and screenshots the three wood sets, the
+tree blocks (leaves, saplings, hedges, carpets, potted saplings) and the grown trees with their
+falling leaves.
