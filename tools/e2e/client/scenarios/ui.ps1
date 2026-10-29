@@ -16,8 +16,8 @@ Wait-LogLine 'ui demo: inventory overlay drawn' 20 -Since $mark | Out-Null
 Save-Screenshot 'inventory' | Out-Null
 
 # Hover the first hotbar slot (the diamonds): the tooltip shows the extra line.
-$slot = Wait-LogLine 'ui demo: slot .*hotbar.* at' 10 -Since $mark
-$sx, $sy = Get-Fraction $slot
+$slotLine = Wait-LogLine 'ui demo: slot .*hotbar.* at' 10 -Since $mark
+$sx, $sy = Get-Fraction $slotLine
 Move-Mouse $sx $sy -Relative
 Start-Sleep -Milliseconds 800
 Save-Screenshot 'tooltip' | Out-Null
