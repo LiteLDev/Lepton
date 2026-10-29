@@ -49,6 +49,12 @@ soil). Each variant furnace also crafts into a blast furnace, a smoker and a fur
 | nether brick | `lepton:nether_brick_chest` | `lepton:trapped_nether_brick_chest` | Nether Brick Chest / Nether Brick Trapped Chest | `minecraft:nether_brick` (block) | nether_brick | 2.0 / 6 | pickaxe |
 | purpur | `lepton:purpur_chest` | `lepton:trapped_purpur_chest` | Purpur Chest / Purpur Trapped Chest | `minecraft:purpur_block` | stone | 1.5 / 6 | pickaxe |
 | prismarine | `lepton:prismarine_chest` | `lepton:trapped_prismarine_chest` | Prismarine Chest / Prismarine Trapped Chest | `minecraft:prismarine` | stone | 1.5 / 6 | pickaxe |
+| azalea | `lepton:azalea_chest` | `lepton:trapped_azalea_chest` | Azalea Chest / Azalea Trapped Chest | `lepton:azalea_planks` (U7) | wood | 2.5 / 2.5 | axe |
+| blossom | `lepton:blossom_chest` | `lepton:trapped_blossom_chest` | Trumpet Chest / Trumpet Trapped Chest | `lepton:blossom_planks` (U7) | wood | 2.5 / 2.5 | axe |
+| ancient | `lepton:ancient_chest` | `lepton:trapped_ancient_chest` | Ashen Chest / Ashen Trapped Chest | `lepton:ancient_planks` (U7) | wood | 2.5 / 2.5 | axe |
+
+The last three are Quark's own woods (U7 newwoods adds their planks and logs; their chest recipes
+only load when U7's items exist). Their chest textures use U7's plank colours.
 
 Quark copies the block properties of the vanilla chest (wood) or of the base block (stone kinds);
 chests never burn (Quark overrides their flammability to 0).

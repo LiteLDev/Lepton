@@ -149,17 +149,19 @@ void soundAtChest(BlockSource& region, ChestStorage const& st, bool open) {
 }
 
 void tickAnims() {
-    std::vector<GlobalPos> done;
+    std::vector<GlobalPos>                         done;
+    std::vector<std::pair<GlobalPos, GlobalPos>> rekey;
     for (auto& [key, a] : anims()) {
         auto* region = game::regionOf(key.dim);
         auto  pos    = game::blockPos(key);
-        if (!region || !region->hasChunksAt(pos, 0, false)) {
+        if (!region || !region->hasChunksAt(pos, 0, false)) continue; // finishes when loaded again
+        auto st = chestStorage(*region, pos);
+        if (!st) {
             done.push_back(key);
             continue;
         }
-        auto st = chestStorage(*region, pos);
-        if (!st || st->key != key) { // broken or re-paired: the new key animates on its own
-            done.push_back(key);
+        if (st->key != key) { // re-paired: the lid and power carry on under the new key
+            rekey.emplace_back(key, st->key);
             continue;
         }
         int  viewers = vc::viewers(key);
@@ -184,6 +186,32 @@ void tickAnims() {
         if (!open && a.openness == 0) done.push_back(key);
     }
     for (auto const& k : done) anims().erase(k);
+    for (auto const& [from, to] : rekey) {
+        auto a = anims()[from];
+        anims().erase(from);
+        anims().try_emplace(to, a);
+    }
+}
+
+/// Lids / trapped power still moving when the world saves finish after the next load.
+constexpr char const* kAnimsKey = "lp:variantcontainers:anims";
+void saveAnims() {
+    if (anims().empty()) {
+        game::db::erase(kAnimsKey);
+        return;
+    }
+    nlohmann::json arr = nlohmann::json::array();
+    for (auto const& [k, a] : anims()) arr.push_back({k.dim, k.x, k.y, k.z, a.openness});
+    game::db::save(kAnimsKey, arr);
+}
+void loadAnims() {
+    auto j = game::db::load(kAnimsKey);
+    if (!j || !j->is_array()) return;
+    for (auto const& e : *j) {
+        if (!e.is_array() || e.size() != 5) continue;
+        GlobalPos k{e[0].get<int>(), e[1].get<int>(), e[2].get<int>(), e[3].get<int>()};
+        anims().try_emplace(k, Anim{e[4].get<int>(), false});
+    }
 }
 
 // ---- storage transitions ------------------------------------------------------------------------------
@@ -203,10 +231,10 @@ void dropAll(BlockSource& region, BlockPos const& at, std::vector<ItemStack> con
 /// Merges the second half's own slots into the first half's double inventory (idempotent).
 void mergeHalves(BlockSource& region, BlockPos const& first, BlockPos const& second) {
     auto f = game::globalPos(region, first), s = game::globalPos(region, second);
+    vc::closeAll(s); // a screen still open on the old single chest
     auto own = vc::items(s, kChestSlots);
     if (!anyItems(own)) return;
     vc::closeAll(f);
-    vc::closeAll(s);
     auto all = vc::items(f, 2 * kChestSlots);
     std::vector<ItemStack> overflow;
     for (int i = 0; i < kChestSlots; ++i) {
@@ -628,6 +656,9 @@ public:
             auto pos = ev.pos();
             later(1, [dim, pos, prev, next] { onChestChanged(dim, pos, prev, next); });
         }));
+        game::db::onWorldSave([] { saveAnims(); });
+        game::db::onWorldReady([] { loadAnims(); });
+        if (game::db::available()) loadAnims();
         game::db::onWorldClosed([] {
             tasks().clear();
             anims().clear();

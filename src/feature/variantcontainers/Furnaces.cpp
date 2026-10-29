@@ -308,6 +308,10 @@ bool openFurnace(Player& player, BlockPos const& pos) {
         // the client needs a furnace block actor at the position to show the screen: a client
         // without our registry patch (vanilla, or an old client mod) gets a vanilla furnace there
         if (auto const* v = vanillaFurnaceFor(b)) {
+            // a stand-in from a furnace this player just left goes back to the real block first
+            if (auto old = fakes().find(player.getOrCreateUniqueID().rawID); old != fakes().end() && !(old->second.pos == pos)) {
+                if (auto* r = game::regionOf(old->second.dim)) sendBlock(player, old->second.pos, r->getBlock(old->second.pos));
+            }
             sendBlock(player, pos, *v);
             fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick, &b, 0};
         }

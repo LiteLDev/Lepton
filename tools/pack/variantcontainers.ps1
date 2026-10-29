@@ -138,17 +138,21 @@ $xOf = @{ single = (Get-XRange 'single'); left = (Get-XRange 'east'); right = (G
 # ---- chest blocks ---------------------------------------------------------------------------------
 
 $Woods = [ordered]@{
-    oak      = @{ En = 'Oak'; Zh = '橡木'; Planks = 'minecraft:oak_planks'; Sound = 'wood'; Map = '#8f7748'; Logs = @('oak_log', 'oak_wood', 'stripped_oak_log', 'stripped_oak_wood') }
-    spruce   = @{ En = 'Spruce'; Zh = '云杉木'; Planks = 'minecraft:spruce_planks'; Sound = 'wood'; Map = '#815631'; Logs = @('spruce_log', 'spruce_wood', 'stripped_spruce_log', 'stripped_spruce_wood') }
-    birch    = @{ En = 'Birch'; Zh = '白桦木'; Planks = 'minecraft:birch_planks'; Sound = 'wood'; Map = '#f7e9a3'; Logs = @('birch_log', 'birch_wood', 'stripped_birch_log', 'stripped_birch_wood') }
-    jungle   = @{ En = 'Jungle'; Zh = '丛林木'; Planks = 'minecraft:jungle_planks'; Sound = 'wood'; Map = '#976d4d'; Logs = @('jungle_log', 'jungle_wood', 'stripped_jungle_log', 'stripped_jungle_wood') }
-    acacia   = @{ En = 'Acacia'; Zh = '金合欢木'; Planks = 'minecraft:acacia_planks'; Sound = 'wood'; Map = '#d87f33'; Logs = @('acacia_log', 'acacia_wood', 'stripped_acacia_log', 'stripped_acacia_wood') }
-    dark_oak = @{ En = 'Dark Oak'; Zh = '深色橡木'; Planks = 'minecraft:dark_oak_planks'; Sound = 'wood'; Map = '#664c33'; Logs = @('dark_oak_log', 'dark_oak_wood', 'stripped_dark_oak_log', 'stripped_dark_oak_wood') }
-    mangrove = @{ En = 'Mangrove'; Zh = '红树木'; Planks = 'minecraft:mangrove_planks'; Sound = 'wood'; Map = '#993333'; Logs = @('mangrove_log', 'mangrove_wood', 'stripped_mangrove_log', 'stripped_mangrove_wood') }
-    bamboo   = @{ En = 'Bamboo'; Zh = '竹'; Planks = 'minecraft:bamboo_planks'; Sound = 'bamboo_wood'; Map = '#e5e533'; Logs = @('bamboo_block', 'stripped_bamboo_block') }
-    cherry   = @{ En = 'Cherry'; Zh = '樱花木'; Planks = 'minecraft:cherry_planks'; Sound = 'cherry_wood'; Map = '#d1b1a1'; Logs = @('cherry_log', 'cherry_wood', 'stripped_cherry_log', 'stripped_cherry_wood') }
-    crimson  = @{ En = 'Crimson'; Zh = '绯红木'; Planks = 'minecraft:crimson_planks'; Sound = 'nether_wood'; Map = '#943f61'; Logs = @('crimson_stem', 'crimson_hyphae', 'stripped_crimson_stem', 'stripped_crimson_hyphae') }
-    warped   = @{ En = 'Warped'; Zh = '诡异木'; Planks = 'minecraft:warped_planks'; Sound = 'nether_wood'; Map = '#3a8e8c'; Logs = @('warped_stem', 'warped_hyphae', 'stripped_warped_stem', 'stripped_warped_hyphae') }
+    oak      = @{ En = 'Oak'; Zh = '橡木'; Planks = 'minecraft:oak_planks'; Sound = 'wood'; Map = '#8f7748'; Logs = @('minecraft:oak_log', 'minecraft:oak_wood', 'minecraft:stripped_oak_log', 'minecraft:stripped_oak_wood') }
+    spruce   = @{ En = 'Spruce'; Zh = '云杉木'; Planks = 'minecraft:spruce_planks'; Sound = 'wood'; Map = '#815631'; Logs = @('minecraft:spruce_log', 'minecraft:spruce_wood', 'minecraft:stripped_spruce_log', 'minecraft:stripped_spruce_wood') }
+    birch    = @{ En = 'Birch'; Zh = '白桦木'; Planks = 'minecraft:birch_planks'; Sound = 'wood'; Map = '#f7e9a3'; Logs = @('minecraft:birch_log', 'minecraft:birch_wood', 'minecraft:stripped_birch_log', 'minecraft:stripped_birch_wood') }
+    jungle   = @{ En = 'Jungle'; Zh = '丛林木'; Planks = 'minecraft:jungle_planks'; Sound = 'wood'; Map = '#976d4d'; Logs = @('minecraft:jungle_log', 'minecraft:jungle_wood', 'minecraft:stripped_jungle_log', 'minecraft:stripped_jungle_wood') }
+    acacia   = @{ En = 'Acacia'; Zh = '金合欢木'; Planks = 'minecraft:acacia_planks'; Sound = 'wood'; Map = '#d87f33'; Logs = @('minecraft:acacia_log', 'minecraft:acacia_wood', 'minecraft:stripped_acacia_log', 'minecraft:stripped_acacia_wood') }
+    dark_oak = @{ En = 'Dark Oak'; Zh = '深色橡木'; Planks = 'minecraft:dark_oak_planks'; Sound = 'wood'; Map = '#664c33'; Logs = @('minecraft:dark_oak_log', 'minecraft:dark_oak_wood', 'minecraft:stripped_dark_oak_log', 'minecraft:stripped_dark_oak_wood') }
+    mangrove = @{ En = 'Mangrove'; Zh = '红树木'; Planks = 'minecraft:mangrove_planks'; Sound = 'wood'; Map = '#993333'; Logs = @('minecraft:mangrove_log', 'minecraft:mangrove_wood', 'minecraft:stripped_mangrove_log', 'minecraft:stripped_mangrove_wood') }
+    bamboo   = @{ En = 'Bamboo'; Zh = '竹'; Planks = 'minecraft:bamboo_planks'; Sound = 'bamboo_wood'; Map = '#e5e533'; Logs = @('minecraft:bamboo_block', 'minecraft:stripped_bamboo_block') }
+    cherry   = @{ En = 'Cherry'; Zh = '樱花木'; Planks = 'minecraft:cherry_planks'; Sound = 'cherry_wood'; Map = '#d1b1a1'; Logs = @('minecraft:cherry_log', 'minecraft:cherry_wood', 'minecraft:stripped_cherry_log', 'minecraft:stripped_cherry_wood') }
+    crimson  = @{ En = 'Crimson'; Zh = '绯红木'; Planks = 'minecraft:crimson_planks'; Sound = 'nether_wood'; Map = '#943f61'; Logs = @('minecraft:crimson_stem', 'minecraft:crimson_hyphae', 'minecraft:stripped_crimson_stem', 'minecraft:stripped_crimson_hyphae') }
+    warped   = @{ En = 'Warped'; Zh = '诡异木'; Planks = 'minecraft:warped_planks'; Sound = 'nether_wood'; Map = '#3a8e8c'; Logs = @('minecraft:warped_stem', 'minecraft:warped_hyphae', 'minecraft:stripped_warped_stem', 'minecraft:stripped_warped_hyphae') }
+    # Quark's own woods: their planks and logs come from U7 newwoods (lepton:<wood>_planks, ...)
+    azalea   = @{ En = 'Azalea'; Zh = '杜鹃木'; Planks = 'lepton:azalea_planks'; Sound = 'wood'; Map = '#7a8a3a'; Logs = @('lepton:azalea_log', 'lepton:azalea_wood', 'lepton:stripped_azalea_log', 'lepton:stripped_azalea_wood') }
+    blossom  = @{ En = 'Trumpet'; Zh = '喇叭木'; Planks = 'lepton:blossom_planks'; Sound = 'wood'; Map = '#8a3a33'; Logs = @('lepton:blossom_log', 'lepton:blossom_wood', 'lepton:stripped_blossom_log', 'lepton:stripped_blossom_wood') }
+    ancient  = @{ En = 'Ashen'; Zh = '苍白木'; Planks = 'lepton:ancient_planks'; Sound = 'wood'; Map = '#b8a49b'; Logs = @('lepton:ancient_log', 'lepton:ancient_wood', 'lepton:stripped_ancient_log', 'lepton:stripped_ancient_wood') }
 }
 $Stones = [ordered]@{
     nether_brick = @{ En = 'Nether Brick'; Zh = '下界砖'; Planks = 'minecraft:nether_brick'; Sound = 'nether_brick'; Map = '#700200'; Hardness = 2.0 }
@@ -225,7 +229,7 @@ function Write-ChestRecipes([string]$Mat, $Info, [bool]$Wooden) {
     Write-PriorityRecipe "${Mat}_chest" @('###', '# #', '###') @{ '#' = $Info.Planks } $chest 1
     Write-ShapelessRecipe "trapped_${Mat}_chest" @($chest, 'minecraft:tripwire_hook') $trapped 1
     if ($Wooden) {
-        foreach ($log in $Info.Logs) { Write-PriorityRecipe "${Mat}_chest_wood_$log" @('###', '# #', '###') @{ '#' = "minecraft:$log" } $chest 4 }
+        foreach ($log in $Info.Logs) { Write-PriorityRecipe "${Mat}_chest_wood_$(Get-Path $log)" @('###', '# #', '###') @{ '#' = $log } $chest 4 }
         Write-ShapelessRecipe "${Mat}_chest_revert" @($chest) 'minecraft:chest' 1
         Write-ShapelessRecipe "trapped_${Mat}_chest_revert" @($trapped) 'minecraft:trapped_chest' 1
     }

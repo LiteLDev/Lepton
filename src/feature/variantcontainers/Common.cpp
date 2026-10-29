@@ -50,9 +50,22 @@ BlockPos step(BlockPos const& pos, int f) {
 
 // ---- chest states -----------------------------------------------------------------------------------
 
-bool isVariantChest(Block const& block) {
-    return block.hasTag(HashedString("lepton:variant_chest")) || block.hasTag(HashedString("lepton:variant_trapped_chest"));
+namespace {
+HashedString const& tagChest() {
+    static HashedString const h("lepton:variant_chest");
+    return h;
 }
+HashedString const& tagTrapped() {
+    static HashedString const h("lepton:variant_trapped_chest");
+    return h;
+}
+HashedString const& tagFurnace() {
+    static HashedString const h("lepton:variant_furnace");
+    return h;
+}
+} // namespace
+
+bool isVariantChest(Block const& block) { return block.hasTag(tagChest()) || block.hasTag(tagTrapped()); }
 
 std::optional<ChestState> chestState(Block const& block) {
     if (!isVariantChest(block)) return std::nullopt;
@@ -66,7 +79,7 @@ std::optional<ChestState> chestState(Block const& block) {
     s.facing  = opp(l);
     s.type    = *type == "left" ? ChestType::Left : *type == "right" ? ChestType::Right : ChestType::Single;
     s.lid     = bs::getInt(block, "lepton:lid").value_or(0);
-    s.trapped = block.hasTag(HashedString("lepton:variant_trapped_chest"));
+    s.trapped = block.hasTag(tagTrapped());
     return s;
 }
 
@@ -131,7 +144,7 @@ void spawnItem(BlockSource& region, ItemStack const& stack, float x, float y, fl
 
 std::vector<std::string> const& chestMaterials() {
     static std::vector<std::string> const v{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
-        "bamboo", "cherry", "crimson", "warped", "nether_brick", "purpur", "prismarine"};
+        "bamboo", "cherry", "crimson", "warped", "nether_brick", "purpur", "prismarine", "azalea", "blossom", "ancient"};
     return v;
 }
 
@@ -154,6 +167,6 @@ std::vector<std::string> const& furnaceIds() {
     return v;
 }
 
-bool isVariantFurnace(Block const& block) { return block.hasTag(HashedString("lepton:variant_furnace")); }
+bool isVariantFurnace(Block const& block) { return block.hasTag(tagFurnace()); }
 
 } // namespace lp::feature::variantcontainers

@@ -229,6 +229,10 @@ public:
     }
     // Our replacement functions live in this DLL: give every block type its own vtable back.
     void uninstall() {
+        if (mHooked) {
+            RegisterBlockHook::unhook();
+            mHooked = false;
+        }
         std::lock_guard lock(mutex());
         BlockTypeRegistry::get().forEachBlockType([](BlockType const& t) {
             auto it = clones().find(vtableOf(t));

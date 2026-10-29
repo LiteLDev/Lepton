@@ -7,6 +7,7 @@
 // Bedrock does not tell a chest which structure made it, so the structure comes from the chest's
 // loot table (and the biome for the village chests shared by every village kind).
 
+#include <cstdlib>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -167,6 +168,20 @@ bool replaceOne(BlockSource& region, Entry const& e) {
     ChestType type = ChestType::Single;
     std::optional<BlockPos> partner;
     if (chest->mLargeChestPaired) partner = chest->mLargeChestPairedPosition;
+    if (!partner) {
+        // chests placed from structure data pair on their first tick (deferred pair): use the
+        // recorded pair position, absolute or relative, when it names a side neighbour
+        int px = chest->mDeferredPairX, pz = chest->mDeferredPairZ;
+        for (BlockPos cand : {BlockPos{px, e.pos.y, pz}, BlockPos{e.pos.x + px, e.pos.y, e.pos.z + pz}}) {
+            int dx = cand.x - e.pos.x, dz = cand.z - e.pos.z;
+            if (std::abs(dx) + std::abs(dz) != 1) continue;
+            auto const& n = region.getBlock(cand).getTypeName();
+            if (n == name || isVariantChest(region.getBlock(cand))) {
+                partner = cand;
+                break;
+            }
+        }
+    }
     if (partner) {
         int dx = partner->x - e.pos.x, dz = partner->z - e.pos.z;
         for (int d = 0; d < 4; ++d) {

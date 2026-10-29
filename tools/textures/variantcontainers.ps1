@@ -41,6 +41,10 @@ $script:ChestMaterials = [ordered]@{
     nether_brick = @{ Ramp = @('#170a0d', '#2a1318', '#3b1c22', '#4b252c', '#5d3139'); Kind = 'brick'; Seed = 912 }
     purpur       = @{ Ramp = @('#5e3f60', '#83608a', '#9c78a0', '#b08fb3', '#c6a9c8'); Kind = 'tile'; Seed = 913 }
     prismarine   = @{ Ramp = @('#21453f', '#326b60', '#45897b', '#5aa292', '#78bcaa'); Kind = 'tile'; Seed = 914 }
+    # Quark's own woods (U7 newwoods planks: lepton:azalea_planks, lepton:blossom_planks, lepton:ancient_planks)
+    azalea       = @{ Ramp = @('#2c3413', '#3f4a1c', '#6d7c33', '#8f9f47', '#a2b257'); Kind = 'wood'; Seed = 915 }
+    blossom      = @{ Ramp = @('#33140f', '#4a1e1c', '#77322c', '#8a3a33', '#9e463c'); Kind = 'wood'; Seed = 916 }
+    ancient      = @{ Ramp = @('#5c4e49', '#7c6a63', '#ab978e', '#c8b6ad', '#d6c5bc'); Kind = 'wood'; Seed = 917 }
 }
 
 # ---- canvas -------------------------------------------------------------------------------------

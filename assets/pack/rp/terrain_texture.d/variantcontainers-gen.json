@@ -2,6 +2,12 @@
   "lepton_variantcontainers_variantcontainers_acacia_chest": {
     "textures": "textures/blocks/variantcontainers/acacia_chest"
   },
+  "lepton_variantcontainers_variantcontainers_ancient_chest": {
+    "textures": "textures/blocks/variantcontainers/ancient_chest"
+  },
+  "lepton_variantcontainers_variantcontainers_azalea_chest": {
+    "textures": "textures/blocks/variantcontainers/azalea_chest"
+  },
   "lepton_variantcontainers_variantcontainers_bamboo_chest": {
     "textures": "textures/blocks/variantcontainers/bamboo_chest"
   },
@@ -22,6 +28,9 @@
   },
   "lepton_variantcontainers_variantcontainers_blackstone_furnace_top": {
     "textures": "textures/blocks/variantcontainers/blackstone_furnace_top"
+  },
+  "lepton_variantcontainers_variantcontainers_blossom_chest": {
+    "textures": "textures/blocks/variantcontainers/blossom_chest"
   },
   "lepton_variantcontainers_variantcontainers_cherry_chest": {
     "textures": "textures/blocks/variantcontainers/cherry_chest"
@@ -68,11 +77,20 @@
   "lepton_variantcontainers_variantcontainers_trapped_acacia_chest": {
     "textures": "textures/blocks/variantcontainers/trapped_acacia_chest"
   },
+  "lepton_variantcontainers_variantcontainers_trapped_ancient_chest": {
+    "textures": "textures/blocks/variantcontainers/trapped_ancient_chest"
+  },
+  "lepton_variantcontainers_variantcontainers_trapped_azalea_chest": {
+    "textures": "textures/blocks/variantcontainers/trapped_azalea_chest"
+  },
   "lepton_variantcontainers_variantcontainers_trapped_bamboo_chest": {
     "textures": "textures/blocks/variantcontainers/trapped_bamboo_chest"
   },
   "lepton_variantcontainers_variantcontainers_trapped_birch_chest": {
     "textures": "textures/blocks/variantcontainers/trapped_birch_chest"
+  },
+  "lepton_variantcontainers_variantcontainers_trapped_blossom_chest": {
+    "textures": "textures/blocks/variantcontainers/trapped_blossom_chest"
   },
   "lepton_variantcontainers_variantcontainers_trapped_cherry_chest": {
     "textures": "textures/blocks/variantcontainers/trapped_cherry_chest"

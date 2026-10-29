@@ -95,16 +95,26 @@ void replaceDrop(Death const& d) {
     auto* region = game::regionOf(d.dim);
     if (!region) return;
     AABB box{Vec3{d.pos.x - 3.f, d.pos.y - 3.f, d.pos.z - 3.f}, Vec3{d.pos.x + 3.f, d.pos.y + 3.f, d.pos.z + 3.f}};
+    // the single chest item closest to where the animal died
+    ItemActor* best  = nullptr;
+    float      bestD = 1e9f;
     for (auto* a : game::entities::inBox(*region, box, "minecraft:item")) {
-        auto& item = static_cast<ItemActor*>(a)->item();
-        if (game::itemId(item) != "minecraft:chest") continue;
-        auto variant = game::itemFromSnbt(d.snbt);
-        if (game::isEmpty(variant)) return;
-        variant.set(item.mCount);
-        item = variant;
-        log().info("variantcontainers: a dead animal dropped {}", game::itemId(variant));
-        return;
+        auto* ia   = static_cast<ItemActor*>(a);
+        auto& item = ia->item();
+        if (game::itemId(item) != "minecraft:chest" || item.mCount != 1) continue;
+        auto  p    = a->getPosition();
+        float dist = (p.x - d.pos.x) * (p.x - d.pos.x) + (p.y - d.pos.y) * (p.y - d.pos.y) + (p.z - d.pos.z) * (p.z - d.pos.z);
+        if (dist < bestD) {
+            bestD = dist;
+            best  = ia;
+        }
     }
+    if (!best) return;
+    auto variant = game::itemFromSnbt(d.snbt);
+    if (game::isEmpty(variant)) return;
+    variant.set(1);
+    best->item() = variant;
+    log().info("variantcontainers: a dead animal dropped {}", game::itemId(variant));
 }
 
 } // namespace

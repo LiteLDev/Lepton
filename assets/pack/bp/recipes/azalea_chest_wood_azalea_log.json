@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_chest_wood_azalea_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:azalea_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:azalea_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

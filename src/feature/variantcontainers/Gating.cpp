@@ -154,21 +154,31 @@ LL_TYPE_INSTANCE_HOOK(
 class GatingModule {
 public:
     void load() {
-        VcRecipeGateHook::hook();
-        VcCreativeGroupHook::hook();
-        VcCreativeLooseHook::hook();
+        hook();
         game::db::onWorldClosed([] { gSkippedRecipes = gSkippedItems = 0; });
         game::db::onWorldReady([] {
             if (gSkippedRecipes || gSkippedItems)
                 log().info("variantcontainers: {} recipes and {} creative entries disabled by config", gSkippedRecipes, gSkippedItems);
         });
     }
-    void install() {}
+    void install() { hook(); }
     void uninstall() {
+        if (!mHooked) return;
         VcRecipeGateHook::unhook();
         VcCreativeGroupHook::unhook();
         VcCreativeLooseHook::unhook();
+        mHooked = false;
     }
+
+private:
+    void hook() {
+        if (mHooked) return;
+        VcRecipeGateHook::hook();
+        VcCreativeGroupHook::hook();
+        VcCreativeLooseHook::hook();
+        mHooked = true;
+    }
+    bool mHooked = false;
 };
 
 } // namespace lp::feature::variantcontainers
