@@ -190,7 +190,7 @@ try {
             # worlds opened for multiplayer knock each other out ("An error has occurred", "Blaze").
             if ($script:Headless) { Set-WorldSinglePlayer (Join-Path (Get-WorldsDir) $script:WorldName) }
         }
-        Reset-CameraPerspective
+        Reset-ViewOptions              # HUD shown, first person, default GUI scale (see lib.ps1)
         $prelaunch = Join-Path $PSScriptRoot "scenarios/$Scenario.prelaunch.ps1"
         if (Test-Path $prelaunch) { . $prelaunch }
         try {
