@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:blossom_door",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.door"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_newwoods_newwoods_blossom_door",
+      "minecraft:block_placer": {
+        "block": "lepton:blossom_door",
+        "replace_block_item": true
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

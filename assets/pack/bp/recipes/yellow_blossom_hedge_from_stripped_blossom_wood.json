@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:yellow_blossom_hedge_from_stripped_blossom_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "lepton:yellow_blossom_leaves"
+      },
+      "W": {
+        "item": "lepton:stripped_blossom_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:stripped_blossom_wood"
+      },
+      {
+        "item": "lepton:yellow_blossom_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:yellow_blossom_hedge",
+      "count": 2
+    }
+  }
+}

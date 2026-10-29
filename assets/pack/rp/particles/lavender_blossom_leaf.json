@@ -1,0 +1,80 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "lepton:lavender_blossom_leaf",
+      "basic_render_parameters": {
+        "material": "particles_alpha",
+        "texture": "textures/blocks/newwoods/lavender_blossom_leaves"
+      }
+    },
+    "components": {
+      "minecraft:emitter_initialization": {
+        "creation_expression": "t.t = (query.day + query.time_of_day) * 24000; t.s = 5 + math.cos(t.t / 2000 * 57.29578) * 2; t.ex = math.cos(t.t / 1200 * 57.29578) * t.s + variable.emitter_random_1 * 0.8 - 0.4; t.ey = -1 + variable.emitter_random_2 * 0.8 - 0.4; t.ez = math.sin(t.t / 1000 * 57.29578) * t.s + variable.emitter_random_3 * 0.8 - 0.4; t.e = math.sqrt(t.ex * t.ex + t.ey * t.ey + t.ez * t.ez); t.d = (variable.emitter_random_4 + variable.emitter_random_1 + 1) * 0.15 * 0.4; variable.vx = t.ex / t.e * t.d * 20; variable.vy = (t.ey / t.e * t.d + 0.1) * 20; variable.vz = t.ez / t.e * t.d * 20; variable.spd = math.sqrt(variable.vx * variable.vx + variable.vy * variable.vy + variable.vz * variable.vz);"
+      },
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 1
+      },
+      "minecraft:emitter_lifetime_once": {
+        "active_time": 0
+      },
+      "minecraft:emitter_shape_point": {
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "direction": [
+          "variable.vx",
+          "variable.vy",
+          "variable.vz"
+        ]
+      },
+      "minecraft:particle_initial_speed": "variable.spd",
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "4 / (variable.particle_random_2 * 0.9 + 0.1) / 20"
+      },
+      "minecraft:particle_motion_dynamic": {
+        "linear_acceleration": [
+          0,
+          -16,
+          0
+        ],
+        "linear_drag_coefficient": 0.4
+      },
+      "minecraft:particle_motion_collision": {
+        "collision_radius": 0.05,
+        "coefficient_of_restitution": 0,
+        "collision_drag": 10
+      },
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "0.1 * (variable.particle_random_3 * 0.5 + 0.5)",
+          "0.1 * (variable.particle_random_3 * 0.5 + 0.5)"
+        ],
+        "facing_camera_mode": "lookat_xyz",
+        "uv": {
+          "texture_width": 16,
+          "texture_height": 16,
+          "uv": [
+            "math.floor(variable.particle_random_3 * 12)",
+            "math.floor(variable.particle_random_4 * 12)"
+          ],
+          "uv_size": [
+            4,
+            4
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          0.6,
+          0.6,
+          0.6,
+          1.0
+        ]
+      },
+      "minecraft:particle_appearance_lighting": {}
+    }
+  }
+}

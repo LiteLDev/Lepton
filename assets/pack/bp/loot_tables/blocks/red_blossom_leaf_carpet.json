@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:red_blossom_leaf_carpet",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

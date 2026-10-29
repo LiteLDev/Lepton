@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:lavender_blossom_leaf_carpet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:lavender_blossom_leaves"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:lavender_blossom_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:lavender_blossom_leaf_carpet",
+      "count": 3
+    }
+  }
+}

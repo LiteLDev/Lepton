@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_hedge_from_azalea_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:azalea_leaves"
+      },
+      "W": {
+        "item": "lepton:azalea_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:azalea_wood"
+      },
+      {
+        "item": "minecraft:azalea_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_hedge",
+      "count": 2
+    }
+  }
+}

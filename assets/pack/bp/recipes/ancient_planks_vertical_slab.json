@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:ancient_planks_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:ancient_planks_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ancient_planks_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:ancient_planks_vertical_slab",
+      "count": 3
+    }
+  }
+}

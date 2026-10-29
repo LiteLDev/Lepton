@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:stripped_blossom_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:stripped_blossom_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:stripped_blossom_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:stripped_blossom_wood",
+      "count": 3
+    }
+  }
+}

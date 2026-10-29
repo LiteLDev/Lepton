@@ -1,0 +1,43 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:lavender_blossom_leaves",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.leaves"
+      },
+      "states": {
+        "lepton:persistent": [
+          true,
+          false
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.2
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.2
+      },
+      "minecraft:map_color": "#f27fa5",
+      "tag:lepton:nw_blossom_trees": {},
+      "tag:lepton:nw_leaves": {},
+      "tag:minecraft:is_hoe_item_destructible": {},
+      "minecraft:flammable": {
+        "catch_chance_modifier": 30,
+        "destroy_chance_modifier": 60
+      },
+      "minecraft:light_dampening": 1,
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newwoods_newwoods_lavender_blossom_leaves",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/lavender_blossom_leaves.json"
+    }
+  }
+}

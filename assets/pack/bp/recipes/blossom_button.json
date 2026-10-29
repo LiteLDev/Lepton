@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:blossom_button"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:blossom_planks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:blossom_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:blossom_button",
+      "count": 1
+    }
+  }
+}
