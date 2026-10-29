@@ -1,5 +1,6 @@
 #include "feature/worldbeyond/Chorus.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <mutex>
@@ -7,6 +8,7 @@
 #include <random>
 #include <set>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "ll/api/event/EventBus.h"
@@ -31,6 +33,8 @@
 #include "mc/world/level/GameType.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Tick.h"
+#include "mc/world/level/storage/GameRule.h"
+#include "mc/world/level/storage/GameRules.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -49,7 +53,46 @@ namespace lp::feature::worldbeyond {
 
 namespace {
 
-constexpr int kMaxTickDelay = 2730; ///< uniform 1..2730: mean 1365.5 ticks = 4096 / 3 (Java random ticks)
+JavaRandom& threadRandom() {
+    thread_local JavaRandom r(static_cast<int64_t>(std::random_device{}()) << 16 ^ std::random_device{}());
+    return r;
+}
+
+/// Ticks of a plant while random ticks are off (randomtickspeed 0): it only keeps its tick chain alive.
+constexpr int kPollDelay = 200;
+
+/// The largest delay of a plant's "random tick": a uniform delay 1..max has Java's mean interval
+/// between random ticks, 4096 / (3 * speed) ticks (Bedrock's randomtickspeed 1 is Java's 3).
+/// 0 while random ticks are off.
+int maxTickDelay() {
+    int  speed = 1;
+    auto level = ll::service::getLevel();
+    if (level) {
+        auto const& rules = level->getGameRules().mGameRules.get();
+        auto        idx   = static_cast<size_t>(GameRules::GameRulesIndex::RandomTickSpeed);
+        if (idx < rules.size())
+            if (auto const* v = std::get_if<int>(&rules[idx].mValue.get())) speed = *v;
+    }
+    if (speed <= 0) return 0;
+    return std::max(1, static_cast<int>(std::lround(2.0 * 4096.0 / (3.0 * speed))) - 1);
+}
+
+/// Selftests: plants inside this box tick every 1..3 ticks.
+struct FastBox {
+    std::atomic<bool> on{false};
+    std::atomic<int>  dim{0}, x0{0}, y0{0}, z0{0}, x1{0}, y1{0}, z1{0};
+    std::atomic<int>  ticks{0};
+    bool contains(int d, BlockPos const& p) const {
+        return on.load() && d == dim.load() && p.x >= x0.load() && p.x <= x1.load() && p.y >= y0.load() && p.y <= y1.load()
+            && p.z >= z0.load() && p.z <= z1.load();
+    }
+} gFast;
+
+int nextDelay(BlockSource& region, BlockPos const& pos) {
+    if (gFast.contains(static_cast<int>(region.getDimensionId()), pos)) return 1 + threadRandom().nextInt(3);
+    int maxDelay = maxTickDelay();
+    return maxDelay > 0 ? 1 + threadRandom().nextInt(maxDelay) : kPollDelay;
+}
 
 /// Java's Direction.values() order: DOWN, UP, NORTH, SOUTH, WEST, EAST.
 constexpr int kDirs[6][3] = {
@@ -61,10 +104,6 @@ constexpr int kDirs[6][3] = {
     {1,  0,  0 }
 };
 
-JavaRandom& threadRandom() {
-    thread_local JavaRandom r(static_cast<int64_t>(std::random_device{}()) << 16 ^ std::random_device{}());
-    return r;
-}
 
 Vec3 center(BlockPos const& p, float dy = 0.5f) {
     return Vec3{static_cast<float>(p.x) + 0.5f, static_cast<float>(p.y) + dy, static_cast<float>(p.z) + 0.5f};
@@ -252,13 +291,17 @@ LL_TYPE_INSTANCE_HOOK(
     if (!isChorusType(&this->getBlockType()) || region.getLevel().isClientSide()) return;
     auto const& b = blocks();
     if (!region.hasChunksAt(pos, 0, false) || !b.isChorus(region.getBlock(pos))) return; // a stale tick
+    if (gFast.contains(static_cast<int>(region.getDimensionId()), pos)) ++gFast.ticks;
     // Overdue ticks of a loading chunk fire on worker threads: there only the next tick is
     // scheduled (the random tick itself needs the server thread; with random intervals, skipping
     // one changes nothing a player could notice).
-    if (std::this_thread::get_id() == gServerThread.load()) chorusRandomTick(region, pos);
+    bool randomTicks = maxTickDelay() > 0;
+    if (randomTicks && std::this_thread::get_id() == gServerThread.load()) chorusRandomTick(region, pos);
     if (region.hasChunksAt(pos, 0, false)) {
         auto const& now = region.getBlock(pos);
-        if (b.isChorus(now)) scheduleChorusTick(region, pos, now);
+        // the tick being run may still count as queued here: schedule the next one without the
+        // duplicate check, or the chain would stop after one tick
+        if (b.isChorus(now)) region.addToTickingQueue(pos, now, nextDelay(region, pos));
     }
 }
 
@@ -323,9 +366,20 @@ void scheduleChorusTick(BlockSource& region, BlockPos const& pos, Block const& b
     if (!chunk) return;
     Tick next{};
     if (chunk->getTickQueue().getNextUpdateForPos(pos, next)) return; // already scheduled
-    int delay = 1 + threadRandom().nextInt(kMaxTickDelay);
-    region.addToTickingQueue(pos, block, delay);
+    region.addToTickingQueue(pos, block, nextDelay(region, pos));
 }
+
+namespace testing {
+void fastTicks(int dim, BlockPos const& min, BlockPos const& max) {
+    gFast.dim = dim;
+    gFast.x0 = min.x, gFast.y0 = min.y, gFast.z0 = min.z;
+    gFast.x1 = max.x, gFast.y1 = max.y, gFast.z1 = max.z;
+    gFast.ticks = 0;
+    gFast.on    = true;
+}
+int fastTickCount() { return gFast.ticks.load(); }
+void stopFastTicks() { gFast.on = false; }
+} // namespace testing
 
 std::optional<BlockPos> chorusTeleport(BlockSource& region, BlockPos const& pos, Block const& state, int range, double growthChance) {
     auto const& b    = blocks();

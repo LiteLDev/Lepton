@@ -119,9 +119,11 @@ and stays.
   above, place a copy there; with probability G remove the original (portal particles, enderman
   teleport sound at volume 0.1, pitch 5 + random); reverse-portal particles at the new spot.
 - **Random tick**: with `passiveTeleportChance` (0.2): teleport (R 4, G = 1 - `teleportDuplicationChance`).
-  Bedrock: custom blocks get no Java-style random ticks, so the blocks carry `minecraft:tick` with a
-  uniform interval of 1..2730 ticks (mean 1365.5 = Java's 4096/3 ticks between random ticks at the
-  default `randomTickSpeed` 3); the tick runs the random-tick logic.
+  Bedrock: custom blocks get no Java-style random ticks, so every plant keeps a chain of scheduled
+  block ticks with a uniform delay of 1..max, max = 2 * 4096 / (3 * randomtickspeed) - 1 (mean =
+  Java's interval between random ticks; Bedrock's randomtickspeed 1 is Java's 3, so 1..2730 by
+  default); each tick runs the random-tick logic and schedules the next. With randomtickspeed 0 the
+  plants do nothing (the chain polls every 200 ticks).
 - **Trampling** (weeds only, not twist): a living entity that is not an enderman or endermite inside
   the block teleports the weeds (R 4, G 1 - dup chance); then with `endermiteSpawnChance` (0.01) an
   endermite spawns at the new spot. Bedrock: checked every tick for living entities overlapping
@@ -225,7 +227,7 @@ Selftests (dx 2900..2999; generation tests run in the real Nether / End far from
 `worldbeyond.config`, `worldbeyond.random`, `worldbeyond.myalite_color`, `worldbeyond.spike`,
 `worldbeyond.spike_blocked`, `worldbeyond.spike_spawner`, `worldbeyond.chorus_teleport`,
 `worldbeyond.chorus_survive`, `worldbeyond.chorus_water`, `worldbeyond.chorus_trample`,
-`worldbeyond.chorus_bonemeal`, `worldbeyond.chorus_tick`, `worldbeyond.crystal_hue`,
+`worldbeyond.chorus_bonemeal`, `worldbeyond.chorus_tick`, `worldbeyond.chorus_tick_chain` (ticks keep coming over many cycles), `worldbeyond.crystal_hue`,
 `worldbeyond.chorus_dispenser`, `worldbeyond.viaduct`, `worldbeyond.viaduct_command` (a real `/tp`),
 `worldbeyond.viaduct_pearl` (a thrown ender pearl), `worldbeyond.viaduct_loop`, `worldbeyond.spire`, `worldbeyond.renewable`,
 `worldbeyond.end_gen`, `worldbeyond.nether_gen`.
