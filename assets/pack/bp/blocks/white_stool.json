@@ -4,8 +4,7 @@
     "description": {
       "identifier": "lepton:white_stool",
       "menu_category": {
-        "category": "items",
-        "group": "minecraft:itemGroup.name.bed"
+        "category": "none"
       },
       "states": {
         "lepton:big": [

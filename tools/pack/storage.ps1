@@ -469,6 +469,37 @@ foreach ($m in 'iron', 'copper', 'gold') {
     Add-Smelting "storage_raw_${m}_block_blast" "minecraft:raw_${m}_block" "minecraft:${m}_block" 1 @('blast_furnace') @($UR, 'smeltRawOreBlocks')
 }
 
+# ==================================================================================================
+# Fuel blocks: an item definition with minecraft:fuel, so clients without the client mod also
+# treat them as fuel in the furnace screen (the burn time itself comes from the native hook / config)
+# ==================================================================================================
+$fuelBlocks = [ordered]@{ 'lepton:charcoal_block' = 16000; 'lepton:blaze_lantern' = 24000; 'lepton:stick_block' = 900 }
+foreach ($id in 'lepton:sugar_cane_block', 'lepton:cactus_block', 'lepton:chorus_fruit_block') { $fuelBlocks[$id] = 300 }
+foreach ($c in $crates) { $fuelBlocks["lepton:$($c[0])_crate"] = 300 }
+foreach ($kv in $colorNames.GetEnumerator()) { $fuelBlocks["lepton:$($kv.Key)_stool"] = 300 }
+foreach ($kv in $fuelBlocks.GetEnumerator()) {
+    $blockFile = Join-Path $script:BP "blocks/$(Get-Path $kv.Key).json"
+    $block = Get-Content $blockFile -Raw | ConvertFrom-Json -AsHashtable
+    $menu = $block['minecraft:block'].description.menu_category
+    $itemMenu = [ordered]@{ category = $menu.category }
+    if ($menu.group) { $itemMenu.group = $menu.group }
+    # the item is what the creative inventory lists
+    $block['minecraft:block'].description.menu_category = [ordered]@{ category = 'none' }
+    Write-PackJson $blockFile $block
+    Write-PackJson (Join-Path $script:BP "items/$(Get-Path $kv.Key).json") ([ordered]@{
+            format_version   = $script:ItemFormat
+            'minecraft:item' = [ordered]@{
+                description = [ordered]@{ identifier = $kv.Key; menu_category = $itemMenu }
+                components  = [ordered]@{
+                    'minecraft:block_placer'   = [ordered]@{ block = $kv.Key; replace_block_item = $true }
+                    'minecraft:display_name'   = [ordered]@{ value = "tile.$($kv.Key).name" }
+                    'minecraft:fuel'           = [ordered]@{ duration = $kv.Value / 20 }
+                    'minecraft:max_stack_size' = 64
+                }
+            }
+        })
+}
+
 Complete-PackUnit
 
 # ---- Content.inc --------------------------------------------------------------------------------

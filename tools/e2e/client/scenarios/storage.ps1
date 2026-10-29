@@ -21,8 +21,8 @@ if ($line -match 'FAIL') { throw "gallery selftest failed: $line" }
 
 # item icons: shards, rope, a stool and a crate in the hotbar
 Invoke-Chat '/clear @s'
-foreach ($id in 'lepton:clear_shard', 'lepton:dirty_shard', 'lepton:red_shard', 'lepton:blue_shard', 'lepton:rope', 'lepton:red_stool',
-    'lepton:apple_crate', 'lepton:glowberry_sack', 'lepton:dirty_glass') {
+foreach ($id in 'lepton:clear_shard', 'lepton:red_shard', 'lepton:rope', 'lepton:red_stool', 'lepton:charcoal_block',
+    'lepton:apple_crate', 'lepton:stick_block', 'lepton:glowberry_sack', 'lepton:dirty_glass') {
     Invoke-Chat "/give @s $id 1"
 }
 Start-Sleep -Seconds 2
