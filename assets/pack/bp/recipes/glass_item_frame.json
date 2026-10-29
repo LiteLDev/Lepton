@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:glass_item_frame"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "#F#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:glass_pane"
+      },
+      "F": {
+        "item": "minecraft:frame"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:frame"
+      },
+      {
+        "item": "minecraft:glass_pane"
+      }
+    ],
+    "result": {
+      "item": "lepton:glass_item_frame",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:dyed_item_frame",
+      "materials": {
+        "default": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/entity/frames/dyed_item_frame"
+      },
+      "geometry": {
+        "default": "geometry.lepton.dyed_item_frame"
+      },
+      "render_controllers": [
+        "controller.render.lepton.dyed_item_frame"
+      ]
+    }
+  }
+}

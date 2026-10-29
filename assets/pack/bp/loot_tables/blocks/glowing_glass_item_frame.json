@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:glowing_glass_item_frame",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "lepton_frames_frames_dyed_glow_item_frame": {
+    "textures": "textures/items/frames/dyed_glow_item_frame"
+  },
+  "lepton_frames_frames_dyed_glow_item_frame_dyed": {
+    "textures": "textures/items/frames/dyed_glow_item_frame_dyed"
+  },
+  "lepton_frames_frames_dyed_item_frame": {
+    "textures": "textures/items/frames/dyed_item_frame"
+  },
+  "lepton_frames_frames_dyed_item_frame_dyed": {
+    "textures": "textures/items/frames/dyed_item_frame_dyed"
+  },
+  "lepton_frames_frames_glass_item_frame": {
+    "textures": "textures/items/frames/glass_item_frame"
+  },
+  "lepton_frames_frames_glowing_glass_item_frame": {
+    "textures": "textures/items/frames/glowing_glass_item_frame"
+  }
+}

@@ -1,0 +1,8 @@
+entity.lepton:dyed_item_frame.name=染色物品展示框
+entity.lepton:glass_frame.name=玻璃物品展示框
+item.lepton:dyed_glow_item_frame.name=荧光物品展示框
+item.lepton:dyed_item_frame.name=物品展示框
+item.lepton:glass_item_frame.name=玻璃物品展示框
+item.lepton:glowing_glass_item_frame.name=荧光玻璃物品展示框
+tile.lepton:glass_item_frame.name=玻璃物品展示框
+tile.lepton:glowing_glass_item_frame.name=荧光玻璃物品展示框
