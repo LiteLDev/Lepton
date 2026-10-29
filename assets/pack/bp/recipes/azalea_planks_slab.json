@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_planks_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:azalea_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:azalea_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_planks_slab",
+      "count": 6
+    }
+  }
+}

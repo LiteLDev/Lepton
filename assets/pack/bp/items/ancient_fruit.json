@@ -1,0 +1,31 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:ancient_fruit",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.miscFood"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_newwoods_newwoods_ancient_fruit",
+      "minecraft:max_stack_size": 64,
+      "minecraft:food": {
+        "nutrition": 4,
+        "saturation_modifier": 0.3,
+        "can_always_eat": true
+      },
+      "minecraft:use_animation": "eat",
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_food"
+        ]
+      }
+    }
+  }
+}

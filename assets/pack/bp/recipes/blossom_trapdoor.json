@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:blossom_trapdoor"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:blossom_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:blossom_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:blossom_trapdoor",
+      "count": 2
+    }
+  }
+}

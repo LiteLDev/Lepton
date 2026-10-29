@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:azalea_button"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:azalea_planks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:azalea_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_button",
+      "count": 1
+    }
+  }
+}

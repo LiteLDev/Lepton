@@ -1,0 +1,19 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:azalea_ladder",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_newwoods_textures_blocks_newwoods_azalea_ladder",
+      "minecraft:block_placer": {
+        "block": "lepton:azalea_ladder",
+        "replace_block_item": true
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}
