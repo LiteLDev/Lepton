@@ -18,6 +18,7 @@ pwsh tools/build.ps1 -Target all                                   # or pass -Bu
 pwsh -NoProfile -File tools/e2e/server/run.ps1 -Scenario smoke     # [-Build] [-TimeoutSec 900] [-Quiet]
 pwsh -NoProfile -File tools/e2e/server/run.ps1 -Scenario full
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke     # [-Build] [-KeepOpen] [-KeepOtherMods]
+pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario mapcrash -WithoutMod   # local world without Lepton: vanilla baseline for a game bug
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario full
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke -Foreground   # real SendInput (takes over the PC)
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke -Slot 2       # a clone game instance
