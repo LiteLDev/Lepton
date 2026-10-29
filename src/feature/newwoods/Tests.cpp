@@ -387,7 +387,10 @@ LP_REGISTER_SELFTEST("newwoods.blossom_tree", [](Context& ctx) -> ll::coro::Coro
         stepAside(ctx, p, 18);
         co_await ctx.ticks(2);
         nw::JavaRandom r(17 + i);
-        ctx.check(nw::advanceSapling(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)), r), std::string(t.name) + " grew");
+        // the sapling's own tick chain may already have grown it during the wait
+        bool early = idAt(ctx, off(p, 0, 1, 0)) == "lepton:blossom_log";
+        if (early) ctx.info(std::string(t.name) + " grew on its own tick before the test advanced it");
+        ctx.check(early || nw::advanceSapling(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)), r), std::string(t.name) + " grew");
         auto blocks = collectTree(ctx, off(p, 0, 1, 0), 16, 32);
         std::string leaves(t.leaves);
         ctx.check(blocks["lepton:blossom_log"] >= 9, std::string(t.name) + " logs: " + std::to_string(blocks["lepton:blossom_log"]));
