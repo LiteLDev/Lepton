@@ -1,0 +1,33 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton_parrot": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.red_blue",
+            "Texture.blue",
+            "Texture.green",
+            "Texture.yellow_blue",
+            "Texture.grey"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.skins[query.variant]"
+      ],
+      "overlay_color": {
+        "r": 1.0,
+        "g": 0.55,
+        "b": 0.8,
+        "a": "(query.variant == 4 && query.mark_variant == 1) ? 0.45 : 0.0"
+      }
+    }
+  }
+}

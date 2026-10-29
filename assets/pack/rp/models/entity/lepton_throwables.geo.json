@@ -1,0 +1,159 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.lepton.flat_item",
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 2,
+        "visible_bounds_height": 2,
+        "visible_bounds_offset": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0,
+            3.2,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                3.2,
+                -8
+              ],
+              "size": [
+                16,
+                0,
+                16
+              ],
+              "uv": {
+                "up": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    16
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    16
+                  ],
+                  "uv_size": [
+                    16,
+                    -16
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": {
+        "identifier": "geometry.lepton.torch_arrow",
+        "texture_width": 32,
+        "texture_height": 32,
+        "visible_bounds_width": 1,
+        "visible_bounds_height": 1,
+        "visible_bounds_offset": [
+          0,
+          0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                0,
+                -2.5,
+                -8
+              ],
+              "size": [
+                0,
+                5,
+                16
+              ],
+              "uv": {
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    5
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    16,
+                    0
+                  ],
+                  "uv_size": [
+                    -16,
+                    5
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -2.5,
+                0,
+                -8
+              ],
+              "size": [
+                5,
+                0,
+                16
+              ],
+              "uv": {
+                "up": {
+                  "uv": [
+                    16,
+                    0
+                  ],
+                  "uv_size": [
+                    -16,
+                    5
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    16,
+                    5
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

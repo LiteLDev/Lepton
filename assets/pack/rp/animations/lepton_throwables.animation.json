@@ -1,0 +1,17 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.pickarang.spin": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            0,
+            "query.life_time * 400.0",
+            0
+          ]
+        }
+      }
+    }
+  }
+}
