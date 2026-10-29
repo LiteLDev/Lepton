@@ -31,6 +31,7 @@ Close-Screen
 # Wear it (chest slot) with something inside, look at the player from the front.
 Invoke-Chat '/clear @s lepton:backpack'
 Invoke-Chat '/replaceitem entity @s slot.armor.chest 0 lepton:backpack'
+Invoke-Chat '/quark debug backpack'   # a few stacks inside (screen.png shows them)
 Start-Sleep -Seconds 1
 Press-Key F5
 Start-Sleep -Seconds 2
