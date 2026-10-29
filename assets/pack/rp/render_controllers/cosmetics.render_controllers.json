@@ -1,0 +1,547 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.lepton.cow": {
+      "arrays": {
+        "textures": {
+          "Array.textures": [
+            "Texture.default",
+            "Texture.warm",
+            "Texture.cold"
+          ],
+          "Array.baby_textures": [
+            "Texture.baby_default",
+            "Texture.baby_warm",
+            "Texture.baby_cold"
+          ],
+          "Array.lepton": [
+            "Texture.lp_shiny",
+            "Texture.lp_1",
+            "Texture.lp_2",
+            "Texture.lp_3",
+            "Texture.lp_4"
+          ]
+        },
+        "geometries": {
+          "Array.geos": [
+            "Geometry.default",
+            "Geometry.warm",
+            "Geometry.cold"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Array.geos[v.index]",
+      "materials": [
+        {
+          "*": "v.is_cold ? Material.cold : Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby_textures[v.index] : ((v.index == 0 && v.lp_skin > 0) ? Array.lepton[(v.lp_skin == 31 ? 0 : v.lp_skin)] : Array.textures[v.index])"
+      ]
+    },
+    "controller.render.lepton.pig": {
+      "arrays": {
+        "textures": {
+          "Array.default": [
+            "Texture.default",
+            "Texture.warm",
+            "Texture.cold"
+          ],
+          "Array.baby": [
+            "Texture.baby_default",
+            "Texture.baby_warm",
+            "Texture.baby_cold"
+          ],
+          "Array.lepton": [
+            "Texture.lp_shiny",
+            "Texture.lp_1",
+            "Texture.lp_2",
+            "Texture.lp_3"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby[v.index] : ((v.index == 0 && v.lp_skin > 0) ? Array.lepton[(v.lp_skin == 31 ? 0 : v.lp_skin)] : Array.default[v.index])"
+      ]
+    },
+    "controller.render.lepton.chicken": {
+      "arrays": {
+        "textures": {
+          "Array.textures": [
+            "Texture.default",
+            "Texture.warm",
+            "Texture.cold"
+          ],
+          "Array.baby_textures": [
+            "Texture.baby_default",
+            "Texture.baby_warm",
+            "Texture.baby_cold"
+          ],
+          "Array.lepton": [
+            "Texture.lp_shiny",
+            "Texture.lp_1",
+            "Texture.lp_2",
+            "Texture.lp_3",
+            "Texture.lp_4",
+            "Texture.lp_5",
+            "Texture.lp_6"
+          ]
+        },
+        "geometries": {
+          "Array.geos": [
+            "Geometry.default",
+            "Geometry.warm",
+            "Geometry.cold"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Array.geos[v.index]",
+      "materials": [
+        {
+          "*": "v.is_cold ? Material.cold : Material.default"
+        },
+        {
+          "leg*": "Material.legs"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby_textures[v.index] : ((v.index == 0 && v.lp_skin > 0) ? Array.lepton[(v.lp_skin == 31 ? 0 : v.lp_skin)] : Array.textures[v.index])"
+      ],
+      "part_visibility": [
+        {
+          "leg*": "!v.lp_carried"
+        }
+      ]
+    },
+    "controller.render.lepton.allay": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "v.lp_skin > 0 ? Array.lepton[(v.lp_skin == 31 ? 0 : v.lp_skin)] : Texture.default"
+      ],
+      "ignore_lighting": true,
+      "arrays": {
+        "textures": {
+          "Array.lepton": [
+            "Texture.lp_shiny",
+            "Texture.lp_1",
+            "Texture.lp_2",
+            "Texture.lp_3",
+            "Texture.lp_4",
+            "Texture.lp_5"
+          ]
+        }
+      }
+    },
+    "controller.render.lepton.rabbit.v2": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.brown",
+            "Texture.white",
+            "Texture.black",
+            "Texture.white_splotched",
+            "Texture.gold",
+            "Texture.salt"
+          ],
+          "Array.baby_skins": [
+            "Texture.baby_brown",
+            "Texture.baby_white",
+            "Texture.baby_black",
+            "Texture.baby_white_splotched",
+            "Texture.baby_gold",
+            "Texture.baby_salt"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? (query.get_name == 'Toast' ? Texture.baby_toast : Array.baby_skins[query.variant]) : (v.lp_skin == 31 ? Texture.lp_shiny : (query.get_name == 'Toast' ? Texture.toast : Array.skins[query.variant]))"
+      ]
+    },
+    "controller.render.lepton.llama.v2": {
+      "arrays": {
+        "textures": {
+          "Array.base": [
+            "Texture.creamy",
+            "Texture.white",
+            "Texture.brown",
+            "Texture.gray"
+          ],
+          "Array.baby_base": [
+            "Texture.baby_creamy",
+            "Texture.baby_white",
+            "Texture.baby_brown",
+            "Texture.baby_gray"
+          ],
+          "Array.decor": [
+            "Texture.decor_none",
+            "Texture.decor_white",
+            "Texture.decor_orange",
+            "Texture.decor_magenta",
+            "Texture.decor_light_blue",
+            "Texture.decor_yellow",
+            "Texture.decor_lime",
+            "Texture.decor_pink",
+            "Texture.decor_gray",
+            "Texture.decor_silver",
+            "Texture.decor_cyan",
+            "Texture.decor_purple",
+            "Texture.decor_blue",
+            "Texture.decor_brown",
+            "Texture.decor_green",
+            "Texture.decor_red",
+            "Texture.decor_black"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "part_visibility": [
+        {
+          "chest*": "query.is_chested"
+        }
+      ],
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby_base[query.variant] : (v.lp_skin == 31 ? Texture.lp_shiny : Array.base[query.variant])",
+        "(query.mark_variant == 1 && variable.DecorTextureIndex == 0) ? query.is_baby ? Texture.baby_decor_wandering_trader : Texture.decor_wandering_trader : query.is_baby ? Texture.decor_none : Array.decor[variable.DecorTextureIndex]",
+        "Texture.decor_none"
+      ]
+    },
+    "controller.render.lepton.dolphin.v2": {
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Texture.baby : (v.lp_skin == 31 ? Texture.lp_shiny : Texture.default)"
+      ]
+    },
+    "controller.render.lepton.armadillo.v2": {
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Texture.baby : (v.lp_skin == 31 ? Texture.lp_shiny : Texture.default)"
+      ],
+      "part_visibility": [
+        {
+          "body": "!variable.use_rolled_up_model"
+        },
+        {
+          "tail": "!variable.use_rolled_up_model"
+        },
+        {
+          "left_hind_leg": "!variable.use_rolled_up_model"
+        },
+        {
+          "right_hind_leg": "!variable.use_rolled_up_model"
+        },
+        {
+          "body_rolled_up": "variable.use_rolled_up_model"
+        }
+      ]
+    },
+    "controller.render.lepton.frog": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.temperate",
+            "Texture.cold",
+            "Texture.warm"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "part_visibility": [
+        {
+          "croaking_body": "!query.is_eating_mob"
+        }
+      ],
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "v.lp_skin == 31 ? Texture.lp_shiny : Array.skins[query.variant]"
+      ]
+    },
+    "controller.render.lepton.slime": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "v.lp_skin == 31 ? Texture.lp_shiny : Texture.default"
+      ]
+    },
+    "controller.render.lepton.slime_armor": {
+      "geometry": "Geometry.armor",
+      "materials": [
+        {
+          "*": "Material.outer"
+        }
+      ],
+      "textures": [
+        "v.lp_skin == 31 ? Texture.lp_shiny : Texture.default"
+      ]
+    },
+    "controller.render.lepton.bee": {
+      "arrays": {
+        "textures": {
+          "array.skins": [
+            "texture.default",
+            "texture.nectar",
+            "texture.angry",
+            "texture.angry_nectar"
+          ],
+          "array.baby_skins": [
+            "texture.baby_default",
+            "texture.baby_nectar",
+            "texture.baby_angry",
+            "texture.baby_angry_nectar"
+          ],
+          "Array.lepton": [
+            "Texture.lp_acebee_normal",
+            "Texture.lp_acebee_nectar",
+            "Texture.lp_acebee_angry",
+            "Texture.lp_acebee_angry_nectar",
+            "Texture.lp_agenbee_normal",
+            "Texture.lp_agenbee_nectar",
+            "Texture.lp_agenbee_angry",
+            "Texture.lp_agenbee_angry_nectar",
+            "Texture.lp_arobee_normal",
+            "Texture.lp_arobee_nectar",
+            "Texture.lp_arobee_angry",
+            "Texture.lp_arobee_angry_nectar",
+            "Texture.lp_beefluid_normal",
+            "Texture.lp_beefluid_nectar",
+            "Texture.lp_beefluid_angry",
+            "Texture.lp_beefluid_angry_nectar",
+            "Texture.lp_beesexual_normal",
+            "Texture.lp_beesexual_nectar",
+            "Texture.lp_beesexual_angry",
+            "Texture.lp_beesexual_angry_nectar",
+            "Texture.lp_beequeer_normal",
+            "Texture.lp_beequeer_nectar",
+            "Texture.lp_beequeer_angry",
+            "Texture.lp_beequeer_angry_nectar",
+            "Texture.lp_enbee_normal",
+            "Texture.lp_enbee_nectar",
+            "Texture.lp_enbee_angry",
+            "Texture.lp_enbee_angry_nectar",
+            "Texture.lp_gaybee_normal",
+            "Texture.lp_gaybee_nectar",
+            "Texture.lp_gaybee_angry",
+            "Texture.lp_gaybee_angry_nectar",
+            "Texture.lp_interbee_normal",
+            "Texture.lp_interbee_nectar",
+            "Texture.lp_interbee_angry",
+            "Texture.lp_interbee_angry_nectar",
+            "Texture.lp_lesbeean_normal",
+            "Texture.lp_lesbeean_nectar",
+            "Texture.lp_lesbeean_angry",
+            "Texture.lp_lesbeean_angry_nectar",
+            "Texture.lp_panbee_normal",
+            "Texture.lp_panbee_nectar",
+            "Texture.lp_panbee_angry",
+            "Texture.lp_panbee_angry_nectar",
+            "Texture.lp_polysexbee_normal",
+            "Texture.lp_polysexbee_nectar",
+            "Texture.lp_polysexbee_angry",
+            "Texture.lp_polysexbee_angry_nectar",
+            "Texture.lp_transbee_normal",
+            "Texture.lp_transbee_nectar",
+            "Texture.lp_transbee_angry",
+            "Texture.lp_transbee_angry_nectar",
+            "Texture.lp_helen_normal",
+            "Texture.lp_helen_nectar",
+            "Texture.lp_helen_angry",
+            "Texture.lp_helen_angry_nectar",
+            "Texture.lp_mlbeem_normal",
+            "Texture.lp_mlbeem_nectar",
+            "Texture.lp_mlbeem_angry",
+            "Texture.lp_mlbeem_angry_nectar",
+            "Texture.lp_polyamorbee_normal",
+            "Texture.lp_polyamorbee_nectar",
+            "Texture.lp_polyamorbee_angry",
+            "Texture.lp_polyamorbee_angry_nectar",
+            "Texture.lp_salmacibee_normal",
+            "Texture.lp_salmacibee_nectar",
+            "Texture.lp_salmacibee_angry",
+            "Texture.lp_salmacibee_angry_nectar"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? array.baby_skins[query.property('minecraft:has_nectar') + query.is_angry * 2] : ((v.lp_skin > 0 && v.lp_skin <= 17) ? Array.lepton[(v.lp_skin - 1) * 4 + v.lp_state] : array.skins[v.lp_state])"
+      ]
+    },
+    "controller.render.lepton.villager_v3_masked": {
+      "arrays": {
+        "textures": {
+          "Array.biomes": [
+            "Texture.plains",
+            "Texture.desert",
+            "Texture.jungle",
+            "Texture.savanna",
+            "Texture.snow",
+            "Texture.swamp",
+            "Texture.taiga",
+            "Texture.lp_beach",
+            "Texture.lp_ocean"
+          ],
+          "Array.baby_biomes": [
+            "Texture.baby_plains",
+            "Texture.baby_desert",
+            "Texture.baby_jungle",
+            "Texture.baby_savanna",
+            "Texture.baby_snow",
+            "Texture.baby_swamp",
+            "Texture.baby_taiga",
+            "Texture.lp_baby_beach",
+            "Texture.lp_baby_ocean"
+          ],
+          "Array.professions": [
+            "Texture.unskilled",
+            "Texture.farmer",
+            "Texture.fisherman",
+            "Texture.shepherd",
+            "Texture.fletcher",
+            "Texture.librarian",
+            "Texture.cartographer",
+            "Texture.cleric",
+            "Texture.armorer",
+            "Texture.weapon_smith",
+            "Texture.tool_smith",
+            "Texture.butcher",
+            "Texture.leatherworker",
+            "Texture.stonemason",
+            "Texture.nitwit"
+          ]
+        }
+      },
+      "geometry": "query.is_baby ? Geometry.baby : Geometry.default",
+      "materials": [
+        {
+          "*": "(query.is_baby || variable.profession_index == 0) ? Material.default : Material.masked"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby_biomes[query.mark_variant] : Array.biomes[query.mark_variant]",
+        "Array.professions[variable.profession_index]"
+      ]
+    },
+    "controller.render.lepton.zombie_villager_v3_masked": {
+      "arrays": {
+        "textures": {
+          "Array.biomes": [
+            "Texture.plains",
+            "Texture.desert",
+            "Texture.jungle",
+            "Texture.savanna",
+            "Texture.snow",
+            "Texture.swamp",
+            "Texture.taiga",
+            "Texture.lp_beach",
+            "Texture.lp_ocean"
+          ],
+          "Array.baby_biomes": [
+            "Texture.baby_plains",
+            "Texture.baby_desert",
+            "Texture.baby_jungle",
+            "Texture.baby_savanna",
+            "Texture.baby_snow",
+            "Texture.baby_swamp",
+            "Texture.baby_taiga",
+            "Texture.lp_baby_beach",
+            "Texture.lp_baby_ocean"
+          ],
+          "Array.professions": [
+            "Texture.unskilled",
+            "Texture.farmer",
+            "Texture.fisherman",
+            "Texture.shepherd",
+            "Texture.fletcher",
+            "Texture.librarian",
+            "Texture.cartographer",
+            "Texture.cleric",
+            "Texture.armorer",
+            "Texture.weapon_smith",
+            "Texture.tool_smith",
+            "Texture.butcher",
+            "Texture.leatherworker",
+            "Texture.stonemason",
+            "Texture.nitwit"
+          ]
+        }
+      },
+      "geometry": "query.is_baby? Geometry.baby: Geometry.default",
+      "materials": [
+        {
+          "*": "query.is_baby ? Material.default : Material.masked"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Array.baby_biomes[query.mark_variant] : Array.biomes[query.mark_variant]",
+        "Array.professions[variable.profession_index]"
+      ]
+    },
+    "controller.render.lepton.armor_stand": {
+      "geometry": "query.skin_id == 1 ? Geometry.lp_player : Geometry.default",
+      "part_visibility": [
+        {
+          "baseplate": "!query.is_in_ui && query.skin_id != 1"
+        }
+      ],
+      "materials": [
+        {
+          "*": "query.skin_id == 1 ? Material.lp_player : Material.default"
+        }
+      ],
+      "textures": [
+        "query.skin_id == 1 ? Texture.lp_player : Texture.default"
+      ],
+      "overlay_color": {
+        "r": "this",
+        "g": "this",
+        "b": "this",
+        "a": "0.0"
+      }
+    }
+  }
+}

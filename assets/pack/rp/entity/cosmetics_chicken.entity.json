@@ -1,0 +1,70 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "minecraft:chicken",
+      "min_engine_version": "1.12.0",
+      "materials": {
+        "default": "chicken",
+        "legs": "chicken_legs",
+        "cold": "chicken_cold"
+      },
+      "textures": {
+        "default": "textures/entity/chicken/chicken",
+        "warm": "textures/entity/chicken/chicken_warm",
+        "cold": "textures/entity/chicken/chicken_cold",
+        "baby_default": "textures/entity/chicken/chicken_temperate_baby",
+        "baby_warm": "textures/entity/chicken/chicken_warm_baby",
+        "baby_cold": "textures/entity/chicken/chicken_cold_baby",
+        "lp_shiny": "textures/entity/lepton/variants/chicken_shiny",
+        "lp_1": "textures/entity/lepton/variants/chicken1",
+        "lp_2": "textures/entity/lepton/variants/chicken2",
+        "lp_3": "textures/entity/lepton/variants/chicken3",
+        "lp_4": "textures/entity/lepton/variants/chicken4",
+        "lp_5": "textures/entity/lepton/variants/chicken5",
+        "lp_6": "textures/entity/lepton/variants/chicken6"
+      },
+      "geometry": {
+        "default": "geometry.chicken.v1.12",
+        "warm": "geometry.chicken.v1.12",
+        "cold": "geometry.chicken.cold",
+        "baby": "geometry.chicken.baby"
+      },
+      "animations": {
+        "move": "animation.chicken.move",
+        "general": "animation.chicken.general",
+        "look_at_target": "animation.common.look_at_target",
+        "baby_transform": "animation.chicken.baby_transform",
+        "lepton_carried": "animation.lepton.chicken.carried"
+      },
+      "scripts": {
+        "animate": [
+          "general",
+          {
+            "move": "query.modified_move_speed"
+          },
+          "look_at_target",
+          {
+            "lepton_carried": "v.lp_carried"
+          }
+        ],
+        "pre_animation": [
+          "t.variant = query.property('minecraft:climate_variant');",
+          "v.index = (t.variant == 'temperate') ? 0 : ((t.variant == 'warm') ? 1 : 2);",
+          "v.is_cold = t.variant == 'cold';",
+          "v.lp_skin = math.mod(query.skin_id, 32);",
+          "v.lp_carried = math.mod(math.floor(query.skin_id / 32), 2) == 1;",
+          "v.lp_seat = math.mod(math.floor(query.skin_id / 64), 2);",
+          "v.lp_offset = math.floor(query.skin_id / 128) / 100 - 1;"
+        ],
+        "scale": "query.is_baby ? 2.0 : 1.0"
+      },
+      "render_controllers": [
+        "controller.render.lepton.chicken"
+      ],
+      "spawn_egg": {
+        "texture": "spawn_egg_chicken"
+      }
+    }
+  }
+}

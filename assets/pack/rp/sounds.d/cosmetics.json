@@ -1,0 +1,12 @@
+{
+  "lepton.camera.shutter": {
+    "category": "ui",
+    "subtitle": "quark.subtitles.camera_shutter",
+    "sounds": [
+      {
+        "name": "sounds/lepton/camera_shutter",
+        "volume": 1.0
+      }
+    ]
+  }
+}

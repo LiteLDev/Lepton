@@ -34,7 +34,8 @@ Gives some animals random extra skins, chosen per entity from its id (stable for
   happy-villager sparkle every 10 ticks when `shinySparkles` (random angle, 0.25..0.75 blocks out,
   at the top of the mob ±0.1, random velocity ±0.5).
 - Pride bees (`enableLGBTBees`): a bee is "LGBT" with probability 0.056 (or always with
-  `everyBeeIsLGBT`); it then gets one of 16 flag skins (not `helen`). A bee named (name tag) like a
+  `everyBeeIsLGBT`); it then gets skin `|m % 16|` of the list below (so `salmacibee`, the 17th, never
+  appears at random: Quark's `size() - 1` was meant to exclude `helen` but drops the last entry). A bee named (name tag) like a
   variant (`acebee`, `agenbee`, `arobee`, `beefluid`, `beesexual`, `beequeer`, `enbee`, `gaybee`,
   `interbee`, `lesbeean`, `panbee`, `polysexbee`, `transbee`, `helen`, `mlbeem`, `polyamorbee`,
   `salmacibee`, case-insensitive) always uses that skin; `wirebeegal`/`wiresegal` → `enbee`. Each

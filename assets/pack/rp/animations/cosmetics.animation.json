@@ -1,0 +1,14 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.chicken.carried": {
+      "loop": true,
+      "bones": {
+        "body": { "position": [ "v.lp_seat == 1 ? 6.4 : -6.4", "2.08 + v.lp_offset * 16", "1.6" ] },
+        "head": { "position": [ "v.lp_seat == 1 ? 6.4 : -6.4", "2.08 + v.lp_offset * 16", "1.6" ] },
+        "wing0": { "position": [ "v.lp_seat == 1 ? 6.4 : -6.4", "2.08 + v.lp_offset * 16", "1.6" ] },
+        "wing1": { "position": [ "v.lp_seat == 1 ? 6.4 : -6.4", "2.08 + v.lp_offset * 16", "1.6" ] }
+      }
+    }
+  }
+}
