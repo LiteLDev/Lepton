@@ -138,11 +138,11 @@ bool replaceScaffolding(Player& player, BlockSource& region, BlockPos const& pos
         if (!r || !level) return;
         auto* p = level->getPlayer(uid);
         if (!p || !isScaffolding(r->getBlock(last))) return;
+        if (!consumeSelected(*p, itemId)) return; // the item left the hand meanwhile
         if (!game::setBlock(*r, last, *place)) return;
         game::shapes::updateShape(*r, last);
         playPlaceSound(*r, last, *place, *p);
         if (!p->isCreative()) {
-            consumeSelected(*p, itemId);
             ItemStack give = game::makeItem(kScaffolding);
             if (!p->addAndRefresh(give)) p->drop(give, false);
         }
@@ -186,11 +186,11 @@ bool dropLadder(Player& player, BlockSource& region, BlockPos const& clicked, It
             auto const& cur = r->getBlock(down);
             bool        ok  = cur.isAir() || cur.getTypeName() == "minecraft:water" || cur.getTypeName() == "minecraft:flowing_water";
             if (!p || !ok) return;
+            if (!consumeSelected(*p, itemId)) return; // the item left the hand meanwhile
             Block const* water = cur.isAir() ? nullptr : &cur;
             if (!game::setBlock(*r, down, *place)) return;
             if (water) r->setExtraBlock(down, *water, 3);
             playPlaceSound(*r, down, *place, *p);
-            consumeSelected(*p, itemId);
             log().info("placement: dropped {} down to {} {} {}", type, down.x, down.y, down.z);
         });
         (void)water;

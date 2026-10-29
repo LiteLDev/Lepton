@@ -179,9 +179,10 @@ VariantMap& built() {
 
 } // namespace
 
-void rebuildVariants() {
+void rebuildVariants(bool eager) {
     std::lock_guard lock(mapMutex());
     vmap().built = false;
+    if (eager) (void)built();
 }
 
 bool variantsEnabled() { return cfg().enableVariantSelector; }
@@ -336,9 +337,11 @@ std::optional<ItemStack> converted(ItemStack const& inst) {
     if (!b) return std::nullopt;
     auto original = originalOf(b->getTypeName());
     if (original == b->getTypeName()) return std::nullopt;
-    ItemStack out = game::makeItem(original, 1);
+    // Quark builds `new ItemStack(original)` (one item) and so loses the rest of a dropped stack;
+    // the count is kept here.
+    ItemStack out = game::makeItem(original, inst.mCount);
     if (game::isEmpty(out)) return std::nullopt;
-    return out; // Quark: new ItemStack(original) - one item
+    return out;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -436,12 +439,12 @@ public:
             net::onClientModJoined([](Player& player) { sendVariantRestore(player); });
             game::db::onWorldReady([] {
                 savedCache().clear();
-                rebuildVariants();
+                rebuildVariants(true);
             });
             game::db::onWorldClosed([] { savedCache().clear(); });
-            config::onReload([] { rebuildVariants(); });
+            config::onReload([] { rebuildVariants(game::db::available()); });
         }
-        rebuildVariants();
+        rebuildVariants(game::db::available());
         VariantSpawnItemHook::hook();
         VariantBedrockSpawnItemHook::hook();
     }

@@ -432,6 +432,7 @@ LP_REGISTER_SELFTEST("placement.convert_items", [](Context& ctx) -> ll::coro::Co
     auto* ia = level->getSpawner().spawnItem(region(ctx), stack, nullptr, at, 0);
     ctx.require(ia != nullptr, "item spawned");
     ctx.check(lp::game::itemId(ia->item()) == "minecraft:stone_bricks", "dropped stairs become stone bricks: " + lp::game::itemId(ia->item()));
+    ctx.check(ia->item().mCount == 3, "the count is kept");
     ia->remove();
     g.cfg().convertVariantItems = false;
     auto* ib = level->getSpawner().spawnItem(region(ctx), stack, nullptr, at, 0);

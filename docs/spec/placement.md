@@ -158,7 +158,7 @@ No blocks are added.
   placed.
 - Pick block: picking a variant of the held block selects that variant instead of picking; picking
   any variant block picks its original (if in the inventory or in creative) and selects the variant.
-- `convertVariantItems`: dropped variant items turn into their originals.
+- `convertVariantItems`: dropped variant items turn into their originals (same count).
 - Hammer (`enableHammer`): using it on a block replaces the block with the saved variant of its
   original (or the original when the saved variant is ""), oriented by the placement rules and the
   rotation lock; same block: nothing.
@@ -317,6 +317,11 @@ Rotation Lock, `key.lepton.variant_selector` Variant Selector (RP `texts.d/*/pla
 - Rotation lock on vanilla blocks re-evaluates Bedrock's own placement rule for the locked face
   instead of setting Java properties, so every vanilla block orients "as if placed looking that
   way"; a few blocks whose Java FACING differs from that rule (e.g. observers) follow Bedrock.
+- Beds are never re-oriented by the rotation lock (two blocks and a block entity placed by the
+  bed item), and a chest placed next to a chest of its kind keeps the orientation it paired with
+  (Bedrock pairs chests during placement; re-orienting one half would split the double chest).
+- `convertVariantItems` keeps the dropped stack's count (Quark creates a single item and so
+  deletes the rest of a dropped stack).
 - The client-predicted block appears in its natural orientation for a moment before the server's
   locked/variant block replaces it.
 - Sliding and inventory sneak move the player on the mod client (as Quark does on the Java client);

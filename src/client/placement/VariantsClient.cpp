@@ -11,6 +11,7 @@
 #include <cmath>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <numbers>
 
 #include "ll/api/event/EventBus.h"
@@ -57,10 +58,19 @@ std::string lookedAtBlock(Player& p) {
     return region.getBlock(ray.pos).getTypeName();
 }
 
-/// One ItemStack per block id for drawing (kept for the frame's lifetime and beyond).
-ItemStack const& stackOf(std::string const& id) {
+/// One ItemStack per block id for drawing (client thread; cleared when a world is joined).
+std::map<std::string, ItemStack>& itemCache() {
     static std::map<std::string, ItemStack> cache;
-    auto                                    it = cache.find(id);
+    return cache;
+}
+std::mutex& itemCacheMutex() {
+    static std::mutex m;
+    return m;
+}
+ItemStack const& stackOf(std::string const& id) {
+    std::lock_guard l(itemCacheMutex());
+    auto&           cache = itemCache();
+    auto  it    = cache.find(id);
     if (it != cache.end()) return it->second;
     return cache.emplace(id, game::makeItem(id, 1)).first->second;
 }
@@ -179,6 +189,16 @@ public:
         if (!mLogged) {
             mLogged = true;
             log().info("placement: variant selector opened with {} segments", segments);
+            for (int seg = 0; seg < segments; ++seg) {
+                float center = (static_cast<float>(seg) + 0.5f) * degPer + pad;
+                log().info(
+                    "placement: variant segment {} '{}' at {:.3f},{:.3f}",
+                    seg,
+                    mVariants[seg].first,
+                    (cx + std::cos(center) * 35) / size.x,
+                    (cy + std::sin(center) * 35) / size.y
+                );
+            }
         }
         // Quark: releasing the key picks (tick())
         if (gKeyReleased.exchange(false)) release(timeIn);
@@ -270,6 +290,11 @@ void drawVariantHud(ui::DrawContext& dc) {
         if (!left.empty() && !clientVariant().empty()) right = fp::variantOf(left, clientVariant());
     }
     if (left.empty() || right.empty() || left == right) return;
+    static std::string lastShown;
+    if (lastShown != left + ">" + right) {
+        lastShown = left + ">" + right;
+        log().info("placement: variant hud {} -> {}", left, right);
+    }
     auto  size = dc.screenSize();
     float x    = std::floor(size.x / 2);
     float y    = std::floor(size.y / 2) + 12;
@@ -450,6 +475,11 @@ void hintTooltip(ItemStackBase const& item, std::vector<std::string>& lines) {
 }
 
 } // namespace
+
+void clearItemCache() {
+    std::lock_guard l(itemCacheMutex());
+    itemCache().clear();
+}
 
 class VariantSelectorClientModule {
 public:

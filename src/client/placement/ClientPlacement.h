@@ -18,7 +18,9 @@ using feature::placement::ReachTarget;
 /// The rotation lock shown on the HUD (what this client sent to the server).
 [[nodiscard]] std::optional<LockProfile> clientLock();
 /// The variant this client places ("" = the original).
-[[nodiscard]] std::string const& clientVariant();
+[[nodiscard]] std::string clientVariant();
+/// Drops the cached ItemStacks used for drawing (they belong to the world's item registry).
+void clearItemCache();
 /// Sets the variant; `sync` sends it to the server (Quark's PlaceVariantUpdateMessage).
 void setClientVariant(std::string const& variant, bool sync);
 /// The reacharound target of the last client tick.

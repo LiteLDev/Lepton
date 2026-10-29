@@ -61,9 +61,17 @@ bool pickItem(Player& player, std::string const& itemId) {
         inv.setItem(slot, b);
         inv.setItem(found, a);
     } else if (player.isCreative()) {
+        // Java Inventory#setPickedItem: the displaced stack moves to a free slot first
         ItemStack stack = game::makeItem(itemId, 1);
         if (game::isEmpty(stack)) return false;
         slot = suitableHotbarSlot(player, inv);
+        if (!game::isEmpty(inv.getItem(slot))) {
+            for (int i = 0; i < game::inv::kPlayerSlots; ++i) {
+                if (!game::isEmpty(inv.getItem(i))) continue;
+                inv.setItem(i, inv.getItem(slot));
+                break;
+            }
+        }
         inv.setItem(slot, stack);
     } else {
         return false;

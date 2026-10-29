@@ -109,6 +109,10 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     bool orig = origin(region, pos, face);
     if (orig || !freestandingOn()) return orig;
+    if (isHorizontal(face)) {
+        auto const& clicked = region.getBlock(step(pos, oppositeDir(face)));
+        if (isLadder(clicked) && ladderFacing(clicked) == face) return false; // in front of a ladder
+    }
     // Without the placer's view: any horizontal facing that would survive.
     for (int d = North; d <= East; ++d)
         if (ladderSurvives(region, pos, d)) return true;

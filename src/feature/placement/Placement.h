@@ -181,8 +181,9 @@ std::optional<LockProfile> toggleLock(Player& player, LockProfile const& next, s
 
 // ---- VariantSelector ----------------------------------------------------------------------------
 
-/// Quark's VariantsConfig maps (rebuilt from the block registry by `rebuildVariants`).
-void rebuildVariants();
+/// Quark's VariantsConfig maps, rebuilt from the block registry: now (`eager`, at world load and
+/// config reload) or on first use.
+void rebuildVariants(bool eager = false);
 [[nodiscard]] bool                       variantsEnabled();
 [[nodiscard]] std::vector<std::string>   visibleVariants();
 [[nodiscard]] bool                       isKnownVariant(std::string const& variant);
@@ -239,8 +240,9 @@ void sendVariantRestore(Player& player);
 void later(int ticks, std::function<void()> fn);
 /// Plays the place sound of `block` at `pos` for everyone around (`by`: the placing actor).
 void playPlaceSound(BlockSource& region, BlockPos const& pos, Block const& block, Actor const& by);
-/// Survival: one item less in the selected slot (when it is still `itemId`).
-void consumeSelected(Player& player, std::string const& itemId);
+/// The selected slot still holds `itemId`: survival uses one of it. False (nothing used) when the
+/// item is no longer in the hand.
+bool consumeSelected(Player& player, std::string const& itemId);
 
 // ---- LongRangePickBlock -------------------------------------------------------------------------
 

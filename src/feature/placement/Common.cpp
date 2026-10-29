@@ -204,14 +204,15 @@ void playPlaceSound(BlockSource& region, BlockPos const& pos, Block const& block
     );
 }
 
-void consumeSelected(Player& player, std::string const& itemId) {
-    if (player.isCreative()) return;
+bool consumeSelected(Player& player, std::string const& itemId) {
     ItemStack item = player.getSelectedItem();
-    if (game::isEmpty(item) || game::itemId(item) != itemId) return;
+    if (game::isEmpty(item) || game::itemId(item) != itemId) return false;
+    if (player.isCreative()) return true;
     item.remove(1);
     if (item.mCount == 0) item = ItemStack();
     player.setSelectedItem(item);
     player.sendInventory(false);
+    return true;
 }
 
 class PlacementCommonModule {

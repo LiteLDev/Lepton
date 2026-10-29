@@ -56,11 +56,19 @@ std::optional<LockProfile> clientLock() {
     return st().lock;
 }
 
-std::string const& clientVariant() { return st().variant; }
+std::string clientVariant() {
+    std::lock_guard l(st().mutex);
+    return st().variant;
+}
 
 void setClientVariant(std::string const& variant, bool sync) {
-    if (sync && st().variant != variant) net::sendToServer(fp::VariantMsg{variant});
-    st().variant = variant;
+    bool changed = false;
+    {
+        std::lock_guard l(st().mutex);
+        changed      = st().variant != variant;
+        st().variant = variant;
+    }
+    if (sync && changed) net::sendToServer(fp::VariantMsg{variant});
     log().info("placement: client variant '{}'", variant);
 }
 
@@ -283,6 +291,11 @@ void drawHalfIcon(ui::DrawContext& dc, int half, float x, float y, ui::Color c) 
 void drawLock(ui::DrawContext& dc) {
     if (!cfg().enableLockRotation || hudHidden() || ui::topScreen() != "hud_screen") return;
     auto lock = clientLock();
+    static std::optional<LockProfile> lastShown;
+    if (lock != lastShown) {
+        lastShown = lock;
+        if (lock) log().info("placement: lock indicator {} {}", fp::dirName(lock->facing), lock->half);
+    }
     if (!lock) return;
     auto      size = dc.screenSize();
     float     x    = std::floor(size.x / 2) + 20;
@@ -360,6 +373,13 @@ void onClientTick() {
         std::lock_guard l(st().mutex);
         st().reach = reach;
     }
+    // one log line per change of the indicator (e2e scenarios wait for it)
+    static int last = -1;
+    int        now  = !reach ? 0 : reach->face == fp::Down ? 1 : 2;
+    if (now != last) {
+        last = now;
+        log().info("placement: reacharound indicator {}", now == 0 ? "none" : now == 1 ? "vertical" : "horizontal");
+    }
     laddersTick(*p);
 }
 
@@ -375,10 +395,11 @@ public:
                 std::lock_guard l(st().mutex);
                 st().lock.reset();
                 st().reach.reset();
+                st().variant.clear();
             }
-            st().variant.clear();
             st().forcedSneak = false;
-            fp::rebuildVariants();
+            clearItemCache();
+            fp::rebuildVariants(true);
         });
         mRestore = net::onClient<fp::VariantRestoreMsg>([](fp::VariantRestoreMsg const& m) {
             if (m.variant.empty() || fp::isKnownVariant(m.variant)) setClientVariant(m.variant, false);

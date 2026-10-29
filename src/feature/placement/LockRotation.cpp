@@ -253,6 +253,12 @@ bool applyLockVanilla(BlockSource& region, BlockPos const& pos, Player& player, 
     // Beds are two blocks with a block entity placed by the bed item: re-orienting the foot alone
     // would break them.
     if (cur.getTypeName() == "minecraft:bed") return false;
+    // Chests pair with a neighbour while they are placed; re-orienting a paired half would split
+    // the double chest, so a chest placed next to another one keeps its pairing orientation.
+    if (cur.getTypeName() == "minecraft:chest" || cur.getTypeName() == "minecraft:trapped_chest") {
+        for (int d = North; d <= East; ++d)
+            if (region.getBlock(step(pos, d)).getTypeName() == cur.getTypeName()) return false;
+    }
     auto const* next = vanillaLocked(region, pos, player, cur, profile, aux);
     if (!next || !next->canSurvive(region, pos)) return false;
     Block const& before = cur;

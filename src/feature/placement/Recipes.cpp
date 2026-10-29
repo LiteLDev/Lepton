@@ -24,7 +24,6 @@ std::set<std::string> disabledRecipes() {
     if (!cfg().enableTrowel) {
         out.insert("lepton:trowel");
         out.insert("lepton:trowel_to_iron_nugget");
-        out.insert("lepton:trowel_to_iron_nugget_blasting");
     }
     if (!cfg().enableVariantSelector || !cfg().enableHammer) out.insert("lepton:hammer");
     return out;
