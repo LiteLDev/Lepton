@@ -97,8 +97,6 @@ using TestRegistry = StaticRegistry<TestEntry>;
 /// `SELFTEST DONE pass=<N> fail=<M>`. `out` receives every line too (command output).
 void runAll(std::string const& glob, std::function<void(std::string const&)> out);
 [[nodiscard]] bool running();
-/// Number of tests in the current run (1: a test run on its own, e.g. a client scenario driving it).
-[[nodiscard]] std::size_t runSize();
 
 namespace detail {
 struct TestRegistrar {
