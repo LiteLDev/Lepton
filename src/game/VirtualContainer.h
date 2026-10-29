@@ -76,7 +76,11 @@ void dropContents(BlockSource& region, core::GlobalPos const& pos);
 // ---- screens -------------------------------------------------------------------------------------
 
 /// Opens the container at `pos` for `player`. False if the area isn't loaded or the player is
-/// busy (another screen open).
+/// busy (another screen open). The player is a viewer at once; the screen itself opens a few ticks
+/// later when the helper was just spawned (the client must know the entity and its name tag, the
+/// screen title). Calling it again for the position the player is viewing re-sends the screen
+/// (a client drops a container opened while one of its own screens, e.g. the chat, is closing:
+/// open containers from chat commands a few ticks later).
 bool open(Player& player, core::GlobalPos const& pos, Spec const& spec);
 /// Closes every open screen of `pos` (contents are kept).
 void closeAll(core::GlobalPos const& pos);
