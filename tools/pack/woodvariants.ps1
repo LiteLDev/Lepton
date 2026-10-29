@@ -199,6 +199,10 @@ $script:PostDirs = [ordered]@{
     north = @{ axis = 'z'; box = (New-Box 6 6 0 10 10 6) }; south = @{ axis = 'z'; box = (New-Box 6 6 10 10 10 16) }
     west = @{ axis = 'x'; box = (New-Box 0 6 6 6 10 10) }; east = @{ axis = 'x'; box = (New-Box 10 6 6 16 10 10) }
 }
+# the directions off each axis, in lepton:side_0..3 order (src/feature/woodvariants kPostSides)
+$script:PostSides = @{
+    y = @('north', 'south', 'west', 'east'); x = @('down', 'up', 'north', 'south'); z = @('down', 'up', 'west', 'east')
+}
 $script:PostBeams = @{ x = (New-Box 0 6 6 16 10 10); y = (New-Box 6 0 6 10 16 10); z = (New-Box 6 6 0 10 10 16) }
 # faces to rotate so the grain follows the piece's axis
 $script:GrainRot = @{ x = @('north', 'south', 'up', 'down'); y = @(); z = @('east', 'west') }
@@ -249,12 +253,18 @@ function New-WvPost {
     $c = Get-WvBase 2 3 $MapColor (-not $NonFlammable) $tags
     $c['minecraft:light_dampening'] = 0
     $c['minecraft:liquid_detection'] = $script:Waterloggable
-    $c['minecraft:material_instances'] = [ordered]@{ '*' = (Get-Mat $SideTexture); side = (Get-Mat $SideTexture); chain = (Get-Mat $ChainTexture 'alpha_test') }
+    # one render method per block (the game refuses opaque mixed with alpha_test): the chain needs alpha_test
+    $c['minecraft:material_instances'] = [ordered]@{ '*' = (Get-Mat $SideTexture 'alpha_test'); side = (Get-Mat $SideTexture 'alpha_test'); chain = (Get-Mat $ChainTexture 'alpha_test') }
     $vis = [ordered]@{}
     foreach ($a in $script:Axes) { $vis["beam_$a"] = Get-AxisCond $a }
     foreach ($d in $script:PostDirs.Keys) {
-        $vis["post_$d"] = Get-StateCond "lepton:connect_$d" 'other_post'
-        $vis["chain_$d"] = Get-StateCond "lepton:connect_$d" 'chain'
+        foreach ($t in 'other_post', 'chain') {
+            $terms = foreach ($a in $script:Axes) {
+                $k = [array]::IndexOf($script:PostSides[$a], $d)
+                if ($k -ge 0) { Join-And @((Get-AxisCond $a), (Get-StateCond "lepton:side_$k" $t)) }
+            }
+            $vis[$(if ($t -eq 'chain') { "chain_$d" } else { "post_$d" })] = Join-Or @($terms)
+        }
     }
     $c['minecraft:geometry'] = [ordered]@{ identifier = $geo; bone_visibility = $vis }
     $c['minecraft:loot'] = Write-LootTable (Get-Path $Id) $Id
@@ -262,8 +272,9 @@ function New-WvPost {
         $b = $script:PostBeams[$a]
         [ordered]@{ condition = (Get-AxisCond $a); components = [ordered]@{ 'minecraft:collision_box' = ConvertTo-BoxJson $b; 'minecraft:selection_box' = ConvertTo-BoxJson $b } }
     }
+    # the four sides off the axis only (lepton:side_<k>, see $PostSides): 6 x 81 permutations
     $states = [ordered]@{}
-    foreach ($d in $script:PostDirs.Keys) { $states["lepton:connect_$d"] = @('none', 'chain', 'other_post') }
+    foreach ($k in 0..3) { $states["lepton:side_$k"] = @('none', 'chain', 'other_post') }
     Write-BlockJson -Id $Id -Menu ([ordered]@{ category = 'construction'; group = 'minecraft:itemGroup.name.wood' }) -States $states -Traits $script:BlockFaceTrait -Components $c -Permutations $perms
     Register-BlockClient $Id $Sound $Name
 }
@@ -294,7 +305,7 @@ function New-WvHedge {
     $c = Get-WvBase 2 3 $MapColor (-not $NonFlammable) @('lepton:hedge', 'lepton:wv_hedges', 'dirt', 'minecraft:is_hoe_item_destructible')
     $c['minecraft:light_dampening'] = 0
     $c['minecraft:liquid_detection'] = $script:Waterloggable
-    $c['minecraft:material_instances'] = [ordered]@{ '*' = (Get-Mat $LeafTexture 'alpha_test' $Tint); leaf = (Get-Mat $LeafTexture 'alpha_test' $Tint); log = (Get-Mat $LogTexture) }
+    $c['minecraft:material_instances'] = [ordered]@{ '*' = (Get-Mat $LeafTexture 'alpha_test' $Tint); leaf = (Get-Mat $LeafTexture 'alpha_test' $Tint); log = (Get-Mat $LogTexture 'alpha_test') }
     $ext = Get-StateCond 'lepton:extend' $true
     $vis = [ordered]@{ log = "!$ext"; leaves = "!$ext"; extend = $ext }
     foreach ($d in 'north', 'south', 'west', 'east') { $vis[$d] = Get-StateCond "lepton:$d" $true }

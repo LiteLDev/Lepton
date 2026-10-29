@@ -108,6 +108,10 @@ LP_REGISTER_SELFTEST("woodvariants.recipes", [](Context& ctx) {
     c.enableHollowLogs = false;
     ctx.check(wv::recipeDisabled("lepton:hollow_oak_log", "lepton:hollow_oak_log"), "disabled hollow logs");
     ctx.check(!wv::recipeDisabled("minecraft:bookshelf", "minecraft:bookshelf"), "vanilla recipes untouched");
+    ctx.check(!wv::vanillaRecipeReplaced("minecraft:bookshelf_from_spruce_planks"), "vanilla per-planks shelf back when disabled");
+    c.enableVariantBookshelves = true;
+    ctx.check(wv::vanillaRecipeReplaced("minecraft:bookshelf_from_mangrove_planks"), "the variant replaces the vanilla per-planks shelf");
+    ctx.check(!wv::vanillaRecipeReplaced("minecraft:bookshelf_from_oak_planks"), "the oak one stays");
     c = saved;
     ctx.check(!wv::recipeDisabled("lepton:azalea_hedge_oak_from_oak_log", "lepton:azalea_hedge") || wv::azaleaWoodEnabled(),
         "azalea hedge from oak logs while AzaleaWood is off");
@@ -132,25 +136,25 @@ LP_REGISTER_SELFTEST("woodvariants.post_connections", [](Context& ctx) -> ll::co
     p.y += 3;
     ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
     stepAside(ctx, p);
-    ctx.require(put(ctx, p, "lepton:oak_post", {{"minecraft:block_face", "up"}}), "y post");
+    ctx.require(put(ctx, p, "lepton:oak_post", {{"minecraft:block_face", "east"}}), "x post (sides down, up, north, south; Java connects only those)");
     ctx.require(put(ctx, off(p, 0, -1, 0), "minecraft:chain", {{"pillar_axis", "y"}}), "chain below");
     ctx.require(put(ctx, off(p, 0, 0, -1), "lepton:spruce_post", {{"minecraft:block_face", "north"}}), "z post north");
-    ctx.require(put(ctx, off(p, 1, 0, 0), "lepton:birch_post", {{"minecraft:block_face", "up"}}), "y post east (wrong axis)");
+    ctx.require(put(ctx, off(p, 0, 0, 1), "lepton:birch_post", {{"minecraft:block_face", "up"}}), "y post south (wrong axis)");
     ctx.require(put(ctx, off(p, 0, 1, 0), "lepton:oak_hedge"), "hedge above");
     co_await ctx.ticks(4);
     auto const& b = at(ctx, p);
-    ctx.check(str(b, "lepton:connect_down") == "chain", "chain below: " + str(b, "lepton:connect_down"));
-    ctx.check(str(b, "lepton:connect_north") == "other_post", "post north: " + str(b, "lepton:connect_north"));
-    ctx.check(str(b, "lepton:connect_east") == "none", "post on another axis: " + str(b, "lepton:connect_east"));
-    ctx.check(str(b, "lepton:connect_up") == "other_post", "hedge above: " + str(b, "lepton:connect_up"));
-    ctx.check(str(b, "lepton:connect_west") == "none", "nothing west");
+    ctx.check(wv::postConnection(b, "down") == "chain", "chain below: " + wv::postConnection(b, "down"));
+    ctx.check(wv::postConnection(b, "north") == "other_post", "post north: " + wv::postConnection(b, "north"));
+    ctx.check(wv::postConnection(b, "south") == "none", "post on another axis: " + wv::postConnection(b, "south"));
+    ctx.check(wv::postConnection(b, "up") == "other_post", "hedge above: " + wv::postConnection(b, "up"));
+    ctx.check(wv::postConnection(b, "west") == "none", "nothing along the axis");
     // a hanging lantern below instead of the chain
     ctx.require(put(ctx, off(p, 0, -1, 0), "minecraft:lantern", {{"hanging", true}}), "hanging lantern below");
     co_await ctx.ticks(4);
-    ctx.check(str(at(ctx, p), "lepton:connect_down") == "chain", "hanging lantern counts as chain");
+    ctx.check(wv::postConnection(at(ctx, p), "down") == "chain", "hanging lantern counts as chain");
     clear(ctx, off(p, 0, -1, 0));
     co_await ctx.ticks(4);
-    ctx.check(str(at(ctx, p), "lepton:connect_down") == "none", "connection removed");
+    ctx.check(wv::postConnection(at(ctx, p), "down") == "none", "connection removed");
 });
 
 LP_REGISTER_SELFTEST("woodvariants.post_strip", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -213,6 +217,10 @@ LP_REGISTER_SELFTEST("woodvariants.hedge_plant", [](Context& ctx) -> ll::coro::C
     auto const* poppy = bs::of("minecraft:poppy");
     ctx.require(poppy != nullptr, "poppy");
     ctx.check(poppy->getBlockType().mayPlace(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0))), "a flower may be placed on a hedge");
+    if (auto const* sapling = bs::of("minecraft:oak_sapling")) {
+        bool ok = sapling->getBlockType().mayPlace(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)));
+        ctx.check(ok, "a sapling may be placed on a hedge");
+    }
     use(ctx, "minecraft:poppy", p, Facing::Up, Vec3{0.5f, 1.f, 0.5f});
     co_await ctx.ticks(3);
     ctx.check(idAt(ctx, off(p, 0, 1, 0)) == "minecraft:poppy", "poppy planted: " + idAt(ctx, off(p, 0, 1, 0)));
@@ -253,9 +261,27 @@ LP_REGISTER_SELFTEST("woodvariants.ladder_climb", [](Context& ctx) -> ll::coro::
     co_await ctx.ticks(2);
     ctx.check(hasProperty("lepton:birch_ladder", BlockProperty::Climbable), "ladder block type is climbable");
     ctx.check(hasProperty("lepton:hollow_oak_log", BlockProperty::Climbable), "hollow log block type is climbable");
-    ctx.player().teleport(Vec3{static_cast<float>(p.x) + 0.5f, static_cast<float>(p.y), static_cast<float>(p.z) + 0.5f}, DimensionType(p.dim));
+    ctx.check(idAt(ctx, p) == "lepton:birch_ladder", "the ladder stays on its wall: " + idAt(ctx, p));
+    // the same with the vanilla ladder for reference
+    auto q = off(p, 2, 0, 0);
+    ctx.require(put(ctx, off(q, 0, 0, 1), "minecraft:stone"), "vanilla wall");
+    ctx.require(put(ctx, q, "minecraft:ladder", {{"facing_direction", 2}}), "vanilla ladder");
+    co_await ctx.ticks(2);
+    auto standIn = [&](GP const& at) {
+        ctx.player().teleport(
+            Vec3{static_cast<float>(at.x) + 0.5f, static_cast<float>(at.y), static_cast<float>(at.z) + 0.5f},
+            DimensionType(at.dim)
+        );
+    };
+    standIn(q);
     co_await ctx.ticks(3);
-    ctx.check(ctx.player().onClimbableBlock(), "a player in the ladder is on a climbable block");
+    bool vanilla = ctx.player().onClimbableBlock();
+    standIn(p);
+    co_await ctx.ticks(3);
+    bool ours = ctx.player().onClimbableBlock();
+    ctx.check(ours == vanilla, std::string("climbing like the vanilla ladder: ours ") + (ours ? "yes" : "no") + ", vanilla " + (vanilla ? "yes" : "no"));
+    ctx.info(std::string("onClimbableBlock ours=") + (ours ? "1" : "0") + " vanilla=" + (vanilla ? "1" : "0"));
+    stepAside(ctx, p);
 });
 
 LP_REGISTER_SELFTEST("woodvariants.carpet_survive", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -425,7 +451,7 @@ LP_REGISTER_SELFTEST("woodvariants.gallery", [](Context& ctx) -> ll::coro::CoroT
         if (i % 2 == 0) place(off(rowC, i, 1, 0), ns + w + "_hedge");
         place(off(rowC, i, 0, 2), ns + w + "_leaf_carpet");
     }
-    place(off(rowC, 13, 0, 0), "lepton:dark_oak_post", {{"minecraft:block_face", "up"}});
+    place(off(rowC, 13, 0, 0), "lepton:dark_oak_post", {{"minecraft:block_face", "east"}});
     place(off(rowC, 13, 1, 0), "lepton:oak_hedge");
     // D: hollow logs on each axis, the crawl log (x axis) with free space west of it
     for (int i = 0; i < 10; ++i) {
@@ -439,12 +465,12 @@ LP_REGISTER_SELFTEST("woodvariants.gallery", [](Context& ctx) -> ll::coro::CoroT
     for (int dy = 0; dy < 2; ++dy) ctx.cleanupBlock(off(crawl, -1, dy, 0));
     co_await ctx.ticks(6);
     ctx.check(failed == 0, std::to_string(failed) + " gallery blocks not placed");
-    ctx.check(str(at(ctx, off(rowB, 0, 3, 0)), "lepton:connect_down") == "chain", "chain below the first post");
-    ctx.check(str(at(ctx, off(rowB, 2, 3, 0)), "lepton:connect_down") == "chain", "lantern below the second post");
+    ctx.check(wv::postConnection(at(ctx, off(rowB, 0, 3, 0)), "down") == "chain", "chain below the first post");
+    ctx.check(wv::postConnection(at(ctx, off(rowB, 2, 3, 0)), "down") == "chain", "lantern below the second post");
     ctx.check(idAt(ctx, off(rowB, 2, 2, 0)) == "minecraft:lantern", "the lantern hangs below the post");
     ctx.check(flag(at(ctx, off(rowC, 0, 0, 0)), "lepton:east"), "hedges connect");
     ctx.check(flag(at(ctx, off(rowC, 0, 1, 0)), "lepton:extend"), "a hedge above a hedge extends");
-    ctx.check(str(at(ctx, off(rowC, 13, 0, 0)), "lepton:connect_up") == "other_post", "post below a hedge");
+    ctx.check(wv::postConnection(at(ctx, off(rowC, 13, 0, 0)), "up") == "other_post", "post below a hedge");
     ctx.check(idAt(ctx, off(rowA, 2, 2, 1)) == "lepton:spruce_ladder", "ladders stay on the planks");
     ctx.check(idAt(ctx, off(rowC, 0, 0, 2)) == "lepton:oak_leaf_carpet", "leaf carpets stay on the floor");
 

@@ -8,32 +8,22 @@
         "group": "minecraft:itemGroup.name.wood"
       },
       "states": {
-        "lepton:connect_down": [
+        "lepton:side_0": [
           "none",
           "chain",
           "other_post"
         ],
-        "lepton:connect_up": [
+        "lepton:side_1": [
           "none",
           "chain",
           "other_post"
         ],
-        "lepton:connect_north": [
+        "lepton:side_2": [
           "none",
           "chain",
           "other_post"
         ],
-        "lepton:connect_south": [
-          "none",
-          "chain",
-          "other_post"
-        ],
-        "lepton:connect_west": [
-          "none",
-          "chain",
-          "other_post"
-        ],
-        "lepton:connect_east": [
+        "lepton:side_3": [
           "none",
           "chain",
           "other_post"
@@ -76,11 +66,11 @@
       "minecraft:material_instances": {
         "*": {
           "texture": "lepton_woodvariants_stripped_mangrove_log_side",
-          "render_method": "opaque"
+          "render_method": "alpha_test"
         },
         "side": {
           "texture": "lepton_woodvariants_stripped_mangrove_log_side",
-          "render_method": "opaque"
+          "render_method": "alpha_test"
         },
         "chain": {
           "texture": "lepton_woodvariants_woodvariants_post_chain",
@@ -93,18 +83,18 @@
           "beam_x": "(q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west')",
           "beam_y": "(q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down')",
           "beam_z": "(q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south')",
-          "post_down": "q.block_state('lepton:connect_down') == 'other_post'",
-          "chain_down": "q.block_state('lepton:connect_down') == 'chain'",
-          "post_up": "q.block_state('lepton:connect_up') == 'other_post'",
-          "chain_up": "q.block_state('lepton:connect_up') == 'chain'",
-          "post_north": "q.block_state('lepton:connect_north') == 'other_post'",
-          "chain_north": "q.block_state('lepton:connect_north') == 'chain'",
-          "post_south": "q.block_state('lepton:connect_south') == 'other_post'",
-          "chain_south": "q.block_state('lepton:connect_south') == 'chain'",
-          "post_west": "q.block_state('lepton:connect_west') == 'other_post'",
-          "chain_west": "q.block_state('lepton:connect_west') == 'chain'",
-          "post_east": "q.block_state('lepton:connect_east') == 'other_post'",
-          "chain_east": "q.block_state('lepton:connect_east') == 'chain'"
+          "post_down": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_0') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_0') == 'other_post'))",
+          "chain_down": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_0') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_0') == 'chain'))",
+          "post_up": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_1') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_1') == 'other_post'))",
+          "chain_up": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_1') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_1') == 'chain'))",
+          "post_north": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_2') == 'other_post') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_0') == 'other_post'))",
+          "chain_north": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_2') == 'chain') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_0') == 'chain'))",
+          "post_south": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_3') == 'other_post') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_1') == 'other_post'))",
+          "chain_south": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_3') == 'chain') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_1') == 'chain'))",
+          "post_west": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_2') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_2') == 'other_post'))",
+          "chain_west": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_2') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_2') == 'chain'))",
+          "post_east": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_3') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_3') == 'other_post'))",
+          "chain_east": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_3') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_3') == 'chain'))"
         }
       },
       "minecraft:loot": "loot_tables/blocks/stripped_mangrove_post.json"

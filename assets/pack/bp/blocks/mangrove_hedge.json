@@ -71,7 +71,7 @@
         },
         "log": {
           "texture": "lepton_woodvariants_mangrove_log_side",
-          "render_method": "opaque"
+          "render_method": "alpha_test"
         }
       },
       "minecraft:geometry": {

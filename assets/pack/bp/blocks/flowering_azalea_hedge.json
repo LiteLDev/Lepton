@@ -69,7 +69,7 @@
         },
         "log": {
           "texture": "lepton_woodvariants_log_oak",
-          "render_method": "opaque"
+          "render_method": "alpha_test"
         }
       },
       "minecraft:geometry": {

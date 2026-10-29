@@ -71,7 +71,7 @@
         },
         "log": {
           "texture": "lepton_woodvariants_log_acacia",
-          "render_method": "opaque"
+          "render_method": "alpha_test"
         }
       },
       "minecraft:geometry": {

@@ -20,6 +20,8 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/ComposterBlock.h"
+#include "mc/world/level/block/FlowerBlock.h"
+#include "mc/world/level/block/FoliageBlock.h"
 #include "mc/world/level/block/HangingSignBlock.h"
 #include "mc/world/level/block/LanternBlock.h"
 #include "mc/world/level/block/actor/FurnaceBlockActor.h"
@@ -79,6 +81,18 @@ bool recipeDisabled(std::string const& recipeId, std::string const& result) {
     return false;
 }
 
+/// The game's per-planks bookshelf recipes (`minecraft:bookshelf_from_<wood>_planks`) have the same
+/// ingredients as the variant bookshelf of that wood: while VariantBookshelves is on, the variant
+/// wins (Quark), so the vanilla duplicate is not loaded. The oak one stays (it is the oak bookshelf).
+bool vanillaRecipeReplaced(std::string const& recipeId) {
+    static constexpr std::string_view kPrefix = "minecraft:bookshelf_from_";
+    if (!recipeId.starts_with(kPrefix) || !recipeId.ends_with("_planks")) return false;
+    if (!moduleEnabled("variant_bookshelves")) return false;
+    auto wood = recipeId.substr(kPrefix.size(), recipeId.size() - kPrefix.size() - 7);
+    if (wood == "oak") return false;
+    return bs::of("lepton:" + wood + "_bookshelf") != nullptr;
+}
+
 namespace {
 
 LL_TYPE_INSTANCE_HOOK(
@@ -95,11 +109,10 @@ LL_TYPE_INSTANCE_HOOK(
     bool                      isBaseGamePack,
     Recipes::Buffers&         buffers
 ) {
-    if (!isBaseGamePack && recipeId.starts_with("lepton:")) {
-        try {
-            if (recipeDisabled(recipeId, resultOf(objData))) return false;
-        } catch (...) {}
-    }
+    try {
+        if (recipeId.starts_with("lepton:") && recipeDisabled(recipeId, resultOf(objData))) return false;
+        if (recipeId.starts_with("minecraft:bookshelf_from_") && vanillaRecipeReplaced(recipeId)) return false;
+    } catch (...) {}
     return origin(recipeId, type, objData, minEngineVersion, formatVersion, isBaseGamePack, buffers);
 }
 
@@ -255,6 +268,50 @@ LL_TYPE_INSTANCE_HOOK(
     return woodvariants::hasTag(b, "lepton:post") && woodvariants::moduleEnabled(b) && (attachFace == 0 || ourFace == 1);
 }
 
+// ---- plants on hedges --------------------------------------------------------------------------
+
+/// Quark HedgeBlock#canSustainPlant (UP): flowers can grow on a hedge. `pos` is the ground block
+/// (or, depending on the caller, the plant's own position with the hedge below).
+bool hedgeSustains(BlockSource& region, BlockPos const& pos) {
+    auto const& ground = region.getBlock(pos);
+    if (hasTag(ground, "lepton:hedge")) return moduleEnabled(ground);
+    if (!ground.isAir()) return false;
+    auto const& below = region.getBlock(BlockPos{pos.x, pos.y - 1, pos.z});
+    return hasTag(below, "lepton:hedge") && moduleEnabled(below);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    FlowerMayPlaceOnHook,
+    ll::memory::HookPriority::Normal,
+    FlowerBlock,
+    &FlowerBlock::$mayPlaceOn,
+    bool,
+    BlockSource&    region,
+    BlockPos const& pos
+) {
+    return origin(region, pos) || hedgeSustains(region, pos);
+}
+
+// Saplings, short grass and ferns (FoliageBlock). FoliageBlock::$mayPlaceOn is MCFOLD (its code may be
+// shared with other block types), so the hedge rule only applies to these plants, by name.
+bool foliageOnHedge(BlockType const& plant) {
+    auto const& n = plant.getTypeName();
+    return n.ends_with("_sapling") || n == "minecraft:short_grass" || n == "minecraft:fern";
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    FoliageMayPlaceOnHook,
+    ll::memory::HookPriority::Normal,
+    FoliageBlock,
+    &FoliageBlock::$mayPlaceOn,
+    bool,
+    BlockSource&    region,
+    BlockPos const& pos
+) {
+    if (origin(region, pos)) return true;
+    return foliageOnHedge(*this) && hedgeSustains(region, pos);
+}
+
 bool gLoaded    = false;
 bool gInstalled = false;
 
@@ -280,6 +337,8 @@ void installHooks() {
     LanternSurviveHook::hook();
     LanternMayPlaceHook::hook();
     HangingSignAttachHook::hook();
+    FlowerMayPlaceOnHook::hook();
+    FoliageMayPlaceOnHook::hook();
 }
 
 void uninstallHooks() {
@@ -293,6 +352,8 @@ void uninstallHooks() {
         LanternSurviveHook::unhook();
         LanternMayPlaceHook::unhook();
         HangingSignAttachHook::unhook();
+        FlowerMayPlaceOnHook::unhook();
+        FoliageMayPlaceOnHook::unhook();
     }
     if (gLoaded) {
         gLoaded = false;

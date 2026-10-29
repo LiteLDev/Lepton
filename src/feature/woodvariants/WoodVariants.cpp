@@ -284,6 +284,21 @@ std::string axisOf(Block const& block) {
     return axisOfDir(face);
 }
 
+std::array<std::string_view, 4> const& postSides(std::string_view axis) {
+    static constexpr std::array<std::string_view, 4> y{"north", "south", "west", "east"};
+    static constexpr std::array<std::string_view, 4> x{"down", "up", "north", "south"};
+    static constexpr std::array<std::string_view, 4> z{"down", "up", "west", "east"};
+    return axis == "x" ? x : axis == "z" ? z : y;
+}
+
+std::string postConnection(Block const& post, std::string_view dir) {
+    auto const& sides = postSides(axisOf(post));
+    for (int k = 0; k < 4; ++k) {
+        if (sides[k] == dir) return bs::getString(post, "lepton:side_" + std::to_string(k)).value_or("none");
+    }
+    return "none";
+}
+
 std::string postSideType(BlockSource& region, BlockPos const& pos, std::string_view dir) {
     auto const& side = region.getBlock(shapes::neighbor(pos, dir));
     auto const& name = side.getTypeName();
@@ -305,7 +320,8 @@ bool updateBlock(BlockSource& region, BlockPos const& pos) {
     auto const& b = region.getBlock(pos);
     if (hasTag(b, "lepton:post")) {
         bs::Changes ch;
-        for (auto d : kSixDirs) ch.emplace_back("lepton:connect_" + std::string(d), postSideType(region, pos, d));
+        auto const& sides = postSides(axisOf(b));
+        for (int k = 0; k < 4; ++k) ch.emplace_back("lepton:side_" + std::to_string(k), postSideType(region, pos, sides[k]));
         return setIfChanged(region, pos, b, bs::with(b, ch));
     }
     if (hasTag(b, "lepton:hedge")) {

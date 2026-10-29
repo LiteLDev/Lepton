@@ -65,7 +65,7 @@ original pixel art from `tools/textures/woodvariants.ps1`.
 | VerticalPlanks | `lepton:vertical_<w>_planks` (ALL) | Vertical Oak Planks, ... | - | 11 |
 | VariantBookshelves | `lepton:<w>_bookshelf` (NON_OAK) | Spruce Bookshelf, ... | - | 10 |
 | VariantLadders | `lepton:<w>_ladder` (NON_OAK) | Spruce Ladder, ... | `minecraft:block_face` (trait; north/south/west/east = facing) | 10 |
-| WoodenPosts | `lepton:<w>_post`, `lepton:stripped_<w>_post` (ALL) | Oak Post, Stripped Oak Post, ... | `minecraft:block_face` (trait; axis), `lepton:connect_{down,up,north,south,west,east}` none/chain/other_post | 22 |
+| WoodenPosts | `lepton:<w>_post`, `lepton:stripped_<w>_post` (ALL) | Oak Post, Stripped Oak Post, ... | `minecraft:block_face` (trait; axis), `lepton:side_0..3` none/chain/other_post: the four directions off the axis (y: N,S,W,E; x: down,up,N,S; z: down,up,W,E), 486 permutations per post | 22 |
 | Hedges | `lepton:<w>_hedge` (OVERWORLD_WITH_TREE), `lepton:azalea_hedge`, `lepton:flowering_azalea_hedge` | Oak Leaf Hedge, ..., Mangrove Leaf Hedge, Azalea Leaf Hedge, Flowering Azalea Leaf Hedge | `lepton:north/east/south/west` bool, `lepton:extend` bool | 10 |
 | LeafCarpet | `lepton:<w>_leaf_carpet` (OVERWORLD_WITH_TREE), `lepton:azalea_leaf_carpet`, `lepton:flowering_azalea_leaf_carpet` | Oak Leaf Carpet, ... | - | 10 |
 | HollowLogs | `lepton:hollow_<w>_log` (8 overworld woods), `lepton:hollow_crimson_stem`, `lepton:hollow_warped_stem` | Hollow Oak Log, ..., Hollow Crimson Stem | `minecraft:block_face` (trait; axis) | 10 |
@@ -131,7 +131,7 @@ items (functional); hedges and leaf carpets: nature, next to leaves; hollow logs
 | `lepton:vertical_planks` | data only |
 | `lepton:bookshelf` | enchanting power 1 (vanilla enchanting table; U13's matrix enchanting and U18's soul candles read it too) |
 | `lepton:ladder` | climbable ladder: `minecraft:block_face` = facing (away from the wall); breaks when the block behind is gone |
-| `lepton:post` | wooden post: axis from `minecraft:block_face`, `lepton:connect_<dir>` connections, lanterns and hanging signs hang below it; `lepton:strippable` for the axe |
+| `lepton:post` | wooden post: axis from `minecraft:block_face`, `lepton:side_<k>` connections (the four directions off the axis), lanterns and hanging signs hang below it; `lepton:strippable` for the axe |
 | `lepton:hedge` | hedge connections (`lepton:<dir>` to other `lepton:hedge` blocks), `lepton:extend` |
 | `lepton:leaf_carpet` | survival check (non-air below), 20% composting |
 | `lepton:hollow_log` | hollow log: axis from `minecraft:block_face`, climbable, auto crawl |
@@ -166,7 +166,7 @@ or the other, never both; the total stays capped at 15 by the game).
 
 ### 3.4 Posts
 - Placement: the axis is the clicked face's axis.
-- Connections (`lepton:connect_<dir>` for the 4 directions not on the axis), Java
+- Connections (`lepton:side_0..3` for the 4 directions not on the axis; Java has one property per direction, Lepton keeps only the four that can connect to stay at 486 block permutations per post), Java
   `PostSideType.get`: `chain` if the neighbour is a chain along that direction's axis, or (down
   only) a hanging lantern / soul lantern or a ceiling hanging sign; `other_post` if the neighbour is
   a post along that axis, or (up only) a hedge; else `none`. Recomputed on every neighbour change.
@@ -181,8 +181,10 @@ or the other, never both; the total stays capped at 15 by the game).
 - Connections: `lepton:<dir>` is true when the neighbour carries `lepton:hedge` (Java
   `connectsTo`: hedges tag only; not fences, walls or solid blocks).
 - `lepton:extend`: true when the block below is a hedge.
-- Plants: flowers, saplings and other plants can be placed on top (Java `canSustainPlant` UP) — the
-  hedges carry the `dirt` block tag Bedrock's plants check.
+- Plants: flowers, saplings, short grass and ferns (Java `canSustainPlant` UP, plains plants) can be
+  placed on top and survive there: `FlowerBlock::mayPlaceOn` and `FoliageBlock::mayPlaceOn` (the
+  latter only for those plant names, since its code is folded) accept a hedge below. The hedges
+  also carry the `dirt` block tag for data-driven plants.
 - Collision: the hedge shape, max 16 px (Java's fence collision is 24 px; Bedrock caps custom
   collision at one block).
 

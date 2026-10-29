@@ -6,12 +6,13 @@
 //
 //   lepton:bookshelf    enchanting power 1
 //   lepton:ladder       climbable, wall placement (minecraft:block_face = facing), pops without support
-//   lepton:post         axis from minecraft:block_face, lepton:connect_<dir> none|chain|other_post
+//   lepton:post         axis from minecraft:block_face, lepton:side_0..3 none|chain|other_post (postSides)
 //   lepton:hedge        lepton:<dir> connections to hedges, lepton:extend
 //   lepton:leaf_carpet  pops over air, composts (20%)
 //   lepton:hollow_log   axis from minecraft:block_face, climbable, auto crawl
 //   lepton:wv_<module>  the config module the block belongs to
 
+#include <array>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -54,6 +55,11 @@ struct WoodVariantsConfig {
 /// Returns true if the world changed.
 bool updateBlock(BlockSource& region, BlockPos const& pos);
 
+/// The directions off a post's axis ("x", "y", "z"), in the order of its lepton:side_0..3 states.
+[[nodiscard]] std::array<std::string_view, 4> const& postSides(std::string_view axis);
+/// The connection a post shows towards `dir` (none|chain|other_post; "none" along its axis).
+[[nodiscard]] std::string postConnection(Block const& post, std::string_view dir);
+
 /// The post connection type of side `dir` ("down", "up", "north", ...) at `pos` (Java PostSideType.get).
 [[nodiscard]] std::string postSideType(BlockSource& region, BlockPos const& pos, std::string_view dir);
 
@@ -72,6 +78,8 @@ void autoCrawlTick(Player& player);
 [[nodiscard]] bool azaleaWoodEnabled();
 /// A recipe of this unit whose module is disabled (docs §3.8); `result` is the result item id.
 [[nodiscard]] bool recipeDisabled(std::string const& recipeId, std::string const& result);
+/// A vanilla `minecraft:bookshelf_from_<wood>_planks` recipe that the variant bookshelf replaces.
+[[nodiscard]] bool vanillaRecipeReplaced(std::string const& recipeId);
 
 /// Every block id of this unit (for the selftests).
 [[nodiscard]] std::vector<std::string> const& allBlockIds();
