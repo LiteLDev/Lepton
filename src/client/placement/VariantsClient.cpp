@@ -16,6 +16,8 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/input/KeyInputEvent.h"
+#include "ll/api/event/input/MouseInputEvent.h"
+#include "ll/api/event/world/ClientLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 
 #include "mc/client/game/ClientInstance.h"
@@ -369,18 +371,24 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     auto& region = getDimensionBlockSource();
     bool  block  = hitResult.mType == HitResultType::Tile && !region.getBlock(hitResult.mBlock).isAir();
-    bool  entity = hitResult.mType == HitResultType::Entity;
-    if (entity) return origin(hitResult, withData);
-    if (block) {
-        if (variantPick(*this, hitResult.mBlock)) return;
-        return origin(hitResult, withData);
-    }
-    if (!cfg().enableLongRangePickBlock) return origin(hitResult, withData);
-    // LongRangePickBlock: nothing (or air) under the crosshair -> 200 blocks
-    Vec3 eye  = getEyePos();
-    Vec3 look = getViewVector(1.0f);
+    if (block && variantPick(*this, hitResult.mBlock)) return;
+    origin(hitResult, withData);
+}
+
+std::atomic<bool> gPickPressed{false};
+
+/// LongRangePickBlock: the game does nothing for a pick on nothing, so the middle click is caught
+/// here and, when the crosshair is on nothing (or air), a 200-block ray picks the block.
+void longRangePick() {
+    auto* p = client::currentPlayer();
+    if (!p || !cfg().enableLongRangePickBlock || ui::topScreen() != "hud_screen") return;
+    auto& region = p->getDimensionBlockSource();
+    Vec3  eye    = p->getEyePos();
+    Vec3  look   = p->getViewVector(1.0f);
+    auto  near   = fp::clip(region, eye, look, fp::reachOf(*p), p);
+    if (near.hit && !region.getBlock(near.pos).isAir()) return; // the game picks it
     Vec3 to{eye.x + look.x * 200, eye.y + look.y * 200, eye.z + look.z * 200};
-    auto far  = region.clip(
+    auto far = region.clip(
         eye,
         to,
         false,
@@ -388,18 +396,18 @@ LL_TYPE_INSTANCE_HOOK(
         201,
         false,
         false,
-        this,
+        p,
         [](BlockSource const&, Block const&, bool) { return true; },
         false
     );
-    if (far.mType != HitResultType::Tile) return origin(hitResult, withData);
+    if (far.mType != HitResultType::Tile) return;
     log().info("placement: long range pick at {} {} {}", far.mBlock.x, far.mBlock.y, far.mBlock.z);
-    if (variantPick(*this, far.mBlock)) return;
+    if (variantPick(*p, far.mBlock)) return;
     if (net::serverHasMod()) {
         net::sendToServer(fp::PickMsg{far.mBlock.x, far.mBlock.y, far.mBlock.z, ""});
         return;
     }
-    origin(far, withData);
+    p->pickBlock(far, false); // a server without Lepton: the vanilla pick request
 }
 
 // ---- held item -----------------------------------------------------------------------------------
@@ -494,15 +502,27 @@ public:
             for (int k : ui::keysOf("variant_selector"))
                 if (k == ev.keyCode()) gKeyReleased = true;
         });
+        // window thread: the middle button (the game's pick); handled on the next client tick
+        mMouse = ll::event::EventBus::getInstance().emplaceListener<ll::event::MouseInputEvent>([](ll::event::MouseInputEvent& ev) {
+            if (ev.actionButtonId() == 3 && ev.buttonData() != 0) gPickPressed = true;
+        });
+        mTick = ll::event::EventBus::getInstance().emplaceListener<ll::event::ClientLevelTickEvent>([](ll::event::ClientLevelTickEvent&) {
+            if (gPickPressed.exchange(false)) longRangePick();
+        });
     }
     void uninstall() {
         PlacementPickBlockHook::unhook();
         PlacementHeldItemHook::unhook();
-        ll::event::EventBus::getInstance().removeListener(mKey);
+        auto& bus = ll::event::EventBus::getInstance();
+        bus.removeListener(mKey);
+        bus.removeListener(mMouse);
+        bus.removeListener(mTick);
     }
 
 private:
     ll::event::ListenerPtr mKey;
+    ll::event::ListenerPtr mMouse;
+    ll::event::ListenerPtr mTick;
 };
 
 } // namespace lp::client::placement
