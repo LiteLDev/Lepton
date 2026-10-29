@@ -319,6 +319,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&       random
 ) {
     origin(biome, lc, region, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(region.getDimensionId()) != 0) return;
     auto const& cp = lc.mPosition.get();
     generateChunk(*this, region, cp.x, cp.z, "minecraft:overworld");
 }
@@ -335,6 +337,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&       random
 ) {
     origin(biome, lc, region, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(region.getDimensionId()) != 1) return;
     auto const& cp = lc.mPosition.get();
     generateChunk(*this, region, cp.x, cp.z, "minecraft:the_nether");
 }
@@ -351,6 +355,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&       random
 ) {
     origin(biome, lc, region, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(region.getDimensionId()) != 2) return;
     auto const& cp = lc.mPosition.get();
     generateChunk(*this, region, cp.x, cp.z, "minecraft:the_end");
 }
