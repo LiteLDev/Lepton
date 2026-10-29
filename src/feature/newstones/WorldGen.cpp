@@ -816,6 +816,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(biome, lc, region, random);
     auto const& cp = lc.mPosition.get();
+    if (region.getDimensionId() != 0) return; // see NewStonesNetherPostProcessHook
     generateChunk(region, overworldQuery(*this, 0, region.getMaxHeight()), cp.x, cp.z);
 }
 
@@ -832,6 +833,9 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(biome, lc, region, random);
     auto const& cp = lc.mPosition.get();
+    // The Nether and End generators share one $decorateWorldGenPostProcess (both hooks land on the
+    // same function), so each hook only acts in its own dimension.
+    if (region.getDimensionId() != 1) return;
     generateChunk(region, overworldQuery(*this, 1, region.getMaxHeight()), cp.x, cp.z);
 }
 
@@ -848,6 +852,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(biome, lc, region, random);
     auto const& cp = lc.mPosition.get();
+    if (region.getDimensionId() != 2) return; // see NewStonesNetherPostProcessHook
     generateChunk(region, endQuery(*this), cp.x, cp.z);
 }
 
