@@ -33,7 +33,7 @@ namespace {
 constexpr int kBedrockMaxLayers = 6; // the banner renderer draws 6 pattern layers
 
 int patternsOf(ItemStack const& stack) {
-    if (game::isEmpty(stack) || game::itemId(stack) != "minecraft:banner") return 0;
+    if (game::isEmpty(stack) || !stack.mUserData || game::itemId(stack) != "minecraft:banner") return 0;
     return BannerBlockActor::getPatternCount(stack.mUserData.get());
 }
 } // namespace

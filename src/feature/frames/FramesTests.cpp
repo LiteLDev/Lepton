@@ -291,6 +291,20 @@ LP_REGISTER_SELFTEST("frames.glass_container", [](Context& ctx) -> ll::coro::Cor
     ctx.check(rec && rec->rotation == 1, "...rotates the item instead");
     sp.setSneaking(false);
     lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(f));
+
+    // a frame on a water cauldron: using it with maps in hand must not wash them
+    auto c = off(s, 3, 0, 0);
+    ctx.require(put(ctx, c, "minecraft:cauldron", {{"fill_level", 6}, {"cauldron_liquid", std::string("water")}}), "cauldron");
+    auto cf = off(c, 0, 0, 1);
+    ctx.require(put(ctx, cf, fr::kGlassFrame, {{"minecraft:block_face", std::string("south")}}), "frame on the cauldron");
+    co_await ctx.ticks(2);
+    hold(ctx, lp::game::makeItem("minecraft:apple"));
+    ctx.check(fr::testing::useGlass(sp, cf), "an apple goes into the cauldron's frame");
+    hold(ctx, lp::game::makeItem("minecraft:filled_map", 2));
+    fr::testing::useGlass(sp, cf);
+    ctx.check(lp::game::itemId(sp.getSelectedItem()) == "minecraft:filled_map", "the held maps are not washed through the frame");
+    ctx.check(bs::getInt(at(ctx, c), "fill_level").value_or(0) == 6, "the cauldron keeps its water");
+    lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(cf));
     co_await ctx.ticks(2);
     clearItems(ctx, s);
 });
@@ -577,9 +591,11 @@ LP_REGISTER_SELFTEST("frames.banner_limit", [](Context& ctx) {
 LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
     namespace game = lp::game;
     ConfigGuard cfg;
-    auto base = ctx.testPos(2470);
+    auto base = ctx.testPos(2462);          // glass frames: dx 2462..2475
+    auto sx   = off(ctx.testPos(2477), 0, 0, 1); // signs: dx 2477..2487
+    auto dx   = ctx.testPos(2489);          // dyed frames: dx 2489..2496
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
-    ctx.require(co_await ctx.ensureLoaded(off(base, 40, 0, 0)), "test area loaded (east)");
+    ctx.require(co_await ctx.ensureLoaded(dx), "test area loaded (east)");
     auto& sp     = ctx.player();
     auto& region = regionOf(ctx);
     stepAside(ctx, off(base, 0, 0, 6));
@@ -617,8 +633,7 @@ LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
     glassFrame(off(base, 3, 0, 2), fr::kGlassFrame, "up", game::makeItem("minecraft:diamond"), 0);
     glassFrame(off(base, 5, 0, 2), fr::kGlassFrame, "up", ItemStack{}, 0);
 
-    // frames on signs (x 18..)
-    auto sx = off(base, 18, 0, 1);
+    // frames on signs
     put(ctx, sx, "minecraft:standing_sign", {{"ground_sign_direction", 8}});
     glassFrame(off(sx, 0, 0, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
     put(ctx, off(sx, 3, 0, -1), "minecraft:stone");
@@ -631,8 +646,7 @@ LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
     put(ctx, off(sx, 9, 0, 0), "minecraft:standing_sign", {{"ground_sign_direction", 0}});
     glassFrame(off(sx, 9, 0, 1), fr::kGlassFrame, "south", game::makeItem("minecraft:emerald"), 0);
 
-    // dyed frames (x 30..37) on a wall
-    auto dx = off(base, 30, 0, 0);
+    // dyed frames on a wall
     for (int x = 0; x < 8; ++x)
         for (int y = 0; y < 3; ++y) put(ctx, off(dx, x, y, 0), "minecraft:stone");
     std::vector<std::pair<int, bool>> colors{
@@ -645,8 +659,8 @@ LP_REGISTER_SELFTEST("frames.gallery", [](Context& ctx) -> ll::coro::CoroTask<> 
         ctx.cleanupBlock(off(dx, i, 1, 1));
     }
     hold(ctx, dyed(false, 0xF9801D));
-    fr::testing::placeDyed(sp, region, game::blockPos(off(dx, 2, 0, 1)), 1);
-    ctx.cleanupBlock(off(dx, 2, 1, 1));
+    fr::testing::placeDyed(sp, region, game::blockPos(off(dx, 2, -1, 2)), 1); // on the ground in front
+    ctx.cleanupBlock(off(dx, 2, 0, 2));
     co_await ctx.ticks(3);
     // a map in the second and an apple in the third dyed frame
     if (auto* be = region.getBlockEntity(game::blockPos(off(dx, 1, 1, 1))))

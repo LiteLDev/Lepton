@@ -109,7 +109,11 @@ untinted), grey dyed frame entity texture.
   0.01 when diff < 0): < 45 -> STANDING/HANGING_IN_FRONT, [135, 225) -> STANDING/HANGING_BEHIND.
   Wall sign facing the frame's direction -> WALL_SIGN. Wall hanging sign (`hanging` = false) facing
   the frame's direction or its opposite -> HANGING_FROM_WALL. The display draws the item at 0.32
-  scale on the sign face with Quark's offsets.
+  scale on the sign face with Quark's offsets. Quark's wrap of the sign angle is kept as is: a
+  north-facing frame (ours = 180) attaches in front only at rotations 7..8 and behind at 15, 0, 1, 2,
+  while other directions attach at 2..3 rotations either way.
+- Like Quark, "use the block behind" applies to every block entity behind a filled frame: on a sign
+  it opens the sign editor (sneak to rotate the item instead), on a chest the chest.
 - **Display.** Filling a frame spawns its `lepton:glass_frame` display entity at the frame (held
   item = the frame item, name tag = the item's custom name); emptying or breaking despawns it. The
   block's `lepton:filled` state hides the glass frame model. The 100-tick sweep respawns a missing

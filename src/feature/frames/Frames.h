@@ -47,7 +47,6 @@ void exchangeOne(Player& player, ItemStack const& result);
 /// Java direction index (0 down, 1 up, 2 north, 3 south, 4 west, 5 east) of a `minecraft:block_face`
 /// value, -1 when unknown.
 [[nodiscard]] int dirFromName(std::string_view name);
-[[nodiscard]] std::string_view dirName(int dir);
 [[nodiscard]] BlockPos offset(BlockPos const& pos, int dir);
 /// The entity yaw that makes a model face `dir` (horizontal directions; 0 for up/down).
 [[nodiscard]] float yawFor(int dir);
@@ -73,6 +72,8 @@ void orient(Actor& actor, float yaw);
 /// Removes (`enabled` = false) or restores the recipes with these identifiers.
 void setRecipesEnabled(std::vector<std::string> const& ids, bool enabled);
 [[nodiscard]] bool hasRecipe(std::string const& id);
+/// Drops the stash of removed recipes (world closed).
+void forgetRemovedRecipes();
 
 // ---- cauldrons ---------------------------------------------------------------------------------------
 
@@ -113,7 +114,9 @@ void uninstall();
 [[nodiscard]] bool mayAddPattern(int patterns);
 } // namespace banners
 
-/// Cauldron interactions of the unit (frame dyeing/washing, map washing). True when handled.
+/// Cauldron interactions of the unit (frame dyeing/washing, map washing) with `hand` (the used
+/// item, the selected one when omitted). True when handled.
+bool onCauldronUse(Player& player, BlockSource& region, BlockPos const& pos, ItemStack const& hand);
 bool onCauldronUse(Player& player, BlockSource& region, BlockPos const& pos);
 
 // ---- selftest hooks --------------------------------------------------------------------------------

@@ -60,6 +60,7 @@ struct Frame {
     std::int64_t display  = 0;
     SignInfo     sign;
     SignAttachment attachment = SignAttachment::NotAttached;
+    bool         dirty = true; ///< the display needs a refresh
 };
 
 struct State {
@@ -127,10 +128,6 @@ int  dirOf(Block const& b) { return dirFromName(bs::getString(b, "minecraft:bloc
 
 Vec3 center(BlockPos const& p) { return Vec3{p.x + 0.5f, p.y + 0.5f, p.z + 0.5f}; }
 
-bool endsWith(std::string_view s, std::string_view suffix) {
-    return s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix;
-}
-
 int facingToRotation(int facing) {
     switch (facing) {
     case 3: return 0;  // south
@@ -147,13 +144,13 @@ int facingToRotation(int facing) {
 SignInfo signInfoOf(Block const& block) {
     SignInfo    s;
     auto const& id = block.getTypeName();
-    if (endsWith(id, "standing_sign")) {
+    if (id.ends_with("standing_sign")) {
         s.kind     = SignKind::Standing;
         s.rotation = bs::getInt(block, "ground_sign_direction").value_or(0) & 15;
-    } else if (endsWith(id, "wall_sign")) {
+    } else if (id.ends_with("wall_sign")) {
         s.kind   = SignKind::Wall;
         s.facing = bs::getInt(block, "facing_direction").value_or(2);
-    } else if (endsWith(id, "hanging_sign")) {
+    } else if (id.ends_with("hanging_sign")) {
         int facing = bs::getInt(block, "facing_direction").value_or(2);
         if (bs::getBool(block, "hanging").value_or(false)) {
             s.kind     = SignKind::CeilingHanging;
@@ -196,8 +193,11 @@ bool supportOk(BlockSource& region, BlockPos const& framePos, int dir) {
 }
 
 void updateAttachment(BlockSource& region, BlockPos const& pos, int dir, Frame& f) {
-    f.sign       = signInfoOf(region.getBlock(offset(pos, oppositeDir(dir))));
-    f.attachment = signAttachment(dir, f.sign);
+    auto sign = signInfoOf(region.getBlock(offset(pos, oppositeDir(dir))));
+    auto att  = signAttachment(dir, sign);
+    if (att != f.attachment || sign.rotation != f.sign.rotation) f.dirty = true;
+    f.sign       = sign;
+    f.attachment = att;
 }
 
 int kindOf(ItemStack const& item) {
@@ -219,6 +219,7 @@ void despawnDisplay(Frame& f) {
 
 /// Spawns / updates the display entity of a filled frame (despawns it for an empty one).
 void syncDisplay(BlockSource& region, GlobalPos const& gp, Frame& f, Block const& block) {
+    f.dirty = false;
     if (game::isEmpty(f.item)) {
         despawnDisplay(f);
         return;
@@ -298,7 +299,8 @@ void sweep(bool maps) {
         updateAttachment(*region, pos, dir, f);
         bool filled = !game::isEmpty(f.item);
         if (bs::getBool(block, "lepton:filled").value_or(false) != filled) requestFilled(gp, filled);
-        syncDisplay(*region, gp, f, block);
+        bool missing = filled && (!f.display || !game::entities::find(f.display));
+        if (f.dirty || missing || (!filled && f.display)) syncDisplay(*region, gp, f, block);
         if (maps && cfg().glassItemFramesUpdateMaps) updateMap(*region, pos, f);
     }
     for (auto const& gp : gone) erase(gp);
@@ -415,11 +417,11 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     // placing a glass frame item
     auto id = game::itemId(ev.item());
     if (id != kGlassFrame && id != kGlowingGlassFrame) return;
+    if (!player.isSneaking() && block.getBlockType().isInteractiveBlock()) return; // the block reacts first
     if (!cfg().enableGlassItemFrame) {
         ev.cancel();
         return;
     }
-    if (!player.isSneaking() && block.getBlockType().isInteractiveBlock()) return; // the block reacts first
     int      dir    = static_cast<int>(ev.face());
     BlockPos target = game::replaceable(region, pos) && !block.isAir() ? pos : offset(pos, dir);
     if (dir < 0 || dir > 5 || !game::replaceable(region, target) || !supportOk(region, target, dir)) ev.cancel();
@@ -502,7 +504,7 @@ void onTick(ll::event::ServerLevelTickEvent&) {
                 continue;
             }
             updateAttachment(*region, pos, dir, it->second);
-            syncDisplay(*region, gp, it->second, block);
+            if (it->second.dirty) syncDisplay(*region, gp, it->second, block);
         }
     }
 
@@ -524,7 +526,9 @@ std::vector<std::string> recipeIds() { return {"lepton:glass_item_frame", "lepto
 
 void applyConfig() {
     setRecipesEnabled(recipeIds(), cfg().enableGlassItemFrame);
-    if (st().loaded) sweep(false);
+    if (!st().loaded) return;
+    for (auto& [gp, f] : st().frames) f.dirty = true; // e.g. a new itemRenderScale
+    sweep(false);
 }
 
 void install() {

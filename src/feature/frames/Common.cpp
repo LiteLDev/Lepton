@@ -50,6 +50,7 @@
 #include "game/Blocks.h"
 #include "game/Inventory.h"
 #include "game/Items.h"
+#include "game/WorldDb.h"
 #include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -127,11 +128,6 @@ int dirFromName(std::string_view name) {
     for (int i = 0; i < 6; ++i)
         if (names[i] == name) return i;
     return -1;
-}
-
-std::string_view dirName(int dir) {
-    static constexpr std::string_view names[6]{"down", "up", "north", "south", "west", "east"};
-    return dir >= 0 && dir < 6 ? names[dir] : std::string_view{};
 }
 
 BlockPos offset(BlockPos const& pos, int dir) {
@@ -302,6 +298,11 @@ void setRecipesEnabled(std::vector<std::string> const& ids, bool enabled) {
     if (changed) notify(recipes);
 }
 
+void forgetRemovedRecipes() {
+    stash().owner = nullptr;
+    stash().removed.clear();
+}
+
 bool hasRecipe(std::string const& id) {
     auto level = ll::service::getLevel();
     if (!level) return false;
@@ -372,6 +373,7 @@ struct FramesModule {
         static bool once = false;
         if (!once) {
             once = true;
+            game::db::onWorldClosed([] { forgetRemovedRecipes(); }); // they belong to the closed world
             config::onReload([] {
                 glass::applyConfig();
                 dyed::applyConfig();

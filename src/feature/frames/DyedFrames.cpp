@@ -8,6 +8,7 @@
 
 #include "feature/frames/Frames.h"
 
+#include <cmath>
 #include <map>
 #include <set>
 
@@ -67,9 +68,12 @@ ItemStack dyedItem(bool glow, int rgb) {
 // ---- cauldrons (dyeing, washing; map washing) -------------------------------------------------------
 
 bool onCauldronUse(Player& player, BlockSource& region, BlockPos const& pos) {
+    return onCauldronUse(player, region, pos, player.getSelectedItem());
+}
+
+bool onCauldronUse(Player& player, BlockSource& region, BlockPos const& pos, ItemStack const& hand) {
     auto info = cauldronAt(region, pos);
     if (!info || !info->water) return false;
-    ItemStack const& hand = player.getSelectedItem();
     if (game::isEmpty(hand) || player.isSneaking()) return false; // sneaking with an item skips block use (Java)
     auto id = game::itemId(hand);
 
@@ -256,11 +260,25 @@ bool convertDrop(PendingDrop const& d) {
     BlockPos     pos = game::blockPos(d.pos);
     AABB         box{Vec3{pos.x - 1.f, pos.y - 1.f, pos.z - 1.f}, Vec3{pos.x + 2.f, pos.y + 2.f, pos.z + 2.f}};
     std::string_view want = d.glow ? kVanillaGlow : kVanillaFrame;
+    // the frame's own drop: a single frame item spawned at the frame in the last few ticks (the
+    // nearest one, so two frames broken together keep their colours)
+    Vec3   c = center(pos);
+    Actor* best = nullptr;
+    float  bestD = 1.0f;
     for (auto* a : game::entities::inBox(*region, box, "minecraft:item")) {
         if (!a || !a->isAlive()) continue;
         auto& ia = static_cast<ItemActor&>(*a);
         ItemStack const& stack = ia.mItem;
-        if (game::itemId(stack) != want || stack.mCount != 1 || ia.mAge > 40) continue;
+        if (game::itemId(stack) != want || stack.mCount != 1 || ia.mAge > 6) continue;
+        Vec3  q    = a->getPosition();
+        float dist = std::sqrt((q.x - c.x) * (q.x - c.x) + (q.y - c.y) * (q.y - c.y) + (q.z - c.z) * (q.z - c.z));
+        if (dist < bestD) {
+            bestD = dist;
+            best  = a;
+        }
+    }
+    if (best) {
+        Actor* a = best;
         Vec3 at = a->getPosition(), motion = a->getPosDelta();
         game::entities::despawn(*a);
         auto level = ll::service::getLevel();
@@ -308,19 +326,17 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     auto const& pos    = ev.blockPos();
     auto const& block  = region.getBlock(pos);
 
-    if (block.getTypeName() == "minecraft:cauldron" && onCauldronUse(player, region, pos)) {
+    // the event's item: a glass frame uses its support with an empty hand (no dyeing, no washing)
+    if (block.getTypeName() == "minecraft:cauldron" && onCauldronUse(player, region, pos, ev.item())) {
         ev.cancel();
         return;
     }
 
     auto id = game::itemId(ev.item());
     if (!isDyedItem(id)) return;
-    if (!cfg().enableDyeableItemFrames) {
-        ev.cancel();
-        return;
-    }
     if (!player.isSneaking() && block.getBlockType().isInteractiveBlock()) return; // the block reacts first
     ev.cancel();
+    if (!cfg().enableDyeableItemFrames) return;
     queuePlacement(player, region, pos, static_cast<int>(ev.face()));
 }
 
