@@ -161,7 +161,7 @@ function Add-StorageBlock {
 function Add-StorageItem([string]$Id, [hashtable]$Name, [string]$Icon, [string]$Category = 'items', [string]$Group, [string]$Block, [string[]]$ItemTags, [string[]]$Gate) {
     $menu = [ordered]@{ category = $Category }
     if ($Group) { $menu.group = $Group }
-    $comp = [ordered]@{ 'minecraft:icon' = (Add-ItemTexture $Icon) }
+    $comp = [ordered]@{ 'minecraft:icon' = (Add-ItemTexture $Icon); 'minecraft:display_name' = [ordered]@{ value = $(if ($Block) { "tile.$Id.name" } else { "item.$Id.name" }) } }
     if ($Block) { $comp['minecraft:block_placer'] = [ordered]@{ block = $Block; replace_block_item = $true } }
     Add-PackText "item.$Id.name" $Name
     if ($ItemTags) { $comp['minecraft:tags'] = [ordered]@{ tags = @($ItemTags) } }

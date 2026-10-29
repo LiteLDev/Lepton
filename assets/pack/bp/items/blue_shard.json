@@ -9,6 +9,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_storage_storage_blue_shard",
+      "minecraft:display_name": {
+        "value": "item.lepton:blue_shard.name"
+      },
       "minecraft:tags": {
         "tags": [
           "lepton:shards"
