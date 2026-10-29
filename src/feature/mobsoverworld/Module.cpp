@@ -151,7 +151,9 @@ LL_TYPE_INSTANCE_HOOK(
     auto const& c = config();
     if (!c.enableCrabs || !c.addCrabLegToFishermanTrades) return result;
     if (mGeneratedTablePath->find("fisherman") == std::string::npos) return result;
-    auto* offers = getOffers();
+    // Not getOffers(): it may generate trades again, re-entering this hook (and the other units'
+    // _generateTrades hooks) until the stack overflows.
+    auto* offers = mOffers.get();
     if (!offers) return result;
     auto leg = game::makeItem("lepton:crab_leg", 4);
     if (game::isEmpty(leg)) return result;
