@@ -344,14 +344,25 @@ LP_REGISTER_SELFTEST("mobsdeep.wraith.aggro", [](Context& ctx) -> ll::coro::Coro
     ctx.check(md::testing::voiceOf(id).has_value(), "the wraith picked a voice");
     ctx.check(w->mTargetId->rawID == 0 || w->mTargetId->rawID == -1, "it ignores players until hit");
     sp.simulateAttack(w);
+    co_await ctx.ticks(3);
+    // its hits slow the victim (Slowness II): a villager victim works on Peaceful too
+    auto* villager = spawnNear(ctx, "minecraft:villager_v2", 3.0f);
+    ctx.require(villager != nullptr, "villager spawned");
+    auto vid    = ent::idOf(*villager);
     bool slowed = false;
     for (int i = 0; i < 200 && !slowed; ++i) {
+        auto* a = ent::find(id);
+        auto* v = ent::find(vid);
+        if (!a || !v) break;
+        a->setTarget(v);
         co_await ctx.ticks(1);
-        auto const* eff = sp.getEffect(2u);
-        slowed          = eff && eff->mAmplifier == 1;
+        if ((v = ent::find(vid))) {
+            auto const* eff = v->getEffect(2u);
+            slowed          = eff && eff->mAmplifier == 1;
+        }
     }
-    ctx.check(slowed, "after being hit it attacks and slows the player (Slowness II)");
-    sp.removeEffect(2);
+    ctx.check(slowed, "its hit slows the victim (Slowness II)");
+    if (auto* v = ent::find(vid)) ent::despawn(*v);
     if (auto* a = ent::find(id)) ent::despawn(*a);
 });
 
@@ -374,7 +385,8 @@ LP_REGISTER_SELFTEST("mobsdeep.soulbead", [](Context& ctx) -> ll::coro::CoroTask
     }
     md::testing::setSoulBeadAge(id, 5998);
     co_await ctx.ticks(6);
-    ctx.check(ent::find(id) == nullptr && md::testing::soulBeadAge(id) == -1, "it vanishes after 6000 ticks");
+    ctx.check(md::testing::soulBeadAge(id) == -1, "its state is gone after 6000 ticks");
+    ctx.check(ent::find(id) == nullptr, "the bead vanishes after 6000 ticks");
 });
 
 // A row of every mob and variant for screenshots (client scenario `mobsdeep`): stonelings of several
@@ -432,7 +444,7 @@ LP_REGISTER_SELFTEST("mobsdeep.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     auto* forgotten = ent::find(ids[5]);
     ctx.check(forgotten && itemId(forgotten->getOffhandSlot()) == "minecraft:iron_sword", "the Forgotten carries its sword");
     auto* blue = ent::find(ids[7]);
-    ctx.check(blue && md::molang(*blue, "query.variant") == 1.0f, "a blue soulhound");
+    ctx.check(blue && blue->getVariant() == 1, "a blue soulhound");
     auto* resting = ent::find(ids[9]);
     ctx.check(resting && md::boolProp(*resting, "lepton:resting"), "the tame foxhound rests");
     ctx.check(bead != 0, "a soul bead flies");

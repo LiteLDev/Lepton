@@ -1,8 +1,9 @@
 // Shared helpers of the mobsdeep unit: config registration, variant table, wraith sound mapping,
-// sounds / particles, molang reads, soul bead geometry, fortress search.
+// sounds / particles, entity property reads, soul bead geometry, fortress search.
 
 #include <cmath>
 #include <map>
+#include <variant>
 
 #include "ll/api/service/Bedrock.h"
 
@@ -10,6 +11,9 @@
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/network/packet/PlaySoundPacket.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/world/actor/state/PropertyComponent.h"
+#include "mc/world/actor/state/PropertyContainer.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/level/BlockPos.h"
@@ -93,14 +97,31 @@ std::vector<Voice> wraithVoices() {
     return out;
 }
 
-float molang(Actor& actor, std::string const& expr) { return actor.evalMolang(expr); }
+namespace {
+// Entity properties are read from the actor's PropertyComponent (Actor::evalMolang does not allow
+// query functions such as query.property in its context).
+std::optional<std::variant<int, float, bool, std::string>> propValue(Actor& actor, std::string_view prop) {
+    auto comp = actor.getEntityContext().tryGetComponent<PropertyComponent>();
+    if (!comp) return std::nullopt;
+    return comp->mPropertyContainer->getValueVariant(HashedString(std::string(prop)).getHash());
+}
+} // namespace
 
 bool boolProp(Actor& actor, std::string_view prop) {
-    return actor.evalMolang("query.property('" + std::string(prop) + "')") != 0.0f;
+    auto v = propValue(actor, prop);
+    if (!v) return false;
+    if (auto const* b = std::get_if<bool>(&*v)) return *b;
+    if (auto const* i = std::get_if<int>(&*v)) return *i != 0;
+    return false;
 }
 
 int intProp(Actor& actor, std::string_view prop) {
-    return static_cast<int>(std::lround(actor.evalMolang("query.property('" + std::string(prop) + "')")));
+    auto v = propValue(actor, prop);
+    if (!v) return 0;
+    if (auto const* i = std::get_if<int>(&*v)) return *i;
+    if (auto const* f = std::get_if<float>(&*v)) return static_cast<int>(std::lround(*f));
+    if (auto const* b = std::get_if<bool>(&*v)) return *b ? 1 : 0;
+    return 0;
 }
 
 void playSoundAt(Actor& near, std::string const& name, Vec3 const& pos, float volume, float pitch) {

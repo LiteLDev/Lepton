@@ -118,6 +118,7 @@ struct StonelingState {
     int   loot      = -1;
     int   tempt     = -1;
     int   wary      = -1;
+    bool  startled  = false;
     bool  fleeing   = false;
     int   fleeTicks = 0;
     int   still     = 0;
@@ -328,7 +329,7 @@ private:
     void tickHats(std::vector<Player*> const& players);
     void runPending();
 
-    void startle(Actor& a, StonelingState& st);
+    bool startle(Actor& a, StonelingState& st);
     void poof(Actor& a);
 
     std::vector<ll::event::ListenerPtr> mListeners;
@@ -489,23 +490,29 @@ void MobsdeepModule::postInteract(Player&, Actor& target, InteractionResult cons
 
 // ---- per tick ---------------------------------------------------------------------------------
 
-void MobsdeepModule::startle(Actor& a, StonelingState& st) {
-    if (boolProp(a, "lepton:startled")) return;
+bool MobsdeepModule::startle(Actor& a, StonelingState& st) {
+    // the event's property change lands a tick later: remember it here too
+    if (st.startled || boolProp(a, "lepton:startled")) return false;
     ent::triggerEvent(a, "lepton:startle");
-    st.tempt = 0;
-    st.wary  = 0;
+    st.startled = true;
+    st.tempt    = 0;
+    st.wary     = 0;
+    log().info("mobsdeep: stoneling startled");
+    return true;
 }
 
 void MobsdeepModule::poof(Actor& a) {
     auto pos = a.getPosition();
     particleAt(a, "lepton:stoneling_poof", pos);
+    Actor* last = nullptr;
     for (int guard = 0; guard < 8; ++guard) {
         auto* passenger = a.getFirstPassenger();
-        if (!passenger || passenger->isPlayer()) break;
-        ent::despawn(*passenger);
+        if (!passenger || passenger == last || passenger->isPlayer()) break;
+        passenger->remove();
+        last = passenger;
     }
     stonelings.erase(ent::idOf(a));
-    ent::despawn(a);
+    a.remove();
     log().info("mobsdeep: stoneling poofed");
 }
 
@@ -515,7 +522,7 @@ void MobsdeepModule::tickStoneling(Actor& a, std::vector<Player*> const& players
     auto&       st  = stonelings[id];
     if (!cfg.enableStonelings) return;
     bool playerMade = boolProp(a, "lepton:player_made");
-    bool startled   = boolProp(a, "lepton:startled");
+    bool startled   = st.startled || boolProp(a, "lepton:startled");
     auto pos        = a.getPosition();
 
     if (!st.seen) {
@@ -523,7 +530,7 @@ void MobsdeepModule::tickStoneling(Actor& a, std::vector<Player*> const& players
         if (!boolProp(a, "lepton:lichen") && !playerMade && a.getDimensionId() == 0) {
             auto biome = biomeName(a.getDimensionBlockSource(), pos);
             if (biome.find("glimmering_weald") != std::string::npos && randInt(5) < 3 && intProp(a, "lepton:variant") >= 0
-                && a.getHealth() == a.getMaxHealth() && molang(a, "query.life_time") < 1.0f)
+                && a.getHealth() == a.getMaxHealth() && a.mTickCount < 20)
                 ent::triggerEvent(a, "lepton:lichen");
         }
     }
@@ -572,7 +579,6 @@ void MobsdeepModule::tickStoneling(Actor& a, std::vector<Player*> const& players
         if (scare) {
             startle(a, st);
             startled = true;
-            log().info("mobsdeep: stoneling startled");
         } else if ((near ? 1 : 0) != st.wary) {
             ent::triggerEvent(a, near ? "lepton:wary_on" : "lepton:wary_off");
             st.wary = near ? 1 : 0;
@@ -738,14 +744,14 @@ void MobsdeepModule::tickSoulBead(Actor& a) {
     auto id = ent::idOf(a);
     auto it = beads.find(id);
     if (it == beads.end()) {
-        ent::despawn(a); // orphan (state lost)
+        a.remove(); // orphan (state lost)
         return;
     }
     auto& b = it->second;
     if (b.life > 6000) {
         beads.erase(it);
         dirty = true;
-        ent::despawn(a);
+        a.remove();
         return;
     }
     Vec3 p = soulBeadPoint(b.start, b.targetX, b.targetZ, b.life);
@@ -888,10 +894,7 @@ void MobsdeepModule::onHurt(ll::event::ActorHurtEvent& ev) {
         playSoundAt(victim, "lepton.stoneling.cry", victim.getPosition());
         if (attacker && attacker->isPlayer() && !boolProp(victim, "lepton:player_made")) {
             auto& st = stonelings[ent::idOf(victim)];
-            if (!boolProp(victim, "lepton:startled")) {
-                startle(victim, st);
-                log().info("mobsdeep: stoneling startled");
-            }
+            startle(victim, st);
         }
         return;
     }
@@ -1127,7 +1130,14 @@ int soulBeadAge(int64_t id) {
     return -1;
 }
 void setSoulBeadAge(int64_t id, int age) {
-    if (auto it = M().beads.find(id); it != M().beads.end()) it->second.life = age;
+    // keeps the bead where it is (the trail start moves along), so it stays in loaded chunks
+    if (auto it = M().beads.find(id); it != M().beads.end()) {
+        auto& b   = it->second;
+        Vec3  cur = soulBeadPoint(b.start, b.targetX, b.targetZ, b.life);
+        Vec3  nxt = soulBeadPoint(b.start, b.targetX, b.targetZ, age);
+        b.start   = Vec3{b.start.x + cur.x - nxt.x, b.start.y + cur.y - nxt.y, b.start.z + cur.z - nxt.z};
+        b.life    = age;
+    }
 }
 int taterTicks(int64_t id) {
     auto& t = M().taters;

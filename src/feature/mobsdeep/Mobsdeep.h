@@ -60,8 +60,7 @@ struct Voice {
 /// The usable entries of `wraithSounds` (exactly three '|'-separated parts), mapped to Bedrock.
 [[nodiscard]] std::vector<Voice> wraithVoices();
 
-/// Entity property / molang helpers.
-[[nodiscard]] float molang(Actor& actor, std::string const& expr);
+/// Entity property reads (from the actor's PropertyComponent; 0 / false when missing).
 [[nodiscard]] bool  boolProp(Actor& actor, std::string_view prop);
 [[nodiscard]] int   intProp(Actor& actor, std::string_view prop);
 
