@@ -7,6 +7,7 @@
 #include <mutex>
 #include <random>
 #include <set>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -90,7 +91,7 @@ std::unordered_map<std::string_view, Part> const& idTable() {
     return table;
 }
 
-bool hasTag(Block const& b, char const* tag) { return b.hasTag(HashedString(tag)); }
+bool               hasTag(Block const& b, char const* tag) { return b.hasTag(HashedString(tag)); }
 std::string const& nameOf(Block const& b) { return b.getTypeName(); }
 
 // Block types the hooks compare against (set on the server/client thread, read by any thread).
@@ -132,14 +133,19 @@ struct Task {
 struct State {
     uint64_t                              tick = 0;
     std::vector<Task>                     tasks;
-    std::set<core::GlobalPos>             checks; // ladder / carpet support checks for the next tick
     std::unordered_map<int64_t, uint64_t> lastCompost;
 };
 State& st() {
     static State s;
     return s;
 }
-void later(int ticks, std::function<void()> fn) { st().tasks.push_back({st().tick + static_cast<uint64_t>(ticks), std::move(fn)}); }
+// ladder / carpet support checks for the next tick (filled by any thread that changes blocks)
+std::mutex                gChecksMutex;
+std::set<core::GlobalPos> gChecks;
+
+void later(int ticks, std::function<void()> fn) {
+    st().tasks.push_back({st().tick + static_cast<uint64_t>(ticks), std::move(fn)});
+}
 
 Player* playerById(int64_t id) {
     auto level = ll::service::getLevel();
@@ -158,7 +164,12 @@ constexpr char const*        kBarsKey = "lp:palette:bars";
 
 void queueBars(core::GlobalPos const& p) {
     std::lock_guard lock(gBarsMutex);
-    if (gBars.size() < kMaxBars) gBars.push_back(p);
+    if (gBars.size() < kMaxBars) {
+        gBars.push_back(p);
+        return;
+    }
+    static std::atomic<bool> warned{false};
+    if (!warned.exchange(true)) log().warn("palette: too many fortress gold bars waiting for their chunks; dropping");
 }
 
 void processBars() {
@@ -226,37 +237,75 @@ Actor const* actorOf(GetCollisionShapeInterface const& e) {
 
 AABB plateBox(BlockPos const& pos, double top = 1.0) {
     return AABB{
-        Vec3{static_cast<float>(pos.x), static_cast<float>(pos.y) + 15.f / 16.f, static_cast<float>(pos.z)},
-        Vec3{static_cast<float>(pos.x) + 1.f, static_cast<float>(pos.y + top), static_cast<float>(pos.z) + 1.f}
+        Vec3{static_cast<float>(pos.x),       static_cast<float>(pos.y) + 15.f / 16.f, static_cast<float>(pos.z)      },
+        Vec3{static_cast<float>(pos.x) + 1.f, static_cast<float>(pos.y + top),         static_cast<float>(pos.z) + 1.f}
     };
 }
 
 bool isEmptyBox(AABB const& b) { return b.max.x <= b.min.x || b.max.y <= b.min.y || b.max.z <= b.min.z; }
 
-AABB grateBox(IConstBlockSource const& region, BlockPos const& pos, uint32_t type, bool leashed, Vec3 const& feet, float step) {
+AABB grateBox(
+    IConstBlockSource const& region,
+    BlockPos const&          pos,
+    uint32_t                 type,
+    bool                     leashed,
+    Vec3 const&              feet,
+    float                    step
+) {
     if (type == kItemEntity || type == kXpOrb) return AABB::BOX_AT_ORIGIN_WITH_NO_VOLUME();
     bool animal = (type & kAnimal) == kAnimal || (type & kWaterAnim) == kWaterAnim;
     if (animal && !leashed) {
-        BlockPos below{
-            static_cast<int>(std::floor(feet.x)),
-            static_cast<int>(std::floor(feet.y)) - 1,
-            static_cast<int>(std::floor(feet.z))
-        };
-        auto const* grate = gGrateType.load();
+        BlockPos below = game::blockPosOf(feet);
+        --below.y;
+        auto const* grate   = gGrateType.load();
         bool        onGrate = grate && &region.getBlock(below).getBlockType() == grate;
         if (!onGrate) return plateBox(pos, 17.0 / 16.0 + step);
     }
     return plateBox(pos);
 }
 
-AABB grateShape(IConstBlockSource const& region, BlockPos const& pos, optional_ref<GetCollisionShapeInterface const> entity) {
+/// The actor whose AABB component is `box` (the same memory), looked up in the dimension's main
+/// region. Only on the thread that owns that region (the server thread); nullptr elsewhere.
+Actor const* actorWithBox(IConstBlockSource const& query, AABB const& box) {
+    auto* region = game::regionOf(static_cast<int>(query.getDimensionId()));
+    if (!region || *region->mOwnerThreadID != std::this_thread::get_id()) return nullptr;
+    AABB search{
+        box.min - Vec3{0.25f, 0.25f, 0.25f},
+        box.max + Vec3{0.25f, 0.25f, 0.25f}
+    };
+    for (Actor* a : region->fetchEntities(nullptr, search, false, false)) {
+        if (&a->getAABB() == &box) return a;
+    }
+    return nullptr;
+}
+
+AABB grateShape(
+    IConstBlockSource const&                       region,
+    BlockPos const&                                pos,
+    optional_ref<GetCollisionShapeInterface const> entity
+) {
     if (!entity) return plateBox(pos);
     if (auto const* a = actorOf(*entity)) {
-        return grateBox(region, pos, static_cast<uint32_t>(a->getEntityTypeId()), a->isLeashed(), a->getFeetPos(), a->getMaxAutoStep());
+        return grateBox(
+            region,
+            pos,
+            static_cast<uint32_t>(a->getEntityTypeId()),
+            a->isLeashed(),
+            a->getFeetPos(),
+            a->getMaxAutoStep()
+        );
     }
-    auto const& box = entity->getAABB();
+    // The movement systems query through an ECS proxy that has no Actor: find the actor whose
+    // AABB component the proxy reads (only for animals, which need the leash state and step height).
+    auto const& box  = entity->getAABB();
+    auto        type = static_cast<uint32_t>(entity->getEntityTypeId());
+    if ((type & kAnimal) == kAnimal || (type & kWaterAnim) == kWaterAnim) {
+        if (auto const* a = actorWithBox(region, box)) {
+            return grateBox(region, pos, type, a->isLeashed(), a->getFeetPos(), a->getMaxAutoStep());
+        }
+    }
     Vec3 feet{(box.min.x + box.max.x) / 2.f, box.min.y, (box.min.z + box.max.z) / 2.f};
-    return grateBox(region, pos, static_cast<uint32_t>(entity->getEntityTypeId()), false, feet, 0.5625f);
+    return grateBox(region, pos, type, false, feet, 0.5625f);
 }
 
 bool isActiveGrate(Block const& block) {
@@ -289,9 +338,9 @@ LL_TYPE_INSTANCE_HOOK(
     BlockType,
     &BlockType::$getCollisionShape,
     AABB,
-    Block const&                                     block,
-    IConstBlockSource const&                         region,
-    BlockPos const&                                  pos,
+    Block const&                                   block,
+    IConstBlockSource const&                       region,
+    BlockPos const&                                pos,
     optional_ref<GetCollisionShapeInterface const> entity
 ) {
     if (!isActiveGrate(block)) return origin(block, region, pos, entity);
@@ -304,11 +353,11 @@ LL_TYPE_INSTANCE_HOOK(
     BlockType,
     &BlockType::$addCollisionShapes,
     bool,
-    Block const&                                     block,
-    IConstBlockSource const&                         region,
-    BlockPos const&                                  pos,
-    AABB const*                                      intersectTestBox,
-    std::vector<AABB>&                               inoutBoxes,
+    Block const&                                   block,
+    IConstBlockSource const&                       region,
+    BlockPos const&                                pos,
+    AABB const*                                    intersectTestBox,
+    std::vector<AABB>&                             inoutBoxes,
     optional_ref<GetCollisionShapeInterface const> entity
 ) {
     if (!isActiveGrate(block)) return origin(block, region, pos, intersectTestBox, inoutBoxes, entity);
@@ -397,7 +446,14 @@ double thatchMultiplier() { return std::clamp(cfg().fallDamageMultiplier, 0.0, 1
 
 AABB grateCollision(BlockSource const& region, BlockPos const& pos, Actor const* actor) {
     if (!actor) return plateBox(pos);
-    return grateBox(region, pos, static_cast<uint32_t>(actor->getEntityTypeId()), actor->isLeashed(), actor->getFeetPos(), actor->getMaxAutoStep());
+    return grateBox(
+        region,
+        pos,
+        static_cast<uint32_t>(actor->getEntityTypeId()),
+        actor->isLeashed(),
+        actor->getFeetPos(),
+        actor->getMaxAutoStep()
+    );
 }
 
 std::string bambooMatFacing(BlockSource& region, BlockPos const& pos, std::string_view id, float yaw, float pitch) {
@@ -423,7 +479,7 @@ bool ladderSupported(BlockSource& region, BlockPos const& pos) {
     if (support.isAir()) return false;
     if (static_cast<bool>(support.mCachedComponentData->mIsSolid)) return true;
     static constexpr std::string_view kFaces[6] = {"down", "up", "north", "south", "west", "east"};
-    uchar facing = 2;
+    uchar                             facing    = 2;
     for (uchar i = 0; i < 6; ++i)
         if (kFaces[i] == *face) facing = i;
     return support.canProvideSupport(facing, BlockSupportType::Edge);
@@ -434,7 +490,7 @@ void applyClimbable() {
         auto const* b = bs::of(e.id);
         if (!b || !hasTag(*b, "lepton:climbable")) continue;
         BlockProperty& props = b->mBlockType->mProperties;
-        props       = static_cast<BlockProperty>(
+        props                = static_cast<BlockProperty>(
             static_cast<uint64_t>(props) | static_cast<uint64_t>(BlockProperty::Climbable)
             | static_cast<uint64_t>(BlockProperty::CanHaltWhenClimbing)
         );
@@ -466,7 +522,11 @@ void popBlock(BlockSource& region, BlockPos const& pos) {
     if (auto level = ll::service::getLevel()) {
         auto stack = game::makeItem(id, 1);
         if (!game::isEmpty(stack)) {
-            Vec3 at{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f, static_cast<float>(pos.z) + 0.5f};
+            Vec3 at{
+                static_cast<float>(pos.x) + 0.5f,
+                static_cast<float>(pos.y) + 0.5f,
+                static_cast<float>(pos.z) + 0.5f
+            };
             level->getSpawner().spawnItem(region, stack, nullptr, at, 10);
         }
     }
@@ -482,7 +542,10 @@ void checkSupport(BlockSource& region, BlockPos const& pos) {
     }
 }
 
-void queueCheck(BlockSource& region, BlockPos const& pos) { st().checks.insert(game::globalPos(region, pos)); }
+void queueCheck(BlockSource& region, BlockPos const& pos) {
+    std::lock_guard lock(gChecksMutex);
+    gChecks.insert(game::globalPos(region, pos));
+}
 
 void onPlacing(ll::event::PlayerPlacingBlockEvent& ev) {
     auto& player = ev.self();
@@ -506,7 +569,13 @@ void onPlaced(ll::event::PlayerPlacedBlockEvent& ev) {
             auto* r = game::regionOf(dim);
             if (!r || nameOf(r->getBlock(pos)) != name) return;
             auto facing = bambooMatFacing(*r, pos, name, yaw, pitch);
-            if (auto const* b = bs::with(r->getBlock(pos), {{"lepton:facing", facing}})) game::setBlock(*r, pos, *b);
+            if (auto const* b = bs::with(
+                    r->getBlock(pos),
+                    {
+                        {"lepton:facing", facing}
+            }
+                ))
+                game::setBlock(*r, pos, *b);
             checkSupport(*r, pos);
         });
     } else if (hasTag(placed, "lepton:ladder")) {
@@ -518,10 +587,10 @@ void onPlaced(ll::event::PlayerPlacedBlockEvent& ev) {
 
 void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     auto& region = ev.blockSource();
-    if (region.getLevel().isClientSide()) return;
+    if (gSupportTypes.empty() || region.getLevel().isClientSide()) return;
     auto const& pos = ev.pos();
     for (auto d : {"north", "south", "west", "east", "up"}) {
-        auto        n = shapes::neighbor(pos, d);
+        auto n = shapes::neighbor(pos, d);
         if (needsSupport(region.getBlock(n))) queueCheck(region, n);
     }
 }
@@ -538,7 +607,7 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     int level = bs::getInt(b, "composter_fill_level").value_or(8);
     if (level >= 7) return; // full / ready: vanilla behaviour
     ev.cancel();
-    auto id = player.getOrCreateUniqueID().rawID;
+    auto  id   = player.getOrCreateUniqueID().rawID;
     auto& last = st().lastCompost[id];
     if (st().tick - last < 4 && last != 0) return; // one use per click
     last    = st().tick;
@@ -559,23 +628,32 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
             game::inv::sync(*p);
         }
         static std::mt19937 rng{std::random_device{}()};
-        bool raise = lvl == 0 || std::uniform_real_distribution<double>(0.0, 1.0)(rng) < 0.65;
-        auto level = ll::service::getLevel();
+        bool                raise = lvl == 0 || std::uniform_real_distribution<double>(0.0, 1.0)(rng) < 0.65;
+        auto                level = ll::service::getLevel();
         Vec3 at{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f, static_cast<float>(pos.z) + 0.5f};
         if (raise) {
-            if (auto const* n = bs::with(c, {{"composter_fill_level", lvl + 1}})) game::setBlock(*r, pos, *n);
-            if (lvl + 1 == 7) {
-                later(20, [dim, pos] {
-                    auto* rr = game::regionOf(dim);
-                    if (!rr) return;
-                    auto const& cc = rr->getBlock(pos);
-                    if (nameOf(cc) == "minecraft:composter" && bs::getInt(cc, "composter_fill_level").value_or(0) == 7)
-                        if (auto const* n = bs::with(cc, {{"composter_fill_level", 8}})) game::setBlock(*rr, pos, *n);
-                });
+            if (auto const* n = bs::with(
+                    c,
+                    {
+                        {"composter_fill_level", lvl + 1}
+            }
+                )) {
+                game::setBlock(*r, pos, *n);
+                // like vanilla: level 7 becomes ready (8) on the composter's queued tick 20 ticks
+                // later (the tick is saved with the chunk)
+                if (lvl + 1 == 7) r->addToTickingQueue(pos, *n, 20);
             }
         }
         if (level)
-            level->broadcastSoundEvent(*r, raise ? SoundEvent::ComposterFillLayer : SoundEvent::ComposterFill, at, r->getBlock(pos), ActorSoundIdentifier(*p), false, std::nullopt);
+            level->broadcastSoundEvent(
+                *r,
+                raise ? SoundEvent::ComposterFillLayer : SoundEvent::ComposterFill,
+                at,
+                r->getBlock(pos),
+                ActorSoundIdentifier(*p),
+                false,
+                std::nullopt
+            );
         log().info("palette: composted thatch at {} {} {} (level {})", pos.x, pos.y, pos.z, raise ? lvl + 1 : lvl);
     });
 }
@@ -584,9 +662,8 @@ void onSpawning(ll::event::SpawningMobEvent& ev) {
     if (!enabled(Part::Grate) || !ev.naturalSpawn()) return;
     auto const* g = gGrateType.load();
     if (!g) return;
-    auto& region = ev.blockSource();
-    auto  p      = ev.pos();
-    BlockPos at{static_cast<int>(std::floor(p.x)), static_cast<int>(std::floor(p.y)), static_cast<int>(std::floor(p.z))};
+    auto&    region = ev.blockSource();
+    auto     at     = game::blockPosOf(ev.pos());
     BlockPos below{at.x, at.y - 1, at.z};
     if (&region.getBlock(at).getBlockType() == g || &region.getBlock(below).getBlockType() == g) ev.cancel();
 }
@@ -610,9 +687,12 @@ void onTick(ll::event::ServerLevelTickEvent&) {
             }
         }
     }
-    if (!s.checks.empty()) {
-        auto checks = std::move(s.checks);
-        s.checks.clear();
+    std::set<core::GlobalPos> checks;
+    {
+        std::lock_guard lock(gChecksMutex);
+        checks.swap(gChecks);
+    }
+    if (!checks.empty()) {
         for (auto const& gp : checks)
             if (auto* r = game::regionOf(gp.dim)) checkSupport(*r, game::blockPos(gp));
     }
@@ -642,15 +722,26 @@ void saveBars() {
     else game::db::save(kBarsKey, arr);
 }
 
-bool gReady = false;
+bool gReady     = false;
+bool gInstalled = false;
 
 void onWorldReady() {
-    if (gReady) return; // registered after the world was ready (BDS) and called directly
+    if (!gInstalled || gReady) return; // registered after the world was ready (BDS) and called directly
     gReady = true;
     cacheBlocks();
     applyClimbable();
     loadBars();
     log().info("palette: ready ({} block/recipe ids)", std::size(kIds));
+}
+
+void resetState() {
+    st() = State{};
+    {
+        std::lock_guard lock(gChecksMutex);
+        gChecks.clear();
+    }
+    std::lock_guard lock(gBarsMutex);
+    gBars.clear();
 }
 
 class PaletteModule {
@@ -667,14 +758,16 @@ public:
         mListeners.push_back(bus.emplaceListener<ll::event::ClientLevelTickEvent>([](ll::event::ClientLevelTickEvent&) {
             // remote worlds register the behaviour pack blocks on the client: apply the
             // climbable property (and cache the grate) whenever the registry changed
-            static Block const* seen = nullptr;
-            auto const*         l    = bs::of("lepton:iron_ladder");
-            if (l && l != seen) {
-                seen = l;
-                applyClimbable();
-                // only the atomic grate type: the rest of the cache belongs to the server thread
-                if (auto const* g = bs::of("lepton:grate")) gGrateType = &g->getBlockType();
-            }
+            // (checked once a second: a new registry may reuse the old addresses, so look at the
+            // property itself)
+            static uint64_t ticks = 0;
+            if (++ticks % 20 != 0) return;
+            auto const* l = bs::of("lepton:iron_ladder");
+            if (!l) return;
+            auto props = static_cast<uint64_t>(static_cast<BlockProperty>(l->mBlockType->mProperties));
+            if (!(props & static_cast<uint64_t>(BlockProperty::Climbable))) applyClimbable();
+            // only the atomic grate type: the rest of the cache belongs to the server thread
+            if (auto const* g = bs::of("lepton:grate")) gGrateType = &g->getBlockType();
         }));
 #endif
         PaletteRecipeHook::hook();
@@ -686,17 +779,17 @@ public:
         if (!registered) {
             registered = true;
             game::db::onWorldReady(onWorldReady);
-            game::db::onWorldSave(saveBars);
+            game::db::onWorldSave([] {
+                if (gInstalled) saveBars();
+            });
             game::db::onWorldClosed([] {
                 gReady = false;
                 clearCachedBlocks();
-                st() = State{};
-                std::lock_guard lock(gBarsMutex);
-                gBars.clear();
+                resetState();
             });
         }
+        gInstalled = true;
         if (game::db::available()) onWorldReady(); // BDS: the world was ready before this module
-
     }
     void uninstall() {
         auto& bus = ll::event::EventBus::getInstance();
@@ -707,7 +800,11 @@ public:
         PaletteGrateShapesHook::unhook();
         PaletteThatchFallHook::unhook();
         PaletteFortressHook::unhook();
-        st() = State{};
+        if (gReady && game::db::available()) saveBars();
+        gInstalled = false;
+        gReady     = false;
+        clearCachedBlocks();
+        resetState();
     }
 
 private:

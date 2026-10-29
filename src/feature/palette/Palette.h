@@ -63,7 +63,8 @@ enum class Part {
 
 /// Java BambooMatBlock#getStateForPlacement: the facing for a mat placed at `pos` by a player
 /// looking along `yaw`/`pitch` ("north".."east", "down").
-[[nodiscard]] std::string bambooMatFacing(BlockSource& region, BlockPos const& pos, std::string_view id, float yaw, float pitch);
+[[nodiscard]] std::string
+bambooMatFacing(BlockSource& region, BlockPos const& pos, std::string_view id, float yaw, float pitch);
 
 /// Whether the ladder at `pos` still hangs on a solid block.
 [[nodiscard]] bool ladderSupported(BlockSource& region, BlockPos const& pos);

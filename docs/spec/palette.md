@@ -172,7 +172,7 @@ ladder; native, see §3). `lepton:framed_glass` marks every framed glass block/p
   `lepton:thatch`, the damage multiplier is multiplied by `fallDamageMultiplier` (Java
   `causeFallDamage(distance, multiplier)`).
 - **Thatch composting**: using thatch on a composter (level < 7) consumes one thatch (not in
-  creative) and raises the level with 65 % chance; level 7 turns to ready (8) after 20 ticks, as
+  creative) and raises the level with 65 % chance; level 7 turns to ready (8) on the composter's queued block tick 20 ticks later, as
   vanilla does.
 - **Grate** (`enableGrate`):
   - Collision (hooks on `BlockType::getCollisionShape` / `addCollisionShapes` for the grate's
@@ -180,8 +180,9 @@ ladder; native, see §3). `lepton:framed_glass` marks every framed glass block/p
     animals (`ActorType` family Animal) and water animals that are not leashed and are not
     standing on a grate get a box from y 15/16 to `17/16 + maxAutoStep`, so they cannot step onto
     it (Java uses the step-height attribute; Bedrock's max auto step is the equivalent); everything
-    else gets the 1/16 top plate.
-  - No mob spawns on grates (hook `BlockType::canSpawnOn`).
+    else gets the 1/16 top plate. Movement queries made through the engine's ECS proxy (no Actor)
+    find the animal by its AABB component to read the leash state and step height.
+  - No natural mob spawns on grates (`SpawningMobEvent` is cancelled on or above a grate).
   - Waterloggable through `minecraft:liquid_detection` (water only).
 - **Iron ladder** (`enableIronLadder`): placed on the side of a block (`minecraft:block_face`
   trait; the ladder hangs on the clicked block). Breaks (drops itself) when the block it hangs on
@@ -265,9 +266,9 @@ Selftests (dx 500..599):
 | `palette.place_disabled` | 500 | placing a block of a disabled module is cancelled |
 | `palette.shapes` | 505 | shingles stairs/slab merge, framed glass panes connect, gold bars connect to iron bars, gate opens |
 | `palette.thatch_fall` | 515 | a player falling 10 blocks takes less damage on thatch than on stone (multiplier) |
-| `palette.thatch_compost` | 520 | composting thatch raises the composter level |
+| `palette.thatch_compost` | 520 | composting thatch raises the composter level; a full composter becomes ready after 20 ticks |
 | `palette.grate_items` | 525 | an item dropped on a grate falls through; a player stands on it |
-| `palette.grate_animals` | 535 | collision boxes: tall for an unleashed pig, top plate for a leashed one / players |
+| `palette.grate_animals` | 535 | collision boxes (actor and ECS-style queries): tall for an unleashed pig, top plate for a leashed one / players |
 | `palette.grate_water` | 545 | a grate can hold water |
 | `palette.ladder` | 550 | ladder placement, climbable property, breaks without support |
 | `palette.bamboo_mat` | 560 | facing from look direction / pitch, reversal next to a mat, carpet breaks without support |
