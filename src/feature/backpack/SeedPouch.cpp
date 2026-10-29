@@ -230,7 +230,9 @@ void setPouchContents(ItemStack& pouch, PouchContents const& c) {
         int  bars = static_cast<int>(std::lround(c.count * 13.0 / max));
         std::string bar = (pouchFertilizer(item) ? "§7" : "§9") + std::string(static_cast<size_t>(bars), '|') + "§8"
                         + std::string(static_cast<size_t>(std::max(0, 13 - bars)), '|');
-        pouch.setCustomLore({"§r§f" + prettyName(game::itemId(item)) + " x" + std::to_string(c.count), "§r" + bar});
+        auto name = item.getName();
+        if (name.empty() || name.find('.') != std::string::npos) name = prettyName(game::itemId(item));
+        pouch.setCustomLore({"§r§f" + name + " x" + std::to_string(c.count), "§r" + bar});
     }
 }
 
@@ -289,8 +291,9 @@ int pouchUseOn(Player& player, BlockPos const& pos, int face) {
     auto content = contentItem(c, 1);
     bool sneak   = player.isSneaking();
 
-    if (sneak) insertIntoChest(player, c, pos);
-    if (!sneak) {
+    if (sneak && insertIntoChest(player, c, pos) >= 0) {
+        // A chest takes the contents (or says it is full); no planting around it.
+    } else if (!sneak) {
         placeSeed(player, c, pos, face);
     } else {
         int  range = pouchHoldable(content) ? cfg().shiftRange : cfg().fertilizerShiftRange;

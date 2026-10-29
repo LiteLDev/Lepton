@@ -344,7 +344,8 @@ int collectFromTotem(Player& player, Actor& totem) {
             if (game::isEmpty(curr)) {
                 player.setArmor(*slot, stack);
                 placed = true;
-            } else if (!isItem(curr, kBackpack) && !hasBinding(curr) && hasBinding(stack)) {
+            } else if (!isItem(curr, kBackpack) && !hasBinding(curr) && (hasBinding(stack) || backpackHasItems(stack))) {
+                // A backpack with items carries Quark's hidden Curse of Binding: it wins the slot.
                 player.setArmor(*slot, stack);
                 stack = curr;
             }

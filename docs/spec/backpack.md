@@ -114,8 +114,8 @@ Item lists (Quark tags, translated to Bedrock ids; other units add items through
 - **Collecting.** Hitting (attacking) the totem: if `allowAnyoneToCollect` is false only the owner
   (or a creative player) can collect. Each hit takes the first `3 + random(0..3)` stacks
   (`dropAllItemsOnHit`: all). Armour pieces are equipped if the slot is empty; a stack with Curse of
-  Binding replaces a worn piece that is not a backpack and not cursed (the worn piece then goes to the
-  inventory). Shields go to an empty off-hand. Everything else goes to the inventory; what doesn't fit
+  Binding (or a backpack with items, which carries Quark's hidden binding curse) replaces a worn piece
+  that is not a backpack and not cursed (the worn piece then goes to the inventory). Shields go to an empty off-hand. Everything else goes to the inventory; what doesn't fit
   drops at the totem. Particles: damage indicator and enchanted hit, one per stack.
 - **Dark Souls mode** (`darkSoulsMode`): while its owner is online and the owner's `lastTotem` is not
   this totem, the totem drops everything (or destroys it with `destroyLostItems`), sends the owner
@@ -153,7 +153,7 @@ Contents (user NBT `lepton:pouch` = `{Item, Count}`): one item type with count 0
   empty.
 - **Chest insert.** Sneak-using on a chest (or trapped chest) first inserts the whole content into
   it; if nothing fits, the action bar says "The inventory you are trying to insert into is full..."
-  (red). Then the 3x3 planting runs as in Quark (it does nothing on a chest).
+  (red). Nothing is planted around the chest.
 - **Display.** Quark shows the contents in the name ("Seed Pouch (Wheat Seeds)"), a fill bar
   (`round(count * 13 / maxItems)`, blue for seeds, light grey for fertilizer) and an icon tooltip.
   Lepton writes a lore line `<item name> x<count>` (white) and a text fill bar for every client;

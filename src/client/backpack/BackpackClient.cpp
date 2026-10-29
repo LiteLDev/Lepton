@@ -94,6 +94,8 @@ public:
             gBackpackScreen = m.open;
             log().info("backpack client: screen {}", m.open ? "open" : "closed");
         });
+        // A new connection (another world / server) starts without an open backpack screen.
+        net::onServerModReady([] { gBackpackScreen = false; });
     }
     void uninstall() { net::removeHandler(mScreen); }
 

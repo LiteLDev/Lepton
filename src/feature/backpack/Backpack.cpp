@@ -234,7 +234,7 @@ void rejectBlocked(Player& p, Container& c) {
 
 bool sameStack(ItemStack const& a, ItemStack const& b) {
     if (game::isEmpty(a) || game::isEmpty(b)) return game::isEmpty(a) && game::isEmpty(b);
-    return a.mCount == b.mCount && game::itemToSnbt(a) == game::itemToSnbt(b);
+    return a.mCount == b.mCount && a.matchesItem(b) && a.hasSameUserData(b);
 }
 
 void tickSessions() {
@@ -290,7 +290,10 @@ Container* backpackContainer(Player const& player) {
 bool openBackpack(Player& player) {
     if (player.isClientSide() || !cfg().enableBackpack || !wearsBackpack(player)) return false;
     auto uuid = player.getUuid().asString();
-    if (sessions().contains(uuid)) finish(uuid, true);
+    if (sessions().contains(uuid)) {
+        finish(uuid, true); // already open: closing it is all a second request does
+        return false;
+    }
     if (player.mContainerManager.get()) return false; // another screen is open
     auto  pos    = player.getFeetPos();
     auto* helper = game::entities::spawn(player.getDimensionBlockSource(), kStorageEntity, {pos.x, pos.y + 0.1f, pos.z});
@@ -319,11 +322,7 @@ bool openBackpack(Player& player) {
 
 void closeBackpack(Player& player) { finish(player.getUuid().asString(), true); }
 
-void flushBackpack(Player& player) {
-    auto it = sessions().find(player.getUuid().asString());
-    if (it == sessions().end()) return;
-    finish(it->first, true);
-}
+void flushBackpack(Player& player) { closeBackpack(player); }
 
 // ---- per-player rules (Quark's BackpackItem.inventoryTick) -------------------------------------
 

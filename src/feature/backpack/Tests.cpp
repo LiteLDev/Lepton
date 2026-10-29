@@ -416,6 +416,24 @@ LP_REGISTER_SELFTEST("backpack.pouch_chest", [](Context& ctx) -> ll::coro::CoroT
     ctx.check(inv::count(*c, [](ItemStack const& s) { return lp::game::itemId(s) == "minecraft:carrot"; }, inv::all(*c)) == 100,
               "sneak-use on a chest inserts everything");
     ctx.check(bp::pouchContents(p.getSelectedItem()).empty(), "the pouch is empty");
+
+    // A full chest: nothing moves and nothing is planted around it.
+    for (int i = 0; i < c->getContainerSize(); ++i) c->setItem(i, makeItem("minecraft:stone", 64));
+    auto side = pos;
+    side.x += 1;
+    ctx.setBlock(side, "minecraft:farmland");
+    auto above = side;
+    above.y += 1;
+    ctx.cleanupBlock(above);
+    co_await ctx.ticks(1);
+    p.setSelectedItem(pouchOf("minecraft:carrot", 10));
+    static_cast<SimulatedPlayer&>(p).simulateSneaking();
+    co_await ctx.ticks(1);
+    bp::pouchUseOn(p, lp::game::blockPos(pos), 1);
+    static_cast<SimulatedPlayer&>(p).simulateStopSneaking();
+    ctx.check(bp::pouchContents(p.getSelectedItem()).count == 10, "a full chest takes nothing");
+    ctx.check(lp::game::blockIdAt(p.getDimensionBlockSource(), lp::game::blockPos(above)) != "minecraft:carrots",
+              "and nothing is planted next to it");
     c->removeAllItems();
     clearPlayer(p);
 });

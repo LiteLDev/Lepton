@@ -76,7 +76,7 @@ void setBackpackItems(ItemStack& backpack, std::vector<ItemStack> const& items);
 [[nodiscard]] bool backpackHasItems(ItemStackBase const& backpack);
 /// Wears a backpack in the chest slot.
 [[nodiscard]] bool wearsBackpack(Player const& player);
-/// Opens the backpack screen (false when not wearing one, busy, ...). `force` skips the creative check.
+/// Opens the backpack screen (false when not wearing one, busy, already open, ...).
 bool openBackpack(Player& player);
 /// Closes the backpack screen (if open), writing the contents back.
 void closeBackpack(Player& player);
@@ -85,7 +85,7 @@ void closeBackpack(Player& player);
 [[nodiscard]] Container* backpackContainer(Player const& player);
 /// Ravager hide amount for a looting level and a random value in [0, 1).
 [[nodiscard]] int ravagerHideDrop(int lootingLevel, double random);
-/// Writes open backpack screens back into the worn items now (before deaths).
+/// Writes an open backpack screen back into the worn item now (before deaths); same as closeBackpack.
 void flushBackpack(Player& player);
 
 // ---- totem (Totem.cpp) --------------------------------------------------------------------------
