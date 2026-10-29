@@ -47,6 +47,9 @@ struct State {
     int                     recalcPath         = 0;
     int                     ambient            = 0;
     bool                    busy               = false; ///< wander goals removed
+    /// False until the first setBusy: the component groups are saved with the entity, this state
+    /// is not, so a reloaded shiba gets its goals set again once.
+    bool                    synced             = false;
 };
 std::unordered_map<int64_t, State> gState;
 
@@ -107,8 +110,9 @@ int blockLight(BlockSource& region, BlockPos const& pos) {
 }
 
 void setBusy(Actor& shiba, State& s, bool busy) {
-    if (s.busy == busy) return;
-    s.busy = busy;
+    if (s.synced && s.busy == busy) return;
+    s.synced = true;
+    s.busy   = busy;
     game::entities::triggerEvent(shiba, busy ? "lepton:busy" : "lepton:idle");
 }
 
@@ -441,6 +445,11 @@ void afterInteract(Player& player, Actor& shiba, bool wasTame, bool wasSitting, 
 }
 
 void onDeath(Actor& shiba) {
+    // The item in its mouth (a given sword, a fetched arrow) is dropped, never lost.
+    if (!mouthEmpty(shiba)) {
+        dropItem(shiba.getDimensionBlockSource(), shiba.getPosition(), shiba.getCarriedItem());
+        setMouth(shiba, ItemStack::EMPTY_ITEM());
+    }
     if (hasArmor(shiba)) {
         dropItem(shiba.getDimensionBlockSource(), shiba.getPosition(), shiba.getArmor(ArmorSlot::Body));
         shiba.setArmor(ArmorSlot::Body, ItemStack::EMPTY_ITEM());

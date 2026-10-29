@@ -6,6 +6,7 @@
 #include <set>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "nlohmann/json.hpp"
@@ -16,6 +17,8 @@
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDamageSource.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/attribute/BaseAttributeMap.h"
+#include "mc/world/attribute/SharedAttributes.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -150,13 +153,13 @@ void tickWorld(int64_t now) {
         for (auto& p : pending) {
             auto* region = game::regionOf(p.dim);
             if (!region) continue;
-            if (game::replaceable(*region, p.pos)) {
-                if (auto const* water = game::blockWith("minecraft:water")) game::setBlock(*region, p.pos, *water);
-            }
-            Vec3 at{static_cast<float>(p.pos.x) + 0.5f, static_cast<float>(p.pos.y), static_cast<float>(p.pos.z) + 0.5f};
-            // The player must still hold that very bucket (no duplication by switching slots).
+            // The player must still hold that very bucket (no duplication by switching slots), and
+            // the target must still be free (nothing placed there in between).
             Player* player = playerById(p.player);
             if (!player || game::itemToSnbt(player->getSelectedItem()) != game::itemToSnbt(p.bucket)) continue;
+            if (!game::replaceable(*region, p.pos)) continue;
+            if (auto const* water = game::blockWith("minecraft:water")) game::setBlock(*region, p.pos, *water);
+            Vec3 at{static_cast<float>(p.pos.x) + 0.5f, static_cast<float>(p.pos.y), static_cast<float>(p.pos.z) + 0.5f};
             if (Actor* crab = releaseFromBucket(p.bucket, p.dim, at)) {
                 playSound(*crab, "bucket.empty_fish", at);
             }
@@ -257,7 +260,12 @@ Actor* releaseFromBucket(ItemStack const& bucket, int dim, Vec3 const& pos) {
     if (data.value("noSpike", false)) game::entities::triggerEvent(*crab, "lepton:no_spike");
     if (auto name = data.value("name", std::string{}); !name.empty()) crab->setNameTag(name);
     int health = data.value("health", 0);
-    if (health > 0 && health < crab->getHealth()) crab->hurtByCause(static_cast<float>(crab->getHealth() - health));
+    if (health > 0 && health < crab->getHealth()) {
+        // Set the health directly (a hurt would run the damage path: armour, panic, sounds). The
+        // non-const getAttributes() exists only in the client build.
+        auto* map = const_cast<BaseAttributeMap*>(std::as_const(*crab).getAttributes().get());
+        (void)map->setCurrentValue(SharedAttributes::HEALTH(), static_cast<float>(health));
+    }
     game::entities::triggerEvent(*crab, "lepton:from_bucket");
     log().info("mobsoverworld: crab released from a bucket");
     return crab;
@@ -295,6 +303,9 @@ bool useBucket(Player& player, BlockPos const& clicked, int face) {
             target.z += kOffsets[face][2];
         }
     }
+    // Like a bucket of fish: nothing happens when neither the clicked block nor the block in front
+    // of the clicked face can take the water.
+    if (!game::replaceable(region, target)) return true;
     int64_t uid = game::entities::idOf(player);
     for (auto const& p : gPending) {
         if (p.player == uid) return true; // one release per player and tick

@@ -170,7 +170,7 @@ void tick(Actor& t, int64_t now) {
             for (int iy = min.y; iy <= max.y && !done; ++iy) {
                 for (int iz = min.z; iz <= max.z && !done; ++iz) {
                     BlockPos p{ix, iy, iz};
-                    if (game::blockIdAt(region, p) != "minecraft:moving_block") continue;
+                    if (region.getBlock(p).getTypeName() != "minecraft:moving_block") continue;
                     auto* be = region.getBlockEntity(p);
                     if (!be) continue;
                     auto* moving = static_cast<MovingBlockActor*>(be);
@@ -191,7 +191,10 @@ void tick(Actor& t, int64_t now) {
 
 bool onHurt(Actor& t, ActorDamageSource const& source, float& damage) {
     State& s      = stateOf(t);
-    Actor* direct = source.isEntitySource() ? game::entities::find(source.getEntityUniqueID().rawID) : nullptr;
+    // Quark looks at the direct attacker only: projectiles (child sources) neither mine nor anger it.
+    Actor* direct = source.isEntitySource() && !source.isChildEntitySource()
+                      ? game::entities::find(source.getEntityUniqueID().rawID)
+                      : nullptr;
     if (direct && asMob(*direct)) {
         ItemStack const& held = direct->isPlayer() ? static_cast<Player&>(*direct).getSelectedItem() : direct->getCarriedItem();
         if (oreOf(t) != 0 && itemHasTag(held, "minecraft:is_pickaxe")) {

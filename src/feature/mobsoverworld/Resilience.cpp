@@ -20,6 +20,7 @@
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/attribute/AttributeInstance.h"
 #include "mc/world/attribute/AttributeInstanceRef.h"
+#include "mc/legacy/ActorRuntimeID.h"
 #include "mc/world/attribute/AttributeModifier.h"
 #include "mc/world/attribute/AttributeModifierOperation.h"
 #include "mc/world/attribute/AttributeOperands.h"
@@ -57,7 +58,9 @@ struct Effect {
     int64_t endTick   = 0;
 };
 std::unordered_map<int64_t, Effect> gEffects;
-std::unordered_map<int64_t, bool>   gApplied; ///< modifier currently on the (loaded) entity
+/// Runtime id of the loaded actor instance that carries the modifier (the modifier is not saved,
+/// and a reloaded entity or a rejoining player is a new instance with a new runtime id).
+std::unordered_map<int64_t, uint64_t> gApplied;
 bool                                gDirty = false;
 
 struct Thrown {
@@ -114,7 +117,8 @@ void setModifier(Actor& actor, int amplifier, bool on) {
                               AttributeModifierOperation::OperationAddition, AttributeOperands::OperandCurrent, false);
         inst->addModifier(mod, attr.mContext);
     }
-    gApplied[game::entities::idOf(actor)] = on;
+    if (on) gApplied[game::entities::idOf(actor)] = actor.getRuntimeID().rawID;
+    else gApplied.erase(game::entities::idOf(actor));
 }
 
 /// A tip line above the hotbar (vanilla clients have no Resilience icon).
@@ -233,13 +237,12 @@ void see(Actor& actor, int64_t now) {
             setModifier(actor, 0, false);
             gDirty = true;
             notify(actor, nullptr, now);
-        } else if (!gApplied[uid]) {
+        } else if (auto a = gApplied.find(uid); a == gApplied.end() || a->second != actor.getRuntimeID().rawID) {
             setModifier(actor, it->second.amplifier, true);
             notify(actor, &it->second, now);
         }
-    } else if (auto a = gApplied.find(uid); a != gApplied.end()) {
-        if (a->second) setModifier(actor, 0, false);
-        gApplied.erase(uid);
+    } else if (gApplied.contains(uid)) {
+        setModifier(actor, 0, false);
     }
 }
 

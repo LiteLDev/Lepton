@@ -219,7 +219,7 @@ Item / entity names in `texts.d` (`item.lepton:crab_leg=Raw Crab Leg`, `entity.l
 ## 7. Bedrock differences / not ported
 
 - Sounds: Quark's own sound files are not copied. Crabs use vanilla turtle / armadillo-like
-  sounds, Shibas the wolf sounds, Oretoises the turtle / stone sounds (mapping in `Sounds.cpp`).
+  sounds, Shibas the wolf sounds, Oretoises the turtle / stone sounds (played natively by `playSound` in each mob's file).
 - Resilience is a Lepton effect, not a vanilla mob effect: Bedrock has no API to register new mob
   effects (the effect list is a fixed enum shared with every client), so the vanilla inventory
   effect list does not show it (mod clients get a HUD line, vanilla clients an action-bar text).
@@ -243,10 +243,12 @@ Item / entity names in `texts.d` (`item.lepton:crab_leg=Raw Crab Leg`, `entity.l
 
 ## 8. Tests
 
-Selftests (dx 2000..2099): `mobsoverworld.crab_variant`, `crab_lightning`, `crab_bucket`,
-`crab_rave`, `crab_armor`, `crab_loot`, `brewing`, `resilience`, `fisherman_trade`,
-`shiba_tame`, `shiba_interact`, `shiba_fetch`, `shiba_darkness`, `toretoise_ore`,
-`toretoise_mine`, `toretoise_feed`, `toretoise_stomp`, `spawn_rules`.
+Selftests (dx 2000..2099): `mobsoverworld.crab_variant`, `crab_lightning`, `crab_armor`,
+`crab_bucket`, `crab_rave`, `brewing`, `resilience`, `shiba_interact` (taming, collar dye, sword,
+armour, shears), `shiba_fetch`, `shiba_darkness`, `toretoise_ore` (pickaxe mining),
+`toretoise_feed`, `toretoise_stomp`, `spawn_rules`, plus `gallery` (client screenshots).
+The crab loot table is pure data (`loot_tables/entities/lepton_crab.json`, random rolls); the
+fisherman trade logs `fisherman buys crab legs` when a fisherman generates its trades.
 E2E: `tools/e2e/server/scenarios/mobsoverworld.ps1` (runs the selftests, checks the log lines),
 `tools/e2e/client/scenarios/mobsoverworld.ps1` (spawns every colour of crab, a raving crab, a giant
 crab, shibas with collars/armour/sword, oretoises with each ore, gives the items; screenshots).
