@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 class Actor;
@@ -166,6 +167,9 @@ inline constexpr int kBeachMarkVariant = 7;
 inline constexpr int kOceanMarkVariant = 8;
 inline constexpr std::string_view kBeachTag = "lepton:villager_beach";
 inline constexpr std::string_view kOceanTag = "lepton:villager_ocean";
+
+/// Skins forced by `/quark cosmetics gallery` (unique id -> skin), kept until the world closes.
+[[nodiscard]] std::unordered_map<int64_t, int>& forcedSkins();
 
 /// The synced skin id of an actor (`query.skin_id`).
 [[nodiscard]] int skinIdOf(Actor const& actor);

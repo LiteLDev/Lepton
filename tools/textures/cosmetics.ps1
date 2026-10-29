@@ -1,7 +1,7 @@
 # U18 cosmetics textures and sounds (original art, procedural):
 #   - animal variant / shiny skins, pride bees, beach and ocean villager clothes (cosmetics-mobs.cs,
 #     painted on the vanilla models' box-UV layouts by cosmetics-painter.cs),
-#   - the camera icon and the bucket icons of BucketsShowInhabitants (pixel rows below),
+#   - the bucket icons of BucketsShowInhabitants (pixel rows below),
 #   - the camera shutter sound (synthesised WAV).
 # Run: pwsh tools/textures/cosmetics.ps1   (writes into assets/pack/rp; commit the output)
 $ErrorActionPreference = 'Stop'
@@ -13,29 +13,8 @@ Add-Type -ReferencedAssemblies System.Drawing, System.Drawing.Primitives, System
     -Path "$PSScriptRoot/cosmetics-painter.cs", "$PSScriptRoot/cosmetics-mobs.cs"
 [LeptonTex.Mobs]::Run($rp)
 
-# ---- camera icon (16x16) -------------------------------------------------------------------------
-$camera = @(
-    '................',
-    '................',
-    '..........kkk...',
-    '...kkkk..kyyyk..',
-    '..kddddkkkkkkk..',
-    '.kggggggggggggk.',
-    '.kgllgkkkkkgggk.',
-    '.kgggkbbbbbkggk.',
-    '.kgggkbccbbkggk.',
-    '.kgggkbcbbbkggk.',
-    '.kgggkbbbbbkggk.',
-    '.kggggkkkkkgggk.',
-    '.kdddddddddddddk',
-    '..kkkkkkkkkkkkk.',
-    '................',
-    '................'
-)
-# Fix the row width of the last frame row.
-$camera[12] = '.kddddddddddddk.'
-Save-PixelArt -Rows $camera -Palette @{ k = '#1c1c22'; d = '#3a3a44'; g = '#5c5e6a'; l = '#a8acb8'; b = '#2a3c66'; c = '#8fb4ff'; y = '#ffd84a' } `
-    -Path (Join-Path $rp 'textures/lepton/cosmetics/camera.png')
+# ---- transparent texture (the vanished pumpkin overlay) ------------------------------------------
+Save-PixelArt -Rows (@('................') * 16) -Palette @{} -Path (Join-Path $rp 'textures/lepton/cosmetics/empty.png')
 
 # ---- bucket icons (16x16) ------------------------------------------------------------------------
 # The bucket: rim, water surface, body. Creatures are drawn over the water.

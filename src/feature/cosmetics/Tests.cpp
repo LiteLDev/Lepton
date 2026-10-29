@@ -14,6 +14,8 @@
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemInstance.h"
+#include "mc/deps/nbt/CompoundTag.h"
+#include "mc/server/SimulatedPlayer.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/enchanting/Enchant.h"
 #include "mc/world/item/enchanting/EnchantUtils.h"
@@ -288,3 +290,36 @@ LP_REGISTER_SELFTEST("cosmetics.carried_chicken", [](Context& ctx) -> ll::coro::
     cos::setFarmingViewForTests(std::nullopt);
 });
 
+
+// The bucket item NBT the client's BucketsShowInhabitants reads (Variant / MarkVariant / Color / Color2).
+LP_REGISTER_SELFTEST("cosmetics.bucket_nbt", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(1860);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& sim = ctx.spawnPlayer("cosmetics_bucket");
+    for (auto [mob, bucket] : {std::pair{"minecraft:axolotl", "minecraft:axolotl_bucket"}, std::pair{"minecraft:tropicalfish", "minecraft:tropical_fish_bucket"}}) {
+        Spawned s;
+        // In water, next to the player.
+        ctx.setBlock(pos, "minecraft:water");
+        Actor* a = s.add(ent::spawn(pos.dim, mob, at(pos, 0.2f)));
+        ctx.require(a != nullptr, std::string("spawned ") + mob);
+        sim.teleport(at(pos, 0), sim.getDimensionId());
+        int slot = ctx.give(sim, lp::game::makeItem("minecraft:water_bucket"), 0);
+        ctx.require(slot == 0, "water bucket in hand");
+        sim.setSelectedSlot(0);
+        co_await ctx.ticks(2);
+        a = ent::find(s.ids.back());
+        ctx.require(a != nullptr, "the mob is still there");
+        bool used = sim.simulateInteract(*a);
+        co_await ctx.ticks(2);
+        auto const& held = sim.getSelectedItem();
+        if (!used || lp::game::itemId(held) != bucket) {
+            ctx.fail(std::string("bucketing a ") + mob + " gave " + lp::game::itemToSnbt(held));
+        }
+        auto snbt = lp::game::itemToSnbt(held);
+        ctx.info(std::string(bucket) + " " + snbt);
+        ctx.check(held.mUserData && held.mUserData->contains("Variant"), std::string(bucket) + " stores Variant");
+        if (std::string_view(bucket) == "minecraft:tropical_fish_bucket")
+            ctx.check(held.mUserData && held.mUserData->contains("MarkVariant") && held.mUserData->contains("Color") && held.mUserData->contains("Color2"),
+                      "the tropical fish bucket stores MarkVariant, Color and Color2");
+    }
+});

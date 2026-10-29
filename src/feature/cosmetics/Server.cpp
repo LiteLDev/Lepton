@@ -219,10 +219,16 @@ bool applyTo(Actor& actor) {
     case ActorType::Slime:
     case ActorType::Armadillo:
     case ActorType::Frog:
-    case ActorType::Bee:
-        return writeInt(actor, kSkinId, animalSkin(actor.getTypeName(), game::entities::idOf(actor), customNameOf(actor), actor.isBaby()));
+    case ActorType::Bee: {
+        auto id   = game::entities::idOf(actor);
+        auto f    = forcedSkins().find(id);
+        int  skin = f != forcedSkins().end() ? f->second : animalSkin(actor.getTypeName(), id, customNameOf(actor), actor.isBaby());
+        return writeInt(actor, kSkinId, skin);
+    }
     case ActorType::Chicken: {
-        int skin = animalSkin("minecraft:chicken", game::entities::idOf(actor), {}, actor.isBaby());
+        auto id   = game::entities::idOf(actor);
+        auto f    = forcedSkins().find(id);
+        int  skin = f != forcedSkins().end() ? f->second : animalSkin("minecraft:chicken", id, {}, actor.isBaby());
         return writeInt(actor, kSkinId, skin | chickenFlags(actor));
     }
     case ActorType::ArmorStand: {
@@ -308,7 +314,10 @@ public:
         reloadFarming();
         lp::config::onReload([] { reloadFarming(); });
         game::db::onWorldReady([] { reloadFarming(); });
-        game::db::onWorldClosed([] { newVillagers().clear(); });
+        game::db::onWorldClosed([] {
+            newVillagers().clear();
+            forcedSkins().clear();
+        });
         MobInitHook::hook();
         gTick = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onTick);
     }
