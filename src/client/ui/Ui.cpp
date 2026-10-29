@@ -112,7 +112,8 @@ std::map<std::string, Shown> gShown; ///< frames since each screen was (re)opene
 int countFrame(std::string const& name) {
     auto  now = std::chrono::steady_clock::now();
     auto& s   = gShown[name];
-    if (s.frames == 0 || now - s.last > std::chrono::milliseconds(300)) s = Shown{};
+    // Not rendered for a second: closed and opened again (a slow client still renders every second).
+    if (s.frames == 0 || now - s.last > std::chrono::seconds(1)) s = Shown{};
     s.last = now;
     return ++s.frames;
 }
@@ -125,7 +126,8 @@ bool settledLayout(std::string const& name, std::vector<Slot> const& slots) {
     auto& st  = gShown[name];
     st.stable = st.frames > 1 && sig == st.layout ? st.stable + 1 : 0;
     st.layout = sig;
-    return st.stable >= 4;
+    // A screen whose slot controls are not built yet has no slots: wait for them a while.
+    return st.stable >= 4 && (!slots.empty() || st.frames >= 20);
 }
 
 float invGuiScale() {
@@ -239,7 +241,8 @@ void DrawContext::text(std::string_view s, float x, float y, Color color, float 
     float         left = align == Align::Left ? x : align == Align::Center ? x - w / 2 : x - w;
     RectangleArea area{left, left + w, y, y + 10 * scale};
     auto          a  = align == Align::Left ? ::ui::TextAlignment::Left : align == Align::Center ? ::ui::TextAlignment::Center : ::ui::TextAlignment::Right;
-    TextMeasureData  tmd{scale, 0.f, shadow, true, false, a};
+    // showColorSymbol = false: the game's font renderer applies `§` codes instead of drawing them.
+    TextMeasureData  tmd{scale, 0.f, shadow, false, false, a};
     CaretMeasureData caret{-1, false};
     mImpl.rc.drawText(mImpl.font.getFont(), area, std::string(s), mce::Color(color.r, color.g, color.b, color.a), color.a, a, tmd, caret);
     mImpl.textQueued = true;
@@ -513,8 +516,20 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     // Every layer renders each frame: the HUD first (also below open screens), then the open
     // screens, then always-on layers (debug_screen, toast_screen, ...). Only the top screen's
     // widgets take input; the HUD is the top screen when no menu is shown.
-    bool onTop = isHud ? !c->isShowingMenu() : isCustom || name == shortScreenName(c->getTopScreenName());
-    if (!onTop) return;
+    auto topName = shortScreenName(c->getTopScreenName());
+    bool onTop   = isHud ? !c->isShowingMenu() : isCustom || name == topName;
+    if (!onTop) {
+        // The HUD renders in every frame: when the top screen changed to one that never matches a
+        // rendered root, drop the widgets of the previous one so they cannot take clicks.
+        if (isHud) {
+            std::lock_guard lock(gInputMutex);
+            if (gTopScreen != topName && !gCustomOnTop) {
+                gTopScreen = topName;
+                gRegions.clear();
+            }
+        }
+        return;
+    }
     if (!isHud) gCallbacks = std::move(callbacks);
     std::lock_guard lock(gInputMutex);
     gTopScreen   = name;
