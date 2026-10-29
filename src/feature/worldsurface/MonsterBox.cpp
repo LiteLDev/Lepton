@@ -7,6 +7,7 @@
 #include <fstream>
 #include <map>
 #include <mutex>
+#include <tuple>
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/MobDieEvent.h"
@@ -47,6 +48,8 @@ constexpr int         kBreakAt = 40; // Java: breakProgress > 40
 std::mutex                       gPendingMutex;
 std::vector<core::GlobalPos>     gPending;
 std::set<core::GlobalPos>        gBoxes;
+/// gBoxes by (dim, chunk x, chunk z): the tick only looks at the chunks around players.
+std::map<std::tuple<int, int, int>, std::set<core::GlobalPos>> gByChunk;
 std::map<core::GlobalPos, int>   gProgress;
 bool                             gDirty  = false;
 bool                             gLoaded = false;
@@ -87,6 +90,31 @@ void loadSpawnTable() {
 
 bool isBox(Block const& b) { return nameOf(b) == kBoxId; }
 
+std::tuple<int, int, int> chunkKey(core::GlobalPos const& p) { return {p.dim, p.x >> 4, p.z >> 4}; }
+
+bool addBox(core::GlobalPos const& p) {
+    if (!gBoxes.insert(p).second) return false;
+    gByChunk[chunkKey(p)].insert(p);
+    gDirty = true;
+    return true;
+}
+
+void removeBox(core::GlobalPos const& p) {
+    gBoxes.erase(p);
+    gProgress.erase(p);
+    if (auto it = gByChunk.find(chunkKey(p)); it != gByChunk.end()) {
+        it->second.erase(p);
+        if (it->second.empty()) gByChunk.erase(it);
+    }
+    gDirty = true;
+}
+
+void clearBoxes() {
+    gBoxes.clear();
+    gByChunk.clear();
+    gProgress.clear();
+}
+
 Vec3 center(BlockPos const& p) {
     return Vec3{static_cast<float>(p.x) + 0.5f, static_cast<float>(p.y) + 0.5f, static_cast<float>(p.z) + 0.5f};
 }
@@ -97,8 +125,7 @@ void drainPending() {
         std::lock_guard lock(gPendingMutex);
         pending.swap(gPending);
     }
-    for (auto const& p : pending)
-        if (gBoxes.insert(p).second) gDirty = true;
+    for (auto const& p : pending) addBox(p);
 }
 
 void onPlaced(ll::event::PlayerPlacedBlockEvent& ev) {
@@ -142,9 +169,7 @@ void queueGenerated(int dim, std::vector<BlockPos> const& positions) {
     for (auto const& p : positions) gPending.push_back(core::GlobalPos{dim, p.x, p.y, p.z});
 }
 
-void registerBox(core::GlobalPos const& pos) {
-    if (gBoxes.insert(pos).second) gDirty = true;
-}
+void registerBox(core::GlobalPos const& pos) { addBox(pos); }
 
 std::set<core::GlobalPos> const& registry() {
     drainPending();
@@ -224,9 +249,19 @@ void tick() {
         }
     }
 
+    // the boxes in the chunks around players (48 blocks) and the ones already breaking
+    std::set<core::GlobalPos> candidates;
+    for (auto const& [gp, _] : gProgress) candidates.insert(gp);
+    for (auto const& p : players) {
+        int cx = static_cast<int>(std::floor(p.pos.x)) >> 4, cz = static_cast<int>(std::floor(p.pos.z)) >> 4;
+        for (int dx = -3; dx <= 3; ++dx)
+            for (int dz = -3; dz <= 3; ++dz)
+                if (auto it = gByChunk.find({p.dim, cx + dx, cz + dz}); it != gByChunk.end())
+                    candidates.insert(it->second.begin(), it->second.end());
+    }
+
     double range2 = cfg().activationRange * cfg().activationRange;
-    for (auto it = gBoxes.begin(); it != gBoxes.end();) {
-        auto const& gp   = *it;
+    for (auto const& gp : candidates) {
         BlockPos    pos  = game::blockPos(gp);
         Vec3        c    = center(pos);
         double      near = 1e18;
@@ -242,20 +277,12 @@ void tick() {
             if (f2 < range2 && !p.spectator) activate = true;
         }
         int prog = progress(gp);
-        if (near > 48.0 * 48.0 && prog == 0) {
-            ++it;
-            continue;
-        }
+        if (near > 48.0 * 48.0 && prog == 0) continue;
         auto* region = game::regionOf(gp.dim);
-        if (!region || !region->hasChunksAt(pos, 0, false)) {
-            ++it;
-            continue;
-        }
+        if (!region || !region->hasChunksAt(pos, 0, false)) continue;
         auto const& b = region->getBlock(pos);
         if (!isBox(b)) {
-            gProgress.erase(gp);
-            it     = gBoxes.erase(it);
-            gDirty = true;
+            removeBox(gp);
             continue;
         }
         if (near < 32.0 * 32.0) {
@@ -272,11 +299,7 @@ void tick() {
                 );
             }
         }
-        bool doBreak = prog > 0 || activate;
-        if (!doBreak) {
-            ++it;
-            continue;
-        }
+        if (prog == 0 && !activate) continue;
         if (prog == 0) {
             runCommand(std::format("playsound lepton.monster_box.growl @a {} {} {} 0.5 1", pos.x, pos.y, pos.z), gp.dim);
             log().info("worldsurface: monster box at {} {} {} activated", pos.x, pos.y, pos.z);
@@ -287,26 +310,23 @@ void tick() {
             level->broadcastLevelEvent(SharedTypes::Legacy::LevelEvent::ParticlesDestroyBlock, c, static_cast<int>(b.mNetworkId), nullptr);
             game::clearBlock(*region, pos);
             log().info("worldsurface: monster box at {} {} {} broke and spawned {} mobs", pos.x, pos.y, pos.z, n);
-            gProgress.erase(gp);
-            it     = gBoxes.erase(it);
-            gDirty = true;
+            removeBox(gp);
             continue;
         }
         gProgress[gp] = prog;
-        ++it;
     }
 }
 
 void onWorldReady() {
-    gBoxes.clear();
-    gProgress.clear();
-    gDirty = false;
+    clearBoxes();
     loadSpawnTable();
     if (auto j = game::db::load(kDbKey); j && j->is_array()) {
         for (auto const& e : *j)
-            if (e.is_array() && e.size() == 4)
-                gBoxes.insert(core::GlobalPos{e[0].get<int>(), e[1].get<int>(), e[2].get<int>(), e[3].get<int>()});
+            if (e.is_array() && e.size() == 4 && e[0].is_number_integer() && e[1].is_number_integer()
+                && e[2].is_number_integer() && e[3].is_number_integer())
+                addBox(core::GlobalPos{e[0].get<int>(), e[1].get<int>(), e[2].get<int>(), e[3].get<int>()});
     }
+    gDirty  = false;
     gLoaded = true;
 }
 
@@ -320,8 +340,7 @@ void onWorldSave() {
 }
 
 void onWorldClosed() {
-    gBoxes.clear();
-    gProgress.clear();
+    clearBoxes();
     gDirty  = false;
     gLoaded = false;
     std::lock_guard lock(gPendingMutex);

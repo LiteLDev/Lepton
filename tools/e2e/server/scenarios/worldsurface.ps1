@@ -3,5 +3,5 @@
 # is covered by the `worldsurface-gen` scenario (normal world).
 $r = Invoke-SelfTest 'worldsurface.*'
 if ($r.Fail -gt 0) { throw "$($r.Fail) worldsurface selftest(s) failed" }
-if ($r.Pass -lt 16) { throw "expected 16 worldsurface selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 17) { throw "expected 17 worldsurface selftests to pass, got $($r.Pass)" }
 Wait-LogLine 'worldsurface: monster box at .* broke and spawned \d+ mobs' 5 | Out-Null

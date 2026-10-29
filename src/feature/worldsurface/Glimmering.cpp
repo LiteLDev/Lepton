@@ -16,6 +16,9 @@
 
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/shared_types/legacy/LevelEvent.h"
+#include "mc/network/packet/SpawnParticleEffectPacket.h"
+#include "mc/network/packet/SpawnParticleEffectPacketPayload.h"
+#include "mc/world/level/block/BlockType.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
@@ -335,7 +338,98 @@ void spawnStonelings() {
     }
 }
 
+void sendParticle(Player& p, std::string const& effect, Vec3 const& at) {
+    SpawnParticleEffectPacket pkt(
+        SpawnParticleEffectPacketPayload(at, effect, static_cast<uchar>(static_cast<int>(p.getDimensionId())), std::nullopt)
+    );
+    pkt.sendTo(p);
+}
+
+/// Java ClientLevel.animateTick: 667 random blocks around the player within 16 blocks and 667
+/// within 32 blocks get their animateTick each client tick. The server does it per real player
+/// and sends the particles to that player only, so every client (vanilla too) sees them.
+void ambientParticles() {
+    if (!cfg().enableGlimmeringWeald) return;
+    auto level = ll::service::getLevel();
+    if (!level) return;
+    auto st = genState();
+    if (!st->glowShroom || !st->lichenGrowth || !st->shroomCap) return;
+    AmbientTypes types{&st->glowShroom->getBlockType(), &st->lichenGrowth->getBlockType(), &st->shroomCap->getBlockType()};
+    level->forEachPlayer([&](Player& p) {
+        if (p.isSimulated()) return true;
+        auto&    region = p.getDimensionBlockSource();
+        BlockPos base   = game::blockPosOf(p.getPosition());
+        auto&    r      = rng();
+        for (int radius : {16, 32}) {
+            for (int i = 0; i < 667; ++i) {
+                BlockPos q{
+                    base.x + r.nextInt(radius) - r.nextInt(radius),
+                    base.y + r.nextInt(radius) - r.nextInt(radius),
+                    base.z + r.nextInt(radius) - r.nextInt(radius)
+                };
+                if (q.y < region.getMinHeight() || q.y >= region.getMaxHeight()) continue;
+                animateTick(p, region, q, types, r);
+            }
+        }
+        return true;
+    });
+}
+
 } // namespace
+
+int animateTick(Player& viewer, BlockSource& region, BlockPos const& pos, AmbientTypes const& types, Rng& r) {
+    auto const& type = region.getBlock(pos).getBlockType();
+    auto        air  = [&](BlockPos const& q) {
+        return q.y >= region.getMinHeight() && q.y < region.getMaxHeight() && region.getBlock(q).isAir();
+    };
+    if (&type == types.shroom) {
+        // GlowShroomBlock: an end rod spark rising from the cap (1 in 12) when the block above is air
+        if (r.nextInt(12) != 0 || !air(BlockPos{pos.x, pos.y + 1, pos.z})) return 0;
+        sendParticle(
+            viewer,
+            "lepton:glow_shroom_spore",
+            Vec3{
+                static_cast<float>(pos.x + 0.4 + r.nextDouble() * 0.2),
+                static_cast<float>(pos.y + 0.5 + r.nextDouble() * 0.1),
+                static_cast<float>(pos.z + 0.4 + r.nextDouble() * 0.2)
+            }
+        );
+        return 1;
+    }
+    if (&type == types.growth) {
+        // GlowLichenGrowthBlock: 10 mycelium specks in a 5x8x5 box and one at the plant
+        sendParticle(viewer, "lepton:glow_lichen_spores", centerOf(pos));
+        sendParticle(
+            viewer,
+            "minecraft:mycelium_dust_particle",
+            Vec3{
+                static_cast<float>(pos.x + (r.nextDouble() - 0.5) * 0.4 + 0.5),
+                static_cast<float>(pos.y + (r.nextDouble() - 0.5) * 0.3 + 0.3),
+                static_cast<float>(pos.z + (r.nextDouble() - 0.5) * 0.4 + 0.5)
+            }
+        );
+        return 2;
+    }
+    if (&type == types.shroomBlock) {
+        // HugeGlowShroomBlock (glowing): a spark dripping down (1 in 10) above air or a ring
+        if (r.nextInt(10) != 0) return 0;
+        BlockPos below{pos.x, pos.y - 1, pos.z};
+        if (below.y < region.getMinHeight()) return 0;
+        auto const& b = region.getBlock(below);
+        if (!b.isAir() && nameOf(b) != "lepton:glow_shroom_ring") return 0;
+        sendParticle(
+            viewer,
+            "lepton:glow_shroom_drip",
+            Vec3{
+                static_cast<float>(pos.x + r.nextDouble()),
+                static_cast<float>(pos.y),
+                static_cast<float>(pos.z + r.nextDouble())
+            }
+        );
+        return 1;
+    }
+    return 0;
+}
 
 bool boneMeal(BlockSource& region, BlockPos const& pos, Rng& r) {
     auto const& name = nameOf(region.getBlock(pos));
@@ -429,6 +523,7 @@ bool playerInGlimmering(Player const& p) {
 
 void tick() {
     uint64_t t = tickCount();
+    ambientParticles();
     if (t % 20 == 0) updateFog();
     if (t % 400 == 200) spawnStonelings();
 }

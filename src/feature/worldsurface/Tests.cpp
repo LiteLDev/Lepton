@@ -17,6 +17,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockType.h"
 #include "mc/world/level/dimension/DimensionType.h"
 #include "mc/world/phys/AABB.h"
 
@@ -272,6 +273,40 @@ LP_REGISTER_SELFTEST("worldsurface.huge_glow_shroom", [](Context& ctx) -> ll::co
     fill(ctx, r, {f.x - 3, f.y + 1, f.z - 3}, {f.x + 3, f.y + 10, f.z + 3}, "minecraft:air");
     fill(ctx, r, {f.x, f.y, f.z}, {f.x, f.y, f.z}, "minecraft:stone");
     ctx.check(!gen::placeHugeGlowShroom(r, *st, rng, {f.x, f.y + 1, f.z}), "not on stone");
+});
+
+LP_REGISTER_SELFTEST("worldsurface.particles", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto g = area(ctx, 2845, 30);
+    ctx.require(co_await ctx.ensureLoaded(g), "test area loaded");
+    auto&    r  = overworld(ctx);
+    BlockPos f  = bp(g);
+    auto     st = genState();
+    ctx.require(st->glowShroom && st->lichenGrowth && st->shroomCap, "palette");
+    glimmer::AmbientTypes types{&st->glowShroom->getBlockType(), &st->lichenGrowth->getBlockType(), &st->shroomCap->getBlockType()};
+    fill(ctx, r, {f.x, f.y, f.z}, {f.x + 4, f.y, f.z}, "minecraft:deepslate");
+    cleanup(ctx, {f.x, f.y + 1, f.z}, {f.x + 4, f.y + 4, f.z});
+    fill(ctx, r, {f.x, f.y + 1, f.z}, {f.x, f.y + 1, f.z}, "lepton:glow_lichen_growth");
+    fill(ctx, r, {f.x + 2, f.y + 1, f.z}, {f.x + 2, f.y + 1, f.z}, "lepton:glow_shroom");
+    fill(ctx, r, {f.x + 4, f.y + 3, f.z}, {f.x + 4, f.y + 3, f.z}, "lepton:glow_shroom_block");
+    auto& p = ctx.player();
+    Rng   rng(2845);
+    ctx.check(glimmer::animateTick(p, r, {f.x, f.y + 1, f.z}, types, rng) == 2, "a lichen growth always sends its spores");
+    int shroom = 0, drip = 0;
+    for (int i = 0; i < 300; ++i) {
+        shroom += glimmer::animateTick(p, r, {f.x + 2, f.y + 1, f.z}, types, rng);
+        drip += glimmer::animateTick(p, r, {f.x + 4, f.y + 3, f.z}, types, rng);
+    }
+    ctx.check(shroom > 10 && shroom < 50, std::format("a glow shroom sparks about 1 in 12 ticks (got {}/300)", shroom));
+    ctx.check(drip > 12 && drip < 55, std::format("a shroom block drips about 1 in 10 ticks above air (got {}/300)", drip));
+    fill(ctx, r, {f.x + 2, f.y + 2, f.z}, {f.x + 2, f.y + 2, f.z}, "minecraft:deepslate");
+    fill(ctx, r, {f.x + 4, f.y + 2, f.z}, {f.x + 4, f.y + 2, f.z}, "minecraft:deepslate");
+    int blocked = 0;
+    for (int i = 0; i < 100; ++i) {
+        blocked += glimmer::animateTick(p, r, {f.x + 2, f.y + 1, f.z}, types, rng);
+        blocked += glimmer::animateTick(p, r, {f.x + 4, f.y + 3, f.z}, types, rng);
+        blocked += glimmer::animateTick(p, r, {f.x + 1, f.y, f.z}, types, rng);
+    }
+    ctx.check(blocked == 0, "no particles when covered, and none from other blocks");
 });
 
 LP_REGISTER_SELFTEST("worldsurface.glow_extras", [](Context& ctx) -> ll::coro::CoroTask<> {

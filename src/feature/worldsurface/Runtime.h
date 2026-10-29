@@ -14,6 +14,7 @@
 class Actor;
 class BlockPos;
 class BlockSource;
+class BlockType;
 class Player;
 
 namespace lp::feature::worldsurface {
@@ -70,6 +71,15 @@ bool compost(BlockSource& region, BlockPos const& pos, double chance, double rol
 [[nodiscard]] std::string plantOf(std::string const& potted);
 /// Whether the player stands in Glimmering Weald (fog bookkeeping).
 [[nodiscard]] bool playerInGlimmering(Player const& p);
+/// Block types with ambient particles (Java animateTick).
+struct AmbientTypes {
+    BlockType const* shroom      = nullptr;
+    BlockType const* growth      = nullptr;
+    BlockType const* shroomBlock = nullptr; ///< the glowing huge-shroom block (not the stem)
+};
+/// One animateTick of the block at `pos` as seen by `viewer`: sends its particles to that player.
+/// Returns the number of particle effects sent.
+int animateTick(Player& viewer, BlockSource& region, BlockPos const& pos, AmbientTypes const& types, Rng& rng);
 } // namespace glimmer
 
 } // namespace lp::feature::worldsurface
