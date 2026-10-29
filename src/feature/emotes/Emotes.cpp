@@ -30,6 +30,7 @@
 #include "feature/emotes/EmoteScript.h"
 #include "feature/emotes/EmotesConfig.h"
 #include "game/Forms.h"
+#include "game/WorldDb.h"
 #include "mod/Commands.h"
 #include "mod/Config.h"
 #include "mod/I18n.h"
@@ -104,19 +105,27 @@ void sendListLater(Player& player) {
     }).launch(ll::thread::ServerThreadExecutor::getDefault());
 }
 
-/// Requests from one client are accepted at most every 5 ticks (Quark has no limit; this only
-/// stops a modified client from flooding every other client with emotes).
+/// Player requests (companion message, command, form) are accepted at most every 5 ticks per
+/// player (Quark has no limit; this only stops a client from flooding every other client).
 std::unordered_map<std::int64_t, std::uint64_t> gLastRequest;
 
 bool throttled(Player const& p) {
     auto level = ll::service::getLevel();
     if (!level) return false;
-    auto now  = level->getCurrentTick().tickID;
-    auto id   = p.getOrCreateUniqueID().rawID;
-    auto it   = gLastRequest.find(id);
-    if (it != gLastRequest.end() && now - it->second < 5) return true;
+    auto now = level->getCurrentTick().tickID;
+    // Old entries (players who left, another world) never throttle: drop them now and then.
+    if (gLastRequest.size() > 256) std::erase_if(gLastRequest, [now](auto const& e) { return e.second > now || now - e.second >= 5; });
+    auto id = p.getOrCreateUniqueID().rawID;
+    auto it = gLastRequest.find(id);
+    if (it != gLastRequest.end() && it->second <= now && now - it->second < 5) return true;
     gLastRequest[id] = now;
     return false;
+}
+
+/// A player's own request: throttled, then played.
+PlayResult requestEmote(Player& p, std::string const& emote) {
+    if (throttled(p)) return PlayResult::Throttled;
+    return playEmote(p, emote);
 }
 
 } // namespace
@@ -193,7 +202,7 @@ void openEmoteForm(Player& player) {
         auto const* b     = findBuiltin(id);
         auto        label = emoteName(player, id);
         if (b && b->patreon) label += " " + trFor(player, "lp.emotes.form.patreon", "(Patreon)");
-        form.button(label, [id](Player& p) { playEmote(p, id); }, "textures/lepton/emotes/" + id);
+        form.button(label, [id](Player& p) { requestEmote(p, id); }, "textures/lepton/emotes/" + id);
     }
     form.sendTo(player);
     log().info("emotes: form sent to {}", player.getRealName());
@@ -204,6 +213,8 @@ std::vector<testing::SentAnimation> testing::takeSentAnimations() {
     return std::exchange(gSent, {});
 }
 
+void testing::resetThrottle() { gLastRequest.clear(); }
+
 namespace {
 
 std::string resultMessage(Player const& p, PlayResult r, std::string const& emote) {
@@ -213,6 +224,7 @@ std::string resultMessage(Player const& p, PlayResult r, std::string const& emot
     case PlayResult::Unknown: return trFor(p, "lp.emotes.unknown", "Unknown emote: {}", emote);
     case PlayResult::NotEnabled: return trFor(p, "lp.emotes.not_enabled", "The {} emote is disabled on this server.", emote);
     case PlayResult::TierTooLow: return trFor(p, "lp.emotes.tier", "The {} emote is a Patreon emote.", emote);
+    case PlayResult::Throttled: return trFor(p, "lp.emotes.throttled", "Wait a moment before the next emote.");
     }
     return {};
 }
@@ -230,7 +242,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         [](CommandOrigin const& origin, CommandOutput& output, EmoteCommandParams const& params) {
             auto* p = commands::playerOf(origin);
             if (!p) return output.error(tr("lp.emotes.players_only", "Only players can use emotes."));
-            auto r = playEmote(*p, params.name);
+            auto r = requestEmote(*p, params.name);
             if (r == PlayResult::Played) return output.success("");
             output.error(resultMessage(*p, r, params.name));
         }
@@ -241,8 +253,8 @@ class EmotesModule {
 public:
     void install() {
         mRequest = net::onServer<EmoteRequest>([](Player& p, EmoteRequest const& m) {
-            if (m.emote.size() > 80 || throttled(p)) return;
-            auto r = playEmote(p, m.emote);
+            if (m.emote.size() > 80) return;
+            auto r = requestEmote(p, m.emote);
             if (r != PlayResult::Played) log().debug("emotes: refused {} for {} ({})", m.emote, p.getRealName(), static_cast<int>(r));
         });
         mInstalled = true;
@@ -252,6 +264,7 @@ public:
             net::onClientModJoined([this](Player& p) {
                 if (mInstalled) sendListLater(p);
             });
+            game::db::onWorldClosed([] { gLastRequest.clear(); });
             config::onReload([this] {
                 if (!mInstalled) return;
                 for (auto* p : net::modPlayers())

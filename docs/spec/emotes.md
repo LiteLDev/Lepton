@@ -36,9 +36,11 @@ None. Resource-pack content:
   unknown or too-high-tier emotes): `enableEmotes`; a built-in default emote must be in
   `enabledEmotes`; a patreon emote needs the player's tier >= the emote's tier; `custom:<name>`
   (name of letters, digits, `_`, `-`, `.`, max 64) is relayed as is (Quark relays anything).
-- **Rate limit** (Lepton): a client's `emotes:request` is accepted at most every 5 ticks, so a
-  modified client cannot flood the other clients (Quark has no limit; the command and form are
-  not limited).
+- **Rate limit** (Lepton): a player's requests (`emotes:request`, `/quark emote <name>`, the form)
+  are accepted at most every 5 ticks, so a client cannot flood the other clients (Quark has no
+  limit); the command then answers "Wait a moment before the next emote." (`lp.emotes.throttled`).
+- **Endless emotes**: a negative `repeat`/`yoyo` count repeats forever (the tween engine's
+  INFINITY); it plays until the player swings or is hurt (the baked animation is capped at an hour).
 - **Tiers** (Quark `ContributorRewardHandler`: the patron list downloaded from Quark's GitHub,
   by Java account name): `emoteTiers` maps a lower-case player name or XUID to a tier; everyone
   else has `defaultEmoteTier` (0, like a non-patron).
@@ -76,7 +78,8 @@ None. Resource-pack content:
 - **Visibility.** `blend_weight` hides the emote in first person and outside Quark's "standing"
   pose (sneaking, swimming, sleeping, gliding): Quark keeps emoting but stops showing it then.
 - **HUD** (mod client): while the local player emotes, its icon (32x32) is drawn at
-  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length.
+  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length or
+  until the player swings or is hurt (Quark `EmoteBase.isDone`; the emote's sounds stop too).
 - **Sounds** (mod clients, custom emotes): `sound instant|continuous section|emote <sound>
   [volume (max 1.5)] [pitch]` plays when the statement before it in its section completes (or
   when the section starts); `section` sounds end when their section completes; `sound stop` ends
@@ -180,6 +183,8 @@ decides the rest (enabled emotes and tiers are sent to mod clients).
 | `lp.emotes.unknown` | Unknown emote: {} |
 | `lp.emotes.not_enabled` | The {} emote is disabled on this server. |
 | `lp.emotes.tier` | The {} emote is a Patreon emote. |
+| `lp.emotes.throttled` | Wait a moment before the next emote. |
+| `lp.emotes.players_only` | Only players can use emotes. |
 
 ## 7. Bedrock differences / not ported
 

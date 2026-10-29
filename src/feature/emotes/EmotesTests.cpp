@@ -115,6 +115,7 @@ LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) -> ll::coro::CoroTask<> 
     ConfigGuard cfg;
     auto&       p = ctx.player();
     lp::net::testing::setClientMod(p, true);
+    em::testing::resetThrottle();
     (void)em::testing::takeSentAnimations();
     lp::net::testing::receiveFromClient(p, em::EmoteRequest{"yes"});
     ctx.check(sentTo(p, "animation.lepton.emote.yes"), "a client request plays the emote");
@@ -132,6 +133,7 @@ LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) -> ll::coro::CoroTask<> 
 LP_REGISTER_SELFTEST("emotes.form", [](Context& ctx) {
     ConfigGuard cfg;
     auto&       p = ctx.player();
+    em::testing::resetThrottle();
     (void)em::testing::takeSentAnimations();
     em::openEmoteForm(p);
     ctx.check(lp::game::forms::testing::pendingTitle(p) == lp::trFor(p, "quark.gui.button.emotes", "Emotes"), "the emote form opens");

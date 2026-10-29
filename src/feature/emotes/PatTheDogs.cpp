@@ -60,7 +60,7 @@ float random01() { return std::uniform_real_distribution<float>(0.f, 1.f)(rng())
 
 std::unordered_map<std::int64_t, std::int64_t> gPetTimes;
 bool                                           gDirty = false;
-std::set<std::int64_t>                         gSeenUntamed; ///< wolves seen wild (to notice taming)
+std::set<std::int64_t>                         gSeenUntamed; ///< loaded wolves that were wild last tick (to notice taming)
 
 std::int64_t now() {
     auto level = ll::service::getLevel();
@@ -253,14 +253,13 @@ Player* ownerOf(Actor const& dog) {
     return (a && a->isPlayer()) ? static_cast<Player*>(a) : nullptr;
 }
 
-void tickDog(Actor& dog) {
+void tickDog(Actor& dog, std::set<std::int64_t>& wildNow) {
     auto id = idOf(dog);
     if (!dog.isTame()) {
-        if (gSeenUntamed.size() > 4096) gSeenUntamed.clear(); // wild wolves that unloaded
-        gSeenUntamed.insert(id);
+        wildNow.insert(id);
         return;
     }
-    if (gSeenUntamed.erase(id)) setPetTime(dog); // Quark: AnimalTameEvent
+    if (gSeenUntamed.contains(id)) setPetTime(dog); // Quark: AnimalTameEvent
     Player* owner = needsPets(dog) ? ownerOf(dog) : nullptr;
     if (!owner || owner->getDimensionId() != dog.getDimensionId()) {
         gDogs.erase(id);
@@ -318,8 +317,11 @@ void onTick(ll::event::ServerLevelTickEvent&) {
     if (!cfg().enablePatTheDogs || cfg().dogsWantLove <= 0) return;
     auto level = ll::service::getLevel();
     if (!level) return;
+    // Rebuilt every tick, so wolves that unload while wild drop out.
+    std::set<std::int64_t> wildNow;
     for (auto* a : level->getRuntimeActorList())
-        if (a && isDog(a->getTypeName()) && a->isAlive()) tickDog(*a);
+        if (a && isDog(a->getTypeName()) && a->isAlive()) tickDog(*a, wildNow);
+    gSeenUntamed = std::move(wildNow);
 }
 
 /// A dead dog's records go away (Quark keeps them on the entity, which is gone too).

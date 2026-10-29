@@ -152,6 +152,35 @@ TEST(EmoteScript, RepeatedSectionsReplayTheirStartSounds) {
     EXPECT_EQ(plays, 4);
 }
 
+TEST(EmoteScript, YoyoForwardPassesReplayTheirStartSounds) {
+    // Iterations 0 and 2 play forwards (cues fire), iteration 1 plays back (no cues).
+    auto r = es::compile("use head\nanimation sequence\nsection sequence\nsound instant emote a\nmove head_x 100 1\n"
+                         "yoyo 2 0\nend\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    es::Sampler s(r.emote);
+    int         plays = 0;
+    for (float t = 0; t <= 400; t += 10) {
+        s.advance(t);
+        for (auto const& e : s.takeSoundEvents()) plays += e.what == es::Sampler::SoundEvent::What::Play;
+    }
+    EXPECT_EQ(plays, 2);
+}
+
+TEST(EmoteScript, NegativeRepeatCountsLoopForever) {
+    auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 yoyo -1 0\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_GT(r.emote.totalMs(), 1e9f);
+    es::Sampler s(r.emote);
+    EXPECT_NEAR(s.advance(100000)[0].b, 0, 1e-3); // an even number of passes later: back at the pose
+    EXPECT_NEAR(s.advance(100050)[0].b, 0.5, 1e-3);
+}
+
+TEST(EmoteScript, ByteOrderMarkIsIgnored) {
+    auto r = es::compile("\xEF\xBB\xBFname BOM\nuse head\nanimation sequence\nmove head_x 100 1\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_EQ(r.emote.name, "BOM");
+}
+
 TEST(EmoteScript, HugeScriptsStayBounded) {
     auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 repeat 2000000000 0\nend\n");
     ASSERT_TRUE(r.ok) << r.error;

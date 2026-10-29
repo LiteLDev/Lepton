@@ -108,6 +108,13 @@ int parseInt(std::string_view s) {
     return v;
 }
 
+/// A repeat/yoyo count; negative counts repeat forever (the tween engine's INFINITY, -1), which
+/// is played as kInfiniteRepeats iterations (an emote ends anyway when the player swings or is hurt).
+int repeatCount(std::string_view s) {
+    int v = parseInt(s);
+    return v < 0 ? kInfiniteRepeats : v;
+}
+
 int partIndex(std::string_view name) {
     for (int i = 0; i < kParts; ++i)
         if (kPartNames[static_cast<size_t>(i)] == name) return i;
@@ -243,7 +250,7 @@ private:
                 n.delay += parseFloat(t[i++]) * mSpeed;
             } else if (cmd == "yoyo" || cmd == "repeat") {
                 need(cmd, 2);
-                n.repeatCount = parseInt(t[i++]);
+                n.repeatCount = repeatCount(t[i++]);
                 n.repeatDelay = parseFloat(t[i++]) * mSpeed;
                 n.yoyo        = cmd == "yoyo";
             } else if (cmd == "ease") {
@@ -298,7 +305,7 @@ private:
     void repeat(std::vector<std::string_view> const& t, bool yoyo) {
         count(t, 3);
         requireStarted(t[0]);
-        mCurrent->repeatCount = parseInt(t[1]);
+        mCurrent->repeatCount = repeatCount(t[1]);
         mCurrent->repeatDelay = parseFloat(t[2]) * mSpeed;
         mCurrent->yoyo        = yoyo;
     }
@@ -438,6 +445,7 @@ CompileResult compile(std::string_view text) {
     CompileResult r;
     Parser        p;
     int           lineNo = 0;
+    if (text.starts_with("ï»¿")) text.remove_prefix(3); // a UTF-8 BOM (Notepad, PowerShell 5)
     try {
         size_t pos = 0;
         while (pos <= text.size() && !p.compiled) {
@@ -529,7 +537,8 @@ void Sampler::visit(State& s, float local, bool mirrored) {
         }
     }
     bool completing = !mirrored && prev < full && full <= local;
-    s.prevLocal     = local;
+    // A mirrored (yoyo) pass leaves the node to be restarted by the next forward pass.
+    s.prevLocal     = mirrored ? -1e30f : local;
 
     // Position inside the node: iteration k, time w in it (clamped to the iteration's end
     // during repeat delays and after the end).
@@ -586,7 +595,7 @@ void Sampler::visit(State& s, float local, bool mirrored) {
         }
         float offset = 0;
         for (auto& c : s.children) {
-            visit(c, inner < 0 ? inner - offset : inner - offset, childMirrored);
+            visit(c, inner - offset, childMirrored);
             if (!n.parallel) offset += c.node->fullDuration();
         }
     }

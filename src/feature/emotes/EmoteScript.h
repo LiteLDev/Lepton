@@ -34,6 +34,8 @@ namespace lp::feature::emotes::script {
 enum Part : int { Head = 0, Body = 1, RightArm = 2, LeftArm = 3, RightLeg = 4, LeftLeg = 5, Model = 6 };
 inline constexpr int kParts    = 7;
 inline constexpr int kChannels = kParts * 3;
+/// Iterations played for an infinite repeat/yoyo count (the tween engine's INFINITY, -1).
+inline constexpr int kInfiniteRepeats = 1 << 24;
 
 /// Part name as used in scripts ("head", "right_arm", ..., "model"), or "".
 [[nodiscard]] std::string_view partName(int part);

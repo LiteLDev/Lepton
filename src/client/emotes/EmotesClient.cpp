@@ -21,6 +21,9 @@
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/client/player/LocalPlayer.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components/MobHurtTimeComponent.h"
+#include "mc/world/actor/Mob.h"
 #include "mc/world/level/Level.h"
 
 #include "client/Client.h"
@@ -294,13 +297,35 @@ void startEmote(EmotePlay const& m) {
     log().info("emotes: {} plays {} (client)", m.playerName, m.emote);
 }
 
+/// Quark's EmoteBase.isDone: an emote also ends when its player swings (attackAnim > 0) or is
+/// hurt (hurtTime > 0); the animation itself stops on the same condition (kStopExpression).
+bool interrupted(Level& level, std::int64_t player) {
+    ActorUniqueID uid;
+    uid.rawID   = player;
+    auto* actor = level.fetchEntity(uid, false);
+    if (!actor || !actor->isPlayer()) return false;
+    auto& mob = static_cast<Mob&>(*actor);
+    if (*mob.mAttackAnim > 0.f || *mob.mSwinging) return true;
+    auto* hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
+    return hurt && *hurt->mValue > 0;
+}
+
 void updateActive() {
+    // Another world or server: the old emotes (and their sound handles) belong to a gone level.
+    static Level* lastLevel = nullptr;
+    auto*         level     = clientLevel();
+    if (level != lastLevel) {
+        lastLevel = level;
+        gActive.clear();
+    }
+    if (!net::serverHasMod()) gServer = {};
     auto now = std::chrono::steady_clock::now();
     for (auto it = gActive.begin(); it != gActive.end();) {
         auto& a       = it->second;
         float elapsed = std::chrono::duration<float, std::milli>(now - a.start).count();
         float total   = a.emote->totalMs();
-        a.sampler->advance(std::min(elapsed, total));
+        if (level && interrupted(*level, it->first)) elapsed = total;
+        if (elapsed < total) a.sampler->advance(elapsed);
         for (auto const& ev : a.sampler->takeSoundEvents()) {
             using What = script::Sampler::SoundEvent::What;
             if (ev.what == What::StopAll) stopSounds(a);
@@ -419,7 +444,7 @@ void hud(ui::DrawContext& dc) {
     auto&  a       = it->second;
     float  elapsed = std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - a.start).count();
     float  total   = a.emote->totalMs();
-    if (elapsed >= total) return;
+    if (elapsed >= total || interrupted(p->getLevel(), it->first)) return;
     // Quark fades over 5 ms at each end (in practice: always opaque).
     constexpr float tween = 5.f;
     float           alpha = elapsed < tween ? elapsed / tween : elapsed > total - tween ? (total - elapsed) / tween : 1.f;

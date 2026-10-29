@@ -25,5 +25,6 @@
   "lp.emotes.unknown": "Unknown emote: {}",
   "lp.emotes.not_enabled": "The {} emote is disabled on this server.",
   "lp.emotes.tier": "The {} emote is a Patreon emote.",
-  "lp.emotes.players_only": "Only players can use emotes."
+  "lp.emotes.players_only": "Only players can use emotes.",
+  "lp.emotes.throttled": "Wait a moment before the next emote."
 }
