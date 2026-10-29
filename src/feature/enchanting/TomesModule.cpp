@@ -310,6 +310,8 @@ void closeStationScreen(Player& p) {
             close.mServerInitiatedClose  = true;
             close.sendTo(p);
         }
+        // The local player of a client-hosted world ignores the container close: close every screen.
+        if (auto screen = MinecraftPackets::createPacket(MinecraftPacketIds::ClientboundCloseScreen)) screen->sendTo(p);
     }
     static_cast<ServerPlayer&>(p).initiateContainerClose();
 }
