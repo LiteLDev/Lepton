@@ -72,6 +72,7 @@ Ids const& ids() {
             add("lepton:" + n + "_sapling", t.module, "sapling");
             add("lepton:" + n + "_hedge", t.module, "hedge");
             add("lepton:" + n + "_leaf_carpet", t.module, "leaf_carpet");
+            add("lepton:potted_" + n + "_sapling", t.module, "potted");
         }
         out.module["lepton:ancient_fruit"] = Module::AncientWood;
         out.kind["lepton:ancient_fruit"]   = "fruit";

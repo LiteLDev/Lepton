@@ -119,7 +119,7 @@ LP_REGISTER_SELFTEST("newwoods.blocks", [](Context& ctx) {
             ctx.check(false, "block registered: " + id);
         }
     }
-    ctx.check(nw::allBlockIds().size() == 84, "84 blocks, got " + std::to_string(nw::allBlockIds().size()));
+    ctx.check(nw::allBlockIds().size() == 90, "90 blocks, got " + std::to_string(nw::allBlockIds().size()));
     ctx.check(missing == 0, std::to_string(missing) + " blocks missing");
     ctx.check(!lp::game::makeItem("lepton:ancient_fruit").isNull(), "Enchanted Fruit item");
     for (auto const* id : {"lepton:azalea_door", "lepton:blossom_door", "lepton:ancient_door", "lepton:red_blossom_sapling"})
@@ -263,17 +263,27 @@ LP_REGISTER_SELFTEST("newwoods.sapling_place", [](Context& ctx) -> ll::coro::Cor
     put(ctx, p, "minecraft:stone");
     co_await ctx.ticks(5);
     ctx.check(at(ctx, off(p, 0, 1, 0)).isAir(), "sapling popped off, got " + idAt(ctx, off(p, 0, 1, 0)));
-    // potted: a flower pot takes the sapling (Quark's potted_*_sapling)
+    // potted: a sapling on an empty flower pot makes the potted sapling; using it again gives it back
     auto pot = off(p, 4, 1, 0);
     ctx.require(put(ctx, off(p, 4, 0, 0), "minecraft:stone") && put(ctx, pot, "minecraft:flower_pot"), "flower pot");
     co_await ctx.ticks(10);
     use(ctx, "lepton:blue_blossom_sapling", pot, Facing::Up, Vec3{0.5f, 0.4f, 0.5f});
     co_await ctx.ticks(5);
+    ctx.check(idAt(ctx, pot) == "lepton:potted_blue_blossom_sapling", "potted, got " + idAt(ctx, pot));
     auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(pot));
-    ctx.require(be != nullptr, "flower pot block entity");
-    Block const* plant = static_cast<FlowerPotBlockActor*>(be)->mPlant;
-    ctx.check(plant && plant->getTypeName() == "lepton:blue_blossom_sapling",
-        "the pot holds the sapling, got " + (plant ? plant->getTypeName() : std::string("nothing")));
+    Block const* plant = be ? static_cast<FlowerPotBlockActor*>(be)->mPlant : nullptr;
+    ctx.check(plant == nullptr, "no vanilla pot holds the custom sapling (the client would crash)");
+    co_await ctx.ticks(10);
+    use(ctx, "minecraft:stick", pot, Facing::Up, Vec3{0.5f, 0.4f, 0.5f});
+    co_await ctx.ticks(5);
+    ctx.check(idAt(ctx, pot) == "minecraft:flower_pot", "the sapling came out, got " + idAt(ctx, pot));
+    // the API and the drops
+    auto& region = regionOf(ctx);
+    auto  bp     = lp::game::blockPos(pot);
+    ctx.check(nw::potSapling(region, bp, "lepton:ancient_sapling"), "pot an ashen sapling");
+    ctx.check(!nw::potSapling(region, bp, "lepton:red_blossom_sapling"), "a full pot takes nothing");
+    ctx.check(nw::unpotSapling(region, bp) == "lepton:ancient_sapling", "unpot gives the sapling");
+    ctx.check(!nw::potSapling(region, bp, "minecraft:oak_sapling"), "vanilla saplings are the vanilla pot's");
 });
 
 LP_REGISTER_SELFTEST("newwoods.sapling_bonemeal", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -625,12 +635,14 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         place(off(row, 8, 1, 0), "lepton:" + n + "_leaf_carpet");
         place(off(row, 9, 0, 0), "minecraft:grass_block");
         place(off(row, 9, 1, 0), "lepton:" + n + "_leaf_carpet");
-        place(off(row, 11, 0, 0), "minecraft:stone");
-        place(off(row, 11, 1, 0), "minecraft:flower_pot");
-        if (auto* be = regionOf(ctx).getBlockEntity(lp::game::blockPos(off(row, 11, 1, 0)))) {
-            auto* pot   = static_cast<FlowerPotBlockActor*>(be);
-            pot->mPlant = bs::of(t.sapling);
-            pot->refresh(regionOf(ctx));
+    }
+    // the potted saplings, in their own chunk (z - 64)
+    auto potRow = off(base, 0, 0, -64);
+    {
+        int k = 0;
+        for (auto const& t : nw::treeTypes()) {
+            place(off(potRow, 2 * k, 0, 0), "minecraft:stone");
+            place(off(potRow, 2 * k++, 1, 0), "lepton:potted_" + std::string(t.name) + "_sapling");
         }
     }
     ctx.check(placed == wanted, "placed " + std::to_string(placed) + " / " + std::to_string(wanted) + " gallery blocks");
@@ -678,6 +690,7 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     views.push_back({"trees-rows-a", treeRows[0], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-b", treeRows[2], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-c", treeRows[4], 6.f, 3.f, 4.5f, 25.f, 180.f});
+    views.push_back({"potted", potRow, 5.f, 2.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-a", forest, 28.f, 8.f, 30.5f, 5.f, 90.f}); // east of the line, looking west
     views.push_back({"trees-b", forest, 28.f, 8.f, 120.5f, 5.f, 90.f});
     for (auto const& v : views) {
