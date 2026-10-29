@@ -2,6 +2,7 @@
   "lp.ui.demo.radial": "Lepton 轮盘演示",
   "lp.ui.demo.hud": "Lepton HUD 演示",
   "lp.ui.demo.codes": "§a绿色 §c红色 §l粗体§r §o斜体",
+  "lp.ui.demo.edge_tip": "留在屏幕内的提示",
   "lp.ui.demo.hud_sub": "文字、矩形、物品",
   "lp.ui.demo.button": "整理",
   "lp.ui.demo.button_tip": "Lepton 叠加按钮",
