@@ -24,6 +24,7 @@
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockChangeContext.h"
 #include "mc/world/level/block/BlockProperty.h"
+#include "mc/world/level/block/BlockSupportType.h"
 #include "mc/world/level/block/BlockType.h"
 #include "mc/world/level/block/ComposterBlock.h"
 #include "mc/world/level/block/DispenserBlock.h"
@@ -208,14 +209,9 @@ LP_REGISTER_SELFTEST("storage.gates", [](Context& ctx) {
 // ---- CompressedBlocks / UtilityRecipes ------------------------------------------------------------
 
 LP_REGISTER_SELFTEST("storage.fuel", [](Context& ctx) {
-    auto const* coal = itemOf("minecraft:coal");
-    ctx.require(coal != nullptr, "coal");
-    float ref = FurnaceBlockActor::getItemBurnDuration(*coal, 200.f);
+    float ref = FurnaceBlockActor::getBurnDuration(lp::game::makeItem("minecraft:coal"), 200.f);
     ctx.require(ref > 0.f, "coal burns");
-    auto ratio = [&](char const* id) {
-        auto const* it = itemOf(id);
-        return it ? FurnaceBlockActor::getItemBurnDuration(*it, 200.f) / ref : -1.f;
-    };
+    auto ratio = [&](char const* id) { return FurnaceBlockActor::getBurnDuration(lp::game::makeItem(id), 200.f) / ref; };
     ctx.check(std::abs(ratio("lepton:charcoal_block") - 10.f) < 0.01f, "charcoal block = 16000 ticks: " + std::to_string(ratio("lepton:charcoal_block")));
     ctx.check(std::abs(ratio("lepton:blaze_lantern") - 15.f) < 0.01f, "blaze lantern = 24000 ticks");
     ctx.check(std::abs(ratio("lepton:stick_block") - 900.f / 1600.f) < 0.01f, "stick stack = 900 ticks");
@@ -223,9 +219,11 @@ LP_REGISTER_SELFTEST("storage.fuel", [](Context& ctx) {
     ctx.check(std::abs(ratio("lepton:red_stool") - 300.f / 1600.f) < 0.01f, "stools = 300 ticks");
     ctx.check(std::abs(ratio("minecraft:torch") - 400.f / 1600.f) < 0.01f, "torches = 400 ticks");
     ctx.check(ratio("lepton:gunpowder_sack") <= 0.f, "sacks are no fuel");
-    auto block = lp::game::makeItem("lepton:charcoal_block");
+    float blast = FurnaceBlockActor::getBurnDuration(lp::game::makeItem("lepton:charcoal_block"), 100.f);
+    ctx.check(std::abs(blast / FurnaceBlockActor::getBurnDuration(lp::game::makeItem("minecraft:coal"), 100.f) - 10.f) < 0.01f, "same ratio in a blast furnace");    auto block = lp::game::makeItem("lepton:charcoal_block");
     ctx.check(FurnaceBlockActor::isItemAllowedInFuelSlot(1, block, 1), "charcoal block fits the fuel slot");
-    ctx.check(FurnaceBlockActor::getBurnDuration(block, 200.f) / ref > 9.9f, "getBurnDuration agrees");
+    auto const* bi = block.mItem.get();
+    ctx.check(bi && FurnaceBlockActor::getItemBurnDuration(*bi, 200.f) / ref > 9.9f, "getItemBurnDuration agrees");
     auto& c     = lp::config::mut<st::StorageConfig>();
     auto  saved = c;
     c.charcoalBlockFuelTime = 3200;
@@ -368,11 +366,12 @@ LP_REGISTER_SELFTEST("storage.stool_sit", [](Context& ctx) -> ll::coro::CoroTask
     ctx.check(b.getBlockType().hasComparatorSignal(), "the stool has a comparator signal");
     ctx.check(b.getBlockType().getComparatorSignal(regionOf(ctx), bp(p), b, 0) == 15, "comparator 15 while sat in");
     ctx.check(!st::stools::sit(ctx.spawnPlayer("storage_stool2"), regionOf(ctx), bp(p)), "one seat per stool");
+    auto seatId = lp::game::entities::idOf(*seat);
     player.stopRiding(true, false, false, false);
     co_await ctx.ticks(3);
     ctx.check(!flag(at(ctx, p), "lepton:sat_in"), "sat_in cleared after getting up");
     ctx.check(at(ctx, p).getBlockType().getComparatorSignal(regionOf(ctx), bp(p), at(ctx, p), 0) == 0, "comparator 0 when empty");
-    ctx.check(lp::game::entities::find(lp::game::entities::idOf(*seat)) == nullptr, "the seat is gone");
+    ctx.check(lp::game::entities::find(seatId) == nullptr, "the seat is gone");
     // a block above blocks sitting
     ctx.require(put(ctx, off(p, 0, 1, 0), "minecraft:stone"), "stone above");
     ctx.check(!st::stools::sit(player, regionOf(ctx), bp(p)), "no sitting under a block");
@@ -405,7 +404,7 @@ LP_REGISTER_SELFTEST("storage.stool_piston", [](Context& ctx) -> ll::coro::CoroT
     ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
     clearBox(ctx, off(p, -1, 0, 0), 5, 3, 1);
     // piston facing east (facing_direction 5) at p, stool east of it
-    ctx.require(put(ctx, p, "minecraft:piston", {{"facing_direction", 5}}), "piston");
+    ctx.require(put(ctx, p, "minecraft:piston", {{"facing_direction", 4}}), "piston");
     ctx.require(put(ctx, off(p, 1, 0, 0), "lepton:green_stool"), "stool");
     stepAside(ctx, p);
     co_await ctx.ticks(2);
@@ -413,6 +412,7 @@ LP_REGISTER_SELFTEST("storage.stool_piston", [](Context& ctx) -> ll::coro::CoroT
     co_await ctx.ticks(2);
     ctx.require(put(ctx, off(p, -1, 0, 0), "minecraft:redstone_block"), "power the piston");
     co_await ctx.ticks(12);
+    ctx.info("after the push: x-1 " + idAt(ctx, off(p, -1, 0, 0)) + " x+0 " + idAt(ctx, p) + " x+1 " + idAt(ctx, off(p, 1, 0, 0)) + " x+2 " + idAt(ctx, off(p, 2, 0, 0)) + " x+3 " + idAt(ctx, off(p, 3, 0, 0)));
     ctx.check(idAt(ctx, off(p, 2, 0, 0)).ends_with("_stool"), "the stool moved: " + idAt(ctx, off(p, 2, 0, 0)));
     auto* seat = st::stools::seatOf(ctx.player());
     ctx.check(seat != nullptr, "still seated after the push");
@@ -525,10 +525,25 @@ LP_REGISTER_SELFTEST("storage.rope_survive", [](Context& ctx) -> ll::coro::CoroT
     ctx.check(idAt(ctx, off(p, 0, 4, 0)) != "lepton:rope", "without the ceiling the rope pops");
     ctx.check(idAt(ctx, off(p, 0, 3, 0)) != "lepton:rope", "and the one below");
     killItems(ctx, off(p, 0, 3, 0));
+    auto sup = [&](char const* what) {
+        auto const& b = at(ctx, off(p, 0, 5, 0));
+        auto const& t = b.getBlockType();
+        ctx.info(std::string(what) + ": center " + std::to_string(t.canProvideSupport(b, 0, BlockSupportType::Center)) + " edge "
+            + std::to_string(t.canProvideSupport(b, 0, BlockSupportType::Edge)) + " any " + std::to_string(t.canProvideSupport(b, 0, BlockSupportType::Any)));
+    };
+    put(ctx, off(p, 0, 5, 0), "minecraft:stone");
+    sup("stone");
     ctx.require(put(ctx, off(p, 0, 5, 0), "minecraft:oak_fence"), "fence");
+    sup("fence");
     ctx.check(!st::rope::canHang(r, bp(off(p, 0, 4, 0))), "a fence's bottom is not sturdy");
     ctx.require(put(ctx, off(p, 0, 5, 0), "minecraft:oak_slab", {{"minecraft:vertical_half", "top"}}), "top slab");
-    ctx.check(st::rope::canHang(r, bp(off(p, 0, 4, 0))), "a top slab holds rope");
+    sup("top slab");
+    put(ctx, off(p, 0, 5, 0), "minecraft:glass");
+    sup("glass");
+    ctx.require(put(ctx, off(p, 0, 5, 0), "minecraft:oak_slab", {{"minecraft:vertical_half", "top"}}), "top slab");
+    ctx.check(!st::rope::canHang(r, bp(off(p, 0, 4, 0))), "a top slab's bottom face is not full (Java: no face at the block's bottom)");
+    put(ctx, off(p, 0, 5, 0), "minecraft:glass");
+    ctx.check(st::rope::canHang(r, bp(off(p, 0, 4, 0))), "glass holds rope");
 });
 
 LP_REGISTER_SELFTEST("storage.rope_dispenser", [](Context& ctx) -> ll::coro::CoroTask<> {
@@ -619,7 +634,7 @@ LP_REGISTER_SELFTEST("storage.potting", [](Context& ctx) -> ll::coro::CoroTask<>
     ctx.check(idAt(ctx, p) == "lepton:potted_wheat", "a player pots wheat seeds: " + idAt(ctx, p));
     for (auto id : {"lepton:potted_sea_pickle", "lepton:potted_cave_vines"}) {
         auto const* b = bs::of(id);
-        ctx.check(b && b->getBlockType().mLightEmission->mValue > 0, std::string(id) + " gives light");
+        ctx.check(b && b->mDirectData->mLightEmission->mValue > 0, std::string(id) + " gives light");
     }
 });
 

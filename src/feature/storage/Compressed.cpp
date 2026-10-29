@@ -50,10 +50,9 @@ std::string const& nameOf(Item const& item) { return item.mFullName->getString()
 // ---- fuel -------------------------------------------------------------------------------------
 
 
-Item const* coalItem() {
-    static ItemStack coal = game::makeItem("minecraft:coal");
-    return coal.mItem.get();
-}
+/// The game's burn duration: Java ticks scaled by the furnace's burn interval (200 = a furnace,
+/// 100 = blast furnace / smoker: coal gives 1600 at 200).
+float burnDuration(int ticks, float burnInterval) { return ticks <= 0 ? 0.f : static_cast<float>(ticks) * burnInterval / 200.f; }
 
 LL_TYPE_STATIC_HOOK(
     StorageItemBurnHook,
@@ -64,12 +63,8 @@ LL_TYPE_STATIC_HOOK(
     Item const& item,
     float       burnInterval
 ) {
-    auto ticks = fuelTicks(nameOf(item));
-    if (!ticks) return origin(item, burnInterval);
-    if (*ticks <= 0) return 0.f;
-    auto const* coal = coalItem();
-    float       ref  = coal ? origin(*coal, burnInterval) : 0.f;
-    return static_cast<float>(*ticks) * (ref > 0.f ? ref / 1600.f : 1.f);
+    if (auto ticks = fuelTicks(nameOf(item))) return burnDuration(*ticks, burnInterval);
+    return origin(item, burnInterval);
 }
 
 LL_TYPE_STATIC_HOOK(
@@ -82,10 +77,11 @@ LL_TYPE_STATIC_HOOK(
     float                burnInterval
 ) {
     auto const* item = stack.isNull() ? nullptr : stack.mItem.get();
-    if (!item || !fuelTicks(nameOf(*item))) return origin(stack, burnInterval);
-    return FurnaceBlockActor::getItemBurnDuration(*item, burnInterval);
+    if (item) {
+        if (auto ticks = fuelTicks(nameOf(*item))) return burnDuration(*ticks, burnInterval);
+    }
+    return origin(stack, burnInterval);
 }
-
 LL_TYPE_STATIC_HOOK(
     StorageFuelSlotHook,
     ll::memory::HookPriority::Normal,
