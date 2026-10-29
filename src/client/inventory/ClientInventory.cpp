@@ -392,8 +392,8 @@ void overlay(Overlay& o, ScreenInfo const& s) {
                 log().info("inventory: search bar {}", gSearchEnabled ? "shown" : "hidden");
             });
             if (gSearchEnabled) {
-                field = Rect{containerFirst->rect.x + 10 * sc, containerFirst->rect.y - 12 * sc, 117 * sc, 10 * sc};
-                Rect bg{field.x - 11 * sc, field.y - 3 * sc, 126 * sc, 13 * sc};
+                field = Rect{containerFirst->rect.x + 12 * sc, containerFirst->rect.y - 12 * sc, 115 * sc, 10 * sc};
+                Rect bg{field.x - 13 * sc, field.y - 3 * sc, 126 * sc, 13 * sc};
                 dc.fill(bg, Color{0.12f, 0.12f, 0.12f, 1});
                 dc.outline(bg, gSearchFocused ? colors::white : colors::gray);
                 drawIcon(dc, Rect{bg.x + 1.5f * sc, bg.y + 1.5f * sc, 10 * sc, 10 * sc}, Icon::Filter, colors::gray);
@@ -699,9 +699,11 @@ void hud(DrawContext& dc) {
     if (gHotbarHeight > 0 && c.enableHotbarChanger) {
         auto* p = client::currentPlayer();
         if (p) {
-            float real   = gHotbarHeight * 90.f;
+            // Quark slides the rows up from behind the hotbar and moves the status bars up with them;
+            // Bedrock's hearts / hunger cannot be moved, so the rows rise above them instead.
+            float real   = gHotbarHeight * 66.f;
             float xStart = size.x / 2 - 91;
-            float yStart = size.y - real;
+            float yStart = size.y - 42.f - real;
             for (int row = 0; row < 3; ++row) {
                 Rect bar{xStart, yStart + row * 21.f, 182, 22};
                 dc.fill(bar, Color{0, 0, 0, 0.55f});
