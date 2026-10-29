@@ -43,6 +43,7 @@
 #include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
 #include "mc/deps/core/math/Color.h"
 #include "mc/deps/nbt/CompoundTag.h"
+#include "mc/deps/nbt/Int64Tag.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/locale/I18n.h"
 #include "mc/world/actor/player/Inventory.h"
@@ -69,6 +70,19 @@ using namespace lp::feature::hud;
 namespace {
 
 // ---- shared state --------------------------------------------------------------------------------
+
+/// The map a filled map shows (its `map_uuid`; -1 = none). Never call `MapItem::getMapId`: the game
+/// returns its ActorUniqueID (which has constructors there) through a hidden result pointer, while
+/// LeviLamina's aggregate ActorUniqueID is returned in RAX, so the game takes the tag pointer for the
+/// result slot and writes the id over the tag's vtable (the map's data is then corrupt and the next
+/// read of it, in Lepton or in the game, crashes).
+ActorUniqueID mapIdOf(ItemStackBase const& stack) {
+    ActorUniqueID id{-1};
+    if (!stack.mUserData) return id;
+    Tag const* t = stack.mUserData->get(MapItem::TAG_MAP_UUID());
+    if (t && t->getId() == Tag::Type::Int64) id.rawID = static_cast<Int64Tag const*>(t)->data;
+    return id;
+}
 
 std::atomic<bool>  gShift{false};
 std::atomic<float> gLineHeight{10.f}; ///< measured from the rendered tooltip
@@ -176,7 +190,7 @@ std::string stackCodes(ItemStackBase const& stack) {
     // a shulker box (cheap, and no ItemStackBase::save, which runs item fix-ups).
     auto key = game::itemId(stack) + ":" + std::to_string(stack.getAuxValue());
     if (key.starts_with("minecraft:filled_map"))
-        key += ":" + std::to_string(MapItem::getMapId(stack.mUserData.get()).rawID);
+        key += ":" + std::to_string(mapIdOf(stack).rawID);
     if (isShulkerBox(stack))
         for (auto const& is : shulkerContents(stack)) key += ":" + game::itemId(is) + "x" + std::to_string(is.mCount);
     auto        h = static_cast<uint32_t>(std::hash<std::string>{}(key));
@@ -296,7 +310,7 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
         if (!conf.mapRequireShift || shift) {
             Component c;
             c.kind  = Kind::Map;
-            c.mapId = MapItem::getMapId(stack.mUserData.get());
+            c.mapId = mapIdOf(stack);
             auto r  = reserve(c, id++, 72, 75);
             insert.insert(insert.end(), r.begin(), r.end());
             layout->comps.push_back(std::move(c));
@@ -598,7 +612,7 @@ void updateWantedMap() {
         resetMaps();
         return;
     }
-    if (!wanted || !level) return;
+    if (!wanted || wanted->rawID == -1 || !level) return; // -1: a map item that names no map
     // The level finds a map's data by the map item's data: look for the item in the inventory.
     MapItemSavedData* data = nullptr;
     if (player) {
@@ -606,7 +620,7 @@ void updateWantedMap() {
         for (int i = 0; i < inv.getContainerSize() && !data; ++i) {
             auto const& s = inv.getItem(i);
             if (s.mUserData && game::itemId(s) == "minecraft:filled_map"
-                && MapItem::getMapId(s.mUserData.get()) == *wanted)
+                && mapIdOf(s) == *wanted)
                 data = level->getMapSavedData(s.mUserData.get());
         }
     }
