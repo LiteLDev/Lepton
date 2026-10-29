@@ -350,8 +350,13 @@ LP_REGISTER_SELFTEST("misctweaks.mending_nerf", [](Context& ctx) -> ll::coro::Co
 namespace {
 ll::coro::CoroTask<int> killAndCount(Context& ctx, BlockSource& region, std::string type, Vec3 at, std::string item) {
     clearItems(region, at);
-    auto* mob = ent::spawn(region, type, at);
-    ctx.require(mob != nullptr, type + " spawned");
+    // some mobs (sheep: 5%) spawn as babies, which drop nothing: spawn until an adult comes out
+    Actor* mob = nullptr;
+    for (int i = 0; i < 10 && (!mob || mob->isBaby()); ++i) {
+        if (mob) ent::despawn(*mob);
+        mob = ent::spawn(region, type, at);
+    }
+    ctx.require(mob != nullptr && !mob->isBaby(), "adult " + type + " spawned");
     auto id = ent::idOf(*mob);
     co_await ctx.ticks(2);
     if (auto* m = ent::find(id)) m->hurtByCause(10000.f, SharedTypes::Legacy::ActorDamageCause::EntityAttack, ctx.player());
