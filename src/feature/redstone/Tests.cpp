@@ -536,33 +536,34 @@ LP_REGISTER_SELFTEST("redstone.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     GP base = ctx.testPos(1090);
     ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
     clearBox(ctx, off(base, -1, 0, -2), 20, 6, 4);
+    clearBox(ctx, off(base, 5, 6, 0), 1, 10, 1);
     for (int dx = -1; dx < 19; ++dx) put(ctx, off(base, dx, -1, 0), "minecraft:smooth_stone");
     struct Item {
         int          dx, dy;
         char const*  id;
         bs::Changes  states;
     };
+    // compact around x = 8 so one view from the south shows the whole row
     std::vector<Item> const items{
-        {0,  0, "lepton:iron_rod",                {{"minecraft:block_face", "up"}}                                            },
-        {1,  0, "lepton:iron_rod",                {{"minecraft:block_face", "east"}}                                          },
-        {2,  0, "lepton:iron_rod",                {{"minecraft:block_face", "north"}}                                         },
-        {4,  0, "lepton:gravisand",               {}                                                                          },
-        {6,  0, "lepton:ender_watcher",           {}                                                                          },
-        {7,  0, "lepton:ender_watcher",           {{"lepton:watched", true}, {"lepton:power", 15}}                            },
-        {9,  0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                                 },
-        {11, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                                 },
-        {11, 0, "",                               {}                                                                          },
-        {13, 0, "lepton:iron_button",             {{"minecraft:block_face", "up"}}                                            },
-        {14, 0, "lepton:gold_button",             {{"minecraft:block_face", "up"}}                                            },
-        {16, 0, "lepton:obsidian_pressure_plate", {}                                                                          },
-        {17, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "east"}, {"lepton:powered", "right"}}     },
+        {2,  0, "lepton:iron_rod",                {{"minecraft:block_face", "up"}}                                        },
+        {3,  0, "lepton:iron_rod",                {{"minecraft:block_face", "east"}}                                      },
+        {4,  0, "lepton:iron_rod",                {{"minecraft:block_face", "north"}}                                     },
+        {5,  0, "lepton:gravisand",               {}                                                                      },
+        {7,  0, "lepton:ender_watcher",           {}                                                                      },
+        {8,  0, "lepton:ender_watcher",           {}                                                                      },
+        {10, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                             },
+        {11, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                             },
+        {12, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "east"}, {"lepton:powered", "right"}} },
+        {13, 0, "lepton:iron_button",             {{"minecraft:block_face", "up"}}                                        },
+        {14, 0, "lepton:gold_button",             {{"minecraft:block_face", "up"}}                                        },
+        {15, 0, "lepton:obsidian_pressure_plate", {}                                                                      },
     };
     for (auto const& it : items) {
-        if (!*it.id) continue;
         ctx.check(put(ctx, off(base, it.dx, it.dy, 0), it.id, it.states), std::string("placed ") + it.id);
     }
     // the second randomizer is powered from behind (the south side)
     put(ctx, off(base, 11, 0, 1), "minecraft:redstone_block");
+
     co_await ctx.ticks(8);
     ctx.check(bs::getString(regionOf(ctx).getBlock(bp(off(base, 11, 0, 0))), "lepton:powered").value_or("off") != "off",
               "the powered randomizer is on");
@@ -578,22 +579,24 @@ LP_REGISTER_SELFTEST("redstone.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         if (auto* v = ctx.player().getLevel().getPlayer(uid))
             v->teleport(Vec3{base.x + dx, base.y + dy, base.z + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
     };
-    // the real player looks at the second ender watcher (so it stays watched)
-    view(7.5f, 1.0f, 4.5f, 10.f, 180.f);
-    co_await ctx.ticks(40);
+    // one view (later teleports of a real client are not reliable): south of the row, looking at the
+    // second ender watcher (so it is watched), the rest of the row in sight
+    view(8.5f, 1.0f, 9.5f, 6.5f, 180.f); // eyes ~1.1 above the watcher centre, ~9.5 blocks away
+    co_await ctx.ticks(60);
     ctx.info("REDSTONE GALLERY watcher");
-    co_await ctx.ticks(100);
-    view(8.5f, 2.5f, 5.5f, 30.f, 180.f);
-    co_await ctx.ticks(40);
+    co_await ctx.ticks(60);
     ctx.info("REDSTONE GALLERY row");
-    co_await ctx.ticks(100);
+    co_await ctx.ticks(60);
     // gravisand floating up: blocked below, powered from the side
-    put(ctx, off(base, 4, 4, 0), "minecraft:stone");
-    put(ctx, off(base, 5, 0, 0), "minecraft:redstone_block");
-    co_await ctx.ticks(5);
+    put(ctx, off(base, 5, 14, 0), "minecraft:stone");
+    co_await ctx.ticks(10);
+    put(ctx, off(base, 6, 0, 0), "minecraft:redstone_block");
+    co_await ctx.ticks(7);
     ctx.info("REDSTONE GALLERY floating");
     co_await ctx.ticks(60);
-    ctx.check(idAt(ctx, off(base, 4, 3, 0)) == "lepton:gravisand", "the gallery gravisand floated up to the stone");
+    ctx.check(idAt(ctx, off(base, 5, 13, 0)) == "lepton:gravisand", "the gallery gravisand floated up to the stone");
+    put(ctx, off(base, 5, 13, 0), "minecraft:air");
+    put(ctx, off(base, 5, 14, 0), "minecraft:air");
     ctx.info("REDSTONE GALLERY done");
 });
 
