@@ -23,6 +23,8 @@
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorType.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/Container.h"
+#include "mc/world/item/FertilizerItem.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/BlockTickingQueue.h"
@@ -97,8 +99,7 @@ void teleportSound(BlockSource& region, BlockPos const& pos, float pitch) {
 struct Pending {
     std::mutex                      mutex;
     std::set<core::GlobalPos>       schedule;  ///< chorus placed: make sure it ticks
-    std::set<core::GlobalPos>       water;     ///< water appeared next to chorus
-    std::set<core::GlobalPos>       ticks;     ///< plant ticks that fired off the server thread
+    std::set<core::GlobalPos>       water;     ///< chorus whose neighbours changed off the server thread
     std::vector<std::tuple<int64_t, core::GlobalPos>> bonemeal; ///< (player id, pos)
 };
 Pending& pending() {
@@ -118,9 +119,6 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     if (b.isChorus(nb)) {
         std::lock_guard lock(pending().mutex);
         pending().schedule.insert(game::globalPos(region, ev.pos()));
-    } else if (b.isWater(nb)) {
-        std::lock_guard lock(pending().mutex);
-        pending().water.insert(game::globalPos(region, ev.pos()));
     }
 }
 
@@ -166,7 +164,7 @@ void scanEntities(Level& level) {
                     BlockPos p{x, y, z};
                     if (!region.hasChunksAt(p, 0, false)) continue;
                     auto const& blk = region.getBlock(p);
-                    if (&blk.getBlockType() == b.weedsType) chorusEntityInside(region, p, *a);
+                    if (&blk.getBlockType() == b.weedsType) chorusEntityInside(region, p);
                 }
     }
 }
@@ -179,7 +177,8 @@ void ambientParticles(Level& level) {
     level.forEachPlayer([&](Player& p) {
         auto& region = p.getDimensionBlockSource();
         auto  feet   = p.getFeetPos();
-        int   px = static_cast<int>(std::floor(feet.x)), py = static_cast<int>(std::floor(feet.y)), pz = static_cast<int>(std::floor(feet.z));
+        auto  fp   = game::blockPosOf(feet);
+        int   px = fp.x, py = fp.y, pz = fp.z;
         for (int i = 0; i < 200; ++i) {
             BlockPos q{px + rand.nextInt(16) - rand.nextInt(16), py + rand.nextInt(16) - rand.nextInt(16), pz + rand.nextInt(16) - rand.nextInt(16)};
             if (q.y < region.getMinHeight() || q.y >= region.getMaxHeight() || !region.hasChunksAt(q, 0, false)) continue;
@@ -200,13 +199,12 @@ void onTick(ll::event::ServerLevelTickEvent& ev) {
     auto& level = ev.level();
     auto const& cfg = config();
     if (!blocks().ready()) return;
-    std::set<core::GlobalPos>                         schedule, water, ticks;
+    std::set<core::GlobalPos>                         schedule, water;
     std::vector<std::tuple<int64_t, core::GlobalPos>> bonemeal;
     {
         std::lock_guard lock(pending().mutex);
         schedule.swap(pending().schedule);
         water.swap(pending().water);
-        ticks.swap(pending().ticks);
         bonemeal.swap(pending().bonemeal);
     }
     auto const& b = blocks();
@@ -217,21 +215,12 @@ void onTick(ll::event::ServerLevelTickEvent& ev) {
         auto const& blk = region->getBlock(pos);
         if (b.isChorus(blk)) scheduleChorusTick(*region, pos, blk);
     }
-    for (auto const& g : ticks) { // the random tick of a plant ticked during a chunk load
-        auto* region = game::regionOf(g.dim);
-        auto  pos    = game::blockPos(g);
-        if (!region || !region->hasChunksAt(pos, 0, false) || !b.isChorus(region->getBlock(pos))) continue;
-        chorusRandomTick(*region, pos);
-        if (b.isChorus(region->getBlock(pos))) scheduleChorusTick(*region, pos, region->getBlock(pos));
-    }
     if (cfg.enableChorusVegetation) {
         for (auto const& g : water) {
             auto* region = game::regionOf(g.dim);
-            if (!region) continue;
-            auto w = game::blockPos(g);
-            for (auto const& d : kDirs) {
-                BlockPos p{w.x + d[0], w.y + d[1], w.z + d[2]};
-                if (region->hasChunksAt(p, 0, false) && b.isChorus(region->getBlock(p))) chorusRunAwayFromWater(*region, p);
+            auto  pos    = game::blockPos(g);
+            if (region && region->hasChunksAt(pos, 0, false) && b.isChorus(region->getBlock(pos))) {
+                chorusRunAwayFromWater(*region, pos);
             }
         }
         for (auto const& [id, g] : bonemeal) {
@@ -261,18 +250,65 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(region, pos, random);
     if (!isChorusType(&this->getBlockType()) || region.getLevel().isClientSide()) return;
-    if (std::this_thread::get_id() != gServerThread.load()) {
-        // instaticks while chunks load run on worker threads: redo it on the server thread
-        std::lock_guard lock(pending().mutex);
-        pending().ticks.insert(game::globalPos(region, pos));
-        return;
-    }
     auto const& b = blocks();
-    chorusRandomTick(region, pos);
+    if (!region.hasChunksAt(pos, 0, false) || !b.isChorus(region.getBlock(pos))) return; // a stale tick
+    // Overdue ticks of a loading chunk fire on worker threads: there only the next tick is
+    // scheduled (the random tick itself needs the server thread; with random intervals, skipping
+    // one changes nothing a player could notice).
+    if (std::this_thread::get_id() == gServerThread.load()) chorusRandomTick(region, pos);
     if (region.hasChunksAt(pos, 0, false)) {
         auto const& now = region.getBlock(pos);
         if (b.isChorus(now)) scheduleChorusTick(region, pos, now);
     }
+}
+
+/// Quark's neighborChanged: water next to the plant makes it run away.
+LL_TYPE_INSTANCE_HOOK(
+    ChorusNeighborChangedHook,
+    ll::memory::HookPriority::Normal,
+    Block,
+    &Block::neighborChanged,
+    void,
+    BlockSource&    region,
+    BlockPos const& pos,
+    BlockPos const& neighborPos
+) {
+    origin(region, pos, neighborPos);
+    if (!isChorusType(&this->getBlockType()) || region.getLevel().isClientSide()) return;
+    if (!config().enableChorusVegetation) return;
+    if (std::this_thread::get_id() != gServerThread.load()) {
+        std::lock_guard lock(pending().mutex);
+        pending().water.insert(game::globalPos(region, pos));
+        return;
+    }
+    if (region.hasChunksAt(pos, 0, false) && blocks().isChorus(region.getBlock(pos))) chorusRunAwayFromWater(region, pos);
+}
+
+/// Dispensers: Quark's plants are BonemealableBlocks (always fertilizable). Bedrock's fertilizer
+/// dispense does nothing on a custom block, so a dispenser aimed at a plant fertilizes it here.
+LL_TYPE_INSTANCE_HOOK(
+    ChorusDispenseHook,
+    ll::memory::HookPriority::Normal,
+    FertilizerItem,
+    &FertilizerItem::$dispense,
+    bool,
+    BlockSource& region,
+    Container&   container,
+    int          slot,
+    Vec3 const&  pos,
+    uchar        face
+) {
+    if (region.getLevel().isClientSide() || !config().enableChorusVegetation || !blocks().ready()) {
+        return origin(region, container, slot, pos, face);
+    }
+    BlockPos target = game::blockPosOf(pos);
+    if (!region.hasChunksAt(target, 0, false) || !blocks().isChorus(region.getBlock(target))) {
+        return origin(region, container, slot, pos, face);
+    }
+    chorusBonemeal(region, target);
+    region.getLevel().spawnParticleEffect("minecraft:crop_growth_emitter", center(target), &region.getDimension());
+    container.removeItem(slot, 1);
+    return true;
 }
 
 } // namespace
@@ -331,12 +367,11 @@ void chorusRandomTick(BlockSource& region, BlockPos const& pos) {
     }
 }
 
-void chorusEntityInside(BlockSource& region, BlockPos const& pos, Actor& entity) {
+void chorusEntityInside(BlockSource& region, BlockPos const& pos) {
     auto const& cfg = config();
     if (!cfg.enableChorusVegetation) return;
     Block const& state = region.getBlock(pos);
     if (&state.getBlockType() != blocks().weedsType) return; // only the "simple" plant reacts
-    (void)entity;
     auto target = chorusTeleport(region, pos, state, 4, 1.0 - cfg.teleportDuplicationChance);
     if (target && serverRandom().nextDouble() < cfg.endermiteSpawnChance) {
         game::entities::spawn(region, "minecraft:endermite", Vec3{static_cast<float>(target->x), static_cast<float>(target->y), static_cast<float>(target->z)});
@@ -367,9 +402,13 @@ void installChorus() {
     gListeners.push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteract));
     gListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>(onTick));
     ChorusQueuedTickHook::hook();
+    ChorusNeighborChangedHook::hook();
+    ChorusDispenseHook::hook();
 }
 
 void uninstallChorus() {
+    ChorusDispenseHook::unhook();
+    ChorusNeighborChangedHook::unhook();
     ChorusQueuedTickHook::unhook();
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : gListeners) bus.removeListener(l);
@@ -377,7 +416,6 @@ void uninstallChorus() {
     std::lock_guard lock(pending().mutex);
     pending().schedule.clear();
     pending().water.clear();
-    pending().ticks.clear();
     pending().bonemeal.clear();
 }
 

@@ -99,7 +99,9 @@ BlockSet const& blocks() {
 }
 
 bool isChorusType(BlockType const* type) {
-    return type && (type == gFastWeeds.load(std::memory_order_relaxed) || type == gFastTwist.load(std::memory_order_relaxed));
+    if (!type) return false;
+    if (!gFastWeeds.load(std::memory_order_relaxed)) (void)blocks(); // resolve after a world change
+    return type == gFastWeeds.load(std::memory_order_relaxed) || type == gFastTwist.load(std::memory_order_relaxed);
 }
 
 void resetBlocks() {

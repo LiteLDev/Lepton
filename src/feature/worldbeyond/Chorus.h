@@ -25,7 +25,7 @@ std::optional<BlockPos> chorusTeleport(BlockSource& region, BlockPos const& pos,
 /// Random tick: teleports with `passiveTeleportChance`.
 void chorusRandomTick(BlockSource& region, BlockPos const& pos);
 /// A living entity inside the block (weeds only): teleport, maybe spawn an endermite.
-void chorusEntityInside(BlockSource& region, BlockPos const& pos, Actor& entity);
+void chorusEntityInside(BlockSource& region, BlockPos const& pos);
 /// Water next to the block: teleport (range 8, always moves).
 void chorusRunAwayFromWater(BlockSource& region, BlockPos const& pos);
 /// Bone meal: 3..5 copies far away, then a move.

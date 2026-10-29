@@ -22,7 +22,11 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/GameType.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/Container.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/actor/BlockActor.h"
+#include "mc/world/level/block/actor/BlockActorType.h"
+#include "mc/world/level/block/actor/DispenserBlockActor.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/levelgen/v1/TheEndGenerator.h"
 
@@ -446,7 +450,38 @@ LP_REGISTER_SELFTEST("worldbeyond.viaduct_pearl", [](Context& ctx) -> ll::coro::
     p.setPlayerGameType(GameType::Creative);
 });
 
-LP_REGISTER_SELFTEST("worldbeyond.viaduct_loop", [](Context& ctx) -> ll::coro::CoroTask<> {
+LP_REGISTER_SELFTEST("worldbeyond.chorus_dispenser", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto s = co_await sky(ctx, 2990);
+    auto& r = *s.region;
+    Scratch sc(r);
+    sc.platform(s.pos, 6);
+    BlockPos at{s.pos.x, s.pos.y + 1, s.pos.z};
+    BlockPos disp{at.x - 1, at.y, at.z};
+    sc.set(at, kChorusWeeds);
+    auto const* dispenser = lp::game::blockstates::of("minecraft:dispenser", {{"facing_direction", 5}}); // east, at the plant
+    ctx.require(dispenser != nullptr, "dispenser state");
+    sc.set(disp, *dispenser);
+    co_await ctx.ticks(1);
+    auto container = [&]() -> Container* {
+        auto* be = r.getBlockEntity(disp);
+        if (!be || be->getType() != BlockActorType::Dispenser) return nullptr;
+        return &static_cast<Container&>(static_cast<DispenserBlockActor&>(*be));
+    };
+    ctx.require(container() != nullptr, "the dispenser has its container");
+    container()->setItem(0, lp::game::makeItem("minecraft:bone_meal", 3));
+    co_await ctx.ticks(1);
+    BlockPos power{disp.x - 1, disp.y, disp.z};
+    sc.set(power, "minecraft:redstone_block");
+    int n = 0;
+    for (int i = 0; i < 20 && (n = countChorus(r, at, 6)) < 2; ++i) co_await ctx.ticks(1);
+    ctx.check(n >= 2, "a dispenser with bone meal multiplies the plant (" + std::to_string(n) + " plants)");
+    int left = container() ? container()->getItem(0).mCount : -1;
+    ctx.check(left == 2, "the dispenser used one bone meal (" + std::to_string(left) + " left)");
+    if (auto* c = container()) c->removeItem(0, c->getItem(0).mCount);
+    clearChorus(r, at, 6);
+});
+
+LP_REGISTER_SELFTEST("worldbeyond.viaduct_loop",[](Context& ctx) -> ll::coro::CoroTask<> {
     auto s = co_await sky(ctx, 2960);
     auto& r = *s.region;
     Scratch sc(r);
@@ -475,7 +510,8 @@ LP_REGISTER_SELFTEST("worldbeyond.spire", [](Context& ctx) -> ll::coro::CoroTask
     auto s = co_await sky(ctx, 2970);
     auto& r = *s.region;
     Scratch  sc(r);
-    BlockPos pad{s.pos.x, s.pos.y + 40, s.pos.z};
+    // the trunk (up to 69 blocks) and the climbing spiral (up to 22 more) stay below the build limit
+    BlockPos pad{s.pos.x, std::min(s.pos.y + 40, static_cast<int>(r.getMaxHeight()) - 95), s.pos.z};
     for (int x = -1; x <= 1; ++x)
         for (int z = -1; z <= 1; ++z) sc.set(BlockPos{pad.x + x, pad.y, pad.z + z}, "minecraft:end_stone");
     GenRegion g = GenRegion::unclipped(r);

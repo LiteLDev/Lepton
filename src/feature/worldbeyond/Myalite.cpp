@@ -95,11 +95,7 @@ std::optional<Vec3> redirect(Actor& actor, Vec3 const& pos) {
     if (!blocks().ready()) return std::nullopt;
     // Actor::teleportTo takes the feet position (commands, pearls, chorus fruit, endermen), like
     // Java's EntityTeleportEvent target.
-    BlockPos target{
-        static_cast<int>(std::floor(pos.x)),
-        static_cast<int>(std::floor(pos.y)),
-        static_cast<int>(std::floor(pos.z))
-    };
+    BlockPos target = game::blockPosOf(pos);
     auto& region = actor.getDimensionBlockSource();
     return viaductTarget(region, target, actor);
 }

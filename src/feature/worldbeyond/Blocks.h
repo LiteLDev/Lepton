@@ -60,8 +60,8 @@ struct BlockSet {
 
 /// The handles of the current world (resolved on first use; never null itself).
 [[nodiscard]] BlockSet const& blocks();
-/// Lock-free check for hot paths (every block tick): the type is chorus weeds or twist. False
-/// until `blocks()` resolved the handles of the current world.
+/// Lock-free check for hot paths (every block tick): the type is chorus weeds or twist (resolves
+/// the handles of the current world first when needed).
 [[nodiscard]] bool isChorusType(BlockType const* type);
 /// Drops the cached handles (world closed; the client reloads the registry per world).
 void resetBlocks();

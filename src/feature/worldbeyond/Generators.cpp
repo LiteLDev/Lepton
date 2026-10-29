@@ -29,7 +29,6 @@ namespace {
 
 std::atomic<int64_t> gChunks{0}, gSpikes{0}, gSpires{0}, gChorus{0}, gSprings{0};
 
-constexpr int kStageSurfaceStructures   = 4;
 constexpr int kStageUndergroundDecoration = 7;
 
 /// Java's Direction.values() order: DOWN, UP, NORTH, SOUTH, WEST, EAST.
@@ -263,11 +262,14 @@ int generateChorus(GenRegion& region, BiomeLookup const& biomes, int64_t seed, i
                 && biomes.at(x, topY, z) == "minecraft:end_highlands";
         },
         [&](BlockPos const& src, JavaRandom& rand) {
+            // End biomes are per chunk (and every attempt lies in this chunk): look it up once
+            bool   perChunk   = region.dimension() == 2;
+            double chunkChance = perChunk ? chanceFor(biomes.at(cx * 16, topY, cz * 16)) : 0.0;
             for (int i = 0; i < cfg.chunkAttempts; ++i) {
                 int      ox = rand.nextInt(16);
                 int      oz = rand.nextInt(16);
                 BlockPos p{cx * 16 + ox, 100, cz * 16 + oz};
-                double   chance = chanceFor(biomes.at(p.x, topY, p.z));
+                double   chance = perChunk ? chunkChance : chanceFor(biomes.at(p.x, topY, p.z));
                 double   dist   = static_cast<double>(p.x - src.x) * (p.x - src.x) + static_cast<double>(p.z - src.z) * (p.z - src.z);
                 int      dither = 6 * 6;
                 if (dist > dither) chance *= (1.0 - (std::atan((dist - dither) / 50.0) / (std::numbers::pi / 2.0)));
@@ -409,7 +411,6 @@ void decorateChunk(BlockSource& source, int dimId, int chunkX, int chunkZ, int64
     if (cfg.enableChorusVegetation && dimId == 2) { // Quark: DimensionConfig.end(false), not configurable
         generateChorus(region, biomes, seed, chunkX, chunkZ, cfg);
     }
-    (void)kStageSurfaceStructures;
 }
 
 GenStats genStats() {
