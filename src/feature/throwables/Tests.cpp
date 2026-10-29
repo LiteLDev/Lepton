@@ -360,6 +360,11 @@ LP_REGISTER_SELFTEST("throwables.skull_pike", [](Context& ctx) -> ll::coro::Coro
     co_await ctx.ticks(2);
     int fleeing = tw::skullpikes::fleeingCount();
     for (int i = 0; i < 10 && tw::skullpikes::fleeingCount() <= fleeing; ++i) {
+        // A husk busy attacking does not flee: in the full suite it may target other units' mobs.
+        if (auto* z = ent::find(zid); z && z->mTargetId->rawID != -1 && z->mTargetId->rawID != 0) {
+            ctx.info("the husk had a target: cleared");
+            z->setTarget(nullptr);
+        }
         tw::skullpikes::scareNow(); // the escape position is random: a few tries
         co_await ctx.ticks(1);
     }
