@@ -1,0 +1,31 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton.foxhound": {
+      "arrays": {
+        "textures": {
+          "Array.coats": [
+            "Texture.red_idle",
+            "Texture.red_hostile",
+            "Texture.red_sleeping",
+            "Texture.blue_idle",
+            "Texture.blue_hostile",
+            "Texture.blue_sleeping",
+            "Texture.black_idle",
+            "Texture.black_hostile",
+            "Texture.black_sleeping"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.coats[math.clamp(query.variant, 0, 2) * 3 + (query.property('lepton:resting') ? 2 : ((!query.is_tamed || query.has_target) ? 1 : 0))]"
+      ]
+    }
+  }
+}

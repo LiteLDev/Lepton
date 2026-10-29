@@ -1,0 +1,11 @@
+{
+  "lepton_mobsdeep_diamond_heart": {
+    "textures": "textures/items/diamond_heart"
+  },
+  "lepton_mobsdeep_forgotten_hat": {
+    "textures": "textures/items/forgotten_hat"
+  },
+  "lepton_mobsdeep_soul_bead": {
+    "textures": "textures/items/soul_bead"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "lepton:stoneling",
+      "population_control": "monster"
+    },
+    "conditions": [
+      {
+        "minecraft:spawns_underground": {},
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:stone",
+          "minecraft:deepslate",
+          "minecraft:tuff",
+          "minecraft:andesite",
+          "minecraft:diorite",
+          "minecraft:granite",
+          "minecraft:calcite",
+          "minecraft:dripstone_block",
+          "minecraft:cobblestone",
+          "minecraft:cobbled_deepslate",
+          "minecraft:smooth_basalt",
+          "minecraft:infested_stone",
+          "minecraft:infested_deepslate"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 0,
+          "max": 7,
+          "adjust_for_weather": true
+        },
+        "minecraft:weight": {
+          "default": 80
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:biome_filter": {
+          "all_of": [
+            {
+              "test": "has_biome_tag",
+              "value": "overworld"
+            },
+            {
+              "test": "has_biome_tag",
+              "operator": "!=",
+              "value": "the_end"
+            },
+            {
+              "test": "has_biome_tag",
+              "operator": "!=",
+              "value": "nether"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

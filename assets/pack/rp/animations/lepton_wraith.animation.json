@@ -1,0 +1,45 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.wraith.float": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "position": [
+            0,
+            "math.sin(query.life_time * 90) * 1.0 + 1.0",
+            0
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "math.sin(query.life_time * 70) * 6",
+            0,
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "math.cos(query.life_time * 70) * 6",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.wraith.fx": {
+      "loop": true,
+      "animation_length": 0.1,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "mist"
+          },
+          {
+            "effect": "soul"
+          }
+        ]
+      }
+    }
+  }
+}

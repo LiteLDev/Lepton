@@ -1,0 +1,272 @@
+{
+  "lepton.stoneling.meep": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/bat/idle1",
+        "volume": 0.8,
+        "pitch": 1.6
+      },
+      {
+        "name": "sounds/mob/bat/idle2",
+        "volume": 0.8,
+        "pitch": 1.6
+      }
+    ]
+  },
+  "lepton.stoneling.purr": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/cat/purr1",
+        "volume": 0.25,
+        "pitch": 1.4
+      },
+      {
+        "name": "sounds/mob/cat/purr2",
+        "volume": 0.25,
+        "pitch": 1.4
+      },
+      {
+        "name": "sounds/mob/cat/purr3",
+        "volume": 0.25,
+        "pitch": 1.4
+      }
+    ]
+  },
+  "lepton.stoneling.give": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/block/itemframe/add_item1",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/add_item2",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/add_item3",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/add_item4",
+        "volume": 1.0,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "lepton.stoneling.take": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/block/itemframe/remove_item1",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/remove_item2",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/remove_item3",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/itemframe/remove_item4",
+        "volume": 1.0,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "lepton.stoneling.eat": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/dig/stone1",
+        "volume": 1.0,
+        "pitch": 0.8
+      },
+      {
+        "name": "sounds/dig/stone2",
+        "volume": 1.0,
+        "pitch": 0.8
+      },
+      {
+        "name": "sounds/dig/stone3",
+        "volume": 1.0,
+        "pitch": 0.8
+      },
+      {
+        "name": "sounds/dig/stone4",
+        "volume": 1.0,
+        "pitch": 0.8
+      }
+    ]
+  },
+  "lepton.stoneling.cry": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/silverfish/hit1",
+        "volume": 1.0,
+        "pitch": 1.3
+      },
+      {
+        "name": "sounds/mob/silverfish/hit2",
+        "volume": 1.0,
+        "pitch": 1.3
+      },
+      {
+        "name": "sounds/mob/silverfish/hit3",
+        "volume": 1.0,
+        "pitch": 1.3
+      }
+    ]
+  },
+  "lepton.stoneling.die": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/random/break",
+        "volume": 1.0,
+        "pitch": 0.8
+      }
+    ]
+  },
+  "lepton.stoneling.michael": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/villager/idle1",
+        "volume": 1.0,
+        "pitch": 0.9
+      },
+      {
+        "name": "sounds/mob/villager/idle2",
+        "volume": 1.0,
+        "pitch": 0.9
+      },
+      {
+        "name": "sounds/mob/villager/idle3",
+        "volume": 1.0,
+        "pitch": 0.9
+      }
+    ]
+  },
+  "lepton.foxhound.eat": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/fox/eat1",
+        "volume": 0.65,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/fox/eat2",
+        "volume": 0.65,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/fox/eat3",
+        "volume": 0.65,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "lepton.foxhound.crackle": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/block/furnace/fire_crackle1",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/furnace/fire_crackle2",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/block/furnace/fire_crackle3",
+        "volume": 1.0,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "lepton.soul_bead.idle": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/ghast/moan1",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan2",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan3",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan4",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan5",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan6",
+        "volume": 1.0,
+        "pitch": 1.0
+      },
+      {
+        "name": "sounds/mob/ghast/moan7",
+        "volume": 1.0,
+        "pitch": 1.0
+      }
+    ]
+  },
+  "lepton.soul_bead.spawn": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/ghast/scream1",
+        "volume": 0.6,
+        "pitch": 1.2
+      },
+      {
+        "name": "sounds/mob/ghast/scream2",
+        "volume": 0.6,
+        "pitch": 1.2
+      },
+      {
+        "name": "sounds/mob/ghast/scream3",
+        "volume": 0.6,
+        "pitch": 1.2
+      },
+      {
+        "name": "sounds/mob/ghast/scream4",
+        "volume": 0.6,
+        "pitch": 1.2
+      },
+      {
+        "name": "sounds/mob/ghast/scream5",
+        "volume": 0.6,
+        "pitch": 1.2
+      }
+    ]
+  }
+}

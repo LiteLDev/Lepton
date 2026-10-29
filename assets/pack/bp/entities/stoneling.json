@@ -1,0 +1,454 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:stoneling",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "lepton:variant": {
+          "type": "int",
+          "range": [
+            0,
+            10
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "lepton:lichen": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "lepton:player_made": {
+          "type": "bool",
+          "default": false
+        },
+        "lepton:startled": {
+          "type": "bool",
+          "default": false
+        }
+      }
+    },
+    "component_groups": {
+      "lepton:wild": {
+        "minecraft:despawn": {
+          "despawn_from_distance": {
+            "min_distance": 32,
+            "max_distance": 128
+          }
+        }
+      },
+      "lepton:tame": {
+        "minecraft:persistent": {}
+      },
+      "lepton:carry_loot": {
+        "minecraft:equipment": {
+          "table": "loot_tables/entities/stoneling_carry.json",
+          "slot_drop_chance": [
+            {
+              "slot": "slot.weapon.mainhand",
+              "drop_chance": 0.0
+            }
+          ]
+        }
+      },
+      "lepton:loot_heart": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/stoneling.json"
+        }
+      },
+      "lepton:tempt_diamond": {
+        "minecraft:behavior.tempt": {
+          "priority": 0,
+          "speed_multiplier": 0.6,
+          "within_radius": 10,
+          "can_tempt_vertically": true,
+          "items": [
+            "minecraft:diamond"
+          ]
+        }
+      },
+      "lepton:tempt_glow_shroom": {
+        "minecraft:behavior.tempt": {
+          "priority": 0,
+          "speed_multiplier": 0.6,
+          "within_radius": 10,
+          "can_tempt_vertically": true,
+          "items": [
+            "lepton:glow_shroom"
+          ]
+        }
+      },
+      "lepton:wary": {
+        "minecraft:behavior.random_stroll": {
+          "priority": 1,
+          "speed_multiplier": 0.1,
+          "interval": 120
+        }
+      },
+      "lepton:startled": {
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "max_flee": 16,
+          "ignore_visibility": false,
+          "remove_target": true,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 4,
+              "walk_speed_multiplier": 0.5,
+              "sprint_speed_multiplier": 0.5
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "stoneling",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 8,
+        "max": 8
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:movement": {
+        "value": 0.7
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:variable_max_auto_step": {
+        "base_value": 1.0625,
+        "jump_prevented_value": 1.0625
+      },
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "avoid_damage_blocks": true,
+        "can_path_over_water": false
+      },
+      "minecraft:collision_box": {
+        "width": 0.5,
+        "height": 0.9
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0,
+        "breathes_water": true,
+        "breathes_air": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "cause": "contact",
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:follow_range": {
+        "value": 16
+      },
+      "minecraft:nameable": {},
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:behavior.move_to_block": {
+        "priority": 4,
+        "tick_interval": 300,
+        "search_range": 16,
+        "search_height": 2,
+        "goal_radius": 1.0,
+        "speed_multiplier": 0.2,
+        "stay_duration": 120,
+        "start_chance": 1.0,
+        "target_selection_method": "nearest",
+        "target_blocks": [
+          "minecraft:diamond_ore",
+          "minecraft:deepslate_diamond_ore"
+        ]
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 5,
+        "speed_multiplier": 0.2
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "add": {
+              "component_groups": [
+                "lepton:wild",
+                "lepton:carry_loot",
+                "lepton:loot_heart",
+                "lepton:tempt_diamond"
+              ]
+            }
+          },
+          {
+            "randomize": [
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 0
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 1
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 2
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 3
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 4
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 5
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 6
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 7
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 8
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 9
+                }
+              },
+              {
+                "weight": 1,
+                "set_property": {
+                  "lepton:variant": 10
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "lepton:from_heart": {
+        "add": {
+          "component_groups": [
+            "lepton:tame",
+            "lepton:loot_heart",
+            "lepton:tempt_diamond"
+          ]
+        },
+        "set_property": {
+          "lepton:player_made": true
+        }
+      },
+      "lepton:make_player_made": {
+        "remove": {
+          "component_groups": [
+            "lepton:wild",
+            "lepton:wary"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "lepton:tame"
+          ]
+        },
+        "set_property": {
+          "lepton:player_made": true
+        }
+      },
+      "lepton:startle": {
+        "remove": {
+          "component_groups": [
+            "lepton:tempt_diamond",
+            "lepton:tempt_glow_shroom",
+            "lepton:wary"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "lepton:startled"
+          ]
+        },
+        "set_property": {
+          "lepton:startled": true
+        }
+      },
+      "lepton:tempt_none": {
+        "remove": {
+          "component_groups": [
+            "lepton:tempt_diamond",
+            "lepton:tempt_glow_shroom"
+          ]
+        }
+      },
+      "lepton:tempt_diamond": {
+        "remove": {
+          "component_groups": [
+            "lepton:tempt_glow_shroom"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "lepton:tempt_diamond"
+          ]
+        }
+      },
+      "lepton:tempt_glow_shroom": {
+        "remove": {
+          "component_groups": [
+            "lepton:tempt_diamond"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "lepton:tempt_glow_shroom"
+          ]
+        }
+      },
+      "lepton:wary_on": {
+        "add": {
+          "component_groups": [
+            "lepton:wary"
+          ]
+        }
+      },
+      "lepton:wary_off": {
+        "remove": {
+          "component_groups": [
+            "lepton:wary"
+          ]
+        }
+      },
+      "lepton:loot_on": {
+        "add": {
+          "component_groups": [
+            "lepton:loot_heart"
+          ]
+        }
+      },
+      "lepton:loot_off": {
+        "remove": {
+          "component_groups": [
+            "lepton:loot_heart"
+          ]
+        }
+      },
+      "lepton:lichen": {
+        "set_property": {
+          "lepton:lichen": true
+        }
+      },
+      "lepton:variant_0": {
+        "set_property": {
+          "lepton:variant": 0
+        }
+      },
+      "lepton:variant_1": {
+        "set_property": {
+          "lepton:variant": 1
+        }
+      },
+      "lepton:variant_2": {
+        "set_property": {
+          "lepton:variant": 2
+        }
+      },
+      "lepton:variant_3": {
+        "set_property": {
+          "lepton:variant": 3
+        }
+      },
+      "lepton:variant_4": {
+        "set_property": {
+          "lepton:variant": 4
+        }
+      },
+      "lepton:variant_5": {
+        "set_property": {
+          "lepton:variant": 5
+        }
+      },
+      "lepton:variant_6": {
+        "set_property": {
+          "lepton:variant": 6
+        }
+      },
+      "lepton:variant_7": {
+        "set_property": {
+          "lepton:variant": 7
+        }
+      },
+      "lepton:variant_8": {
+        "set_property": {
+          "lepton:variant": 8
+        }
+      },
+      "lepton:variant_9": {
+        "set_property": {
+          "lepton:variant": 9
+        }
+      },
+      "lepton:variant_10": {
+        "set_property": {
+          "lepton:variant": 10
+        }
+      }
+    }
+  }
+}

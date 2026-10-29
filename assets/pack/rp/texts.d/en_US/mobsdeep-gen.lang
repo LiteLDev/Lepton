@@ -1,0 +1,12 @@
+entity.lepton:forgotten.name=Forgotten
+entity.lepton:foxhound.name=Foxhound
+entity.lepton:soul_bead.name=Soul Bead
+entity.lepton:stoneling.name=Stoneling
+entity.lepton:wraith.name=Wraith
+item.lepton:diamond_heart.name=Heart of Diamond
+item.lepton:forgotten_hat.name=Forgotten Hat
+item.lepton:soul_bead.name=Soul Bead
+item.spawn_egg.entity.lepton:forgotten.name=Forgotten Spawn Egg
+item.spawn_egg.entity.lepton:foxhound.name=Foxhound Spawn Egg
+item.spawn_egg.entity.lepton:stoneling.name=Stoneling Spawn Egg
+item.spawn_egg.entity.lepton:wraith.name=Wraith Spawn Egg
