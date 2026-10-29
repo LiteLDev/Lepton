@@ -13,11 +13,11 @@
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 
-#include "mc/world/item/CreativeItemInitializer.h"
-#include "mc/world/item/ItemInstance.h"
-#include "mc/world/item/Item.h"
-#include "mc/world/item/ItemStack.h"
 #include "mc/deps/core/string/HashedString.h"
+#include "mc/world/item/CreativeItemInitializer.h"
+#include "mc/world/item/Item.h"
+#include "mc/world/item/ItemInstance.h"
+#include "mc/world/item/ItemStack.h"
 #include "mc/world/item/crafting/Recipes.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -30,6 +30,7 @@
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
 #include "game/Items.h"
+#include "game/WorldDb.h"
 #include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -111,7 +112,13 @@ void onTick(ll::event::ServerLevelTickEvent&) {
         if (!region) continue;
         auto const& b = region->getBlock(p.pos);
         if (!isLamp(b.getTypeName())) continue;
-        if (auto const* n = bs::with(b, {{std::string(kLightState), lampLight()}}); n && n != &b)
+        if (auto const* n = bs::with(
+                b,
+                {
+                    {std::string(kLightState), lampLight()}
+        }
+            );
+            n && n != &b)
             game::setBlock(*region, p.pos, *n);
     }
 }
@@ -126,10 +133,11 @@ CrossUnit& crossUnit() {
 }
 
 void refreshCrossUnit() {
-    auto vs                     = readOther("vslabs");
-    auto st                     = readOther("storage");
-    crossUnit().verticalSlabs   = readOtherBool(vs, "enableVerticalSlabs", true);
-    crossUnit().smeltOreBlocks  = readOtherBool(st, "enableUtilityRecipes", true) && readOtherBool(st, "smeltRawOreBlocks", true);
+    auto vs                   = readOther("vslabs");
+    auto st                   = readOther("storage");
+    crossUnit().verticalSlabs = readOtherBool(vs, "enableVerticalSlabs", true);
+    crossUnit().smeltOreBlocks =
+        readOtherBool(st, "enableUtilityRecipes", true) && readOtherBool(st, "smeltRawOreBlocks", true);
 }
 
 bool gateEnabled(unsigned g) {
@@ -180,6 +188,7 @@ float rawBricksXp(std::string_view id) {
 float smeltResultXp(std::string_view id) {
     // the game asks for the multiplier of the furnace's result; these blocks only come out of a
     // furnace from raw metal bricks (or, with U8, raw ore blocks: same values in Quark)
+    if (!gateEnabled(G_rawmetal | G_smelt)) return 0.f;
     if (id == "minecraft:iron_block" || id == "minecraft:copper_block") return 6.3f;
     if (id == "minecraft:gold_block") return 9.0f;
     return rawBricksXp(id);
@@ -196,13 +205,13 @@ LL_TYPE_INSTANCE_HOOK(
     Recipes,
     &Recipes::_loadRecipe,
     bool,
-    std::string const&        recipeId,
-    ::RecipeType              type,
-    Json::Value const&        objData,
-    MinEngineVersion const&   minEngineVersion,
-    SemVersion const&         formatVersion,
-    bool                      isBaseGamePack,
-    Recipes::Buffers&         buffers
+    std::string const&      recipeId,
+    ::RecipeType            type,
+    Json::Value const&      objData,
+    MinEngineVersion const& minEngineVersion,
+    SemVersion const&       formatVersion,
+    bool                    isBaseGamePack,
+    Recipes::Buffers&       buffers
 ) {
     if (!recipeEnabled(recipeId)) return true;
     return origin(recipeId, type, objData, minEngineVersion, formatVersion, isBaseGamePack, buffers);
@@ -215,7 +224,7 @@ LL_TYPE_INSTANCE_HOOK(
     CreativeItemInitializer,
     &CreativeItemInitializer::_addCreativeItemServer,
     void,
-    CreativeGroupInfo& group,
+    CreativeGroupInfo&  group,
     ItemInstance const& item
 ) {
     if (!item.isNull() && !blockEnabled(game::itemId(item))) return;
@@ -237,8 +246,8 @@ LL_TYPE_INSTANCE_HOOK(
     auto const& input = self->getItem(0);
     auto const* item  = input.isNull() ? nullptr : input.mItem.get();
     // cheap test first (no allocation): every furnace runs this each tick
-    if (!item || !item->mFullName->getString().starts_with("lepton:raw_") || rawBricksXp(item->mFullName->getString()) == 0.f
-        || region.getLevel().isClientSide()) {
+    if (!item || !item->mFullName->getString().starts_with("lepton:raw_")
+        || rawBricksXp(item->mFullName->getString()) == 0.f || region.getLevel().isClientSide()) {
         origin(region);
         return;
     }
@@ -277,15 +286,26 @@ public:
     void load() {
         refreshCrossUnit();
         config::onReload([] { refreshCrossUnit(); });
+        // the client loads many worlds in one process: lamps queued in one never apply to the next
+        game::db::onWorldClosed([] { pendingLamps().clear(); });
         hookAll();
-        auto const& c = cfg();
+        auto const& c  = cfg();
         auto        on = [](bool b) { return b ? "on" : "off"; };
         log().info(
             "stones: {} blocks, {} recipes; moreStoneVariants={} bricks={} chiseled={} pillar={} rawMetalBricks={} "
             "sturdyStone={} lamps={} (light {}) verticalSlabs={} smeltOreBlocks={}",
-            blockCount(), recipeCount(), on(c.enableMoreStoneVariants), on(c.enableBricks), on(c.enableChiseledBricks),
-            on(c.enablePillar), on(c.enableRawMetalBricks), on(c.enableSturdyStone), on(c.enableCelebratoryLamps),
-            lampLight(), on(crossUnit().verticalSlabs), on(crossUnit().smeltOreBlocks)
+            blockCount(),
+            recipeCount(),
+            on(c.enableMoreStoneVariants),
+            on(c.enableBricks),
+            on(c.enableChiseledBricks),
+            on(c.enablePillar),
+            on(c.enableRawMetalBricks),
+            on(c.enableSturdyStone),
+            on(c.enableCelebratoryLamps),
+            lampLight(),
+            on(crossUnit().verticalSlabs),
+            on(crossUnit().smeltOreBlocks)
         );
     }
     void install() {

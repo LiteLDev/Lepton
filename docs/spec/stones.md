@@ -189,5 +189,7 @@ block in two lines, screenshots).
 E2E: `tools/e2e/server/scenarios/stones.ps1` (all `stones.*` selftests),
 `stones-disabled.ps1` (+ `.prelaunch.ps1`: bricks and SturdyStone off in `config/stones.json`; the
 world loads without their recipes / creative entries); client `tools/e2e/client/scenarios/stones.ps1`
-(gallery screenshots `gallery-south` and `gallery-east` (the two halves seen from the south),
-`gallery-north`, `gallery-night` (lamps lit at midnight)).
+(close-up gallery screenshots `gallery-bricks-{1,2,3}` (stone bricks, chiseled bricks, pillars, from the
+south), `gallery-line2-{1,2,3}` (polished blocks, calcite/dripstone shapes, raw metal bricks, sturdy stone,
+lamps, from the north), `gallery-lamps-night` (the test sets midnight: lamps light the grass), and
+`lamp-tooltip` (the celebration line on the stone lamp's tooltip)).

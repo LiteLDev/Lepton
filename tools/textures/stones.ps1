@@ -197,6 +197,6 @@ function Write-StonesTextures([string]$Dir) {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    $dir = Join-Path $PSScriptRoot '../../assets/pack/rp/textures/blocks'
+    $dir = Join-Path $PSScriptRoot '../../assets/pack/rp/textures/blocks/stones'
     Write-StonesTextures $dir | ForEach-Object { Write-Host $_ }
 }

@@ -37,7 +37,7 @@ inline constexpr unsigned G_lamps    = 1u << 8; ///< enableCelebratoryLamps
 /// Options of other units that gate content of this one (read from their config files; true when
 /// the file or key is missing, so this unit works without them).
 struct CrossUnit {
-    bool verticalSlabs = true; ///< vslabs.json: enableVerticalSlabs
+    bool verticalSlabs  = true; ///< vslabs.json: enableVerticalSlabs
     bool smeltOreBlocks = true; ///< storage.json: enableUtilityRecipes && smeltRawOreBlocks
 };
 [[nodiscard]] CrossUnit& crossUnit();
@@ -59,7 +59,7 @@ template <class F>
 void forEachBlock(F&& fn);
 
 /// The light the lamps emit (`lightLevel` clamped to 0..15).
-[[nodiscard]] int lampLight();
+[[nodiscard]] int  lampLight();
 [[nodiscard]] bool isLamp(std::string_view id);
 
 /// Raw metal bricks smelt this many times slower than a normal item (Quark: 1800 / 900 ticks).
