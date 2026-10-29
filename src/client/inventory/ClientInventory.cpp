@@ -76,6 +76,7 @@ float       gHotbarHeight = 0; ///< 0..1
 Clock::time_point gLastHud{};
 Clock::time_point gLastShare{};
 bool        gReported = false;
+std::string gReportedFor; ///< screen whose button positions were logged
 
 struct Card {
     ItemStack         item;
@@ -284,7 +285,10 @@ std::string hintText(std::string const& action) {
 
 void overlay(Overlay& o, ScreenInfo const& s) {
     runQueue();
-    if (s.name == "hud_screen" || s.name.find("custom_screen") != std::string::npos) return;
+    if (s.name == "hud_screen" || s.name.find("custom_screen") != std::string::npos) {
+        gReportedFor.clear();
+        return;
+    }
     auto const& c = cfg();
     auto&       dc = o.draw();
 
@@ -307,6 +311,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
     bool containerScreen = !inventoryScreen && static_cast<int>(containerIdx.size()) >= c.chestButtonSlotTarget
                         && containerTopRight && containerFirst && playerTopRight;
     if (!inventoryScreen && !containerScreen) {
+        gReportedFor.clear();
         std::lock_guard lock(gMutex);
         gFrame = Frame{s.name, s.slots, false, {}};
         return;
@@ -400,15 +405,26 @@ void overlay(Overlay& o, ScreenInfo const& s) {
         gReported = true;
         log().info("inventory: overlay on {} ({} slots, container={})", s.name, s.slots.size(), containerScreen);
     }
-    if (containerScreen) {
-        static std::string reportedFor;
-        if (reportedFor != s.name) {
-            reportedFor = s.name;
-            auto r      = at(containerTopRight, 6, -13);
-            auto fb     = at(containerTopRight, -6, -13);
-            log().info("inventory: container buttons on {}: sort at {:.4f},{:.4f} filter at {:.4f},{:.4f}", s.name,
-                       (r.x + r.w / 2) / s.size.x, (r.y + r.h / 2) / s.size.y, (fb.x + fb.w / 2) / s.size.x, (fb.y + fb.h / 2) / s.size.y);
-        }
+    // One line per screen with the button centres (fractions of the screen) for e2e scenarios.
+    auto&              reportedFor = gReportedFor;
+    auto               fx = [&](Rect const& r) { return (r.x + r.w / 2) / s.size.x; };
+    auto               fy = [&](Rect const& r) { return (r.y + r.h / 2) / s.size.y; };
+    if (inventoryScreen && playerTopRight && reportedFor != s.name) {
+        reportedFor = s.name;
+        auto r      = at(playerTopRight, 6, -13);
+        log().info("inventory: player buttons on {}: sort at {:.4f},{:.4f}", s.name, fx(r), fy(r));
+    }
+    if (containerScreen && reportedFor != s.name) {
+        reportedFor = s.name;
+        auto r      = at(containerTopRight, 6, -13);
+        auto fb     = at(containerTopRight, -6, -13);
+        // Player part, right to left: sort inventory (when enabled), insert, extract.
+        float x  = (c.enableInventorySorting && c.enablePlayerInventoryInChests) ? -6.f : 6.f;
+        auto  ib = at(playerTopRight, x, -13);
+        auto  eb = at(playerTopRight, x - 12, -13);
+        log().info("inventory: container buttons on {}: sort at {:.4f},{:.4f} filter at {:.4f},{:.4f} insert at "
+                   "{:.4f},{:.4f} extract at {:.4f},{:.4f}",
+                   s.name, fx(r), fy(r), fx(fb), fy(fb), fx(ib), fy(ib), fx(eb), fy(eb));
     }
 
     std::lock_guard lock(gMutex);

@@ -157,10 +157,10 @@ Triggers: a tool in a hand breaks (durability), or the hand slot becomes empty i
 which the player placed its last block or used up its last item. Not for armour; with
 `unstackablesOnly` only for unstackable items. Search range: player slots 9..35, or 0..35 with
 `checkHotbar`, never the hand slot itself. Predicates in order (first hit wins):
-1. `enableEnchantMatching`: same item (and same damage if not damageable) and shares at least
-   one important enchantment with the broken item (`enchantNames`, default silk touch, fortune,
-   infinity, luck of the sea, looting) — note Quark's `retainAll` returns true when *any* is shared
-   or the old one had none;
+1. `enableEnchantMatching`: same item (and same damage if not damageable) and carries every
+   important enchantment of the broken item (`enchantNames`, default silk touch, fortune,
+   infinity, luck of the sea, looting; Quark's `!copy.retainAll(other)` is true when no important
+   enchantment of the old item is missing on the other one);
 2. same item (same damage if not damageable);
 3. `enableLooseMatching` and the item has tool classes (axe, hoe, shovel, pickaxe, sword, shears,
    fishing_rod, bow, crossbow): `enableEnchantMatching` and important enchantments on the old
@@ -262,11 +262,12 @@ Section `inventory` (`config/inventory.json`):
 | `lp.inventory.sorted` | Sorted. |
 | `lp.inventory.no_container` | Look at a container within reach. |
 | `lp.inventory.no_shulker` | Hold a shulker box in your main hand. |
-| `lp.inventory.cooldown` | You can share an item again in {} seconds. |
+| `lp.inventory.cooldown` | You can't share an item right now. |
 | `lp.inventory.hotbar.title` / `.content` / `.row` | Hotbar Swapper / Swap the hotbar with a row of your inventory. / Row {} |
 | `lp.inventory.disabled` | This feature is disabled. |
 | `lp.inventory.transferred` | Moved {} items. |
 | `lp.inventory.tab.*` | Construction / Equipment / Items / Nature |
+| `lp.inventory.search` | Search... (placeholder of the empty search bar) |
 
 Keybind names (RP `texts.d/*/inventory.lang`): `key.lepton.sort_player` Sort Player Inventory,
 `key.lepton.sort_container` Sort Target Inventory, `key.lepton.transfer_insert` Insert Items,
