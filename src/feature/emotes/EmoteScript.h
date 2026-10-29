@@ -34,9 +34,8 @@ namespace lp::feature::emotes::script {
 enum Part : int { Head = 0, Body = 1, RightArm = 2, LeftArm = 3, RightLeg = 4, LeftLeg = 5, Model = 6 };
 inline constexpr int kParts    = 7;
 inline constexpr int kChannels = kParts * 3;
-/// `repeat -1` / `yoyo -1` (any negative count) repeats forever, as in the tween engine; stored
-/// as this count.
-inline constexpr int kInfiniteRepeat = 1'000'000'000;
+/// Iterations played for an infinite repeat/yoyo count (the tween engine's INFINITY, -1).
+inline constexpr int kInfiniteRepeats = 1 << 24;
 
 /// Part name as used in scripts ("head", "right_arm", ..., "model"), or "".
 [[nodiscard]] std::string_view partName(int part);
@@ -170,8 +169,8 @@ bakeAnimationFile(std::vector<std::pair<std::string, Emote const*>> const& emote
 
 /// The resource-pack file of one emote ("wave" -> "lepton_emote_wave.animation.json",
 /// "custom:my_dance" -> "lepton_emote_custom.my_dance.animation.json"). Every emote gets its own
-/// file: the game silently drops an animation file that is too large (all 18 emotes in one
-/// ~480 KB file never load).
+/// file: Bedrock rejects a whole animation file when one of its animations is invalid, so one
+/// file per emote keeps a problem in one emote from hiding the others.
 [[nodiscard]] std::string animationFileName(std::string_view emoteId);
 /// The file of `kStopAnimation`.
 inline constexpr std::string_view kStopAnimationFile = "lepton_emote_stop.animation.json";

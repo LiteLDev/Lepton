@@ -4,17 +4,14 @@
 #                             icon, the chat screen gets the "Emotes" button and the emote grid.
 #   -Mode remote-vanilla:     no client mod: `/quark emote <name>` still plays the animation (from
 #                             the resource pack) and `/quark emote` opens the form fallback.
-# Screenshots: out/emotes/{wave,cheer,tpose,chat-menu,chat-hover,form}.png
+# Screenshots: out/emotes/{salute,cheer,tpose,custom,chat-menu,chat-hover,form}.png, taken right after
+# Enter (the log line arrives about a second after the emote starts).
 $vanilla = $script:Mode -eq 'remote-vanilla'
 $local   = $script:Mode -eq 'local'
 
 function Get-Fraction([string]$line) {
     if ($line -notmatch 'at ([0-9.]+),([0-9.]+)') { throw "no position in '$line'" }
     return [double]$Matches[1], [double]$Matches[2]
-}
-function Press-VK([int]$vk) {
-    [BsE2E.Native]::Key([uint16]$vk, $false); Start-Sleep -Milliseconds 60; [BsE2E.Native]::Key([uint16]$vk, $true)
-    Start-Sleep -Milliseconds 400
 }
 # Types the command and takes the screenshot $waitMs after Enter (Invoke-Chat and the log wait take
 # longer than the short emotes last), then checks the log.
@@ -33,22 +30,21 @@ function Play-Emote([string]$name, [int]$waitMs, [string]$shot = $name) {
 
 if (-not $vanilla) { Wait-LogLine 'emotes: \d+ emotes available' 60 | Out-Null }
 
-# Look straight ahead and switch to the front third-person view (F5 twice) to see the model.
+# Look straight ahead and switch to the front third-person camera to see the model (the camera
+# command is reliable where an F5 key press can arrive while the chat is still closing).
 Invoke-Chat '/tp @s ~ ~ ~ 0 0'
-Focus-Game
-Press-VK 0x74
-Press-VK 0x74
-Start-Sleep -Milliseconds 600
+Invoke-Chat '/camera @s set minecraft:third_person_front'
+Start-Sleep -Milliseconds 800
 
 try {
-    Play-Emote 'wave' 500     # right arm raised, waving
-    Play-Emote 'cheer' 600    # both arms up
+    Play-Emote 'salute' 300   # right hand at the forehead
+    Play-Emote 'cheer' 300    # both arms up
     if ($local) {
-        Play-Emote 'tpose' 900   # patreon emote, unlocked by emotes.prelaunch.ps1 (defaultEmoteTier 2)
-        Play-Emote 'custom:e2e_spin' 450 'custom'   # custom emote from config/quark_emotes
+        Play-Emote 'tpose' 600   # patreon emote, unlocked by emotes.prelaunch.ps1 (defaultEmoteTier 2)
+        Play-Emote 'custom:e2e_spin' 300 'custom'   # custom emote from config/quark_emotes
     }
 } finally {
-    Press-VK 0x74             # back to first person
+    Invoke-Chat '/camera @s clear'   # back to the player's own view
     Start-Sleep -Milliseconds 400
 }
 

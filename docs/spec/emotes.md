@@ -23,7 +23,7 @@ None. Resource-pack content:
 
 | File | What |
 |---|---|
-| `assets/pack/rp/animations/lepton_emote_<id>.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>`, one file each (the game silently drops a large animation file: all 18 in one ~480 KB file never loaded), + `lepton_emote_stop` (`animation.lepton.emote.stop`, an empty animation on the emote controller that admins can play with `/playanimation` to cancel an emote). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
+| `assets/pack/rp/animations/lepton_emote_<id>.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>`, one file each (Bedrock rejects a whole animation file when one of its animations is invalid, e.g. has an empty `bones` object, so an emote never hides the others), + `lepton_emote_stop` (`animation.lepton.emote.stop`, a no-op animation (zero head rotation) on the emote controller that admins can play with `/playanimation` to cancel an emote). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
 | `assets/pack/rp/textures/lepton/emotes/<id>.png` | 16x16 icons (18 emotes, `custom`, `patreon_t1`, `patreon_t2`), original art by `tools/textures/emotes.ps1`, used by the vanilla-client form. The same pixels are compiled into the client mod (`src/client/emotes/EmoteIcons.inc`). |
 | client only: `mods/Lepton/resource_packs/Lepton_Custom_Emotes/` | A resource pack written by the client mod at game start from the custom emote files (`animations/lepton_emote_custom.<name>.animation.json`). Lepton_RP itself is never modified at runtime. |
 
@@ -36,9 +36,11 @@ None. Resource-pack content:
   unknown or too-high-tier emotes): `enableEmotes`; a built-in default emote must be in
   `enabledEmotes`; a patreon emote needs the player's tier >= the emote's tier; `custom:<name>`
   (name of letters, digits, `_`, `-`, `.`, max 64) is relayed as is (Quark relays anything).
-- **Rate limit** (Lepton): a player's emote (`emotes:request`, `/quark emote <name>`, a form
-  button) is accepted at most every 5 ticks; faster ones are dropped silently, so no client can
-  flood the other clients (Quark has no limit).
+- **Rate limit** (Lepton): a player's requests (`emotes:request`, `/quark emote <name>`, the form)
+  are accepted at most every 5 ticks, so a client cannot flood the other clients (Quark has no
+  limit); the command then answers "Wait a moment before the next emote." (`lp.emotes.throttled`).
+- **Endless emotes**: a negative `repeat`/`yoyo` count repeats forever (the tween engine's
+  INFINITY); it plays until the player swings or is hurt (the baked animation is capped at an hour).
 - **Tiers** (Quark `ContributorRewardHandler`: the patron list downloaded from Quark's GitHub,
   by Java account name): `emoteTiers` maps a lower-case player name or XUID to a tier; everyone
   else has `defaultEmoteTier` (0, like a non-patron).
@@ -60,9 +62,7 @@ None. Resource-pack content:
   emote falls back to an empty animation. Timing follows the Universal Tween Engine: default
   easing Quad in-out, a tween captures its start value when it starts, yoyo iterations play back,
   repeat restarts from the first start value, repeat delays hold the iteration's end value,
-  sequences chain full durations (delay + iterations), parallels take the longest. A negative
-  `yoyo`/`repeat` count repeats forever (the tween engine's `Tween.INFINITY`); its baked animation
-  is capped at an hour and it ends on a swing or a hurt. Every easing
+  sequences chain full durations (delay + iterations), parallels take the longest. Every easing
   equation of the tween engine is available (`linear`/`none`, `in|out|in_out` + `quad`, `cubic`,
   `quart`, `quint`, `circ`, `sine`, `expo`, `back`, `bounce`, `elastic`).
 - **Durations** (ms): no 1400, yes 1400, wave 1600, salute 2950, cheer 2400, clap 2000, think 3900,
@@ -78,9 +78,8 @@ None. Resource-pack content:
 - **Visibility.** `blend_weight` hides the emote in first person and outside Quark's "standing"
   pose (sneaking, swimming, sleeping, gliding): Quark keeps emoting but stops showing it then.
 - **HUD** (mod client): while the local player emotes, its icon (32x32) is drawn at
-  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length. Each
-  mod client ends an emote (HUD, sounds) early when that player swings or is hurt, like the
-  animation's stop expression.
+  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length or
+  until the player swings or is hurt (Quark `EmoteBase.isDone`; the emote's sounds stop too).
 - **Sounds** (mod clients, custom emotes): `sound instant|continuous section|emote <sound>
   [volume (max 1.5)] [pitch]` plays when the statement before it in its section completes (or
   when the section starts); `section` sounds end when their section completes; `sound stop` ends
@@ -185,6 +184,8 @@ decides the rest (enabled emotes and tiers are sent to mod clients).
 | `lp.emotes.unknown` | Unknown emote: {} |
 | `lp.emotes.not_enabled` | The {} emote is disabled on this server. |
 | `lp.emotes.tier` | The {} emote is a Patreon emote. |
+| `lp.emotes.throttled` | Wait a moment before the next emote. |
+| `lp.emotes.players_only` | Only players can use emotes. |
 
 ## 7. Bedrock differences / not ported
 

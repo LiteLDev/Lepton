@@ -153,6 +153,48 @@ TEST(EmoteScript, RepeatedSectionsReplayTheirStartSounds) {
     EXPECT_EQ(plays, 4);
 }
 
+TEST(EmoteScript, YoyoForwardPassesReplayTheirStartSounds) {
+    // Iterations 0 and 2 play forwards (cues fire), iteration 1 plays back (no cues).
+    auto r = es::compile("use head\nanimation sequence\nsection sequence\nsound instant emote a\nmove head_x 100 1\n"
+                         "yoyo 2 0\nend\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    es::Sampler s(r.emote);
+    int         plays = 0;
+    for (float t = 0; t <= 400; t += 10) {
+        s.advance(t);
+        for (auto const& e : s.takeSoundEvents()) plays += e.what == es::Sampler::SoundEvent::What::Play;
+    }
+    EXPECT_EQ(plays, 2);
+}
+
+TEST(EmoteScript, NegativeRepeatCountsLoopForever) {
+    auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 yoyo -1 0\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_GT(r.emote.totalMs(), 1e9f);
+    es::Sampler s(r.emote);
+    EXPECT_NEAR(s.advance(100000)[0].b, 0, 1e-3); // an even number of passes later: back at the pose
+    EXPECT_NEAR(s.advance(100050)[0].b, 0.5, 1e-3);
+}
+
+TEST(EmoteScript, ByteOrderMarkIsIgnored) {
+    auto r = es::compile("\xEF\xBB\xBFname BOM\nuse head\nanimation sequence\nmove head_x 100 1\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_EQ(r.emote.name, "BOM");
+}
+
+TEST(EmoteScript, EveryBakedAnimationHasBones) {
+    // Bedrock drops the whole animation file when one animation has an empty "bones" object.
+    auto broken = es::compile("use head\nanimation nonsense\n");
+    ASSERT_FALSE(broken.ok);
+    EXPECT_FALSE(es::bakeAnimation(broken.emote)["bones"].empty());
+    auto still = es::compile("use head\nanimation sequence\npause 100\nend\n");
+    ASSERT_TRUE(still.ok) << still.error;
+    EXPECT_FALSE(es::bakeAnimation(still.emote)["bones"].empty());
+    std::vector<std::pair<std::string, es::Emote const*>> none;
+    auto file = es::bakeAnimationFile(none);
+    for (auto const& [id, anim] : file["animations"].items()) EXPECT_FALSE(anim["bones"].empty()) << id;
+}
+
 TEST(EmoteScript, HugeScriptsStayBounded) {
     auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 repeat 2000000000 0\nend\n");
     ASSERT_TRUE(r.ok) << r.error;
@@ -288,7 +330,9 @@ TEST(EmoteScript, CommittedAnimationsAreUpToDate) {
     for (auto const& [name, json] : baked) {
         auto path = dir / name;
         auto text = json.dump(2) + "\n";
-        EXPECT_LT(text.size(), 200u * 1024u) << name << ": keep animation files small, the game drops large ones";
+        // Bedrock rejects the whole file when an animation has an empty (or no) "bones" object.
+        for (auto const& [id, anim] : json["animations"].items())
+            EXPECT_TRUE(anim.contains("bones") && anim["bones"].is_object() && !anim["bones"].empty()) << name << ": " << id << " has no bones";
         if (update) std::ofstream(path, std::ios::binary) << text;
         std::ifstream in(path, std::ios::binary);
         ASSERT_TRUE(in.good()) << "missing " << path.string() << " (set LP_UPDATE_EMOTE_ANIMATIONS=1)";

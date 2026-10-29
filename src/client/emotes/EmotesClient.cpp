@@ -20,11 +20,11 @@
 #include "mc/deps/audio/SoundPlayerInterface.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/legacy/ActorUniqueID.h"
+#include "mc/world/actor/Actor.h"
+#include "mc/client/player/LocalPlayer.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
 #include "mc/entity/components/MobHurtTimeComponent.h"
-#include "mc/world/actor/Actor.h"
 #include "mc/world/actor/Mob.h"
-#include "mc/client/player/LocalPlayer.h"
 #include "mc/world/level/Level.h"
 
 #include "client/Client.h"
@@ -120,9 +120,8 @@ std::shared_ptr<script::Emote> readCustom(std::string const& file) {
     return std::make_shared<script::Emote>(std::move(r.emote));
 }
 
-/// Custom emote animations live in their own resource pack: adding or removing a file inside
-/// Lepton_RP while the mod loads makes the game skip the pack files that sort after it (the
-/// built-in emote animations), so Lepton_RP is never touched at runtime.
+/// Custom emote animations live in their own resource pack, so Lepton_RP (shipped with the mod)
+/// is never written at runtime.
 std::filesystem::path customPackDir() {
     return lp::Mod::getInstance().getSelf().getModDir() / "resource_packs" / "Lepton_Custom_Emotes";
 }
@@ -305,21 +304,6 @@ void loopSounds(Active& a, std::int64_t player, float elapsed) {
     });
 }
 
-/// Quark ends an emote when the player swings or is hurt (the animation's stop expression does
-/// the same on the model).
-bool interrupted(std::int64_t player) {
-    auto* level = clientLevel();
-    if (!level) return false;
-    ActorUniqueID uid;
-    uid.rawID   = player;
-    auto* actor = level->fetchEntity(uid, false);
-    if (!actor || !actor->isPlayer()) return false;
-    auto const& mob = static_cast<Mob const&>(*actor);
-    if (mob.mSwinging) return true;
-    auto hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
-    return hurt && hurt->mValue > 0;
-}
-
 void startEmote(EmotePlay const& m) {
     std::shared_ptr<script::Emote const> emote;
     std::string                          icon = m.emote, name;
@@ -352,13 +336,35 @@ void startEmote(EmotePlay const& m) {
     log().info("emotes: {} plays {} (client)", m.playerName, m.emote);
 }
 
+/// Quark's EmoteBase.isDone: an emote also ends when its player swings (attackAnim > 0) or is
+/// hurt (hurtTime > 0); the animation itself stops on the same condition (kStopExpression).
+bool interrupted(Level& level, std::int64_t player) {
+    ActorUniqueID uid;
+    uid.rawID   = player;
+    auto* actor = level.fetchEntity(uid, false);
+    if (!actor || !actor->isPlayer()) return false;
+    auto& mob = static_cast<Mob&>(*actor);
+    if (static_cast<float>(mob.mAttackAnim) > 0.f || static_cast<bool>(mob.mSwinging)) return true;
+    auto hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
+    return hurt && static_cast<int>(hurt->mValue) > 0;
+}
+
 void updateActive() {
+    // Another world or server: the old emotes (and their sound handles) belong to a gone level.
+    static Level* lastLevel = nullptr;
+    auto*         level     = clientLevel();
+    if (level != lastLevel) {
+        lastLevel = level;
+        gActive.clear();
+    }
+    if (!net::serverHasMod()) gServer = {};
     auto now = std::chrono::steady_clock::now();
     for (auto it = gActive.begin(); it != gActive.end();) {
         auto& a       = it->second;
         float elapsed = std::chrono::duration<float, std::milli>(now - a.start).count();
         float total   = a.emote->totalMs();
-        a.sampler->advance(std::min(elapsed, total));
+        if (level && interrupted(*level, it->first)) elapsed = total;
+        if (elapsed < total) a.sampler->advance(elapsed);
         for (auto const& ev : a.sampler->takeSoundEvents()) {
             using What = script::Sampler::SoundEvent::What;
             if (ev.what == What::StopAll) stopSounds(a);
@@ -369,7 +375,7 @@ void updateActive() {
             } else playCue(a, it->first, ev.cue, elapsed);
         }
         loopSounds(a, it->first, elapsed);
-        if (elapsed >= total || interrupted(it->first)) {
+        if (elapsed >= total) {
             stopSounds(a);
             it = gActive.erase(it);
         } else ++it;
@@ -378,8 +384,9 @@ void updateActive() {
 
 // ---- chat screen buttons ---------------------------------------------------------------------------
 
-bool gVisible  = false; // Quark: emotesVisible (kept while the game runs)
-bool gReported = false;
+bool gVisible      = false; // Quark: emotesVisible (kept while the game runs)
+bool gReported     = false; // positions logged for this opening of the chat screen (e2e scenarios)
+bool gReportedGrid = false;
 
 void drawEmoteButton(ui::Overlay& o, MenuEntry const& e, ui::Rect r) {
     auto& dc = o.draw();
@@ -394,8 +401,6 @@ void drawEmoteButton(ui::Overlay& o, MenuEntry const& e, ui::Rect r) {
     if (e.tier >= 2) drawIcon(dc, "patreon_t2", r.x + 4, r.y + 4);
     else if (e.tier >= 1) drawIcon(dc, "patreon_t1", r.x + 4, r.y + 4);
 }
-
-bool gReportedGrid = false;
 
 void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
     if (!cfg().enableEmotes || !net::serverHasMod() || !gServer.enabled) return;
@@ -476,7 +481,7 @@ void hud(ui::DrawContext& dc) {
     auto&  a       = it->second;
     float  elapsed = std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - a.start).count();
     float  total   = a.emote->totalMs();
-    if (elapsed >= total) return;
+    if (elapsed >= total || interrupted(p->getLevel(), it->first)) return;
     // Quark fades over 5 ms at each end (in practice: always opaque).
     constexpr float tween = 5.f;
     float           alpha = elapsed < tween ? elapsed / tween : elapsed > total - tween ? (total - elapsed) / tween : 1.f;

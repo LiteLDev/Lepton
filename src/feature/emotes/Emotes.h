@@ -52,7 +52,7 @@ struct EmoteList {
 /// A custom emote id ("custom:" + a file name of letters, digits, '_', '-', '.', max 64).
 [[nodiscard]] bool isValidCustomId(std::string_view id);
 
-enum class PlayResult { Played, Disabled, Unknown, NotEnabled, TierTooLow };
+enum class PlayResult { Played, Disabled, Unknown, NotEnabled, TierTooLow, Throttled };
 /// Validates and plays an emote for the player (see the flow above).
 PlayResult playEmote(Player& player, std::string const& emote);
 
@@ -68,6 +68,8 @@ struct SentAnimation {
 };
 /// Animations sent since the last call (selftests).
 [[nodiscard]] std::vector<SentAnimation> takeSentAnimations();
+/// Forgets the request times (the 5-tick limit of player requests).
+void resetThrottle();
 } // namespace testing
 
 } // namespace lp::feature::emotes
