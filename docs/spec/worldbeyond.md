@@ -126,9 +126,11 @@ and stays.
   the block teleports the weeds (R 4, G 1 - dup chance); then with `endermiteSpawnChance` (0.01) an
   endermite spawns at the new spot. Bedrock: checked every tick for living entities overlapping
   the block.
-- **Water**: on a neighbour change, if water is next to it (any of the 6 sides): teleport (R 8, G 1).
+- **Water**: on a neighbour change (`Block::neighborChanged` of the plant), if water is next to it
+  (any of the 6 sides, including waterlogged blocks): teleport (R 8, G 1).
 - **Bone meal** (always succeeds): 3..5 teleports with R 10, G 0 (copies), then one with R 4, G 1.
-  Works for players and dispensers (Bedrock `canBeFertilized` / `onFertilized`).
+  Works for players (bone meal used on the plant) and dispensers (Bedrock's fertilizer dispense,
+  `FertilizerItem::dispense`, aimed at a plant: one bone meal is used).
 
 ### 3.5 SpiralSpires
 - **Generation** (End, multi-chunk, radius `spiralSpiresRadius` 15 -> 1 chunk): source chunk:
@@ -148,7 +150,9 @@ and stays.
   `x = (int)(sin(i*spin/10) * i*spread/10)`, `z = (int)(cos(...) * ...)`,
   `y = top + round(i/10 * upward)`; placed with chance 1, decreasing linearly to 0 after the
   deterioration start.
-- **Viaducts** (`enableMyaliteViaducts`): when an entity teleports (any cause) to a loaded spot P:
+- **Viaducts** (`enableMyaliteViaducts`): when an entity teleports (`Actor::teleportTo` with a cause
+  of projectile/ender pearl, chorus fruit, command or behaviour, e.g. endermen) to a loaded spot P
+  (the target's feet position):
   look for crystals adjacent (6 sides) to P, else to P-1, else to P+facing. Walk: pick a random
   adjacent crystal not yet visited, repeat until a crystal has no unvisited neighbours; abort if
   more than `myaliteConduitDistance` (24) moves, or if a dead end touches two or more visited
@@ -222,7 +226,8 @@ Selftests (dx 2900..2999; generation tests run in the real Nether / End far from
 `worldbeyond.spike_blocked`, `worldbeyond.spike_spawner`, `worldbeyond.chorus_teleport`,
 `worldbeyond.chorus_survive`, `worldbeyond.chorus_water`, `worldbeyond.chorus_trample`,
 `worldbeyond.chorus_bonemeal`, `worldbeyond.chorus_tick`, `worldbeyond.crystal_hue`,
-`worldbeyond.viaduct`, `worldbeyond.viaduct_loop`, `worldbeyond.spire`, `worldbeyond.renewable`,
+`worldbeyond.chorus_dispenser`, `worldbeyond.viaduct`, `worldbeyond.viaduct_command` (a real `/tp`),
+`worldbeyond.viaduct_pearl` (a thrown ender pearl), `worldbeyond.viaduct_loop`, `worldbeyond.spire`, `worldbeyond.renewable`,
 `worldbeyond.end_gen`, `worldbeyond.nether_gen`.
 E2E: `tools/e2e/server/scenarios/worldbeyond.ps1` (all selftests, generation log lines);
 `tools/e2e/client/scenarios/worldbeyond.ps1` (screenshots of the blocks, a spire and chorus patch).
