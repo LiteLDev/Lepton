@@ -22,6 +22,7 @@
 #include "game/Blocks.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
+#include "net/Net.h"
 
 namespace lp::feature::placement {
 
@@ -43,6 +44,12 @@ Block const* withLadderFacing(Block const& b, int facing) {
 }
 
 bool freestandingOn() { return cfg().enableEnhancedLadders && cfg().allowFreestanding; }
+
+/// The client's own placement prediction follows the rule only when the server runs Lepton too.
+bool freestandingIn(BlockSource& region) {
+    if (!freestandingOn()) return false;
+    return !region.getLevel().isClientSide() || net::serverHasMod();
+}
 
 /// Java LadderBlock#canSurvive: a sturdy wall behind (facing = away from the wall).
 bool ladderWallOk(BlockSource& region, BlockPos const& pos, int facing) {
@@ -72,7 +79,7 @@ LL_TYPE_INSTANCE_HOOK(
     BlockPos const& pos
 ) {
     if (origin(region, pos)) return true;
-    if (!freestandingOn()) return false;
+    if (!freestandingIn(region)) return false;
     auto const& b = region.getBlock(pos);
     int         f = b.getTypeName() == "minecraft:ladder" ? ladderFacing(b) : -1;
     if (f < 0) return false;
@@ -108,7 +115,7 @@ LL_TYPE_INSTANCE_HOOK(
     uchar           face
 ) {
     bool orig = origin(region, pos, face);
-    if (orig || !freestandingOn()) return orig;
+    if (orig || !freestandingIn(region)) return orig;
     if (isHorizontal(face)) {
         auto const& clicked = region.getBlock(step(pos, oppositeDir(face)));
         if (isLadder(clicked) && ladderFacing(clicked) == face) return false; // in front of a ladder
@@ -132,8 +139,8 @@ LL_TYPE_INSTANCE_HOOK(
     int             itemValue
 ) {
     Block const& orig = origin(by, pos, face, clickPos, itemValue);
-    if (!freestandingOn() || by.isClientSide()) return orig;
     auto& region = by.getDimensionBlockSource();
+    if (!freestandingIn(region)) return orig;
     if (ladderWallOk(region, pos, ladderFacing(orig))) return orig;
     auto f = placementFacing(region, pos, face, by.getRotation().x, by.getRotation().y);
     if (!f) return orig;
