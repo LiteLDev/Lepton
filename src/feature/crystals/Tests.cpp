@@ -11,6 +11,8 @@
 #include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
+#include "mc/world/item/crafting/Recipe.h"
+#include "mc/world/item/crafting/Recipes.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
@@ -586,4 +588,19 @@ LP_REGISTER_SELFTEST("crystals.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     view("beacon", 64.5f, 1.f, 16.5f, -25.f, 180.f);
     co_await ctx.ticks(140);
     ctx.info("GALLERY done");
+});
+
+LP_REGISTER_SELFTEST("crystals.recipes", [](Context& ctx) {
+    // with the default config the corundum lamp and magnet recipes stay, the crystal lamp and
+    // pre-End magnet ones are taken out of the world's recipe list
+    auto& recipes = ctx.player().getLevel().getRecipes();
+    auto  has     = [&](std::string const& id) {
+        for (auto const& [tag, byId] : recipes.mRecipes.get())
+            if (byId.contains(id)) return true;
+        return false;
+    };
+    ctx.check(has("lepton:red_corundum_lamp"), "corundum lamp recipe");
+    ctx.check(!has("lepton:red_crystal_lamp"), "no amethyst crystal lamp recipe while useCorundum is on");
+    ctx.check(has("lepton:magnet") && !has("lepton:magnet_pre_end"), "the post-End magnet recipe only");
+    ctx.check(has("lepton:red_corundum_pane") && has("lepton:red_waxed_corundum"), "sheet and waxing recipes");
 });
