@@ -1,0 +1,26 @@
+{
+  "lepton:glow_lichen_growth": {
+    "sound": "vines"
+  },
+  "lepton:glow_shroom": {
+    "sound": "fungus"
+  },
+  "lepton:glow_shroom_block": {
+    "sound": "wood"
+  },
+  "lepton:glow_shroom_ring": {
+    "sound": "fungus"
+  },
+  "lepton:glow_shroom_stem": {
+    "sound": "wood"
+  },
+  "lepton:monster_box": {
+    "sound": "metal"
+  },
+  "lepton:potted_glow_lichen_growth": {
+    "sound": "stone"
+  },
+  "lepton:potted_glow_shroom": {
+    "sound": "stone"
+  }
+}

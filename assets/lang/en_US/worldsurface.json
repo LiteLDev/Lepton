@@ -1,0 +1,10 @@
+{
+  "biome.quark.glimmering_weald": "Glimmering Weald",
+  "quark.jei.hint.glow_shroom": "Found in the rare Glimmering Weald biome deep underground. Bone Meal can be used to create a large variant.",
+  "quark.jei.hint.glow_lichen_growth": "Found in the rare Glimmering Weald biome deep underground.",
+  "tag.item.quark.glow_shroom_feedables": "Glow Shroom Stoneling Food",
+  "lp.worldsurface.monster_box": "Monster Box",
+  "lp.worldsurface.locate.found": "The nearest {0} is at {1} ({2} blocks away)",
+  "lp.worldsurface.locate.none": "Could not find a {0} within {1} blocks",
+  "lp.worldsurface.locate.unsupported": "{0} needs a normal (non-flat) Overworld"
+}

@@ -1,0 +1,80 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:glow_shroom_stem",
+      "menu_category": {
+        "category": "nature"
+      },
+      "states": {
+        "lepton:north": [
+          true,
+          false
+        ],
+        "lepton:south": [
+          true,
+          false
+        ],
+        "lepton:east": [
+          true,
+          false
+        ],
+        "lepton:west": [
+          true,
+          false
+        ],
+        "lepton:up": [
+          true,
+          false
+        ],
+        "lepton:down": [
+          true,
+          false
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.2
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.2
+      },
+      "minecraft:map_color": "#d7e1db",
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:lepton:glow_shroom_block": {},
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.worldsurface_huge_shroom",
+        "bone_visibility": {
+          "north_skin": "q.block_state('lepton:north')",
+          "north_inner": "!q.block_state('lepton:north')",
+          "south_skin": "q.block_state('lepton:south')",
+          "south_inner": "!q.block_state('lepton:south')",
+          "east_skin": "q.block_state('lepton:east')",
+          "east_inner": "!q.block_state('lepton:east')",
+          "west_skin": "q.block_state('lepton:west')",
+          "west_inner": "!q.block_state('lepton:west')",
+          "up_skin": "q.block_state('lepton:up')",
+          "up_inner": "!q.block_state('lepton:up')",
+          "down_skin": "q.block_state('lepton:down')",
+          "down_inner": "!q.block_state('lepton:down')"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldsurface_glow_shroom_stem",
+          "render_method": "opaque"
+        },
+        "skin": {
+          "texture": "lepton_worldsurface_glow_shroom_stem",
+          "render_method": "opaque"
+        },
+        "inner": {
+          "texture": "lepton_worldsurface_glow_shroom_inside",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/glow_shroom_stem.json"
+    }
+  }
+}

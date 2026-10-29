@@ -1,0 +1,62 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:glow_shroom",
+      "menu_category": {
+        "category": "nature"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "minecraft:map_color": "#4ec3d6",
+      "tag:lepton:glow_shroom": {},
+      "tag:plant": {},
+      "minecraft:geometry": "geometry.lepton.worldsurface_cross",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldsurface_glow_shroom",
+          "render_method": "alpha_test"
+        },
+        "plant": {
+          "texture": "lepton_worldsurface_glow_shroom",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_emission": 10,
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -3.0,
+          0.0,
+          -3.0
+        ],
+        "size": [
+          6.0,
+          6.0,
+          6.0
+        ]
+      },
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "up"
+            ],
+            "block_filter": [
+              "minecraft:deepslate",
+              "minecraft:barrier"
+            ]
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/glow_shroom.json"
+    }
+  }
+}
