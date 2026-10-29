@@ -61,13 +61,7 @@ Wait-LogLine 'hud: debug kit given' 20 -Since $m | Out-Null
 
 $m = Get-LogMark
 Open-Inventory
-try {
-    $slots = Get-Slots (Wait-LogLine 'hud: inventory_screen hotbar slots at' 20 -Since $m)
-} catch {
-    # No slot positions from the UI toolkit: the inventory hotbar of the default layout (1600x900).
-    Write-Host "[hud] no hotbar slot positions logged, using the default inventory layout"
-    $slots = @(0..8 | ForEach-Object { , @(((647 + 43.2 * $_) / 1280), (527 / 720)) })
-}
+$slots = Get-Slots (Wait-LogLine 'hud: inventory_screen hotbar slots at' 20 -Since $m)
 Hover-Slot $slots 0 'tooltip-sword'
 Wait-LogLine 'hud: tooltip drawn' 10 -Since $m | Out-Null
 Hover-Slot $slots 1 'tooltip-helmet'
@@ -93,13 +87,7 @@ Invoke-Chat '/tp @s ~ ~ ~ -90 30'
 Start-Sleep -Milliseconds 800
 $m = Get-LogMark
 Click 0.5 0.5 -Relative -Right
-try {
-    $fslots = Get-Slots (Wait-LogLine 'hud: \S*furnace\S* hotbar slots at' 20 -Since $m)
-} catch {
-    Write-Host "[hud] no furnace hotbar slot positions logged, using the default furnace layout"
-    Save-Screenshot 'furnace-screen' | Out-Null
-    $fslots = @(0..8 | ForEach-Object { , @(((467 + 43.2 * $_) / 1280), (0.85)) })
-}
+$fslots = Get-Slots (Wait-LogLine 'hud: \S*furnace\S* hotbar slots at' 20 -Since $m)
 Hover-Slot $fslots 7 'tooltip-fuel'
 Close-Screen
 

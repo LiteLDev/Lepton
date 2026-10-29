@@ -32,8 +32,18 @@ public:
     /// the rectangle, multiplied by `tint`.
     void image(std::string const& path, float x, float y, float w, float h, Color tint = ui::colors::white);
     /// A part of a texture: `u, v, uw, vh` as fractions of the texture.
-    void imagePart(std::string const& path, float x, float y, float w, float h, float u, float v, float uw, float vh,
-                   Color tint = ui::colors::white);
+    void imagePart(
+        std::string const& path,
+        float              x,
+        float              y,
+        float              w,
+        float              h,
+        float              u,
+        float              v,
+        float              uw,
+        float              vh,
+        Color              tint = ui::colors::white
+    );
     void fill(float x, float y, float w, float h, Color c);
     void text(std::string_view s, float x, float y, Color c = ui::colors::white, float scale = 1, bool shadow = true);
     [[nodiscard]] float textWidth(std::string_view s, float scale = 1) const;

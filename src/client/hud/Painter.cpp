@@ -11,11 +11,11 @@
 #include "mc/client/gui/FontHandle.h"
 #include "mc/client/gui/GuiData.h"
 #include "mc/client/gui/ScreenSizeData.h"
-#include "mc/client/gui/controls/VisualTree.h"
-#include "mc/client/gui/screens/ScreenView.h"
 #include "mc/client/gui/TextAlignment.h"
 #include "mc/client/gui/TextMeasureData.h"
 #include "mc/client/gui/controls/UIControl.h"
+#include "mc/client/gui/controls/VisualTree.h"
+#include "mc/client/gui/screens/ScreenView.h"
 #include "mc/client/renderer/BaseActorRenderContext.h"
 #include "mc/client/renderer/actor/ItemRenderer.h"
 #include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
@@ -45,9 +45,19 @@ void  setSpaceWidth(float w) {
     if (w > 0) gSpace.store(w);
 }
 
-void Painter::imagePart(std::string const& path, float x, float y, float w, float h, float u, float v, float uw, float vh,
-                        Color tint) {
-    auto tex = mRc.getTexture(ResourceLocation(Core::PathView(path)), false);
+void Painter::imagePart(
+    std::string const& path,
+    float              x,
+    float              y,
+    float              w,
+    float              h,
+    float              u,
+    float              v,
+    float              uw,
+    float              vh,
+    Color              tint
+) {
+    auto        tex  = mRc.getTexture(ResourceLocation(Core::PathView(path)), false);
     auto const& data = tex.mClientTexture.get();
     if (!data) return;
     glm::vec2 pos{x, y}, size{w, h}, uv{u, v}, uvSize{uw, vh};
@@ -117,11 +127,11 @@ ui::Vec screenPos(UIControl const& c) {
     }
     ui::Vec v;
     for (UIControl const* cur = &c; cur;) {
-        auto const& rel = cur->mParentRelativePosition.get();
-        v.x += rel.x;
-        v.y += rel.y;
-        auto parent = cur->mParent.lock();
-        cur         = parent.get();
+        auto const& rel  = cur->mParentRelativePosition.get();
+        v.x             += rel.x;
+        v.y             += rel.y;
+        auto parent      = cur->mParent.lock();
+        cur              = parent.get();
     }
     return v;
 }
@@ -146,9 +156,9 @@ bool durabilityBar(ItemStackBase const& stack, int& width, Color& color) {
     if (stack.isNull() || !item || !stack.isDamageableItem() || !stack.isDamaged()) return false;
     int max = item->getMaxDamage();
     if (max <= 0) return false;
-    int   dmg = std::clamp<int>(stack.getDamageValue(), 0, max);
-    width     = static_cast<int>(std::lround(13.0 - dmg * 13.0 / max));
-    float f   = std::max(0.f, static_cast<float>(max - dmg) / max);
+    int dmg = std::clamp<int>(stack.getDamageValue(), 0, max);
+    width   = static_cast<int>(std::lround(13.0 - dmg * 13.0 / max));
+    float f = std::max(0.f, static_cast<float>(max - dmg) / max);
     // HSV(f / 3, 1, 1) -> RGB, as Java's bar.
     float h = f / 3.f * 6.f;
     float x = 1 - std::fabs(std::fmod(h, 2.f) - 1);

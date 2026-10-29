@@ -8,18 +8,18 @@
 #include "ll/api/command/CommandHandle.h"
 
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
-#include "mc/world/actor/player/Inventory.h"
-#include "mc/world/actor/player/Player.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
+#include "mc/world/actor/player/Inventory.h"
+#include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
 
 #include "feature/hud/Logic.h"
 #include "game/Inventory.h"
-#include "mod/Commands.h"
-#include "mod/Log.h"
 #include "game/Items.h"
+#include "mod/Commands.h"
 #include "mod/Config.h"
+#include "mod/Log.h"
 #include "selftest/SelfTest.h"
 
 LP_REGISTER_CONFIG("hud", lp::feature::hud::HudConfig);
@@ -51,7 +51,9 @@ std::vector<ItemStack> debugKit() {
         game::itemFromSnbt(
             R"({Name:"minecraft:red_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:12b,Damage:0s,Slot:0b},{Name:"minecraft:golden_apple",Count:3b,Damage:0s,Slot:1b},{Name:"minecraft:oak_log",Count:64b,Damage:0s,Slot:2b},{Name:"minecraft:iron_pickaxe",Count:1b,Damage:40s,Slot:3b},{Name:"minecraft:redstone",Count:30b,Damage:0s,Slot:4b},{Name:"minecraft:torch",Count:48b,Damage:0s,Slot:5b},{Name:"minecraft:bread",Count:9b,Damage:0s,Slot:6b},{Name:"minecraft:emerald",Count:5b,Damage:0s,Slot:7b},{Name:"minecraft:bone",Count:2b,Damage:0s,Slot:8b},{Name:"minecraft:arrow",Count:20b,Damage:0s,Slot:9b}]}})"
         ),
-        game::itemFromSnbt(R"({Name:"minecraft:enchanted_book",Count:1b,Damage:0s,tag:{ench:[{id:9s,lvl:5s},{id:26s,lvl:1s}]}})"),
+        game::itemFromSnbt(
+            R"({Name:"minecraft:enchanted_book",Count:1b,Damage:0s,tag:{ench:[{id:9s,lvl:5s},{id:26s,lvl:1s}]}})"
+        ),
         game::makeItem("minecraft:empty_map"),
         game::makeItem("minecraft:rotten_flesh", 4),
         game::makeItem("minecraft:coal", 20),
@@ -63,7 +65,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload().text("debug").text("hud").execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* p = commands::playerOf(origin);
         if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
-        auto kit = debugKit();
+        auto  kit = debugKit();
         auto& inv = p->getInventory();
         for (int i = 0; i < static_cast<int>(kit.size()); ++i) inv.setItem(i, kit[static_cast<size_t>(i)]);
         game::inv::sync(*p);
@@ -75,10 +77,15 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
 LP_REGISTER_SELFTEST("hud.config", [](Context& ctx) {
     auto const& c = cfg();
     ctx.check(c.version >= 1, "config/hud.json is loaded");
-    ctx.check(c.foodDivisor == 2 && c.foodCompressionThreshold == 4 && c.fuelTimeDivisor == 200 && c.hudHeight == 10,
-              "Quark's numeric defaults");
-    ctx.check(std::find(c.enchantingStacks.begin(), c.enchantingStacks.end(), "minecraft:diamond_sword") != c.enchantingStacks.end(),
-              "Quark's enchantingStacks default list");
+    ctx.check(
+        c.foodDivisor == 2 && c.foodCompressionThreshold == 4 && c.fuelTimeDivisor == 200 && c.hudHeight == 10,
+        "Quark's numeric defaults"
+    );
+    ctx.check(
+        std::find(c.enchantingStacks.begin(), c.enchantingStacks.end(), "minecraft:diamond_sword")
+            != c.enchantingStacks.end(),
+        "Quark's enchantingStacks default list"
+    );
 });
 
 LP_REGISTER_SELFTEST("hud.ticker_anim", [](Context& ctx) {
@@ -113,7 +120,10 @@ LP_REGISTER_SELFTEST("hud.ticker_layout", [](Context& ctx) {
     ctx.check(tickerX(w, TickerSlot::MainHand, false, false, 0, 0) == 56, "an off-hand item widens the left bar by 58");
     ctx.check(tickerX(w, TickerSlot::MainHand, false, true, 7, 0) == 92, "shiftLeft");
     ctx.check(tickerX(w, TickerSlot::Head, true, true, 0, -3) == 25, "invert puts armour left");
-    ctx.check(tickerX(w, TickerSlot::MainHand, true, true, 0, 4) == 200 + 95 + 20 + 4, "invert puts hands right (+shiftRight)");
+    ctx.check(
+        tickerX(w, TickerSlot::MainHand, true, true, 0, 4) == 200 + 95 + 20 + 4,
+        "invert puts hands right (+shiftRight)"
+    );
 });
 
 LP_REGISTER_SELFTEST("hud.ticker_count", [](Context& ctx) {
@@ -124,10 +134,16 @@ LP_REGISTER_SELFTEST("hud.ticker_count", [](Context& ctx) {
     ctx.give(p, game::makeItem("minecraft:cobblestone", 3), 20);
     p.setOffhandSlot(game::makeItem("minecraft:cobblestone", 2));
     auto t = tickerStack(p, TickerSlot::MainHand);
-    ctx.check(game::itemId(t.stack) == "minecraft:cobblestone" && t.count == 79, "main hand total counts inventory + off hand");
+    ctx.check(
+        game::itemId(t.stack) == "minecraft:cobblestone" && t.count == 79,
+        "main hand total counts inventory + off hand"
+    );
     clearPlayer(p);
     ctx.give(p, game::makeItem("minecraft:cobblestone", 10), 0);
-    ctx.check(game::isEmpty(tickerStack(p, TickerSlot::MainHand).stack), "nothing when the slot already shows the total");
+    ctx.check(
+        game::isEmpty(tickerStack(p, TickerSlot::MainHand).stack),
+        "nothing when the slot already shows the total"
+    );
     clearPlayer(p);
     ctx.give(p, game::makeItem("minecraft:diamond_sword"), 0);
     ctx.check(game::isEmpty(tickerStack(p, TickerSlot::MainHand).stack), "non-stackable hand items show nothing");
@@ -169,9 +185,11 @@ LP_REGISTER_SELFTEST("hud.elytra", [](Context& ctx) {
 });
 
 LP_REGISTER_SELFTEST("hud.food", [](Context& ctx) {
-    ctx.check(saturationTier(19.2f) == 5 && saturationTier(12) == 0 && saturationTier(9) == 1 && saturationTier(7) == 2
-                  && saturationTier(3) == 3 && saturationTier(1) == 4,
-              "saturation tiers");
+    ctx.check(
+        saturationTier(19.2f) == 5 && saturationTier(12) == 0 && saturationTier(9) == 1 && saturationTier(7) == 2
+            && saturationTier(3) == 3 && saturationTier(1) == 4,
+        "saturation tiers"
+    );
     auto steak = foodInfo(game::makeItem("minecraft:cooked_beef"));
     ctx.require(steak.has_value(), "steak is food");
     ctx.check(steak->nutrition == 8 && !steak->poison, "steak: 8 nutrition, not poisonous");
@@ -198,23 +216,29 @@ LP_REGISTER_SELFTEST("hud.fuel", [](Context& ctx) {
 });
 
 LP_REGISTER_SELFTEST("hud.shulker", [](Context& ctx) {
-    ctx.check(shulkerDims(27) == std::pair{9, 3} && shulkerDims(1) == std::pair{1, 1} && shulkerDims(4) == std::pair{4, 1}
-                  && shulkerDims(12) == std::pair{9, 2} && shulkerDims(108) == std::pair{12, 9},
-              "grid dimensions");
+    ctx.check(
+        shulkerDims(27) == std::pair{9, 3} && shulkerDims(1) == std::pair{1, 1} && shulkerDims(4) == std::pair{4, 1}
+            && shulkerDims(12) == std::pair{9, 2} && shulkerDims(108) == std::pair{12, 9},
+        "grid dimensions"
+    );
     auto box = game::itemFromSnbt(
-        R"({Name:"minecraft:red_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:5b,Damage:0s,Slot:3b},{Name:"minecraft:stone",Count:64b,Damage:0s,Slot:1b}]}})");
+        R"({Name:"minecraft:red_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:5b,Damage:0s,Slot:3b},{Name:"minecraft:stone",Count:64b,Damage:0s,Slot:1b}]}})"
+    );
     ctx.require(!game::isEmpty(box), "shulker box created");
     ctx.check(isShulkerBox(box), "is a shulker box");
     auto items = shulkerContents(box);
-    ctx.check(items.size() == 2 && game::itemId(items[0]) == "minecraft:stone" && items[1].mCount == 5,
-              "contents in slot order");
+    ctx.check(
+        items.size() == 2 && game::itemId(items[0]) == "minecraft:stone" && items[1].mCount == 5,
+        "contents in slot order"
+    );
     ctx.check(shulkerColor(box) == 0xB02E26, "red tint");
     ctx.check(!shulkerColor(game::makeItem("minecraft:undyed_shulker_box")).has_value(), "the undyed box has no tint");
     ctx.check(shulkerContents(game::makeItem("minecraft:undyed_shulker_box")).empty(), "an empty box has no contents");
 });
 
 LP_REGISTER_SELFTEST("hud.enchanting", [](Context& ctx) {
-    auto book = game::itemFromSnbt(R"({Name:"minecraft:enchanted_book",Count:1b,Damage:0s,tag:{ench:[{id:9s,lvl:5s}]}})");
+    auto book =
+        game::itemFromSnbt(R"({Name:"minecraft:enchanted_book",Count:1b,Damage:0s,tag:{ench:[{id:9s,lvl:5s}]}})");
     ctx.require(!game::isEmpty(book), "book created");
     auto e = bookEnchants(book);
     ctx.require(e.size() == 1 && e[0].type == 9 && e[0].level == 5, "the book holds Sharpness V");
@@ -222,9 +246,15 @@ LP_REGISTER_SELFTEST("hud.enchanting", [](Context& ctx) {
     auto items = enchantItems(9);
     auto has   = [&](std::string const& id) { return std::find(items.begin(), items.end(), id) != items.end(); };
     ctx.check(has("minecraft:diamond_sword"), "sharpness goes on swords");
-    ctx.check(!has("minecraft:diamond_axe") && !has("minecraft:diamond_helmet") && !has("minecraft:bow"), "not on axes (secondary), helmets or bows");
+    ctx.check(
+        !has("minecraft:diamond_axe") && !has("minecraft:diamond_helmet") && !has("minecraft:bow"),
+        "not on axes (secondary), helmets or bows"
+    );
     auto prot = enchantItems(0);
-    ctx.check(std::find(prot.begin(), prot.end(), "minecraft:diamond_chestplate") != prot.end(), "protection goes on armour");
+    ctx.check(
+        std::find(prot.begin(), prot.end(), "minecraft:diamond_chestplate") != prot.end(),
+        "protection goes on armour"
+    );
 });
 
 LP_REGISTER_SELFTEST("hud.attributes", [](Context& ctx) {
@@ -240,10 +270,15 @@ LP_REGISTER_SELFTEST("hud.attributes", [](Context& ctx) {
     }
     ctx.check(armor && tough, "diamond chestplate: 8 armour, 2 toughness in the chest group");
     auto neth = attributesOf(game::makeItem("minecraft:netherite_boots"));
-    ctx.check(std::any_of(neth.begin(), neth.end(), [](auto const& a) { return a.id == "knockback_resistance"; }),
-              "netherite: knockback resistance");
+    ctx.check(
+        std::any_of(neth.begin(), neth.end(), [](auto const& a) { return a.id == "knockback_resistance"; }),
+        "netherite: knockback resistance"
+    );
     ctx.check(formatNumber(1.6) == "1.6" && formatNumber(7) == "7" && formatNumber(0.125) == "0.12", "#.## format");
-    ctx.check(equipmentSlotFor(game::makeItem("minecraft:iron_boots")) == TickerSlot::Feet, "boots compare with the feet");
+    ctx.check(
+        equipmentSlotFor(game::makeItem("minecraft:iron_boots")) == TickerSlot::Feet,
+        "boots compare with the feet"
+    );
     ctx.check(attributesOf(game::makeItem("minecraft:stone")).empty(), "stone has no attributes");
 });
 

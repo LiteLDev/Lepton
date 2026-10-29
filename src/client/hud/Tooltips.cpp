@@ -40,12 +40,12 @@
 #include "mc/client/gui/screens/models/ClientInstanceModel.h"
 #include "mc/client/multiplayer/ClientLevel.h"
 #include "mc/client/player/LocalPlayer.h"
-#include "mc/world/actor/player/Inventory.h"
 #include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
 #include "mc/deps/core/math/Color.h"
 #include "mc/deps/nbt/CompoundTag.h"
-#include "mc/locale/I18n.h"
 #include "mc/legacy/ActorUniqueID.h"
+#include "mc/locale/I18n.h"
+#include "mc/world/actor/player/Inventory.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
 #include "mc/world/item/MapItem.h"
@@ -70,14 +70,14 @@ namespace {
 
 // ---- shared state --------------------------------------------------------------------------------
 
-std::atomic<bool> gShift{false};
-float             gLineHeight = 10.f; ///< measured from the rendered tooltip
+std::atomic<bool>  gShift{false};
+std::atomic<float> gLineHeight{10.f}; ///< measured from the rendered tooltip
 
 enum class Kind { Attributes, Food, Shulker, Map, Enchant, Fuel };
 
 struct AttrEntry {
-    Attribute              attr;
-    std::optional<double>  diff; ///< vs the equipped item (showUpgradeStatus)
+    Attribute             attr;
+    std::optional<double> diff; ///< vs the equipped item (showUpgradeStatus)
 };
 
 struct Component {
@@ -175,7 +175,8 @@ std::string stackCodes(ItemStackBase const& stack) {
     // Only what tells apart items whose tooltips read the same: the map a map shows, the contents of
     // a shulker box (cheap, and no ItemStackBase::save, which runs item fix-ups).
     auto key = game::itemId(stack) + ":" + std::to_string(stack.getAuxValue());
-    if (key.starts_with("minecraft:filled_map")) key += ":" + std::to_string(MapItem::getMapId(stack.mUserData.get()).rawID);
+    if (key.starts_with("minecraft:filled_map"))
+        key += ":" + std::to_string(MapItem::getMapId(stack.mUserData.get()).rawID);
     if (isShulkerBox(stack))
         for (auto const& is : shulkerContents(stack)) key += ":" + game::itemId(is) + "x" + std::to_string(is.mCount);
     auto        h = static_cast<uint32_t>(std::hash<std::string>{}(key));
@@ -187,11 +188,12 @@ std::string stackCodes(ItemStackBase const& stack) {
 /// Reserved lines for a component of `w` x `h` UI units; the first one gets a marker that is unique
 /// in the tooltip (component id) and names the stack.
 std::vector<std::string> reserve(Component& c, int id, float w, float h) {
-    c.height                     = h;
-    c.lines                      = std::max(1, static_cast<int>(std::ceil(h / gLineHeight)));
-    int         spaces           = std::max(1, static_cast<int>(std::ceil(w / std::max(1.f, width(" ")))));
+    c.height           = h;
+    c.lines            = std::max(1, static_cast<int>(std::ceil(h / gLineHeight.load())));
+    int         spaces = std::max(1, static_cast<int>(std::ceil(w / std::max(1.f, width(" ")))));
     std::string pad(static_cast<size_t>(spaces), ' ');
-    c.marker = std::string("\xC2\xA7r\xC2\xA7") + kHex[(id >> 4) & 15] + "\xC2\xA7" + kHex[id & 15] + gStackCodes + "\xC2\xA7r";
+    c.marker = std::string("\xC2\xA7r\xC2\xA7") + kHex[(id >> 4) & 15] + "\xC2\xA7" + kHex[id & 15] + gStackCodes
+             + "\xC2\xA7r";
     std::vector<std::string> out{c.marker + pad};
     for (int i = 1; i < c.lines; ++i) out.push_back("\xC2\xA7r" + pad);
     return out;
@@ -203,11 +205,16 @@ bool isAttributeLine(std::string const& line) {
     // Bedrock's modifier lines: "+7 Attack Damage" (blue), with the localized attribute names.
     static std::vector<std::string> names;
     static std::string              namesLocale;
+    static std::mutex               namesMutex;
+    std::lock_guard                 lock(namesMutex);
     if (namesLocale != client::clientLocale()) {
         namesLocale = client::clientLocale();
         names.clear();
-        for (auto key : {"attribute.name.generic.attackDamage", "attribute.name.generic.armor",
-                         "attribute.name.generic.armorToughness", "attribute.name.generic.knockbackResistance"}) {
+        for (auto key :
+             {"attribute.name.generic.attackDamage",
+              "attribute.name.generic.armor",
+              "attribute.name.generic.armorToughness",
+              "attribute.name.generic.knockbackResistance"}) {
             auto t = gameText(key);
             if (!t.empty() && t != key) names.push_back(t);
         }
@@ -215,7 +222,9 @@ bool isAttributeLine(std::string const& line) {
     auto plain = stripCodes(line);
     if (plain.empty() || (plain[0] != '+' && plain[0] != '-' && !std::isdigit(static_cast<unsigned char>(plain[0]))))
         return false;
-    return std::any_of(names.begin(), names.end(), [&](std::string const& n) { return plain.find(n) != std::string::npos; });
+    return std::any_of(names.begin(), names.end(), [&](std::string const& n) {
+        return plain.find(n) != std::string::npos;
+    });
 }
 
 std::optional<Component> attributeComponent(ItemStackBase const& stack, Player const& player) {
@@ -275,7 +284,7 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
     if (!conf.enableImprovedTooltips || game::isEmpty(stack) || !player) return text;
     auto lines = split(text);
     if (lines.empty()) return text;
-    bool shift = gShift.load();
+    bool shift  = gShift.load();
     layout      = std::make_shared<Layout>();
     gStackCodes = stackCodes(stack);
     int id      = 1; // component ids: unique within this tooltip, stable across rebuilds
@@ -292,7 +301,11 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
             insert.insert(insert.end(), r.begin(), r.end());
             layout->comps.push_back(std::move(c));
         } else {
-            insert.push_back("\xC2\xA7" "7" + ctr("quark.misc.map_shift", "Hold Shift to see the map"));
+            insert.push_back(
+                "\xC2\xA7"
+                "7"
+                + ctr("quark.misc.map_shift", "Hold Shift to see the map")
+            );
         }
     }
     if (conf.shulkerTooltips && isShulkerBox(stack)) {
@@ -308,7 +321,9 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
                     std::string_view rest = std::string_view(plain).substr(name.size());
                     if (rest.empty()) return true;
                     if (rest.size() > 2 && rest.substr(0, 2) == " x"
-                        && std::all_of(rest.begin() + 2, rest.end(), [](char ch) { return std::isdigit(static_cast<unsigned char>(ch)); }))
+                        && std::all_of(rest.begin() + 2, rest.end(), [](char ch) {
+                               return std::isdigit(static_cast<unsigned char>(ch));
+                           }))
                         return true;
                 }
                 return false;
@@ -325,7 +340,7 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
             lines = std::move(kept);
             if (!conf.shulkerBoxRequireShift || shift) {
                 Component c;
-                c.kind   = Kind::Shulker;
+                c.kind            = Kind::Shulker;
                 auto [cols, rows] = shulkerDims(static_cast<int>(items.size()));
                 if (conf.shulkerBoxUseColors) c.tint = shulkerColor(stack);
                 c.items = std::move(items);
@@ -333,7 +348,11 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
                 insert.insert(insert.end(), r.begin(), r.end());
                 layout->comps.push_back(std::move(c));
             } else {
-                insert.push_back("\xC2\xA7" "7" + ctr("quark.misc.shulker_box_shift", "Hold Shift to see contents"));
+                insert.push_back(
+                    "\xC2\xA7"
+                    "7"
+                    + ctr("quark.misc.shulker_box_shift", "Hold Shift to see contents")
+                );
             }
         }
     }
@@ -350,11 +369,23 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
             }
             if (conf.showSaturation) {
                 int  tier = saturationTier(food->saturation);
-                auto key  = std::string(food->poison ? "quark.misc.bad_saturation" : "quark.misc.saturation") + std::to_string(tier);
-                static constexpr std::array<char const*, 6> kGood{"Fulfilling Meal", "Hearty Meal", "Meal", "Light Meal", "Light Snack", "Full-Course Meal"};
-                static constexpr std::array<char const*, 6> kBad{"Worryingly Fulfilling", "Disturbingly Hearty", "Ill-Advised Meal",
-                                                                 "Questionable Rations", "Disgusting Snack", "Dangerously Tantalizing"};
-                insert.push_back("\xC2\xA7" "7" + ctr(key, food->poison ? kBad[static_cast<size_t>(tier)] : kGood[static_cast<size_t>(tier)]));
+                auto key  = std::string(food->poison ? "quark.misc.bad_saturation" : "quark.misc.saturation")
+                          + std::to_string(tier);
+                static constexpr std::array<char const*, 6>
+                    kGood{"Fulfilling Meal", "Hearty Meal", "Meal", "Light Meal", "Light Snack", "Full-Course Meal"};
+                static constexpr std::array<char const*, 6> kBad{
+                    "Worryingly Fulfilling",
+                    "Disturbingly Hearty",
+                    "Ill-Advised Meal",
+                    "Questionable Rations",
+                    "Disgusting Snack",
+                    "Dangerously Tantalizing"
+                };
+                insert.push_back(
+                    "\xC2\xA7"
+                    "7"
+                    + ctr(key, food->poison ? kBad[static_cast<size_t>(tier)] : kGood[static_cast<size_t>(tier)])
+                );
             }
         }
     }
@@ -371,7 +402,7 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
                 kept.push_back(lines[i]);
             }
             while (kept.size() > 1 && stripCodes(kept.back()).empty()) kept.pop_back();
-            lines = std::move(kept);
+            lines  = std::move(kept);
             auto r = reserve(*c, id++, attributeWidth(*c), static_cast<float>(c->groups.size()) * 10.f);
             insert.insert(insert.end(), r.begin(), r.end());
             layout->comps.push_back(std::move(*c));
@@ -417,22 +448,34 @@ std::string buildTooltip(ItemStackBase const& stack, std::string text, std::shar
 
 std::string slotIcon(SlotGroup g) {
     switch (g) {
-    case SlotGroup::MainHand: return "mainhand";
-    case SlotGroup::OffHand: return "offhand";
-    case SlotGroup::Head: return "head";
-    case SlotGroup::Chest: return "chest";
-    case SlotGroup::Legs: return "legs";
-    case SlotGroup::Feet: return "feet";
-    case SlotGroup::Armor: return "armor";
-    case SlotGroup::Body: return "body";
-    default: return "any";
+    case SlotGroup::MainHand:
+        return "mainhand";
+    case SlotGroup::OffHand:
+        return "offhand";
+    case SlotGroup::Head:
+        return "head";
+    case SlotGroup::Chest:
+        return "chest";
+    case SlotGroup::Legs:
+        return "legs";
+    case SlotGroup::Feet:
+        return "feet";
+    case SlotGroup::Armor:
+        return "armor";
+    case SlotGroup::Body:
+        return "body";
+    default:
+        return "any";
     }
 }
 
 Color rgb(int hex) { return Color::rgb(hex); }
 
 void drawAttributes(Painter& p, Component const& c, float x0, float y) {
-    long long ticks = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() / 50;
+    long long ticks =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count()
+        / 50;
     y -= 1;
     for (auto const& [group, entries] : c.groups) {
         float x = x0;
@@ -449,7 +492,13 @@ void drawAttributes(Painter& p, Component const& c, float x0, float y) {
                 if (*e.diff != 0) {
                     float yp = y - 2;
                     if (cfg().animateUpDownArrows && ticks % 20 < 10) yp += 1;
-                    p.image(*e.diff < 0 ? "textures/lepton/hud/downgrade" : "textures/lepton/hud/upgrade", x - 2, yp, 13, 13);
+                    p.image(
+                        *e.diff < 0 ? "textures/lepton/hud/downgrade" : "textures/lepton/hud/upgrade",
+                        x - 2,
+                        yp,
+                        13,
+                        13
+                    );
                 }
             }
             p.text(text, x + 12, y + 1, col);
@@ -460,8 +509,8 @@ void drawAttributes(Painter& p, Component const& c, float x0, float y) {
 }
 
 void drawFood(Painter& p, Component const& c, float x0, float y) {
-    y -= 1;
-    std::string suffix = c.poison ? "_hunger" : "";
+    y                  -= 1;
+    std::string suffix  = c.poison ? "_hunger" : "";
     for (int i = 0; i < c.food.shanks; ++i) {
         float x = x0 + i * 9 - 1;
         p.image("textures/lepton/hud/food_empty" + suffix, x, y, 9, 9);
@@ -473,14 +522,25 @@ void drawFood(Painter& p, Component const& c, float x0, float y) {
 
 void drawShulker(Painter& p, Component const& c, float x, float y, float screenW) {
     constexpr float kCorner = 5, kEdge = 18, kTex = 30;
-    int             size    = static_cast<int>(c.items.size());
-    auto [cols, rows]       = shulkerDims(size);
-    y -= 1;
-    float texW = kCorner * 2 + kEdge * cols;
+    int             size  = static_cast<int>(c.items.size());
+    auto [cols, rows]     = shulkerDims(size);
+    y                    -= 1;
+    float texW            = kCorner * 2 + kEdge * cols;
     if (x + texW > screenW) x -= x + texW - screenW;
     Color tint = c.tint ? rgb(*c.tint) : ui::colors::white;
     auto  part = [&](float dx, float dy, float w, float h, float u, float v) {
-        p.imagePart("textures/lepton/hud/shulker_widget", x + dx, y + dy, w, h, u / kTex, v / kTex, w / kTex, h / kTex, tint);
+        p.imagePart(
+            "textures/lepton/hud/shulker_widget",
+            x + dx,
+            y + dy,
+            w,
+            h,
+            u / kTex,
+            v / kTex,
+            w / kTex,
+            h / kTex,
+            tint
+        );
     };
     float far = kCorner + 1 + kEdge + 1; // 25: the right / bottom border in the texture
     part(0, 0, kCorner, kCorner, 0, 0);
@@ -499,17 +559,26 @@ void drawShulker(Painter& p, Component const& c, float x, float y, float screenW
         }
     }
     for (int i = 0; i < size; ++i) {
-        float xp = x + 6 + (i % 9) * 18.f;
-        float yp = y + 6 + (i / 9) * 18.f;
+        float       xp = x + 6 + (i % 9) * 18.f;
+        float       yp = y + 6 + (i / 9) * 18.f;
         auto const& is = c.items[static_cast<size_t>(i)];
         p.item(is, xp, yp, 1, is.mCount, true);
     }
 }
 
 // The level's map data is only touched on the client tick: drawing works on a copy of the pixels.
-std::mutex                                gMapMutex;
-std::optional<ActorUniqueID>              gMapWanted; ///< the hovered map (drawing -> client tick)
-std::map<int64, std::vector<uint>>        gMapPixels; ///< map id -> 128x128 ABGR pixels
+std::mutex                                                gMapMutex;
+std::optional<ActorUniqueID>                              gMapWanted; ///< the hovered map (drawing -> client tick)
+std::map<int64, std::shared_ptr<std::vector<uint> const>> gMapPixels; ///< map id -> 128x128 ABGR pixels
+std::atomic<bool>                                         gMapResetAsked{false};
+
+/// Map ids are per world: forget cached pixels and request counts when the world changes.
+void resetMaps() {
+    std::lock_guard lock(gMapMutex);
+    gMapPixels.clear();
+    gMapWanted.reset();
+    gMapResetAsked = true;
+}
 
 /// Client tick: copies the pixels of the hovered map, or asks the server for the data when the
 /// client has none (vanilla MapInfoRequestPacket; remote servers send map data only for held maps),
@@ -520,9 +589,15 @@ void updateWantedMap() {
         std::lock_guard lock(gMapMutex);
         wanted.swap(gMapWanted);
     }
-    auto* client = client::currentClient();
-    auto* level  = client ? client->getLevel() : nullptr;
-    auto* player = client::currentPlayer();
+    auto*              client    = client::currentClient();
+    auto*              level     = client ? client->getLevel() : nullptr;
+    auto*              player    = client::currentPlayer();
+    static void const* lastLevel = nullptr;
+    if (level != lastLevel) {
+        lastLevel = level;
+        resetMaps();
+        return;
+    }
     if (!wanted || !level) return;
     // The level finds a map's data by the map item's data: look for the item in the inventory.
     MapItemSavedData* data = nullptr;
@@ -530,15 +605,17 @@ void updateWantedMap() {
         auto& inv = player->getInventory();
         for (int i = 0; i < inv.getContainerSize() && !data; ++i) {
             auto const& s = inv.getItem(i);
-            if (s.mUserData && game::itemId(s) == "minecraft:filled_map" && MapItem::getMapId(s.mUserData.get()) == *wanted)
+            if (s.mUserData && game::itemId(s) == "minecraft:filled_map"
+                && MapItem::getMapId(s.mUserData.get()) == *wanted)
                 data = level->getMapSavedData(s.mUserData.get());
         }
     }
     if (!data) data = level->getMapSavedData(*wanted);
     if (data && data->mPixels.get().size() >= 128 * 128) {
+        auto            pixels = std::make_shared<std::vector<uint> const>(data->mPixels.get());
         std::lock_guard lock(gMapMutex);
         if (gMapPixels.size() > 32) gMapPixels.clear();
-        gMapPixels[wanted->rawID] = data->mPixels.get();
+        gMapPixels[wanted->rawID] = std::move(pixels);
         return;
     }
     struct Asked {
@@ -546,6 +623,7 @@ void updateWantedMap() {
         int                                   tries = 0;
     };
     static std::map<int64, Asked> asked;
+    if (gMapResetAsked.exchange(false)) asked.clear();
     auto  now = std::chrono::steady_clock::now();
     auto& a   = asked[wanted->rawID];
     if (a.tries >= 10 || (a.tries > 0 && now - a.at < std::chrono::seconds(1))) return;
@@ -556,14 +634,15 @@ void updateWantedMap() {
 
 void drawMap(Painter& p, Component const& c, float x, float y) {
     p.image("textures/lepton/hud/map_background", x + 3 - 3.5f, y + 3 - 3.5f, 71, 71);
-    std::vector<uint> pixels;
+    std::shared_ptr<std::vector<uint> const> shared;
     {
         std::lock_guard lock(gMapMutex);
         gMapWanted = c.mapId; // refreshed every tick while shown
-        if (auto it = gMapPixels.find(c.mapId.rawID); it != gMapPixels.end()) pixels = it->second;
+        if (auto it = gMapPixels.find(c.mapId.rawID); it != gMapPixels.end()) shared = it->second;
     }
-    if (pixels.size() < 128 * 128) return;
-    float const s = 0.5f;
+    if (!shared || shared->size() < 128 * 128) return;
+    auto const& pixels = *shared;
+    float const s      = 0.5f;
     for (int row = 0; row < 128; ++row) {
         int col = 0;
         while (col < 128) {
@@ -622,31 +701,45 @@ LL_TYPE_INSTANCE_HOOK(
         auto        layout    = findLayout(content);
         auto const& formatted = mFormattedContent.get();
         if (!layout) layout = findLayout(formatted);
-        auto lines   = split(formatted.empty() ? content : formatted);
-        auto box     = mBoxDimensions.get();
-        auto cursor  = mCursorPosition.get();
-        auto offset  = mOffset.get();
-        auto base    = screenPos(owner);
+        auto lines  = split(formatted.empty() ? content : formatted);
+        auto box    = mBoxDimensions.get();
+        auto cursor = mCursorPosition.get();
+        auto offset = mOffset.get();
+        auto base   = screenPos(owner);
         if (gRenderLogs < 3 && layout) {
             ++gRenderLogs;
             log().info(
-                "hud: tooltip drawn ({} lines, box {:.1f}x{:.1f}, cursor {:.1f},{:.1f}, offset {:.1f},{:.1f}, owner {:.1f},{:.1f} "
+                "hud: tooltip drawn ({} lines, box {:.1f}x{:.1f}, cursor {:.1f},{:.1f}, offset {:.1f},{:.1f}, owner "
+                "{:.1f},{:.1f} "
                 "{:.1f}x{:.1f}, max width {}, formatted {} raw {} bytes)",
-                lines.size(), box.x, box.y, cursor.x, cursor.y, offset.x, offset.y, base.x, base.y, owner.mSize.get().x,
-                owner.mSize.get().y, mMaxWidth, formatted.size(), content.size()
+                lines.size(),
+                box.x,
+                box.y,
+                cursor.x,
+                cursor.y,
+                offset.x,
+                offset.y,
+                base.x,
+                base.y,
+                owner.mSize.get().x,
+                owner.mSize.get().y,
+                mMaxWidth,
+                formatted.size(),
+                content.size()
             );
         }
-        if (!lines.empty() && box.y > 0) gLineHeight = std::clamp((box.y - 8) / static_cast<float>(lines.size()), 8.f, 12.f);
+        if (!lines.empty() && box.y > 0)
+            gLineHeight = std::clamp((box.y - 8) / static_cast<float>(lines.size()), 8.f, 12.f);
         if (!layout) return;
         // The cursor position is in screen UI units (not relative to the owner control).
-        float boxX  = cursor.x + offset.x;
-        float boxY  = cursor.y + offset.y;
-        float sw    = 0;
+        float boxX = cursor.x + offset.x;
+        float boxY = cursor.y + offset.y;
+        float sw   = 0;
         if (auto* c = client::currentClient()) sw = c->getGuiData()->mScreenSizeData.get().clientUIScreenSize.get().x;
         // The game batches the tooltip box and draws it after this renderer returns, so whatever is
         // drawn here ends up below it: remember what to draw, and paint it after the screen.
         PendingDraw pending{layout, boxX + 4, boxY + 4, sw > 0 ? sw : 1e9f, {}};
-        auto rawLines = split(content);
+        auto        rawLines = split(content);
         for (auto const& comp : layout->comps) {
             // The formatted text may rewrite format codes: fall back to the raw lines (the tooltip
             // has no maximum width, so its lines are not wrapped).
@@ -685,14 +778,26 @@ void paintPending(MinecraftUIRenderContext& rc) {
         }
         if (li < 0) continue;
         float x = pending->textX;
-        float y = pending->textY + static_cast<float>(li) * gLineHeight;
+        float y = pending->textY + static_cast<float>(li) * gLineHeight.load();
         switch (comp.kind) {
-        case Kind::Attributes: drawAttributes(p, comp, x, y); break;
-        case Kind::Food: drawFood(p, comp, x, y); break;
-        case Kind::Shulker: drawShulker(p, comp, x, y, pending->screenW); break;
-        case Kind::Map: drawMap(p, comp, x, y); break;
-        case Kind::Enchant: drawEnchant(p, comp, x, y); break;
-        case Kind::Fuel: drawFuel(p, comp, x, y); break;
+        case Kind::Attributes:
+            drawAttributes(p, comp, x, y);
+            break;
+        case Kind::Food:
+            drawFood(p, comp, x, y);
+            break;
+        case Kind::Shulker:
+            drawShulker(p, comp, x, y, pending->screenW);
+            break;
+        case Kind::Map:
+            drawMap(p, comp, x, y);
+            break;
+        case Kind::Enchant:
+            drawEnchant(p, comp, x, y);
+            break;
+        case Kind::Fuel:
+            drawFuel(p, comp, x, y);
+            break;
         }
     }
 }
@@ -720,8 +825,8 @@ LL_TYPE_INSTANCE_HOOK(
             std::lock_guard lock(gLayoutsMutex);
             if (gLayouts.size() > 64) gLayouts.clear();
             // The game rebuilds the hover text often: log only tooltips not seen yet.
-            bool fresh = !gLayouts.contains(out);
-            auto n     = layout->comps.size();
+            bool fresh    = !gLayouts.contains(out);
+            auto n        = layout->comps.size();
             gLayouts[out] = std::move(layout);
             if (fresh) log().debug("hud: tooltip components for {} ({})", game::itemId(item), n);
         }
@@ -745,11 +850,15 @@ std::string improvedTooltip(ItemStackBase const& item, std::string vanilla, int*
 class ImprovedTooltipsModule {
 public:
     void install() {
-        mKey = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
-            if (ev.keyCode() == ui::Key::Shift) gShift = ev.isDown();
-        });
+        mKey = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>(
+            [](ll::event::KeyInputEvent& ev) {
+                if (ev.keyCode() == ui::Key::Shift) gShift = ev.isDown();
+            }
+        );
         mPaint = ll::event::EventBus::getInstance().emplaceListener<ll::event::AfterUIRenderEvent>(
             [](ll::event::AfterUIRenderEvent& ev) {
+                // Tooltips belong to the top screen: not the HUD layer below an open screen.
+                if (isHudView(ev.screenView()) && ui::topScreen() != "hud_screen") return;
                 try {
                     paintPending(ev.uiRenderContext());
                 } catch (std::exception const& e) {
@@ -771,8 +880,14 @@ public:
         if (!reloadHooked) {
             reloadHooked = true;
             config::onReload([] {
-                { std::lock_guard lock(gEnchantMutex); gEnchantCache.clear(); }
-                { std::lock_guard lock(gLayoutsMutex); gLayouts.clear(); }
+                {
+                    std::lock_guard lock(gEnchantMutex);
+                    gEnchantCache.clear();
+                }
+                {
+                    std::lock_guard lock(gLayoutsMutex);
+                    gLayouts.clear();
+                }
             });
         }
         HoverTextHook::hook();
@@ -784,7 +899,10 @@ public:
         ll::event::EventBus::getInstance().removeListener(mTick);
         HoverTextHook::unhook();
         HoverRenderHook::unhook();
-        { std::lock_guard lock(gLayoutsMutex); gLayouts.clear(); }
+        {
+            std::lock_guard lock(gLayoutsMutex);
+            gLayouts.clear();
+        }
     }
 
 private:
@@ -801,15 +919,21 @@ LP_REGISTER_MODULE(lp::client::hud::ImprovedTooltipsModule);
 // for the client e2e scenario that hovers items.
 LP_REGISTER_SCREEN_OVERLAY("*", [](lp::client::ui::Overlay&, lp::client::ui::ScreenInfo const& s) {
     static std::set<std::string> seen;
-    if (seen.contains(s.name) || s.size.x <= 0 || s.size.y <= 0) return;
+    if (seen.contains(s.name) || !s.settled || s.size.x <= 0 || s.size.y <= 0) return;
     std::map<int, lp::client::ui::Rect> hotbar;
     for (auto const& slot : s.slots)
-        if (slot.collection.find("hotbar") != std::string::npos && slot.index < 9) hotbar.emplace(slot.index, slot.rect);
+        if (slot.collection.find("hotbar") != std::string::npos && slot.index < 9)
+            hotbar.emplace(slot.index, slot.rect);
     if (hotbar.size() < 9) return;
     seen.insert(s.name);
     std::string out;
     for (auto const& [i, r] : hotbar)
-        out += std::format("{}{:.4f},{:.4f}", out.empty() ? "" : ";", (r.x + r.w / 2) / s.size.x, (r.y + r.h / 2) / s.size.y);
+        out += std::format(
+            "{}{:.4f},{:.4f}",
+            out.empty() ? "" : ";",
+            (r.x + r.w / 2) / s.size.x,
+            (r.y + r.h / 2) / s.size.y
+        );
     lp::log().info("hud: {} hotbar slots at {}", s.name, out);
 });
 

@@ -22,13 +22,13 @@
 #include "mc/client/input/RemappingLayout.h"
 #include "mc/client/options/IOptionRegistry.h"
 #include "mc/client/player/LocalPlayer.h"
+#include "mc/deps/core/math/Vec3.h"
 #include "mc/entity/components/MoveInputComponent.h"
 #include "mc/input/MoveInputState.h"
-#include "mc/deps/core/math/Vec3.h"
 
 #include "client/Client.h"
-#include "client/ui/Ui.h"
 #include "client/hud/Painter.h"
+#include "client/ui/Ui.h"
 #include "feature/hud/HudConfig.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -88,7 +88,13 @@ void toggleAutoWalk() {
 
 namespace {
 
-LL_TYPE_INSTANCE_HOOK(AutoJumpHook, ll::memory::HookPriority::Normal, LocalPlayer, &LocalPlayer::$isAutoJumpEnabled, bool) {
+LL_TYPE_INSTANCE_HOOK(
+    AutoJumpHook,
+    ll::memory::HookPriority::Normal,
+    LocalPlayer,
+    &LocalPlayer::$isAutoJumpEnabled,
+    bool
+) {
     // Quark turns auto-jump on while auto-walking when the step height is below 1 (always on
     // Bedrock: 0.5625) and restores the option afterwards; reporting it as on is the same.
     if (gAutorun.load() && cfg().enableAutoWalkKeybind) return true;
@@ -126,14 +132,12 @@ void drawBanner(Painter& p) {
     if (!gAutorun || !cfg().drawHud || !cfg().enableAutoWalkKeybind) return;
     auto* c = client::currentClient();
     if (!c || c->getOptions().getHideHud()) return;
-    auto        message = ctr("quark.misc.autowalking", "Auto-Walking");
-    float       w       = p.textWidth("OoO" + message + "oOo");
-    float       x       = std::floor((uiScreenSize().x - w) / 2);
-    float       y       = static_cast<float>(cfg().hudHeight);
-    auto        ms      = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now().time_since_epoch()
-    )
-                    .count();
+    auto  message = ctr("quark.misc.autowalking", "Auto-Walking");
+    float w       = p.textWidth("OoO" + message + "oOo");
+    float x       = std::floor((uiScreenSize().x - w) / 2);
+    float y       = static_cast<float>(cfg().hudHeight);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+                  .count();
     std::string shown = (ms / 500) % 2 == 0 ? "OoO " + message + " oOo" : "oOo " + message + " OoO";
     p.text(shown, x, y, ui::colors::white);
 }
@@ -144,9 +148,10 @@ class AutoWalkModule {
 public:
     void install() {
         auto& bus = ll::event::EventBus::getInstance();
-        mTick     = bus.emplaceListener<ll::event::ClientLevelTickEvent>([](ll::event::ClientLevelTickEvent&) { onTick(); });
+        mTick =
+            bus.emplaceListener<ll::event::ClientLevelTickEvent>([](ll::event::ClientLevelTickEvent&) { onTick(); });
         // Window thread: only remember the key; onTick (client thread) checks the binding.
-        mKey = bus.emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
+        mKey   = bus.emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
             if (gAutorun && ev.isDown() && ui::topScreen() == "hud_screen") gPressedKey = ev.keyCode();
         });
         mPaint = bus.emplaceListener<ll::event::AfterUIRenderEvent>([](ll::event::AfterUIRenderEvent& ev) {

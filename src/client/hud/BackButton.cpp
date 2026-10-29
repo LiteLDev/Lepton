@@ -36,7 +36,10 @@ void pressBack() {
     auto name = c->getTopScreenName();
     if (name.empty() || name == "hud_screen") return; // in game: no screen to go back from
     auto stack = c->getClientSceneStack();
-    if (!stack->getTopScene()) return;
+    if (!stack->getTopScene() || stack->getSize() < 2 || stack->getScheduledPopCount() > 0) return; // never the root
+    // Screens that have no back action (Escape does nothing there either).
+    for (std::string_view fixed : {"death", "progress", "disconnect", "loading"})
+        if (name.find(fixed) != std::string::npos) return;
     // What the screen's Back / Done / Cancel button and Escape end in: the scene stack pops the top
     // screen (scheduled: the scene must not go away while the frame is being drawn).
     stack->schedulePopScreen(1);
@@ -46,9 +49,12 @@ void pressBack() {
 /// The configured mouse button as LeviLamina's MouseAction (X1 = 5, X2 = 6), 0 = none.
 int mouseAction() {
     switch (cfg().backMouseButton) {
-    case 4: return 5;
-    case 5: return 6;
-    default: return 0;
+    case 4:
+        return 5;
+    case 5:
+        return 6;
+    default:
+        return 0;
     }
 }
 
@@ -68,7 +74,7 @@ public:
             if (action == 0 || ev.actionButtonId() != action || ev.buttonData() == 0) return;
             requestBack();
         });
-        mFrame = bus.emplaceListener<ll::event::AfterUIRenderEvent>([](ll::event::AfterUIRenderEvent&) {
+        mFrame    = bus.emplaceListener<ll::event::AfterUIRenderEvent>([](ll::event::AfterUIRenderEvent&) {
             if (!gPending.exchange(false)) return;
             try {
                 pressBack();

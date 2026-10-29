@@ -58,7 +58,8 @@ struct TickerStack {
 /// Quark's `shouldChange`.
 [[nodiscard]] bool tickerChanged(ItemStackBase const& now, ItemStackBase const& before, int countNow, int countBefore);
 /// X of the element (UI units) for a screen of width `width`.
-[[nodiscard]] float tickerX(float width, TickerSlot slot, bool invert, bool offhandEmpty, int shiftLeft, int shiftRight);
+[[nodiscard]] float
+tickerX(float width, TickerSlot slot, bool invert, bool offhandEmpty, int shiftLeft, int shiftRight);
 
 // ---- ElytraIndicator ---------------------------------------------------------------------------
 
@@ -80,7 +81,7 @@ struct FoodRow {
     int         shanks   = 0;     ///< shanks to draw
     bool        halfLast = false; ///< the last drawn shank is a half one
     std::string text;             ///< "x3.5" when compressed, else ""
-    int         width    = 0;     ///< reserved width (count * 9)
+    int         width = 0;        ///< reserved width (count * 9)
 };
 [[nodiscard]] FoodRow foodRow(int nutrition, int divisor, int compressionThreshold);
 
@@ -106,7 +107,7 @@ struct FoodRow {
 struct BookEnchant {
     int         type  = 0; ///< Enchant::Type
     int         level = 0;
-    std::string line;      ///< the hover-text line of this enchantment ("Sharpness V")
+    std::string line; ///< the hover-text line of this enchantment ("Sharpness V")
 };
 [[nodiscard]] std::vector<BookEnchant> bookEnchants(ItemStackBase const& stack);
 /// Item ids (from `enchantingStacks` + `enchantingAdditionalStacks`) the enchantment can go on.
@@ -120,9 +121,9 @@ enum class SlotGroup { Any, MainHand, OffHand, Hand, Feet, Legs, Chest, Head, Ar
 enum class AttrOp { AddValue, AddMultipliedBase, AddMultipliedTotal };
 
 struct Attribute {
-    std::string id;         ///< icon name: attack_damage, armor, armor_toughness, knockback_resistance, ...
-    SlotGroup   group = SlotGroup::MainHand;
-    AttrOp      op    = AttrOp::AddValue;
+    std::string id; ///< icon name: attack_damage, armor, armor_toughness, knockback_resistance, ...
+    SlotGroup   group  = SlotGroup::MainHand;
+    AttrOp      op     = AttrOp::AddValue;
     double      amount = 0; ///< modifier amount
     double      base   = 0; ///< the player's base value (added for AddValue display)
 };

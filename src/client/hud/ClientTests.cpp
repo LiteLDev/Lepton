@@ -31,8 +31,12 @@ LP_REGISTER_SELFTEST("hud.tooltip_lines", [](Context& ctx) {
     int         n    = 0;
 
     // A sword: the attribute component replaces the vanilla modifier line.
-    auto sword = hud::improvedTooltip(lp::game::makeItem("minecraft:diamond_sword"),
-                                      "Diamond Sword\n\n\xC2\xA7" "9+7 Attack Damage", &n);
+    auto sword = hud::improvedTooltip(
+        lp::game::makeItem("minecraft:diamond_sword"),
+        "Diamond Sword\n\n\xC2\xA7"
+        "9+7 Attack Damage",
+        &n
+    );
     if (conf.attributeTooltips) {
         ctx.check(n == 1, "the sword gets an attribute component");
         ctx.info("sword tooltip: " + sword);
@@ -45,7 +49,8 @@ LP_REGISTER_SELFTEST("hud.tooltip_lines", [](Context& ctx) {
 
     // A shulker box: a grid component; the vanilla content lines are removed.
     auto box = lp::game::itemFromSnbt(
-        R"({Name:"minecraft:blue_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:5b,Damage:0s,Slot:0b}]}})");
+        R"({Name:"minecraft:blue_shulker_box",Count:1b,Damage:0s,tag:{Items:[{Name:"minecraft:diamond",Count:5b,Damage:0s,Slot:0b}]}})"
+    );
     ctx.require(!lp::game::isEmpty(box), "shulker box created");
     auto content = lp::game::makeItem("minecraft:diamond").getName() + " x5";
     auto boxText = hud::improvedTooltip(box, box.getName() + "\n" + content + "\nLore x line", &n);

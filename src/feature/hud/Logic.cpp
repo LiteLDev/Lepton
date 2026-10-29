@@ -31,10 +31,14 @@ using ArmorSlot = SharedTypes::Legacy::ArmorSlot;
 
 ArmorSlot armorSlotOf(TickerSlot s) {
     switch (s) {
-    case TickerSlot::Head: return ArmorSlot::Head;
-    case TickerSlot::Chest: return ArmorSlot::Torso;
-    case TickerSlot::Legs: return ArmorSlot::Legs;
-    default: return ArmorSlot::Feet;
+    case TickerSlot::Head:
+        return ArmorSlot::Head;
+    case TickerSlot::Chest:
+        return ArmorSlot::Torso;
+    case TickerSlot::Legs:
+        return ArmorSlot::Legs;
+    default:
+        return ArmorSlot::Feet;
     }
 }
 
@@ -52,12 +56,18 @@ bool startsWith(std::string_view s, std::string_view p) { return s.substr(0, p.s
 
 int slotIndex(TickerSlot s) {
     switch (s) {
-    case TickerSlot::MainHand: return 0;
-    case TickerSlot::OffHand: return 1;
-    case TickerSlot::Feet: return 0;
-    case TickerSlot::Legs: return 1;
-    case TickerSlot::Chest: return 2;
-    case TickerSlot::Head: return 3;
+    case TickerSlot::MainHand:
+        return 0;
+    case TickerSlot::OffHand:
+        return 1;
+    case TickerSlot::Feet:
+        return 0;
+    case TickerSlot::Legs:
+        return 1;
+    case TickerSlot::Chest:
+        return 2;
+    case TickerSlot::Head:
+        return 3;
     }
     return 0;
 }
@@ -86,9 +96,12 @@ float TickerAnim::offset(float partial) const {
 
 ItemStack const& tickerSource(Player const& player, TickerSlot slot) {
     switch (slot) {
-    case TickerSlot::MainHand: return player.getSelectedItem();
-    case TickerSlot::OffHand: return player.getOffhandSlot();
-    default: return player.getArmor(armorSlotOf(slot));
+    case TickerSlot::MainHand:
+        return player.getSelectedItem();
+    case TickerSlot::OffHand:
+        return player.getOffhandSlot();
+    default:
+        return player.getArmor(armorSlotOf(slot));
     }
 }
 
@@ -113,7 +126,7 @@ int tickerCount(Player const& player, ItemStackBase const& display) {
 }
 
 std::optional<ItemStack> projectileFor(Player const& player, ItemStackBase const& weapon) {
-    auto id = game::itemId(weapon);
+    auto id  = game::itemId(weapon);
     bool bow = id == "minecraft:bow", crossbow = id == "minecraft:crossbow";
     if (!bow && !crossbow) return std::nullopt;
     if (bow && EnchantUtils::getEnchantLevel(Enchant::Type::Infinity, weapon) > 0) return std::nullopt;
@@ -153,13 +166,13 @@ bool tickerChanged(ItemStackBase const& now, ItemStackBase const& before, int co
 }
 
 float tickerX(float width, TickerSlot slot, bool invert, bool offhandEmpty, int shiftLeft, int shiftRight) {
-    float x      = width / 2;
-    bool  armor  = isArmorSlot(slot);
-    bool  right  = armor != invert; // main arm is always the right one on Bedrock
-    int   slots  = armor ? 4 : 2;
-    int   index  = slots - slotIndex(slot) - 1;
-    float mul    = right ? 1.f : -1.f;
-    int   barW   = 190;
+    float x     = width / 2;
+    bool  armor = isArmorSlot(slot);
+    bool  right = armor != invert; // main arm is always the right one on Bedrock
+    int   slots = armor ? 4 : 2;
+    int   index = slots - slotIndex(slot) - 1;
+    float mul   = right ? 1.f : -1.f;
+    int   barW  = 190;
     if (!right && !offhandEmpty) barW += 58;
     x += (barW / 2.f) * mul + index * 20;
     if (!right) x += -slots * 20 + shiftLeft;
@@ -191,8 +204,12 @@ std::optional<FoodInfo> foodInfo(ItemStackBase const& stack) {
     info.saturation = std::min(20.f, info.nutrition * food->getSaturationModifier() * 2.f);
     // Bedrock's food effects are part of the items' code: the vanilla foods with a harmful effect.
     static constexpr std::array<std::string_view, 5> kHarmful{
-        "minecraft:rotten_flesh", "minecraft:spider_eye", "minecraft:poisonous_potato", "minecraft:pufferfish",
-        "minecraft:chicken"};
+        "minecraft:rotten_flesh",
+        "minecraft:spider_eye",
+        "minecraft:poisonous_potato",
+        "minecraft:pufferfish",
+        "minecraft:chicken"
+    };
     info.poison = std::find(kHarmful.begin(), kHarmful.end(), id) != kHarmful.end();
     if (id == "minecraft:suspicious_stew") {
         // Aux values with a harmful effect: tulips (weakness), azure bluet (blindness), lily of the
@@ -264,7 +281,8 @@ std::vector<ItemStack> shulkerContents(ItemStackBase const& stack) {
         if (!entry || !entry.hold(Tag::Type::Compound)) continue;
         auto const& c    = static_cast<CompoundTag const&>(*entry);
         int         slot = order++;
-        if (c.contains("Slot") && c.at("Slot").is_number_integer()) slot = static_cast<int>(static_cast<int64>(c.at("Slot")));
+        if (c.contains("Slot") && c.at("Slot").is_number_integer())
+            slot = static_cast<int>(static_cast<int64>(c.at("Slot")));
         auto is = ItemStack::fromTag(c);
         if (!game::isEmpty(is)) slots.emplace_back(slot, std::move(is));
     }
@@ -277,7 +295,8 @@ std::vector<ItemStack> shulkerContents(ItemStackBase const& stack) {
 
 std::pair<int, int> shulkerDims(int size) {
     static constexpr std::array<std::pair<int, int>, 7> kRatios{
-        {{1, 1}, {9, 3}, {9, 5}, {9, 6}, {9, 8}, {9, 9}, {12, 9}}};
+        {{1, 1}, {9, 3}, {9, 5}, {9, 6}, {9, 8}, {9, 9}, {12, 9}}
+    };
     for (auto const& r : kRatios)
         if (r.first * r.second == size) return r;
     if (size <= 0) return {0, 0};
@@ -286,11 +305,24 @@ std::pair<int, int> shulkerDims(int size) {
 
 std::optional<int> shulkerColor(ItemStackBase const& stack) {
     static std::map<std::string, int, std::less<>> const kDyes{
-        {"white", 0xF9FFFE},  {"orange", 0xF9801D}, {"magenta", 0xC74EBD}, {"light_blue", 0x3AB3DA},
-        {"yellow", 0xFED83D}, {"lime", 0x80C71F},   {"pink", 0xF38BAA},    {"gray", 0x474F52},
-        {"light_gray", 0x9D9D97}, {"silver", 0x9D9D97}, {"cyan", 0x169C9C}, {"purple", 0x8932B8},
-        {"blue", 0x3C44AA},   {"brown", 0x835432},  {"green", 0x5E7C16},   {"red", 0xB02E26},
-        {"black", 0x1D1D21}};
+        {"white",      0xF9FFFE},
+        {"orange",     0xF9801D},
+        {"magenta",    0xC74EBD},
+        {"light_blue", 0x3AB3DA},
+        {"yellow",     0xFED83D},
+        {"lime",       0x80C71F},
+        {"pink",       0xF38BAA},
+        {"gray",       0x474F52},
+        {"light_gray", 0x9D9D97},
+        {"silver",     0x9D9D97},
+        {"cyan",       0x169C9C},
+        {"purple",     0x8932B8},
+        {"blue",       0x3C44AA},
+        {"brown",      0x835432},
+        {"green",      0x5E7C16},
+        {"red",        0xB02E26},
+        {"black",      0x1D1D21}
+    };
     auto id = game::itemId(stack);
     if (!startsWith(id, "minecraft:") || !id.ends_with("_shulker_box")) return std::nullopt;
     auto color = std::string_view(id).substr(10, id.size() - 10 - 12);
@@ -328,8 +360,8 @@ std::vector<std::string> enchantItems(int enchantType) {
     auto const*              e = enchantOf(enchantType);
     if (!e) return out;
     for (auto const& id : cfg().enchantingStacks) {
-        auto stack = game::makeItem(id);
-        auto* item = stack.mItem.get();
+        auto  stack = game::makeItem(id);
+        auto* item  = stack.mItem.get();
         if (game::isEmpty(stack) || !item) continue;
         if ((item->getEnchantSlot() & e->mPrimarySlots) == 0) continue;
         if (item->getEnchantValue() <= 0) continue;
@@ -358,11 +390,16 @@ std::vector<std::string> enchantItems(int enchantType) {
 TickerSlot equipmentSlotFor(ItemStackBase const& stack) {
     if (!stack.isArmorItem()) return TickerSlot::MainHand;
     switch (stack.getArmorSlot()) {
-    case ArmorSlot::Head: return TickerSlot::Head;
-    case ArmorSlot::Torso: return TickerSlot::Chest;
-    case ArmorSlot::Legs: return TickerSlot::Legs;
-    case ArmorSlot::Feet: return TickerSlot::Feet;
-    default: return TickerSlot::Chest;
+    case ArmorSlot::Head:
+        return TickerSlot::Head;
+    case ArmorSlot::Torso:
+        return TickerSlot::Chest;
+    case ArmorSlot::Legs:
+        return TickerSlot::Legs;
+    case ArmorSlot::Feet:
+        return TickerSlot::Feet;
+    default:
+        return TickerSlot::Chest;
     }
 }
 
@@ -382,16 +419,24 @@ std::vector<Attribute> attributesOf(ItemStackBase const& stack) {
     if (stack.isArmorItem()) {
         SlotGroup g = SlotGroup::Chest;
         switch (equipmentSlotFor(stack)) {
-        case TickerSlot::Head: g = SlotGroup::Head; break;
-        case TickerSlot::Legs: g = SlotGroup::Legs; break;
-        case TickerSlot::Feet: g = SlotGroup::Feet; break;
-        default: break;
+        case TickerSlot::Head:
+            g = SlotGroup::Head;
+            break;
+        case TickerSlot::Legs:
+            g = SlotGroup::Legs;
+            break;
+        case TickerSlot::Feet:
+            g = SlotGroup::Feet;
+            break;
+        default:
+            break;
         }
         if (int armor = item->getArmorValue(); armor > 0) add("armor", g, armor, 0);
         if (int tough = item->getToughnessValue(); tough > 0) add("armor_toughness", g, tough, 0);
         if (game::itemId(stack).find("netherite_") != std::string::npos) add("knockback_resistance", g, 0.1, 0);
     }
-    if (int dmg = item->getAttackDamage(); dmg > 0 && !stack.isArmorItem()) add("attack_damage", SlotGroup::MainHand, dmg, 1);
+    if (int dmg = item->getAttackDamage(); dmg > 0 && !stack.isArmorItem())
+        add("attack_damage", SlotGroup::MainHand, dmg, 1);
     return out;
 }
 
@@ -407,9 +452,12 @@ std::string formatNumber(double v) {
 
 std::pair<std::string, bool> formatAttribute(Attribute const& a) {
     switch (a.op) {
-    case AttrOp::AddValue: return {formatNumber(a.amount + a.base), a.amount < 0};
-    case AttrOp::AddMultipliedBase: return {(a.amount > 0 ? "+" : "") + formatNumber(a.amount * 100) + "%", a.amount < 0};
-    case AttrOp::AddMultipliedTotal: return {formatNumber(a.amount) + "x", a.amount < 1};
+    case AttrOp::AddValue:
+        return {formatNumber(a.amount + a.base), a.amount < 0};
+    case AttrOp::AddMultipliedBase:
+        return {(a.amount > 0 ? "+" : "") + formatNumber(a.amount * 100) + "%", a.amount < 0};
+    case AttrOp::AddMultipliedTotal:
+        return {formatNumber(a.amount) + "x", a.amount < 1};
     }
     return {formatNumber(a.amount), a.amount < 0};
 }

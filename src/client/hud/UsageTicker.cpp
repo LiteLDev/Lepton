@@ -32,17 +32,17 @@ using namespace lp::feature::hud;
 namespace {
 
 struct Element {
-    TickerSlot slot;
-    TickerAnim anim;
-    ItemStack  currStack;
-    ItemStack  currReal;
-    int        currCount = 0;
+    TickerSlot  slot;
+    TickerAnim  anim;
+    ItemStack   currStack;
+    ItemStack   currReal;
+    int         currCount = 0;
     TickerStack shown; ///< what is drawn (Quark recomputes it per frame; per tick is enough)
 };
 
 std::vector<Element>                  gElements;
-std::chrono::steady_clock::time_point gLastTick = std::chrono::steady_clock::now();
-bool                                  gLogged   = false;
+std::chrono::steady_clock::time_point gLastTick   = std::chrono::steady_clock::now();
+bool                                  gLogged     = false;
 bool                                  gDrawLogged = false;
 
 std::vector<TickerSlot> wantedSlots() {
@@ -74,12 +74,12 @@ void onTick() {
     auto* player = client::currentPlayer();
     if (!player) return;
     for (auto& e : gElements) {
-        ItemStack real      = tickerSource(*player, e.slot);
-        int       count     = tickerCount(*player, real);
-        ItemStack displayed = logicalStack(*player, e.slot, real, count);
-        bool      changed   = tickerChanged(real, e.currReal, count, e.currCount)
-                     || tickerChanged(displayed, e.currStack, count, e.currCount);
-        bool wasVisible = e.anim.visible();
+        ItemStack real       = tickerSource(*player, e.slot);
+        int       count      = tickerCount(*player, real);
+        ItemStack displayed  = logicalStack(*player, e.slot, real, count);
+        bool      changed    = tickerChanged(real, e.currReal, count, e.currCount)
+                            || tickerChanged(displayed, e.currStack, count, e.currCount);
+        bool      wasVisible = e.anim.visible();
         e.anim.tick(game::isEmpty(displayed), changed);
         if (!wasVisible && e.anim.visible() && !gLogged) {
             gLogged = true;
@@ -100,10 +100,10 @@ void draw(Painter& p) {
     if (!c || !player || c->getOptions().getHideHud()) return;
     float partial = std::chrono::duration<float>(std::chrono::steady_clock::now() - gLastTick).count() * 20.f;
     partial       = std::clamp(partial, 0.f, 1.f);
-    auto  size    = uiScreenSize();
+    auto size     = uiScreenSize();
     if (size.x <= 0) return;
-    bool  offEmpty = game::isEmpty(player->getOffhandSlot());
-    auto const& conf = cfg();
+    bool        offEmpty = game::isEmpty(player->getOffhandSlot());
+    auto const& conf     = cfg();
     for (auto const& e : gElements) {
         if (!e.anim.visible()) continue;
         auto const& shown = e.shown;
