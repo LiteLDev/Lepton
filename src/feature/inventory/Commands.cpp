@@ -117,7 +117,8 @@ void registerCommands(ll::command::CommandHandle& cmd) {
         if (!p) return out.error("Players only.");
         if (!isShulkerBox(p->getSelectedItem()))
             return out.error(trFor(*p, "lp.inventory.no_shulker", "Hold a shulker box in your main hand."));
-        if (!openHeldShulker(*p, p->getSelectedItemSlot()))
+        // Half a second later: a client drops a container opened while its chat screen is closing.
+        if (!openHeldShulker(*p, p->getSelectedItemSlot(), 10))
             return out.error(trFor(*p, "lp.inventory.disabled", "This feature is disabled."));
     });
     cmd.overload().text("share").execute([](CommandOrigin const& o, CommandOutput& out) {
