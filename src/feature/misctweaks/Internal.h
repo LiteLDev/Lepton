@@ -15,6 +15,7 @@ class BlockPos;
 class BlockSource;
 class ItemStackBase;
 class Mob;
+class MobSpawnerBlockActor;
 class Player;
 class Vec3;
 
@@ -72,6 +73,8 @@ bool nerfAnvilResult(ItemStackBase const& left, ItemStackBase const& right, Item
 
 /// The replacement for spawner mob `from` (normalized "minecraft:..." ids), or "".
 [[nodiscard]] std::string spawnerReplacement(std::string_view from);
+/// The mob of a monster spawner ("minecraft:pig"), "" when unknown.
+[[nodiscard]] std::string spawnerMob(MobSpawnerBlockActor const& spawner);
 /// Normalizes an entity id ("pig" -> "minecraft:pig").
 [[nodiscard]] std::string normalizeId(std::string_view id);
 

@@ -34,7 +34,10 @@ bool isAmethyst(Block const& block) {
 
 namespace {
 
-constexpr int kHarp = 0;
+// Bedrock instruments 0..15 come from the block below; 16+ are the mob heads on top (vanilla on
+// both editions). Java gives amethyst the harp; Bedrock gives it the bass drum, so the block below
+// decides here.
+constexpr int kFirstMobHead = 16;
 
 void playChime(BlockSource& region, BlockPos const& pos, int note) {
     float pitch = static_cast<float>(std::pow(2.0, (note - 12) / 12.0));
@@ -65,7 +68,7 @@ LL_TYPE_INSTANCE_HOOK(
     int             note
 ) {
     auto const& c = cfg();
-    if (!c.enableMoreNoteBlockSounds || !c.enableAmethystSound || instrument != kHarp
+    if (!c.enableMoreNoteBlockSounds || !c.enableAmethystSound || instrument >= kFirstMobHead
         || !isAmethyst(region.getBlock(BlockPos{pos.x, pos.y - 1, pos.z})))
         return origin(region, pos, instrument, note);
     if (region.getLevel().isClientSide()) return; // the server sends the chime

@@ -1,16 +1,15 @@
 // VillagerRerollingRework (experimental): seeded first trades and trade rerolling on restock.
 
-#include <cstring>
-#include <random>
 #include <vector>
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/MobDieEvent.h"
 #include "ll/api/memory/Hook.h"
 
-#include "mc/deps/core/math/Random.h"
+#include "mc/deps/nbt/CompoundTag.h"
 #include "mc/util/Random.h"
-#include "mc/util/ThreadOwner.h"
+#include "mc/world/item/SaveContext.h"
+#include "mc/world/item/SaveContextFactory.h"
 #include "mc/entity/components_json_legacy/EconomyTradeableComponent.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/Mob.h"
@@ -46,18 +45,6 @@ nlohmann::json loadData(Actor const& a) {
 
 void saveData(Actor const& a, nlohmann::json const& j) { game::db::save(keyOf(a), j); }
 
-/// Re-seeds a game Random the way MT19937 seeds (Random keeps its state in plain members).
-void seedRandom(Core::Random& r, uint32_t seed) {
-    auto& mt = r._mt;
-    mt[0]    = seed;
-    for (uint32_t i = 1; i < 624; ++i) mt[i] = 1812433253u * (mt[i - 1] ^ (mt[i - 1] >> 30)) + i;
-    r._mti                       = 624;
-    r.mInitedIdx                 = 624;
-    r.mSeed                      = seed;
-    r.mHaveNextNextGaussian      = false;
-    r.mHaveNextNextGaussianDouble = false;
-}
-
 bool gScratchGeneration = false; // generating candidates for a reroll: never seed
 
 bool recipesEmpty(EconomyTradeableComponent& comp) {
@@ -65,6 +52,10 @@ bool recipesEmpty(EconomyTradeableComponent& comp) {
     return !list || list->mRecipeList->empty();
 }
 
+/// Quark seeds the villager's random for its first trades of a profession, so breaking and
+/// replacing the job site regenerates the same trades. Bedrock's trade generation does not take a
+/// random we can seed, so the same result is reached by keeping the first trades generated for
+/// each trade table (profession) and handing them out again on every later first generation.
 LL_TYPE_INSTANCE_HOOK(
     GenerateTradesHook,
     ll::memory::HookPriority::Normal,
@@ -72,46 +63,50 @@ LL_TYPE_INSTANCE_HOOK(
     &EconomyTradeableComponent::_generateTrades,
     bool
 ) {
-    Actor& owner = mOwner;
-    auto const& c = cfg();
+    Actor&      owner = mOwner;
+    auto const& c     = cfg();
     if (gScratchGeneration || !c.enableVillagerRerollingRework || !c.seedInitialVillagerTrades || !isVillager(owner)
-        || onClientSide(owner) || !recipesEmpty(*this))
+        || onClientSide(owner) || !recipesEmpty(*this) || !game::db::available())
         return origin();
-    uint32_t seed = villagerSeed(owner);
-    Core::Random& rnd = owner.getRandom().mRandom->mObject;
-    // Save the villager's random, run the generation from the seed, restore it.
-    std::vector<std::byte> saved(sizeof(Core::Random));
-    std::memcpy(saved.data(), static_cast<void*>(&rnd), sizeof(Core::Random));
-    seedRandom(rnd, seed);
-    bool ok = origin();
-    std::memcpy(static_cast<void*>(&rnd), saved.data(), sizeof(Core::Random));
-    log().debug("misctweaks: seeded trades of villager {}", game::entities::idOf(owner));
+    bool ok    = origin();
+    auto* list = mOffers.get();
+    std::string table = mGeneratedTablePath.get();
+    if (!ok || !list || list->mRecipeList->empty() || table.empty()) return ok;
+    auto j     = loadData(owner);
+    auto& kept = j["trades"];
+    if (!kept.is_object()) kept = nlohmann::json::object();
+    if (kept.contains(table) && kept[table].is_string()) {
+        auto tag = CompoundTag::fromSnbt(kept[table].get<std::string>());
+        if (tag) {
+            list->mRecipeList->clear();
+            list->load(*tag);
+            log().debug("misctweaks: villager {} got its first {} trades again", game::entities::idOf(owner), table);
+        }
+    } else if (auto ctx = SaveContextFactory::createCloneSaveContext()) {
+        if (auto tag = list->createTag(false, *ctx)) {
+            kept[table] = tag->toSnbt(SnbtFormat::Minimize, 0);
+            saveData(owner, j);
+        }
+    }
     return ok;
 }
-
+/// A random trade of `tier` from the villager's trade table. Bedrock only generates trades into an
+/// empty offer slot, so the current list is set aside, a fresh list is generated (every tier, as
+/// Bedrock does), one recipe of the tier is picked and the villager's own list is put back.
 std::optional<MerchantRecipe> candidateFor(EconomyTradeableComponent& comp, int tier, Random& rnd) {
-    auto* list = comp.mOffers.get();
-    if (!list) return std::nullopt;
-    std::vector<MerchantRecipe> saved;
-    auto                        savedTiers = list->mTierExpRequirements.get();
-    saved.swap(list->mRecipeList.get());
-    gScratchGeneration = true;
+    std::unique_ptr<MerchantRecipeList> own = std::move(comp.mOffers);
+    gScratchGeneration                      = true;
     comp._generateTrades();
     gScratchGeneration = false;
-    if (comp.mOffers.get() != list) {
-        log().warn("misctweaks: trade generation replaced the offer list; reroll skipped");
-        return std::nullopt; // the old list (and `saved`) cannot be restored safely
-    }
+    std::unique_ptr<MerchantRecipeList> scratch = std::move(comp.mOffers);
+    comp.mOffers                                = std::move(own);
+    if (!scratch) return std::nullopt;
     std::vector<MerchantRecipe const*> sameTier;
-    for (auto const& r : list->mRecipeList.get())
+    for (auto const& r : scratch->mRecipeList.get())
         if (r.mTier == tier) sameTier.push_back(&r);
-    std::optional<MerchantRecipe> out;
-    if (!sameTier.empty()) out.emplace(*sameTier[static_cast<size_t>(rnd.nextInt(static_cast<int>(sameTier.size())))]);
-    list->mRecipeList.get().swap(saved);
-    list->mTierExpRequirements = savedTiers;
-    return out;
+    if (sameTier.empty()) return std::nullopt;
+    return *sameTier[static_cast<size_t>(rnd.nextInt(static_cast<int>(sameTier.size())))];
 }
-
 bool sameTrade(MerchantRecipe const& a, MerchantRecipe const& b) {
     return game::itemToSnbt(a.mBuyA.get()) == game::itemToSnbt(b.mBuyA.get())
         && game::itemToSnbt(a.mBuyB.get()) == game::itemToSnbt(b.mBuyB.get())
@@ -148,16 +143,6 @@ ll::event::ListenerPtr gDie;
 
 } // namespace
 
-uint32_t villagerSeed(Actor& villager) {
-    auto j = loadData(villager);
-    if (!j.contains("seed")) {
-        std::random_device rd;
-        j["seed"] = static_cast<uint32_t>(rd());
-        saveData(villager, j);
-    }
-    return j["seed"].get<uint32_t>();
-}
-
 int attemptReroll(EconomyTradeableComponent& comp) {
     auto const& c = cfg();
     if (!c.enableVillagerRerollingRework || c.maximumRestocksPerDay == 0 || c.chanceToRerollWhenRestocking == 0) return 0;
@@ -178,8 +163,7 @@ int attemptReroll(EconomyTradeableComponent& comp) {
         if (tier < 0 || tier > kMaxTier) continue;
         if (rnd.nextDouble() >= c.chanceToRerollWhenRestocking) continue;
         auto candidate = candidateFor(comp, tier, rnd);
-        list           = comp.mOffers.get();
-        if (!candidate || !list) continue;
+        if (!candidate) continue;
         bool duplicate = false;
         for (auto const& other : list->mRecipeList.get())
             if (sameTrade(other, *candidate)) {

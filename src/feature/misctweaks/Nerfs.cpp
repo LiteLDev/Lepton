@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <random>
 #include <utility>
@@ -275,6 +276,13 @@ LL_TYPE_INSTANCE_HOOK(FallingTickHook, ll::memory::HookPriority::Normal, Falling
 
 // ---- huge mushrooms ----------------------------------------------------------------------------------
 
+} // namespace
+
+/// Huge mushrooms placed through the hook (selftests).
+std::atomic<int> gHugeMushrooms{0};
+
+namespace {
+
 bool isCap(Block const& b) {
     auto const& n = b.getTypeName();
     if (n != "minecraft:red_mushroom_block" && n != "minecraft:brown_mushroom_block") return false;
@@ -297,6 +305,7 @@ LL_TYPE_INSTANCE_HOOK(
     int             mushroomType,
     int             height
 ) {
+    ++gHugeMushrooms;
     if (!nerf(&MiscTweaksConfig::disableMushroomBlockRemoval)) return origin(region, pos, mushroomType, height);
     std::vector<std::pair<BlockPos, Block const*>> before;
     int top = pos.y + std::max(height, 4) + 3;
