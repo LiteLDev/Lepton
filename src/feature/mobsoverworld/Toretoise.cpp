@@ -67,7 +67,10 @@ bool breaksOre(Block const* block) {
 
 int  oreOf(Actor& t) { return std::clamp(intProperty(t, "lepton:ore"), 0, kOreTypes); }
 void setOre(Actor& t, int ore) { game::entities::triggerEvent(t, "lepton:ore_" + std::to_string(std::clamp(ore, 0, kOreTypes))); }
-int  angerOf(Actor& t) { return stateOf(t).angeryTicks; }
+int  angerOf(Actor& t) {
+    auto it = gState.find(game::entities::idOf(t));
+    return it == gState.end() ? 0 : it->second.angeryTicks;
+}
 
 void dropOre(Actor& t, ItemStack const& tool, Player* miner) {
     int ore = oreOf(t);
@@ -159,6 +162,7 @@ void tick(Actor& t, int64_t now) {
     if (oreOf(t) != 0) {
         auto& region = t.getDimensionBlockSource();
         AABB  bb     = t.getAABB();
+        // Quark rounds the box corners (Math.round), it does not floor them.
         BlockPos min{static_cast<int>(std::round(bb.min.x)), static_cast<int>(std::round(bb.min.y)), static_cast<int>(std::round(bb.min.z))};
         BlockPos max{static_cast<int>(std::round(bb.max.x)), static_cast<int>(std::round(bb.max.y)), static_cast<int>(std::round(bb.max.z))};
         bool done = false;
@@ -217,6 +221,10 @@ Handled interact(Player& player, Actor& t) {
     consumeSelected(player);
     feed(t, gameTick());
     return Handled::Yes;
+}
+
+void prune() {
+    std::erase_if(gState, [](auto const& kv) { return game::entities::find(kv.first) == nullptr; });
 }
 
 void clear() { gState.clear(); }

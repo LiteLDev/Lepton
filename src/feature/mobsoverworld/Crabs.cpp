@@ -154,14 +154,13 @@ void tickWorld(int64_t now) {
                 if (auto const* water = game::blockWith("minecraft:water")) game::setBlock(*region, p.pos, *water);
             }
             Vec3 at{static_cast<float>(p.pos.x) + 0.5f, static_cast<float>(p.pos.y), static_cast<float>(p.pos.z) + 0.5f};
+            // The player must still hold that very bucket (no duplication by switching slots).
+            Player* player = playerById(p.player);
+            if (!player || game::itemToSnbt(player->getSelectedItem()) != game::itemToSnbt(p.bucket)) continue;
             if (Actor* crab = releaseFromBucket(p.bucket, p.dim, at)) {
                 playSound(*crab, "bucket.empty_fish", at);
             }
-            if (Player* player = playerById(p.player); player && !isCreative(*player)) {
-                if (game::itemId(player->getSelectedItem()) == "lepton:crab_bucket") {
-                    setSelected(*player, game::makeItem("minecraft:bucket"));
-                }
-            }
+            if (!isCreative(*player)) setSelected(*player, game::makeItem("minecraft:bucket"));
         }
     }
     if (now % 20 != 0) return;
@@ -296,9 +295,18 @@ bool useBucket(Player& player, BlockPos const& clicked, int face) {
             target.z += kOffsets[face][2];
         }
     }
-    gPending.push_back({game::entities::idOf(player), static_cast<int>(player.getDimensionId()), target,
+    int64_t uid = game::entities::idOf(player);
+    for (auto const& p : gPending) {
+        if (p.player == uid) return true; // one release per player and tick
+    }
+    gPending.push_back({uid, static_cast<int>(player.getDimensionId()), target,
                         ItemStack(player.getSelectedItem())});
     return true;
+}
+
+void prune() {
+    std::erase_if(gAmbient, [](auto const& kv) { return game::entities::find(kv.first) == nullptr; });
+    std::erase_if(gRaveJukebox, [](auto const& kv) { return game::entities::find(kv.first) == nullptr; });
 }
 
 void clear() {

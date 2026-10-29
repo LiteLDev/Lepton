@@ -46,8 +46,12 @@ std::string effectName(int amplifier) {
 }
 
 void drawHud(ui::DrawContext& dc) {
+    if (!currentPlayer()) {
+        gEffect = {}; // left the world: the next one starts without the effect
+        return;
+    }
     int ticks = remainingTicks();
-    if (ticks <= 0 || !currentPlayer()) return;
+    if (ticks <= 0) return;
     auto        size = dc.screenSize();
     std::string text = ctr("lp.mobsoverworld.effect_hud", "{0} {1}", effectName(gEffect.amplifier), formatTicks(ticks));
     float       w    = dc.textWidth(text) + 8;
@@ -82,6 +86,7 @@ LP_REGISTER_TOOLTIP(tooltip);
 class MobsOverworldClient {
 public:
     void install() {
+        net::onServerModReady([] { gEffect = {}; });
         mHandler = net::onClient<EffectMessage>([](EffectMessage const& m) {
             gEffect.amplifier = m.amplifier;
             gEffect.end       = Clock::now() + std::chrono::milliseconds(static_cast<int64_t>(m.ticks) * 50);

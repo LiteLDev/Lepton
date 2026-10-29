@@ -30,6 +30,7 @@
 #include "mc/world/item/ItemInstance.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/alchemy/PotionBrewing.h"
+#include "mc/world/level/BlockSource.h"
 #include "mc/world/phys/AABB.h"
 
 #include "feature/mobsoverworld/Common.h"
@@ -116,15 +117,16 @@ void setModifier(Actor& actor, int amplifier, bool on) {
     gApplied[game::entities::idOf(actor)] = on;
 }
 
+/// A tip line above the hotbar (vanilla clients have no Resilience icon).
 void tip(Player& player, std::string const& text) {
-    TextPacket  packet = TextPacket::createRawMessage(text);
-    auto        body   = packet.mBody;
-    (void)body;
-    // Tips show above the hotbar like the vanilla effect messages; chat is the fallback type.
+    TextPacket packet = TextPacket::createRawMessage(text);
+    if (auto* body = std::get_if<TextPacketPayload::MessageOnly>(&packet.mBody.get())) body->mType = TextPacketType::Tip;
     packet.sendTo(player);
 }
 
-void notify(Actor& actor, Effect const* effect, int64_t now) {
+/// Tells the player about the effect: mod clients always (HUD), vanilla clients only when it
+/// starts / gets stronger (`announce`) or ends.
+void notify(Actor& actor, Effect const* effect, int64_t now, bool announce = true) {
     if (!actor.isPlayer()) return;
     auto& player = static_cast<Player&>(actor);
     EffectMessage msg;
@@ -134,6 +136,7 @@ void notify(Actor& actor, Effect const* effect, int64_t now) {
         net::sendToClient(player, msg);
         return;
     }
+    if (effect && !announce) return;
     if (effect) {
         std::string name = trFor(player, "effect.quark.resilience", "Resilience");
         if (effect->amplifier > 0) name += " " + trFor(player, "lp.mobsoverworld.level_2", "II");
@@ -171,15 +174,16 @@ void apply(Actor& target, int duration, int amplifier) {
     int64_t now = gameTick();
     auto    uid = game::entities::idOf(target);
     auto&   e   = gEffects[uid];
-    bool    had = e.endTick > now;
+    bool    had      = e.endTick > now;
+    bool    stronger = !had || amplifier > e.amplifier;
     // MobEffectInstance.update: a higher level replaces, the same level extends.
-    if (!had || amplifier > e.amplifier || (amplifier == e.amplifier && now + duration > e.endTick)) {
+    if (stronger || (amplifier == e.amplifier && now + duration > e.endTick)) {
         e.amplifier = amplifier;
         e.endTick   = now + duration;
     }
     setModifier(target, e.amplifier, true);
     gDirty = true;
-    notify(target, &e, now);
+    notify(target, &e, now, stronger);
     log().info("mobsoverworld: resilience {} for {} ticks", e.amplifier + 1, duration);
 }
 
@@ -207,10 +211,12 @@ void onDrink(Player& player, std::string const& itemId) {
 }
 
 void see(Actor& actor, int64_t now) {
-    auto type = game::entities::typeOf(actor);
-    auto uid  = game::entities::idOf(actor);
+    std::string_view type = actor.getTypeName();
+    bool             potion = type.starts_with("lepton:") && type.ends_with("_potion_entity");
+    if (!potion && gEffects.empty() && gApplied.empty()) return;
+    auto uid = game::entities::idOf(actor);
     // Thrown potions: remember where they are; when one disappears it has hit something.
-    if (type.ends_with("resilience_splash_potion_entity") || type.ends_with("resilience_lingering_potion_entity")) {
+    if (potion) {
         auto& t     = gThrown[uid];
         t.kind      = type.substr(7, type.size() - 7 - 7); // drop "lepton:" and "_entity"
         t.lingering = type.ends_with("lingering_potion_entity");
@@ -231,8 +237,9 @@ void see(Actor& actor, int64_t now) {
             setModifier(actor, it->second.amplifier, true);
             notify(actor, &it->second, now);
         }
-    } else if (auto a = gApplied.find(uid); a != gApplied.end() && a->second) {
-        setModifier(actor, 0, false);
+    } else if (auto a = gApplied.find(uid); a != gApplied.end()) {
+        if (a->second) setModifier(actor, 0, false);
+        gApplied.erase(uid);
     }
 }
 
@@ -240,11 +247,28 @@ void tick(int64_t now) {
     // Thrown potions that were not seen this tick have hit.
     for (auto it = gThrown.begin(); it != gThrown.end();) {
         if (it->second.seen < now) {
-            Thrown t = it->second;
+            int64_t uid = it->first;
+            Thrown  t   = it->second;
             it       = gThrown.erase(it);
-            auto s = strengthOfPotion("lepton:" + t.kind, t.lingering ? "lingering" : "splash");
-            if (config().enableCrabs) {
-                if (auto* region = game::regionOf(t.dim)) {
+            auto  s      = strengthOfPotion("lepton:" + t.kind, t.lingering ? "lingering" : "splash");
+            auto* region = game::regionOf(t.dim);
+            // Gone because its chunk unloaded (or it changed dimension): it did not land.
+            bool landed = region && region->hasChunksAt(game::blockPosOf(t.pos), 2, false)
+                       && game::entities::find(uid) == nullptr;
+            if (config().enableCrabs && landed) {
+                // The entity whose box it was in when it vanished took a direct hit.
+                int64_t hit = 0;
+                AABB    near{Vec3{t.pos.x - 1, t.pos.y - 2, t.pos.z - 1}, Vec3{t.pos.x + 1, t.pos.y + 2, t.pos.z + 1}};
+                for (Actor* e : game::entities::inBox(*region, near)) {
+                    if (!e || !asMob(*e) || game::entities::idOf(*e) == t.owner) continue;
+                    AABB bb = e->getAABB();
+                    if (t.pos.x >= bb.min.x - 0.4f && t.pos.x <= bb.max.x + 0.4f && t.pos.y >= bb.min.y - 0.4f
+                        && t.pos.y <= bb.max.y + 0.4f && t.pos.z >= bb.min.z - 0.4f && t.pos.z <= bb.max.z + 0.4f) {
+                        hit = game::entities::idOf(*e);
+                        break;
+                    }
+                }
+                {
                     // Glass breaking + the potion cloud for everyone around.
                     for (Actor* a : game::entities::inBox(*region, AABB{Vec3{t.pos.x - 16, t.pos.y - 16, t.pos.z - 16}, Vec3{t.pos.x + 16, t.pos.y + 16, t.pos.z + 16}})) {
                         if (a && a->isPlayer()) {
@@ -254,7 +278,7 @@ void tick(int64_t now) {
                         }
                     }
                 }
-                applyAt(t.pos, t.dim, s, 0, t.lingering);
+                applyAt(t.pos, t.dim, s, hit, t.lingering);
             }
         } else {
             ++it;
@@ -376,8 +400,12 @@ void load() {
     if (!doc || !doc->is_object()) return;
     int64_t now = gameTick();
     for (auto& [k, v] : doc->items()) {
-        if (!v.is_array() || v.size() != 2) continue;
-        gEffects[std::stoll(k)] = Effect{v[0].get<int>(), now + v[1].get<int64_t>()};
+        if (!v.is_array() || v.size() != 2 || !v[0].is_number_integer() || !v[1].is_number_integer()) continue;
+        try {
+            gEffects[std::stoll(k)] = Effect{v[0].get<int>(), now + v[1].get<int64_t>()};
+        } catch (std::exception const&) {
+            log().warn("mobsoverworld: ignoring a bad effect entry '{}'", k);
+        }
     }
 }
 
@@ -390,6 +418,10 @@ void save() {
     }
     game::db::save(kDbKey, doc);
     gDirty = false;
+}
+
+void prune() {
+    std::erase_if(gApplied, [](auto const& kv) { return game::entities::find(kv.first) == nullptr; });
 }
 
 void clear() {

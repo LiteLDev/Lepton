@@ -38,6 +38,8 @@ bool strikeLightning(Actor& crab, int64_t now);
 [[nodiscard]] ItemStack bucketOf(Actor& crab);
 /// Spawns the crab stored in a bucket stack at `pos` (dimension `dim`).
 Actor* releaseFromBucket(ItemStack const& bucket, int dim, Vec3 const& pos);
+/// Drops the state of entities that are gone (periodic).
+void prune();
 void clear();
 } // namespace crabs
 
@@ -52,6 +54,7 @@ void    onDeath(Actor& shiba);
 bool    hyperfocus(Actor& shiba, BlockPos& out);
 /// The arrow being fetched (unique id) or 0 (tests).
 int64_t fetching(Actor& shiba);
+void    prune();
 void    clear();
 } // namespace shiba
 
@@ -66,6 +69,7 @@ void    feed(Actor& toretoise, int64_t now);
 [[nodiscard]] int oreOf(Actor& toretoise);
 void    setOre(Actor& toretoise, int ore);
 [[nodiscard]] int angerOf(Actor& toretoise);
+void    prune();
 void    clear();
 } // namespace toretoise
 
@@ -85,6 +89,7 @@ void resetBrewingMixes();
 [[nodiscard]] std::string brew(std::string const& source, int sourceAux, std::string const& ingredient, int* aux);
 void load();
 void save();
+void prune();
 void clear();
 /// Called for every loaded entity each tick (projectile tracking, effect re-application).
 void see(Actor& actor, int64_t now);

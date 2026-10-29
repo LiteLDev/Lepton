@@ -202,6 +202,12 @@ void onTick(ll::event::ServerLevelTickEvent&) {
     if (now % 100 == 0) {
         for (Actor* a : despawn) game::entities::despawn(*a);
     }
+    if (now % 600 == 0) {
+        crabs::prune();
+        shiba::prune();
+        toretoise::prune();
+        resilience::prune();
+    }
     crabs::tickWorld(now);
     resilience::tick(now);
 }

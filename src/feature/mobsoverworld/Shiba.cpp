@@ -448,6 +448,10 @@ void onDeath(Actor& shiba) {
     gState.erase(game::entities::idOf(shiba));
 }
 
+void prune() {
+    std::erase_if(gState, [](auto const& kv) { return game::entities::find(kv.first) == nullptr; });
+}
+
 void clear() { gState.clear(); }
 
 } // namespace lp::feature::mobsoverworld::shiba
