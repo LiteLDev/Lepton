@@ -91,6 +91,22 @@ void repairLines(ItemStackBase const& stack, std::vector<std::string>& lines) {
 
 } // namespace lp::client::mobtweaks
 
+// e2e aid: the screen positions of the crafting and anvil slots (once per opening), so the client
+// scenario can drive the elytra duplication and an anvil rename with real clicks.
+LP_REGISTER_SCREEN_OVERLAY("*", [](lp::client::ui::Overlay&, lp::client::ui::ScreenInfo const& s) {
+    static bool logged = false;
+    if (s.frames <= 1) logged = false;
+    if (!s.settled || logged) return;
+    if (s.name.find("crafting") == std::string::npos && s.name.find("anvil") == std::string::npos) return;
+    logged = true;
+    for (auto const& slot : s.slots) {
+        if (slot.collection == "inventory_items") continue;
+        lp::log().info("mobtweaks: slot {} {}:{} at {:.4f},{:.4f}", s.name, slot.collection, slot.index,
+                       (slot.rect.x + slot.rect.w / 2) / s.size.x, (slot.rect.y + slot.rect.h / 2) / s.size.y);
+    }
+    lp::log().info("mobtweaks: screen {} unit {:.5f},{:.5f}", s.name, 1.0f / s.size.x, 1.0f / s.size.y);
+});
+
 LP_REGISTER_TOOLTIP([](ItemStackBase const& stack, std::vector<std::string>& lines) {
     if (lp::game::isEmpty(stack)) return;
     lp::client::mobtweaks::bakedLines(stack, lines);

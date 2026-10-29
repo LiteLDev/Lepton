@@ -9,6 +9,7 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
+#include "ll/api/service/Bedrock.h"
 
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/item/Item.h"
@@ -191,7 +192,9 @@ void rebuildCaches() {
         auto id = withNamespace(e);
         if (!id.empty()) next->unrepairable.push_back(id);
     }
-    resolveInto(*next);
+    // The game's enchantment table only exists once a level does: on the client the mod enables at
+    // game start, and resolving then hangs the game. resolveAll() runs on world ready / tooltips.
+    if (ll::service::getLevel()) resolveInto(*next);
     std::lock_guard lock(publishMutex());
     std::atomic_store(&cachesSlot(), std::shared_ptr<Caches const>(std::move(next)));
 }

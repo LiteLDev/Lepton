@@ -27,6 +27,11 @@ inline constexpr char const*      kCosmeticTag  = "lepton:cosmetic_anvil_items";
 void noteSparedCraft(int64_t playerId);
 /// True (and forgets it) if the player's current anvil craft spares the anvil.
 bool consumeSparedCraft(int64_t playerId);
+namespace testing {
+/// False: the anvil / enchanting table / grindstone see baked enchantments too (selftests compare).
+bool& gearScopes();
+} // namespace testing
+
 /// Inserts the stacks into the player's inventory, dropping what doesn't fit.
 void giveOrDrop(Player& player, std::vector<ItemStack> items);
 

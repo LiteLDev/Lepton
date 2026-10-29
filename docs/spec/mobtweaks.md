@@ -147,15 +147,23 @@ All mechanics run on the server thread and check their `enable<Module>` key on e
   dying, so a first dragon that sets the flag when it dies never counts; Java reads it at tick 100,
   before the dying dragon sets it at tick 200). Then the scale spawns when the timer reaches 100, at
   the dragon's position. Logged as `mobtweaks: dragon scale dropped`. The recipe is a behaviour-pack
-  shapeless recipe; hook `CraftHandlerCrafting::handleConsumedItem`: for `lepton:elytra_duplication`
-  the consumed elytra is remembered and given back to the player when the craft request succeeded
-  (`CraftHandlerBase::postRequest`; inventory, else dropped; logged as `mobtweaks: elytra
-  duplicated`); with the module disabled the craft request is rejected.
+  shapeless recipe; hook `CraftHandlerCrafting::handleConsumedItem`: the inputs one crafting request
+  consumes are collected per craft handler (the handler's recipe net id does not resolve while the
+  inputs are consumed, measured in game, so the recipe is recognised by its inputs: only elytras and
+  dragon scales, as many of each). When the request succeeded (`CraftHandlerBase::postRequest`) the
+  consumed elytras (with damage, enchantments, name) go back to the player (inventory, else dropped;
+  logged as `mobtweaks: elytra duplicated`). With the module disabled such a request is rejected.
 - **GoldToolsHaveFortune** — baked map item → {enchantment → level} rebuilt on every config load:
   `itemEnchantments` entries first, then (when `fortuneLevel > 0`) Looting for `golden_sword` and
   Fortune for `golden_pickaxe/axe/shovel/hoe` unless already set. Hooks
   `EnchantUtils::getEnchantLevel` (returns `max(real, baked)`) and `EnchantUtils::hasEnchant`, which
-  every Bedrock enchantment effect (fortune drops, looting, silk touch, sharpness, ...) reads.
+  every Bedrock enchantment effect (fortune drops, looting, silk touch, sharpness, ...) reads. As in
+  Java the baked enchantments are effects only: while the game evaluates an anvil craft
+  (`AnvilContainerScreenValidator::getCraftResult`, `EnchantUtils::combineEnchantedItems`), the
+  enchanting table (`canEnchant`, `getEnchantCosts`, `randomlyEnchant`, `CraftHandlerEnchant`) or the
+  grindstone (`CraftHandlerGrindstone`, its XP) the baked levels are off (per-thread scope), so a
+  golden pickaxe still takes Silk Touch or a Fortune III book exactly like a plain one
+  (`mobtweaks.gold_tools_tables`).
   Harvest level: hook the tools' `canDestroySpecial(block)`; a golden tool answers like the tool of
   tier `harvestLevel` (0 wooden, 1 stone, 2 iron, 3 diamond, 4 netherite) of the same kind.
 - **DiamondRepair** — hook every `isValidRepairItem` override (tools, weapons, armour, shields,
@@ -288,6 +296,7 @@ Selftests (`/quark selftest "mobtweaks.*"`), dx range 2600..2699:
 | `mobtweaks.zombie_villagers` | 2620 | on Normal a villager killed by a zombie becomes a zombie villager |
 | `mobtweaks.dragon_scale` | 2625 | the death-tick rule (scale at tick 100 for a respawned dragon, none for a first one); a real dragon's death timer reaches it |
 | `mobtweaks.gold_tools` | 2630 | baked fortune/looting levels, golden pickaxe drops diamonds from diamond ore with fortune |
+| `mobtweaks.gold_tools_tables` | - | canEnchant / anvil combine give the same results for a golden pickaxe with and without the module |
 | `mobtweaks.diamond_repair` | - | netherite gear repairs with diamonds, not netherite ingots; unrepairable list |
 | `mobtweaks.cosmetic_anvil` | 2635 | rename-only anvil craft never damages the anvil |
 | `mobtweaks.shulker_packing` | 2640 | chest with items + two shells becomes a shulker box item with the items and name |
@@ -301,6 +310,8 @@ inventory with the dragon scale icon (`inventory.png`), the golden pickaxe toolt
 baked "Fortune II" line (`tooltip-gold.png`) and the netherite sword tooltip with the repair hint
 (`tooltip-repair.png`), then runs `mobtweaks.*` in the local world.
 
-Not covered by selftests (needs a real client request): the elytra duplication craft (crafting
-table request) and the anvil craft path into `AnvilContainerScreenValidator::getCraftResult`
-(the damage-skip half is tested directly).
+The client scenario also drives, with headless input, the two paths that need a real client
+request: elytra + dragon scale in a crafting table (`craft-elytra.png`: the new elytra in the result
+slot; `craft-elytra-done.png`: the new elytra and the original damaged one back in the hotbar) and
+three rename-only anvil uses (`anvil-rename.png`, `anvil-after.png`; each logs `mobtweaks: anvil
+spared`).
