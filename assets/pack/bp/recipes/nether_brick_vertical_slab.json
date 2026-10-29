@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:nether_brick_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:nether_brick_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:nether_brick_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:nether_brick_vertical_slab",
+      "count": 3
+    }
+  }
+}

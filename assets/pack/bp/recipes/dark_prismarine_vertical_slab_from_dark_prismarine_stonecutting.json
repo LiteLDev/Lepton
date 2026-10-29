@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:dark_prismarine_vertical_slab_from_dark_prismarine_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:dark_prismarine"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:dark_prismarine"
+      }
+    ],
+    "result": {
+      "item": "lepton:dark_prismarine_vertical_slab",
+      "count": 2
+    }
+  }
+}

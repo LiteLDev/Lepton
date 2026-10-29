@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mud_brick_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:mud_brick_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:mud_brick_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:mud_brick_vertical_slab",
+      "count": 3
+    }
+  }
+}

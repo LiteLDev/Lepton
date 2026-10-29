@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:weathered_cut_copper_vertical_slab",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
