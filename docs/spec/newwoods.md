@@ -93,7 +93,12 @@ buttons 100, saplings 100 (ladders: U6).
 - **Saplings**: no collision, selection box 2..14 × 0..12, break instantly, can be placed only on
   dirt-like blocks (grass block, dirt, coarse dirt, podzol, rooted dirt, moss block, mud, muddy
   mangrove roots, farmland: Java `#minecraft:dirt` + farmland) and break when that block goes; can
-  not be put in a flower pot (see §7). Item: flat sapling icon.
+  be potted (below). Item: flat sapling icon.
+- **Potted saplings** `lepton:potted_<tree>_sapling` (Quark's ids; Potted Ashen Sapling, Potted Frosty
+  Trumpet Sapling, ...): using a sapling on an empty vanilla flower pot turns the pot into the potted
+  sapling (one sapling used, not in creative); using the potted sapling with anything but a sapling
+  gives the sapling back and puts the empty pot back; breaking it drops the flower pot and the sapling.
+  Model: the vanilla pot's shape with dirt and the sapling's cross. Not in the creative inventory.
 - **Hedges / leaf carpets**: U6's generators (`L` over `W` → 2 hedges, W any log/wood of the wood;
   `##` leaves → 3 carpets).
 - **Enchanted Fruit**: food 4 (saturation modifier 0.3), always edible.
@@ -279,11 +284,11 @@ The client mod shows the hints in the item tooltips (Quark shows them in JEI).
   fixed set of wood variants rendered by the game; not ported.
 - **Chests and trapped chests** (`<w>_chest`, `trapped_<w>_chest`): VariantChests is U9's
   behaviour (block tag contract); the chests of these woods are added once U9's generator exists.
-- **Potted saplings** (Quark's `potted_*_sapling`) are not ported: the vanilla flower pot takes custom
-  blocks through `minecraft:flower_pottable`, but the 1.26.51 client crashes (null read while it builds
-  the chunk mesh) as soon as a pot holding our sapling is drawn, with or without `minecraft:embedded_visual`.
-  Custom blocks can't have a block entity, so a `potted_*` block of our own can't hold the plant either;
-  a static potted block would be possible but isn't Quark's behaviour (planting into an existing pot).
+- **Potted saplings** are custom blocks the vanilla pot is swapped for (§2.2), not the vanilla pot
+  holding the sapling: `minecraft:flower_pottable` makes the 1.26.51 client crash while it builds the
+  mesh of a pot holding a custom block.
+- **Cross models** turn their planes by bones: a cube with its own `rotation` makes the 1.26.51 client
+  drop every custom block of that sub-chunk from its mesh.
 - **Wind of the falling leaves** follows the world (day) time instead of the game time; they are the
   same unless the time was changed.
 - **Leaf decay** is computed when logs/leaves change instead of from a stored `distance` state;
@@ -313,7 +318,7 @@ units' test rows.
 | `newwoods.strip` | 700 | an axe strips azalea logs keeping the axis |
 | `newwoods.leaf_drops` | - | the loot rules (shears, silk touch, fortune, explosion) by sampling |
 | `newwoods.leaf_decay` | 704 | leaves next to a removed log decay; persistent ones stay; distance 6 / 7 |
-| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it, a flower pot refuses them |
+| `newwoods.sapling_place` | 712 | saplings only on dirt, pop off without it; potting into a flower pot and taking the sapling out |
 | `newwoods.sapling_bonemeal` | 716 | the player's bone meal advances the sapling; it grows a trumpet tree, dirt below |
 | `newwoods.ancient_tree` | 730 | the ashen tree shape (trunk 18..28, blobs, cap, non-persistent leaves) |
 | `newwoods.blossom_tree` | 750 | a trumpet tree of every colour grows from its sapling |

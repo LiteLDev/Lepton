@@ -41,9 +41,7 @@
       "minecraft:material_instances": {
         "*": {
           "texture": "lepton_newwoods_newwoods_blue_blossom_sapling",
-          "render_method": "alpha_test",
-          "face_dimming": false,
-          "ambient_occlusion": false
+          "render_method": "alpha_test"
         }
       },
       "minecraft:geometry": "geometry.lepton.nw_cross",

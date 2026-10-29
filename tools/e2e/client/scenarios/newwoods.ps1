@@ -7,7 +7,7 @@
 $mark = Get-LogMark
 Invoke-Chat '/quark selftest "newwoods.gallery"'
 $views = @('azalea-left', 'azalea-right', 'blossom-left', 'blossom-right', 'ancient-left', 'ancient-right',
-    'trees-rows-a', 'trees-rows-b', 'trees-rows-c', 'trees-a', 'trees-b')
+    'trees-rows-a', 'trees-rows-b', 'trees-rows-c', 'potted', 'trees-a', 'trees-b')
 foreach ($v in $views) {
     Wait-LogLine "GALLERY view $v" 180 -Since $mark | Out-Null
     Start-Sleep -Seconds 4
@@ -29,5 +29,31 @@ Start-Sleep -Seconds 3
 Save-Screenshot 'inventory' | Out-Null
 Press-Key 'ESCAPE' 100
 Start-Sleep -Seconds 1
+
+# placed by hand: the real player right-clicks leaves, a sapling, a hedge, a leaf carpet and a flower
+# pot onto the ground, then plants a sapling into the pot (potted sapling)
+Invoke-Chat '/clear @s'
+foreach ($id in 'lepton:lavender_blossom_leaves', 'lepton:red_blossom_sapling', 'lepton:ancient_hedge', 'lepton:blue_blossom_leaf_carpet', 'minecraft:flower_pot') {
+    Invoke-Chat "/give @s $id 4"
+}
+$slots = 1..5
+for ($i = 0; $i -lt 5; $i++) {
+    $x = 40 + 2 * $i
+    Invoke-Chat "/tp @s $x -60 0 facing $x -61 2"
+    Start-Sleep -Seconds 1
+    Press-Key "$($slots[$i])"
+    Click 0.5 0.5 -Relative -Right
+    Start-Sleep -Seconds 1
+}
+# the sapling into the pot (slot 2, looking at the pot)
+Invoke-Chat '/tp @s 48 -60 0 facing 48 -60.6 2'
+Start-Sleep -Seconds 1
+Press-Key '2'
+Click 0.5 0.5 -Relative -Right
+Start-Sleep -Seconds 2
+Invoke-Chat '/tp @s 44 -58 -4 facing 44 -60 2'
+Start-Sleep -Seconds 4
+Save-Screenshot 'by-hand' | Out-Null
+
 $r = Invoke-SelfTest 'newwoods.*'
 if ($r.Fail -gt 0) { throw "$($r.Fail) newwoods selftest(s) failed on the integrated server" }

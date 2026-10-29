@@ -14,7 +14,7 @@
 # U6 owns the wv geometries: only reference them.
 function Write-WvGeometry([string]$Name, $Bones) { return "geometry.lepton.wv_$Name" }
 
-$script:NwGeoFormat = '1.21.0'
+$script:NwGeoFormat = '1.12.0'
 
 # ------------------------------------------------------------------------------------------------
 # Unit-specific blocks
@@ -22,16 +22,19 @@ $script:NwGeoFormat = '1.21.0'
 
 # Two crossed planes (saplings), 16 px wide, 16 px high.
 function Write-NwCrossGeometry {
+    # The planes are turned by their bones: a cube with its own "rotation" breaks the 1.26.51
+    # client's chunk mesh (every custom block of that sub-chunk disappears).
     $plane = {
-        param($rot)
+        param($name, $rot)
         [ordered]@{
-            origin = @(-8, 0, 0); size = @(16, 16, 0); pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
-            uv = [ordered]@{
-                # default material instance only: the flower pot's embedded tessellation crashes the
-                # client on a face with a named instance
-                north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
-                south = [ordered]@{ uv = @(16, 0); uv_size = @(-16, 16) }
-            }
+            name = $name; pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
+            cubes = @([ordered]@{
+                    origin = @(-8, 0, 0); size = @(16, 16, 0)
+                    uv = [ordered]@{
+                        north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
+                        south = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
+                    }
+                })
         }
     }
     $geo = [ordered]@{
@@ -41,7 +44,7 @@ function Write-NwCrossGeometry {
                     identifier = 'geometry.lepton.nw_cross'; texture_width = 16; texture_height = 16
                     visible_bounds_width = 2; visible_bounds_height = 2; visible_bounds_offset = @(0, 0.5, 0)
                 }
-                bones       = @([ordered]@{ name = 'cross'; pivot = @(0, 0, 0); cubes = @((& $plane 45), (& $plane -45)) })
+                bones       = @((& $plane 'cross_a' 45), (& $plane 'cross_b' -45))
             })
     }
     Write-PackJson -Path (Join-Path $script:RP 'models/blocks/lepton_nw_cross.geo.json') -Object $geo
@@ -80,7 +83,7 @@ function New-NwSapling {
     $c['minecraft:light_dampening'] = 0
     $c['minecraft:collision_box'] = $false
     $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 2 0 2 14 12 14)
-    $mat = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test'; face_dimming = $false; ambient_occlusion = $false }
+    $mat = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test' }  # no face_dimming / ambient_occlusion: they make the 1.26.51 client drop the sub-chunk's custom blocks from its mesh
     $c['minecraft:material_instances'] = [ordered]@{ '*' = $mat }
     $c['minecraft:geometry'] = $geo
     $c['minecraft:placement_filter'] = [ordered]@{ conditions = @([ordered]@{ allowed_faces = @('up'); block_filter = @($script:SaplingSoil) }) }
@@ -109,15 +112,18 @@ function New-NwSapling {
 # sapling's cross. A vanilla pot can't show a custom plant (minecraft:flower_pottable crashes the
 # 1.26.51 client), so src/feature/newwoods swaps the pot for this block when a sapling is planted.
 function Write-NwPottedGeometry {
-    $wall = { param($b) New-WvCube $b @{ '*' = '*' } }
-    $plant = {
-        param($rot)
+    $wall = { param($b) New-WvCube $b @{ '*' = 'pot' } }
+    $plant = { # turned by the bone (see Write-NwCrossGeometry)
+        param($name, $rot)
         [ordered]@{
-            origin = @(-6, 4, 0); size = @(12, 12, 0); pivot = @(0, 4, 0); rotation = @(0, $rot, 0)
-            uv = [ordered]@{
-                north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16); material_instance = 'plant' }
-                south = [ordered]@{ uv = @(16, 0); uv_size = @(-16, 16); material_instance = 'plant' }
-            }
+            name = $name; pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
+            cubes = @([ordered]@{
+                    origin = @(-6, 4, 0); size = @(12, 12, 0)
+                    uv = [ordered]@{
+                        north = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
+                        south = [ordered]@{ uv = @(0, 0); uv_size = @(16, 16) }
+                    }
+                })
         }
     }
     $geo = [ordered]@{
@@ -132,8 +138,8 @@ function Write-NwPottedGeometry {
                             (& $wall (New-Box 5 0 5 11 6 6)), (& $wall (New-Box 5 0 10 11 6 11)),
                             (& $wall (New-Box 5 0 6 6 6 10)), (& $wall (New-Box 10 0 6 11 6 10)),
                             (& $wall (New-Box 6 0 6 10 1 10))) },
-                    [ordered]@{ name = 'dirt'; pivot = @(0, 0, 0); cubes = @((New-WvCube (New-Box 6 1 6 10 4 10) @{ '*' = 'dirt' } @() @('up'))) },
-                    [ordered]@{ name = 'plant'; pivot = @(0, 0, 0); cubes = @((& $plant 45), (& $plant -45)) }
+                    [ordered]@{ name = 'dirt'; pivot = @(0, 0, 0); cubes = @((New-WvCube (New-Box 6 1 6 10 4 10) @{ '*' = 'dirt' })) },
+                    (& $plant 'plant_a' 45), (& $plant 'plant_b' -45)
                 )
             })
     }
@@ -150,9 +156,9 @@ function New-NwPotted {
     $c['minecraft:light_dampening'] = 0
     $c['minecraft:geometry'] = $geo
     $c['minecraft:material_instances'] = [ordered]@{
-        '*'   = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/flower_pot'); render_method = 'alpha_test' }
+        pot   = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/flower_pot'); render_method = 'alpha_test' }
         dirt  = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/dirt'); render_method = 'alpha_test' }
-        plant = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test'; face_dimming = $false; ambient_occlusion = $false }
+        '*'   = [ordered]@{ texture = (Add-TerrainTexture $Texture); render_method = 'alpha_test' }
     }
     $c['minecraft:collision_box'] = ConvertTo-BoxJson (New-Box 5 0 5 11 6 11)
     $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 5 0 5 11 6 11)

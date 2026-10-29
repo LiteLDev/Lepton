@@ -579,14 +579,11 @@ LP_REGISTER_SELFTEST("newwoods.fuel_compost", [](Context& ctx) {
 LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(700, 60);
     ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
-    int                                      placed = 0, wanted = 0;
-    std::vector<std::pair<GP, Block const*>> all;
-    auto                                     place = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
+    int  placed = 0, wanted = 0;
+    auto place  = [&](GP const& p, std::string const& id, bs::Changes const& st = {}) {
         ++wanted;
-        if (put(ctx, p, id, st)) {
-            ++placed;
-            all.emplace_back(p, &at(ctx, p));
-        } else ctx.check(false, "placed " + id);
+        if (put(ctx, p, id, st)) ++placed;
+        else ctx.check(false, "placed " + id);
     };
     std::vector<GP> woodRows, treeRows;
     int             wi = 0;
@@ -638,13 +635,17 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         place(off(row, 8, 1, 0), "lepton:" + n + "_leaf_carpet");
         place(off(row, 9, 0, 0), "minecraft:grass_block");
         place(off(row, 9, 1, 0), "lepton:" + n + "_leaf_carpet");
-        place(off(row, 11, 0, 0), "minecraft:stone");
-        place(off(row, 11, 1, 0), "lepton:potted_" + n + "_sapling");
+    }
+    // the potted saplings, in their own chunk (z - 64)
+    auto potRow = off(base, 0, 0, -64);
+    {
+        int k = 0;
+        for (auto const& t : nw::treeTypes()) {
+            place(off(potRow, 2 * k, 0, 0), "minecraft:stone");
+            place(off(potRow, 2 * k++, 1, 0), "lepton:potted_" + std::string(t.name) + "_sapling");
+        }
     }
     ctx.check(placed == wanted, "placed " + std::to_string(placed) + " / " + std::to_string(wanted) + " gallery blocks");
-    co_await ctx.ticks(2);
-    ctx.info("rows after placing: " + idAt(ctx, treeRows[0]) + " " + idAt(ctx, off(treeRows[0], 5, 0, 0)) + " "
-             + idAt(ctx, off(woodRows[0], 16, 0, 0)));
 
     // grown trees: the ashen tree and the five trumpets in a line
     auto forest = ctx.testPos(770, 100); // the trees stand in a line along z
@@ -658,13 +659,6 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         collectTree(ctx, off(p, 0, 1, 0), 16, 32);
     }
     ctx.check(grown == 6, "6 grown trees, got " + std::to_string(grown));
-
-    auto rowIds = [&] {
-        auto const& r = treeRows[0];
-        return idAt(ctx, r) + " " + idAt(ctx, off(r, 3, 1, 0)) + " " + idAt(ctx, off(r, 5, 0, 0)) + " " + idAt(ctx, off(r, 8, 1, 0)) + " "
-             + idAt(ctx, off(woodRows[0], 16, 0, 0));
-    };
-    ctx.info("rows after the trees: " + rowIds());
 
     Player* viewer = nullptr;
     ctx.player().getLevel().forEachPlayer([&](Player& p) {
@@ -687,15 +681,6 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
         GP          at;
         float       dx, dy, dz, pitch, yaw;
     };
-    // the viewer's client may have missed updates of blocks set before it looked at them: set the
-    // gallery blocks again now that it is next to them
-    view(woodRows[0], 5.f, 1.f, 5.5f, 15.f, 180.f);
-    co_await ctx.ticks(40);
-    auto* air = bs::of("minecraft:air");
-    for (auto const& [p, b] : all) lp::game::setBlock(regionOf(ctx), lp::game::blockPos(p), *air);
-    co_await ctx.ticks(2);
-    for (auto const& [p, b] : all) lp::game::setBlock(regionOf(ctx), lp::game::blockPos(p), *b);
-    co_await ctx.ticks(20);
     std::vector<View> views;
     char const*       woodNames[] = {"azalea", "blossom", "ancient"};
     for (int i = 0; i < 3; ++i) {
@@ -705,10 +690,11 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     views.push_back({"trees-rows-a", treeRows[0], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-b", treeRows[2], 6.f, 3.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-rows-c", treeRows[4], 6.f, 3.f, 4.5f, 25.f, 180.f});
+    views.push_back({"potted", potRow, 5.f, 2.f, 4.5f, 25.f, 180.f});
     views.push_back({"trees-a", forest, 28.f, 8.f, 30.5f, 5.f, 90.f}); // east of the line, looking west
     views.push_back({"trees-b", forest, 28.f, 8.f, 120.5f, 5.f, 90.f});
     for (auto const& v : views) {
-        ctx.info("GALLERY view " + v.name + " | " + rowIds());
+        ctx.info("GALLERY view " + v.name);
         for (int t = 0; t < 120; ++t) { // hold the player there (no floor below some views)
             view(v.at, v.dx, v.dy, v.dz, v.pitch, v.yaw);
             co_await ctx.ticks(1);
@@ -716,6 +702,5 @@ LP_REGISTER_SELFTEST("newwoods.gallery", [](Context& ctx) -> ll::coro::CoroTask<
     }
     view(woodRows[0], 5.f, 1.f, 5.5f, 15.f, 180.f);
     co_await ctx.ticks(10);
-    ctx.info("rows after the views: " + rowIds());
     ctx.info("GALLERY done");
 });
