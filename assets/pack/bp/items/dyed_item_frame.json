@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:dyed_item_frame",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "lepton_frames_frames_dyed_item_frame",
+          "dyed": "lepton_frames_frames_dyed_item_frame_dyed"
+        }
+      },
+      "minecraft:dyeable": {
+        "default_color": "#ffffff"
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

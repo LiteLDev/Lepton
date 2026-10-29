@@ -1,0 +1,101 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.lepton.glass_frame",
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 4,
+        "visible_bounds_height": 4,
+        "visible_bounds_offset": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "face",
+          "parent": "root",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "sign",
+          "parent": "face",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "sign_turn",
+          "parent": "sign",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "sign_offset",
+          "parent": "sign_turn",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "spin",
+          "parent": "sign_offset",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "holder",
+          "parent": "spin",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "holder",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "rightItem",
+          "parent": "rightArm",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}
