@@ -23,7 +23,7 @@ None. Resource-pack content:
 
 | File | What |
 |---|---|
-| `assets/pack/rp/animations/lepton_emotes.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>` (+ `animation.lepton.emote.stop`). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
+| `assets/pack/rp/animations/lepton_emotes.animation.json` | The 18 emotes baked into Bedrock animations `animation.lepton.emote.<id>` (+ `animation.lepton.emote.stop`, an empty animation on the emote controller that admins can play with `/playanimation` to cancel an emote). Generated from the emote scripts by the unit tests (`tests/emotes/`, `LP_UPDATE_EMOTE_ANIMATIONS=1`); a test fails when it is stale. |
 | `assets/pack/rp/textures/lepton/emotes/<id>.png` | 16x16 icons (18 emotes, `custom`, `patreon_t1`, `patreon_t2`), original art by `tools/textures/emotes.ps1`, used by the vanilla-client form. The same pixels are compiled into the client mod (`src/client/emotes/EmoteIcons.inc`). |
 | client only: `mods/Lepton/resource_packs/Lepton_RP/animations/lepton_custom_emotes.animation.json` | Written by the client mod at game start from the custom emote files. |
 
@@ -36,9 +36,9 @@ None. Resource-pack content:
   unknown or too-high-tier emotes): `enableEmotes`; a built-in default emote must be in
   `enabledEmotes`; a patreon emote needs the player's tier >= the emote's tier; `custom:<name>`
   (name of letters, digits, `_`, `-`, `.`, max 64) is relayed as is (Quark relays anything).
-- **Rate limit** (Lepton): a client's `emotes:request` is accepted at most every 5 ticks, so a
-  modified client cannot flood the other clients (Quark has no limit; the command and form are
-  not limited).
+- **Rate limit** (Lepton): a player's emote (`emotes:request`, `/quark emote <name>`, a form
+  button) is accepted at most every 5 ticks; faster ones are dropped silently, so no client can
+  flood the other clients (Quark has no limit).
 - **Tiers** (Quark `ContributorRewardHandler`: the patron list downloaded from Quark's GitHub,
   by Java account name): `emoteTiers` maps a lower-case player name or XUID to a tier; everyone
   else has `defaultEmoteTier` (0, like a non-patron).
@@ -60,7 +60,9 @@ None. Resource-pack content:
   emote falls back to an empty animation. Timing follows the Universal Tween Engine: default
   easing Quad in-out, a tween captures its start value when it starts, yoyo iterations play back,
   repeat restarts from the first start value, repeat delays hold the iteration's end value,
-  sequences chain full durations (delay + iterations), parallels take the longest. Every easing
+  sequences chain full durations (delay + iterations), parallels take the longest. A negative
+  `yoyo`/`repeat` count repeats forever (the tween engine's `Tween.INFINITY`); its baked animation
+  is capped at an hour and it ends on a swing or a hurt. Every easing
   equation of the tween engine is available (`linear`/`none`, `in|out|in_out` + `quad`, `cubic`,
   `quart`, `quint`, `circ`, `sine`, `expo`, `back`, `bounce`, `elastic`).
 - **Durations** (ms): no 1400, yes 1400, wave 1600, salute 2950, cheer 2400, clap 2000, think 3900,
@@ -76,13 +78,15 @@ None. Resource-pack content:
 - **Visibility.** `blend_weight` hides the emote in first person and outside Quark's "standing"
   pose (sneaking, swimming, sleeping, gliding): Quark keeps emoting but stops showing it then.
 - **HUD** (mod client): while the local player emotes, its icon (32x32) is drawn at
-  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length.
+  (width/2 - 16, height/2 - 60) and its name centred 34 units below, for the emote's length. Each
+  mod client ends an emote (HUD, sounds) early when that player swings or is hurt, like the
+  animation's stop expression.
 - **Sounds** (mod clients, custom emotes): `sound instant|continuous section|emote <sound>
   [volume (max 1.5)] [pitch]` plays when the statement before it in its section completes (or
   when the section starts); `section` sounds end when their section completes; `sound stop` ends
   all; a new `animation` start ends all; continuous sounds are replayed every second until they
-  end (the client sound interface usable from the mod has no loop call). Sounds are played at the player's
-  position by each mod client that runs the emote.
+  end: a continuous sound starts again as soon as its previous instance finished (at most every
+  100 ms). Sounds are played at the player's position by each mod client that runs the emote.
 - **Custom emotes** (client mod): every name in `customEmotes` is read from
   `config/quark_emotes/<name>.emote` (the folder is created) at game start, compiled, and baked
   into the client's resource pack (`lepton_custom_emotes.animation.json`). Their buttons use the
@@ -112,12 +116,13 @@ Only when the player sneaks with an empty main hand:
   allowlisted (no sound). Log: `pat: <player> pets a <type>`.
 - **Dogs want love** (`dogsWantLove` > 0, Quark `WantLoveGoal` + `NuzzleGoal`), every tick for
   tamed wolves whose owner is online in the same dimension and that were not pet for more than
-  `dogsWantLove` ticks: when 2..4 blocks from the owner (distance² 4..16), on the ground, 1 in 5
+  `dogsWantLove` ticks and that are not ordered to sit (Java: the sit goal holds the flags both
+  goals need): when 2..4 blocks from the owner (distance² 4..16), on the ground, 1 in 5
   chance: a hop (velocity += towards the owner 0.4 + 0.2 × current horizontal velocity, +0.2 up),
   until it lands; otherwise, unless the dog sits or the owner is a spectator, it paths to the owner
   at speed 0.5 (path rebuilt every 10 ticks) and whines (`mob.wolf.whine`, pitch 0.5..1.0) within
-  distance² 2, every 80..119 ticks (first after 10). Taming records the pet time (Quark:
-  AnimalTameEvent). Pet times are stored per wolf in the world DB (`lp:emotes:pet_times`, game
+  distance² 2, every 80..119 ticks (first after 10). Taming by a player (hook on
+  `TameableComponent::tame`) records the pet time (Quark: AnimalTameEvent). Pet times are stored per wolf in the world DB (`lp:emotes:pet_times`, game
   tick of the last pet; Quark: the wolf's `quark:PetTime` tag).
 
 ## 4. Screens
@@ -196,7 +201,7 @@ decides the rest (enabled emotes and tiers are sent to mod clients).
 - **Standing pose**: hidden with `blend_weight` (Quark pauses its updates); the stop on swing/hurt
   is evaluated by each client.
 - **Emote sounds** are fixed at the position where they start (Quark moves them with the player),
-  continuous ones are replayed every second (Quark loops the sound itself)
+  continuous ones are restarted when they finish (Quark loops the sound itself)
   and use Bedrock sound event names (`minecraft:` prefix stripped); Java sound ids that don't exist
   on Bedrock are silent.
 - **Custom emote icons**: Quark loads `<name>.png` from the emote folder as a resource pack; Lepton's

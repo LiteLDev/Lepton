@@ -108,6 +108,11 @@ int parseInt(std::string_view s) {
     return v;
 }
 
+/// The tween engine repeats forever for a negative count (Tween.INFINITY = -1): a count far
+/// beyond any playable length (the bake is capped at an hour, the client stops it on a swing or
+/// a hurt like the animation).
+int repeatCountOf(int count) { return count < 0 ? kInfiniteRepeat : count; }
+
 int partIndex(std::string_view name) {
     for (int i = 0; i < kParts; ++i)
         if (kPartNames[static_cast<size_t>(i)] == name) return i;
@@ -243,7 +248,7 @@ private:
                 n.delay += parseFloat(t[i++]) * mSpeed;
             } else if (cmd == "yoyo" || cmd == "repeat") {
                 need(cmd, 2);
-                n.repeatCount = parseInt(t[i++]);
+                n.repeatCount = repeatCountOf(parseInt(t[i++]));
                 n.repeatDelay = parseFloat(t[i++]) * mSpeed;
                 n.yoyo        = cmd == "yoyo";
             } else if (cmd == "ease") {
@@ -298,7 +303,7 @@ private:
     void repeat(std::vector<std::string_view> const& t, bool yoyo) {
         count(t, 3);
         requireStarted(t[0]);
-        mCurrent->repeatCount = parseInt(t[1]);
+        mCurrent->repeatCount = repeatCountOf(parseInt(t[1]));
         mCurrent->repeatDelay = parseFloat(t[2]) * mSpeed;
         mCurrent->yoyo        = yoyo;
     }
@@ -586,7 +591,7 @@ void Sampler::visit(State& s, float local, bool mirrored) {
         }
         float offset = 0;
         for (auto& c : s.children) {
-            visit(c, inner < 0 ? inner - offset : inner - offset, childMirrored);
+            visit(c, inner - offset, childMirrored);
             if (!n.parallel) offset += c.node->fullDuration();
         }
     }
@@ -671,9 +676,10 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
     constexpr double kMaxMs = 3600000.0;
     double           span   = std::min<double>(total, kMaxMs);
     std::vector<float> times;
-    auto               steps = static_cast<size_t>(std::ceil(span / std::max(stepMs, 1.f)));
+    double             step  = std::max(stepMs, 1.f);
+    auto               steps = static_cast<size_t>(std::ceil(span / step));
     times.reserve(steps + 1);
-    for (size_t i = 0; i < steps; ++i) times.push_back(static_cast<float>(static_cast<double>(i) * stepMs));
+    for (size_t i = 0; i < steps; ++i) times.push_back(static_cast<float>(static_cast<double>(i) * step));
     times.push_back(static_cast<float>(span));
     for (float t : times) {
         auto const& v = sampler.advance(t);
@@ -719,15 +725,18 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
         auto  keys = simplify(list, toleranceDeg);
         auto& bone = bones[std::string(boneName(part))];
         auto& rot  = bone["rotation"] = nlohmann::ordered_json::object();
+        auto* pos  = part == Model ? &(bone["position"] = nlohmann::ordered_json::object()) : nullptr;
+        // Keys grow with time: append to the ordered map's vector directly (its operator[] searches
+        // linearly, which makes long animations quadratic). Equal rounded times keep the last one.
+        auto put = [](nlohmann::ordered_json& obj, std::string key, nlohmann::ordered_json v) {
+            auto& map = obj.get_ref<nlohmann::ordered_json::object_t&>();
+            if (!map.empty() && map.back().first == key) map.back().second = std::move(v);
+            else map.emplace_back(std::move(key), std::move(v));
+        };
         for (auto const& k : keys) {
-            rot[fmtNum(round3(k.t), 3)] = nlohmann::ordered_json::array(
-                {value(k.b[0], k.w[0]), value(k.b[1], k.w[1]), value(k.b[2], k.w[2])}
-            );
-        }
-        if (part == Model) {
-            auto& pos = bone["position"] = nlohmann::ordered_json::object();
-            for (auto const& k : keys)
-                pos[fmtNum(round3(k.t), 3)] = nlohmann::ordered_json::array({round3(k.pos[0]), round3(k.pos[1]), round3(k.pos[2])});
+            auto t = fmtNum(round3(k.t), 3);
+            put(rot, t, nlohmann::ordered_json::array({value(k.b[0], k.w[0]), value(k.b[1], k.w[1]), value(k.b[2], k.w[2])}));
+            if (pos) put(*pos, t, nlohmann::ordered_json::array({round3(k.pos[0]), round3(k.pos[1]), round3(k.pos[2])}));
         }
     }
     return anim;

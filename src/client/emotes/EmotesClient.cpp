@@ -19,7 +19,10 @@
 #include "mc/deps/audio/SoundPlayerInterface.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/legacy/ActorUniqueID.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components/MobHurtTimeComponent.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/world/actor/Mob.h"
 #include "mc/client/player/LocalPlayer.h"
 #include "mc/world/level/Level.h"
 
@@ -214,13 +217,10 @@ struct Active {
     std::unique_ptr<script::Sampler>      sampler;
     std::chrono::steady_clock::time_point start;
     std::vector<std::pair<int, uint64_t>> sounds; ///< (cue, handle) of playing sounds
-    std::vector<std::pair<int, float>>    loops;  ///< continuous cues: (cue, next replay ms)
+    std::vector<std::pair<int, float>>    loops;  ///< continuous cues: (cue, last start ms)
 };
 std::map<std::int64_t, Active> gActive; ///< by player unique id
 
-/// Continuous sounds are replayed at this interval (the client sound API has no looping call
-/// usable from the mod; see docs/spec/emotes.md).
-constexpr float kLoopMs = 1000.f;
 
 Level* clientLevel() {
     auto* p = client::currentPlayer();
@@ -252,14 +252,49 @@ void soundOnce(Active& a, std::int64_t player, int cue) {
     std::string name = c.sound;
     if (name.starts_with("minecraft:")) name = name.substr(10);
     auto handle = level->getSoundPlayer()->play(name, actor->getPosition(), c.volume, c.pitch, std::nullopt);
-    a.sounds.emplace_back(cue, handle);
+    if (handle != 0) a.sounds.emplace_back(cue, handle);
 }
 
 void playCue(Active& a, std::int64_t player, int cue, float elapsed) {
     soundOnce(a, player, cue);
     if (cue >= 0 && cue < static_cast<int>(a.emote->sounds.size())
-        && a.emote->sounds[static_cast<size_t>(cue)].kind == script::SoundCue::Kind::Continuous)
-        a.loops.emplace_back(cue, elapsed + kLoopMs);
+        && a.emote->sounds[static_cast<size_t>(cue)].kind == script::SoundCue::Kind::Continuous
+        && std::none_of(a.loops.begin(), a.loops.end(), [&](auto const& l) { return l.first == cue; }))
+        a.loops.emplace_back(cue, elapsed);
+}
+
+/// Forgets finished sounds and loops the continuous ones: a continuous cue starts again as soon
+/// as its previous instance ended (Quark: a looping sound instance).
+void loopSounds(Active& a, std::int64_t player, float elapsed) {
+    auto* level = clientLevel();
+    if (!level) return;
+    auto&& sp = level->getSoundPlayer();
+    std::erase_if(a.sounds, [&](auto const& s) { return !sp->isPlayingSound(s.second); });
+    auto playing = [&](int cue) {
+        return std::any_of(a.sounds.begin(), a.sounds.end(), [&](auto const& s) { return s.first == cue; });
+    };
+    std::erase_if(a.loops, [&](auto& l) {
+        // At most every 100 ms, in case a sound reports "not playing" while it starts.
+        if (playing(l.first) || elapsed - l.second < 100.f) return false;
+        l.second = elapsed;
+        soundOnce(a, player, l.first);
+        return !playing(l.first); // unknown sound (or the player is out of sight): stop looping it
+    });
+}
+
+/// Quark ends an emote when the player swings or is hurt (the animation's stop expression does
+/// the same on the model).
+bool interrupted(std::int64_t player) {
+    auto* level = clientLevel();
+    if (!level) return false;
+    ActorUniqueID uid;
+    uid.rawID   = player;
+    auto* actor = level->fetchEntity(uid, false);
+    if (!actor || !actor->isPlayer()) return false;
+    auto const& mob = static_cast<Mob const&>(*actor);
+    if (mob.mSwinging) return true;
+    auto hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
+    return hurt && hurt->mValue > 0;
 }
 
 void startEmote(EmotePlay const& m) {
@@ -310,12 +345,8 @@ void updateActive() {
                     stopSounds(a, ev.cue);
             } else playCue(a, it->first, ev.cue, elapsed);
         }
-        for (auto& [cue, next] : a.loops) {
-            if (elapsed < next) continue;
-            soundOnce(a, it->first, cue);
-            next = elapsed + kLoopMs;
-        }
-        if (elapsed >= total) {
+        loopSounds(a, it->first, elapsed);
+        if (elapsed >= total || interrupted(it->first)) {
             stopSounds(a);
             it = gActive.erase(it);
         } else ++it;

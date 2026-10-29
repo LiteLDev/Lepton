@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <map>
 #include <random>
-#include <set>
 #include <unordered_map>
 
 #include "ll/api/event/EventBus.h"
@@ -19,6 +18,7 @@
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
 #include "mc/entity/components_json_legacy/NavigationComponent.h"
+#include "mc/entity/components_json_legacy/TameableComponent.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/network/MinecraftPacketIds.h"
 #include "mc/network/MinecraftPackets.h"
@@ -60,7 +60,6 @@ float random01() { return std::uniform_real_distribution<float>(0.f, 1.f)(rng())
 
 std::unordered_map<std::int64_t, std::int64_t> gPetTimes;
 bool                                           gDirty = false;
-std::set<std::int64_t>                         gSeenUntamed; ///< wolves seen wild (to notice taming)
 
 std::int64_t now() {
     auto level = ll::service::getLevel();
@@ -255,12 +254,7 @@ Player* ownerOf(Actor const& dog) {
 
 void tickDog(Actor& dog) {
     auto id = idOf(dog);
-    if (!dog.isTame()) {
-        if (gSeenUntamed.size() > 4096) gSeenUntamed.clear(); // wild wolves that unloaded
-        gSeenUntamed.insert(id);
-        return;
-    }
-    if (gSeenUntamed.erase(id)) setPetTime(dog); // Quark: AnimalTameEvent
+    if (!dog.isTame()) return;
     Player* owner = needsPets(dog) ? ownerOf(dog) : nullptr;
     if (!owner || owner->getDimensionId() != dog.getDimensionId()) {
         gDogs.erase(id);
@@ -269,6 +263,13 @@ void tickDog(Actor& dog) {
     auto& state = gDogs[id];
     float dist2 = dog.distanceToSqr(*owner);
 
+    // A dog ordered to sit runs neither goal (Java: SitWhenOrderedToGoal, priority 2, holds the
+    // MOVE and JUMP flags both goals need).
+    if (dog.isSitting()) {
+        state.leaping  = false;
+        state.nuzzling = false;
+        return;
+    }
     // WantLoveGoal (priority 20): between 2 and 4 blocks, on the ground, 1 in 5 chance: a hop
     // towards the owner; runs until the dog lands.
     if (state.leaping) {
@@ -294,7 +295,7 @@ void tickDog(Actor& dog) {
     }
 
     // NuzzleGoal (priority 21): walk to the owner at speed 0.5 and whine next to them.
-    if (owner->isSpectator() || dog.isSitting()) {
+    if (owner->isSpectator()) {
         state.nuzzling = false;
         return;
     }
@@ -314,6 +315,12 @@ void tickDog(Actor& dog) {
     }
 }
 
+/// Quark: AnimalTameEvent records the pet time of a freshly tamed dog.
+LL_TYPE_INSTANCE_HOOK(TameHook, ll::memory::HookPriority::Normal, TameableComponent, &TameableComponent::tame, void, Actor& owner, Player& player) {
+    origin(owner, player);
+    if (isDog(owner.getTypeName()) && owner.isTame()) setPetTime(owner);
+}
+
 void onTick(ll::event::ServerLevelTickEvent&) {
     if (!cfg().enablePatTheDogs || cfg().dogsWantLove <= 0) return;
     auto level = ll::service::getLevel();
@@ -328,7 +335,6 @@ void onDeath(ll::event::MobDieEvent& ev) {
     if (!isDog(mob.getTypeName())) return;
     auto id = idOf(mob);
     gDogs.erase(id);
-    gSeenUntamed.erase(id);
     if (gPetTimes.erase(id)) gDirty = true;
 }
 
@@ -338,6 +344,7 @@ class PatTheDogsModule {
 public:
     void install() {
         PetHook::hook();
+        TameHook::hook();
         mTick  = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerLevelTickEvent>(onTick);
         mDeath = ll::event::EventBus::getInstance().emplaceListener<ll::event::MobDieEvent>(onDeath);
         static bool once = false;
@@ -348,7 +355,6 @@ public:
             game::db::onWorldClosed([] {
                 gPetTimes.clear();
                 gDogs.clear();
-                gSeenUntamed.clear();
                 gDirty = false;
             });
         }
@@ -356,6 +362,7 @@ public:
     }
     void uninstall() {
         PetHook::unhook();
+        TameHook::unhook();
         ll::event::EventBus::getInstance().removeListener(mTick);
         ll::event::EventBus::getInstance().removeListener(mDeath);
         saveTimes();

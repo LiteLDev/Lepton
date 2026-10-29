@@ -162,6 +162,18 @@ TEST(EmoteScript, HugeScriptsStayBounded) {
     SUCCEED();
 }
 
+TEST(EmoteScript, NegativeRepeatIsInfinite) {
+    auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 yoyo -1 0\nend\n");
+    ASSERT_TRUE(r.ok) << r.error;
+    EXPECT_GT(r.emote.totalMs(), 3600000.f); // longer than any bake
+    es::Sampler s(r.emote);
+    EXPECT_NEAR(s.advance(100)[0].b, 1, 1e-5);   // forward
+    EXPECT_NEAR(s.advance(200)[0].b, 0, 1e-5);   // back (yoyo)
+    EXPECT_NEAR(s.advance(100300)[0].b, 1, 1e-5); // still going
+    auto anim = es::bakeAnimation(r.emote, 50.f);
+    EXPECT_DOUBLE_EQ(anim["animation_length"].get<double>(), 3600.0);
+}
+
 TEST(EmoteScript, UnitScalesTimes) {
     auto r = es::compile("use head\nunit 2\nanimation sequence\nmove head_x 100 1 delay 10\npause 50\nend\n");
     ASSERT_TRUE(r.ok) << r.error;

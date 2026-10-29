@@ -30,6 +30,7 @@
 #include "feature/emotes/EmoteScript.h"
 #include "feature/emotes/EmotesConfig.h"
 #include "game/Forms.h"
+#include "game/WorldDb.h"
 #include "mod/Commands.h"
 #include "mod/Config.h"
 #include "mod/I18n.h"
@@ -104,8 +105,8 @@ void sendListLater(Player& player) {
     }).launch(ll::thread::ServerThreadExecutor::getDefault());
 }
 
-/// Requests from one client are accepted at most every 5 ticks (Quark has no limit; this only
-/// stops a modified client from flooding every other client with emotes).
+/// Requests from one player (companion message, command, form) are accepted at most every 5 ticks
+/// (Quark has no limit; this only stops a client from flooding every other client with emotes).
 std::unordered_map<std::int64_t, std::uint64_t> gLastRequest;
 
 bool throttled(Player const& p) {
@@ -114,7 +115,8 @@ bool throttled(Player const& p) {
     auto now  = level->getCurrentTick().tickID;
     auto id   = p.getOrCreateUniqueID().rawID;
     auto it   = gLastRequest.find(id);
-    if (it != gLastRequest.end() && now - it->second < 5) return true;
+    if (it != gLastRequest.end() && now >= it->second && now - it->second < 5) return true;
+    if (gLastRequest.size() > 1024) gLastRequest.clear(); // players who left long ago
     gLastRequest[id] = now;
     return false;
 }
@@ -193,7 +195,9 @@ void openEmoteForm(Player& player) {
         auto const* b     = findBuiltin(id);
         auto        label = emoteName(player, id);
         if (b && b->patreon) label += " " + trFor(player, "lp.emotes.form.patreon", "(Patreon)");
-        form.button(label, [id](Player& p) { playEmote(p, id); }, "textures/lepton/emotes/" + id);
+        form.button(label, [id](Player& p) {
+            if (!throttled(p)) playEmote(p, id);
+        }, "textures/lepton/emotes/" + id);
     }
     form.sendTo(player);
     log().info("emotes: form sent to {}", player.getRealName());
@@ -230,6 +234,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         [](CommandOrigin const& origin, CommandOutput& output, EmoteCommandParams const& params) {
             auto* p = commands::playerOf(origin);
             if (!p) return output.error(tr("lp.emotes.players_only", "Only players can use emotes."));
+            if (throttled(*p)) return output.success(""); // dropped, like a flooding client's requests
             auto r = playEmote(*p, params.name);
             if (r == PlayResult::Played) return output.success("");
             output.error(resultMessage(*p, r, params.name));
@@ -252,6 +257,7 @@ public:
             net::onClientModJoined([this](Player& p) {
                 if (mInstalled) sendListLater(p);
             });
+            game::db::onWorldClosed([] { gLastRequest.clear(); });
             config::onReload([this] {
                 if (!mInstalled) return;
                 for (auto* p : net::modPlayers())

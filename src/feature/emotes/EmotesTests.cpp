@@ -115,6 +115,7 @@ LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) -> ll::coro::CoroTask<> 
     ConfigGuard cfg;
     auto&       p = ctx.player();
     lp::net::testing::setClientMod(p, true);
+    co_await ctx.ticks(6); // past the 5-tick limit of an earlier request by this player
     (void)em::testing::takeSentAnimations();
     lp::net::testing::receiveFromClient(p, em::EmoteRequest{"yes"});
     ctx.check(sentTo(p, "animation.lepton.emote.yes"), "a client request plays the emote");
@@ -129,14 +130,18 @@ LP_REGISTER_SELFTEST("emotes.request", [](Context& ctx) -> ll::coro::CoroTask<> 
     lp::net::testing::setClientMod(p, false);
 });
 
-LP_REGISTER_SELFTEST("emotes.form", [](Context& ctx) {
+LP_REGISTER_SELFTEST("emotes.form", [](Context& ctx) -> ll::coro::CoroTask<> {
     ConfigGuard cfg;
     auto&       p = ctx.player();
+    co_await ctx.ticks(6); // past the 5-tick limit of an earlier request by this player
     (void)em::testing::takeSentAnimations();
     em::openEmoteForm(p);
     ctx.check(lp::game::forms::testing::pendingTitle(p) == lp::trFor(p, "quark.gui.button.emotes", "Emotes"), "the emote form opens");
     ctx.check(lp::game::forms::testing::click(p, 2), "pick the third button");
     ctx.check(sentTo(p, "animation.lepton.emote.wave"), "the form plays the picked emote (wave)");
+    em::openEmoteForm(p);
+    ctx.check(lp::game::forms::testing::click(p, 2), "pick again at once");
+    ctx.check(em::testing::takeSentAnimations().empty(), "a second pick within 5 ticks is dropped");
 });
 
 // ---- PatTheDogs ---------------------------------------------------------------------------------------

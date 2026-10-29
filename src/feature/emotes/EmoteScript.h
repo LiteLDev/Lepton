@@ -34,6 +34,9 @@ namespace lp::feature::emotes::script {
 enum Part : int { Head = 0, Body = 1, RightArm = 2, LeftArm = 3, RightLeg = 4, LeftLeg = 5, Model = 6 };
 inline constexpr int kParts    = 7;
 inline constexpr int kChannels = kParts * 3;
+/// `repeat -1` / `yoyo -1` (any negative count) repeats forever, as in the tween engine; stored
+/// as this count.
+inline constexpr int kInfiniteRepeat = 1'000'000'000;
 
 /// Part name as used in scripts ("head", "right_arm", ..., "model"), or "".
 [[nodiscard]] std::string_view partName(int part);
