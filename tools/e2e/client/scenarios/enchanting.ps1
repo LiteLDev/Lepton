@@ -23,7 +23,7 @@ function Open-Station([string]$what) {
     $line = Wait-LogLine 'enchanting: demo station .* at -?\d+ -?\d+ -?\d+' 15 -Since $m
     if ($line -notmatch 'at (-?\d+) (-?\d+) (-?\d+)') { throw "no station position in '$line'" }
     $x, $y, $z = [int]$Matches[1], [int]$Matches[2], [int]$Matches[3]
-    Invoke-Chat "/tp @s $($x - 2).5 $y $($z).5 facing $($x).5 $($y).5 $($z).5"
+    Invoke-Chat "/tp @s $($x).5 $y $($z - 2).5 facing $($x).5 $($y).8 $($z).5"
     Start-Sleep -Milliseconds 1200
     Click 0.5 0.5 -Relative -Right
     Start-Sleep -Milliseconds 1500

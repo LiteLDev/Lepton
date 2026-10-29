@@ -284,9 +284,18 @@ std::string itemName(ItemStack const& s) {
 
 void showForm(Player& player, GlobalPos const& pos);
 
+std::set<std::string>& pendingRefresh() {
+    static std::set<std::string> s;
+    return s;
+}
+
+/// Re-shows the main form next tick (once: several actions in one tick send a single form, as a
+/// form sent while another is open is refused by the client and would end the session).
 void refreshFormLater(Player& player, GlobalPos const& pos) {
     auto uuid = uuidOf(player);
+    if (!pendingRefresh().insert(uuid).second) return;
     later(1, [uuid, pos] {
+        pendingRefresh().erase(uuid);
         auto* p = playerByUuid(uuid);
         if (!p) return;
         auto s = sessions().find(uuid);
@@ -480,14 +489,13 @@ void broadcast(GlobalPos const& pos) {
         if (s.pos != pos) continue;
         auto* p = playerByUuid(uuid);
         if (!p) continue;
-        if (s.mod) {
-            auto state = stateJson(*p, pos).dump();
-            if (state == s.lastState) continue;
-            s.lastState = state;
-            net::sendToClient(*p, MatrixStateMsg{true, state});
-        } else {
-            refreshFormLater(*p, pos);
-        }
+        // Forms are re-shown by the acting player's own form callbacks only: sending a form to a
+        // player who has another one open is refused by the client.
+        if (!s.mod) continue;
+        auto state = stateJson(*p, pos).dump();
+        if (state == s.lastState) continue;
+        s.lastState = state;
+        net::sendToClient(*p, MatrixStateMsg{true, state, false});
     }
 }
 
@@ -501,7 +509,7 @@ bool open(Player& player, GlobalPos const& pos) {
     if (mod) {
         auto state                             = stateJson(player, pos).dump();
         sessions()[uuidOf(player)].lastState   = state;
-        net::sendToClient(player, MatrixStateMsg{true, state});
+        net::sendToClient(player, MatrixStateMsg{true, state, true});
     } else {
         showForm(player, pos);
     }
@@ -773,11 +781,17 @@ void showFormImpl(Player& player, GlobalPos const& pos) {
     SimpleForm form(trFor(player, "lp.enchanting.title", "Enchant"), text);
     if (!game::isEmpty(output))
         form.button(trFor(player, "lp.enchanting.form.take_output", "Take {}", itemName(output)),
-                    [](Player& p) { slotAction(p, "take_output", -1); });
+                    [pos](Player& p) {
+                        slotAction(p, "take_output", -1);
+                        refreshFormLater(p, pos);
+                    });
     if (m && j.value("active", false)) {
         form.button(creative(player) ? trFor(player, "lp.enchanting.form.generate_free", "+ New piece")
                                      : trFor(player, "lp.enchanting.form.generate", "+ New piece ({} levels)", j.value("price", 1)),
-                    [](Player& p) { operate(p, OperAdd, 0, 0, 0); });
+                    [pos](Player& p) {
+                        operate(p, OperAdd, 0, 0, 0);
+                        refreshFormLater(p, pos);
+                    });
     }
     if (m) {
         for (int id : m->benched) {
@@ -793,17 +807,26 @@ void showFormImpl(Player& player, GlobalPos const& pos) {
             auto const* def = p ? defOf(p->ench) : nullptr;
             if (!p || !def) continue;
             form.button(trFor(player, "lp.enchanting.form.remove", "Remove {} {}", std::string(1, kLetters[i % 26]), nameOf(player, *def, p->level)),
-                        [id](Player& pl) { operate(pl, OperRemove, id, 0, 0); });
+                        [pos, id](Player& pl) {
+                            operate(pl, OperRemove, id, 0, 0);
+                            refreshFormLater(pl, pos);
+                        });
         }
     }
     if (game::isEmpty(d.item))
         form.button(trFor(player, "lp.enchanting.form.insert", "Insert Item"), [pos](Player& p) { showInsertForm(p, pos, false); });
     else
         form.button(trFor(player, "lp.enchanting.form.take_item", "Take {} back", itemName(d.item)),
-                    [](Player& p) { slotAction(p, "take_item", -1); });
+                    [pos](Player& p) {
+                        slotAction(p, "take_item", -1);
+                        refreshFormLater(p, pos);
+                    });
     form.button(trFor(player, "lp.enchanting.form.add_lapis", "Add Lapis"), [pos](Player& p) { showInsertForm(p, pos, true); });
     if (!game::isEmpty(d.lapis))
-        form.button(trFor(player, "lp.enchanting.form.take_lapis", "Take Lapis back"), [](Player& p) { slotAction(p, "take_lapis", -1); });
+        form.button(trFor(player, "lp.enchanting.form.take_lapis", "Take Lapis back"), [pos](Player& p) {
+            slotAction(p, "take_lapis", -1);
+            refreshFormLater(p, pos);
+        });
     form.onClose([](Player& p) { close(p, false); });
     form.sendTo(player);
 }
@@ -819,6 +842,7 @@ void resetCaches() {
     cache().clear();
     dirty().clear();
     sessions().clear();
+    pendingRefresh().clear();
     influences() = {};
 }
 void flush() { flushAll(); }
@@ -853,7 +877,7 @@ void tickSessions() {
             auto state = stateJson(*p, pos).dump();
             if (state == s.lastState) continue;
             s.lastState = state;
-            net::sendToClient(*p, MatrixStateMsg{true, state});
+            net::sendToClient(*p, MatrixStateMsg{true, state, false});
         }
     }
 }

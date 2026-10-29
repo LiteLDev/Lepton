@@ -2,6 +2,7 @@
 // tweak, the librarian exchange, `/quark enchanting ...` commands.
 
 #include <random>
+#include <set>
 
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/event/EventBus.h"
@@ -77,10 +78,6 @@ int randInt(int bound) { return bound <= 0 ? 0 : std::uniform_int_distribution<i
 thread_local LootTable* gFillTable   = nullptr;
 thread_local bool       gPoolHandled = false;
 
-struct Bounds {
-    float min, max;
-};
-
 LL_TYPE_INSTANCE_HOOK(
     LootFillHook,
     ll::memory::HookPriority::Normal,
@@ -137,13 +134,10 @@ LL_TYPE_INSTANCE_HOOK(
     for (auto const& e : *mEntries) poolWeight += e ? std::max(0, static_cast<int>(e->mWeight)) : 0;
     int extraWeight = 0;
     for (auto const& x : extras) extraWeight += x.weight;
-    auto const& b     = *reinterpret_cast<Bounds const*>(&mRolls);
-    int         lo    = std::clamp(static_cast<int>(b.min), 0, 64);
-    int         hi    = std::clamp(static_cast<int>(b.max), lo, 64);
-    int         rolls = lo + randInt(hi - lo + 1);
-    // Each roll would have picked one of the extra entries with probability extra / (pool + extra):
-    // the extra item replaces the item of that roll.
-    for (int r = 0; r < rolls; ++r) {
+    // Each stack this roll produced would instead have been one of the extra entries with
+    // probability extra / (pool + extra) (Quark adds them as entries of the same pool): replace it
+    // in place. Pools whose conditions failed added nothing and get nothing.
+    for (size_t i = before; i < result.size(); ++i) {
         int pick = randInt(poolWeight + extraWeight);
         if (pick < poolWeight) continue;
         pick -= poolWeight;
@@ -152,15 +146,11 @@ LL_TYPE_INSTANCE_HOOK(
                 pick -= x.weight;
                 continue;
             }
-            auto item = makeLootItem(x.what);
-            if (game::isEmpty(item)) break;
-            if (result.size() > before) result.erase(result.begin() + static_cast<long long>(before) + randInt(static_cast<int>(result.size() - before)));
-            result.push_back(item);
+            if (auto item = makeLootItem(x.what); !game::isEmpty(item)) result[i] = item;
             break;
         }
     }
 }
-
 // ---- deepslate tweak ---------------------------------------------------------------------------
 
 LL_TYPE_INSTANCE_HOOK(
@@ -259,7 +249,7 @@ std::optional<Offer> currentOffer(Player& p) {
 }
 
 /// Removes one matching stack (by SNBT, count ignored) from the UI slot or else the inventory.
-bool takeInput(Player& p, int uiSlot, std::string const& snbt, int count) {
+bool takeInput(Player& p, int uiSlot, std::string const& snbt, int count, bool dryRun = false) {
     if (snbt == "{}") return true;
     auto want = game::itemFromSnbt(snbt);
     if (game::isEmpty(want)) return true;
@@ -273,6 +263,7 @@ bool takeInput(Player& p, int uiSlot, std::string const& snbt, int count) {
     if (uiSlot >= 0) {
         auto const& cur = ui.getItem(uiSlot);
         if (same(cur) && cur.mCount >= count) {
+            if (dryRun) return true;
             ItemStack rest = cur;
             rest.remove(count);
             ui.setItem(uiSlot, rest.mCount > 0 ? rest : ItemStack{});
@@ -280,6 +271,7 @@ bool takeInput(Player& p, int uiSlot, std::string const& snbt, int count) {
         }
     }
     auto& pinv = game::inv::playerInventory(p);
+    if (dryRun) return game::inv::count(pinv, same, game::inv::kPlayerAll) >= count;
     return game::inv::remove(pinv, same, count, game::inv::kPlayerAll) == count;
 }
 
@@ -309,16 +301,16 @@ bool applyOffer(Player& p, Offer const& o) {
         p.sendMessage(trFor(p, "lp.enchanting.craft.too_expensive", "§cYou need {} levels.", o.craft.cost));
         return false;
     }
-    bool ok;
-    if (o.anvil) {
-        ok = takeInput(p, static_cast<int>(PlayerUISlot::AnvilInput), o.left, game::itemFromSnbt(o.left).mCount)
-          && takeInput(p, static_cast<int>(PlayerUISlot::AnvilMaterial), o.right, 1);
-    } else {
-        ok = takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableInput), o.left, 1)
-          && takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableMaterial), o.right, 1)
-          && takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableTemplate), o.extra, 1);
-    }
-    if (!ok) {
+    // Check every input first, then take them, so a missing input never costs the others.
+    auto take = [&](bool dry) {
+        if (o.anvil)
+            return takeInput(p, static_cast<int>(PlayerUISlot::AnvilInput), o.left, game::itemFromSnbt(o.left).mCount, dry)
+                && takeInput(p, static_cast<int>(PlayerUISlot::AnvilMaterial), o.right, 1, dry);
+        return takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableInput), o.left, 1, dry)
+            && takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableMaterial), o.right, 1, dry)
+            && takeInput(p, static_cast<int>(PlayerUISlot::SmithingTableTemplate), o.extra, 1, dry);
+    };
+    if (!take(true) || !take(false)) {
         game::inv::sync(p);
         return false;
     }
@@ -373,7 +365,7 @@ void tickStations() {
         auto uuid = uuidOf(p);
         seen.push_back(uuid);
         auto offer = currentOffer(p);
-        auto sig   = offer ? offer->signature : std::string{};
+        auto sig   = offer ? offer->signature + "|" + std::to_string(creative(p) || playerLevel(p) >= offer->craft.cost) : std::string{};
         auto& last = lastSignature()[uuid];
         if (sig == last) return true;
         last = sig;
@@ -400,6 +392,11 @@ void tickStations() {
 }
 
 // ---- librarians --------------------------------------------------------------------------------
+
+std::set<int64_t>& exchangedVillagers() {
+    static std::set<int64_t> s;
+    return s;
+}
 
 } // namespace
 
@@ -441,9 +438,13 @@ void closeStation(Player& player) { forcedStations().erase(uuidOf(player)); }
 
 bool addLibrarianExchange(Actor& villager) {
     if (!cfg().enableAncientTomes || !cfg().librariansExchangeAncientTomes) return false;
-    auto key    = "lp:enchanting:librarian:" + std::to_string(game::entities::idOf(villager));
+    auto vid = static_cast<int64_t>(game::entities::idOf(villager));
+    if (exchangedVillagers().contains(vid)) return false;
+    auto  key    = "lp:enchanting:librarian:" + std::to_string(vid);
     auto* offers = villager.getTradeOffers();
-    if (!offers || !isLibrarian(*offers) || !isMaster(villager) || game::db::load(key)) return false;
+    if (!offers || !isLibrarian(*offers) || !isMaster(villager)) return false;
+    exchangedVillagers().insert(vid); // checked once per session; the DB marks it across sessions
+    if (game::db::load(key)) return false;
     auto valid = validTomeEnchants();
     if (valid.empty()) return false;
     int  type = valid[static_cast<size_t>(randInt(static_cast<int>(valid.size())))];
@@ -487,6 +488,7 @@ public:
                 lastSignature().clear();
                 pendingForms().clear();
                 forcedStations().clear();
+                exchangedVillagers().clear();
             });
         }
     }
@@ -508,7 +510,7 @@ private:
 
 // ---- commands ----------------------------------------------------------------------------------
 
-/// `/quark enchanting demo anvil|smithing` (operators): places the station two blocks east of the
+/// `/quark enchanting demo anvil|smithing` (operators): places the station three blocks south of the
 /// player; `/quark enchanting demo fill` puts a tome / rune combination into the open station's
 /// slots. Used by the client scenario.
 void placeStation(CommandOrigin const& origin, CommandOutput& output, char const* id) {
@@ -517,7 +519,7 @@ void placeStation(CommandOrigin const& origin, CommandOutput& output, char const
     auto& region = p->getDimensionBlockSource();
     auto  eye    = p->getPosition();
     auto  feet   = game::blockPosOf(Vec3{eye.x, eye.y - 1.5f, eye.z});
-    BlockPos at{feet.x + 2, feet.y, feet.z};
+    BlockPos at{feet.x, feet.y, feet.z + 3};
     for (int dy = 0; dy <= 2; ++dy)
         if (auto const* air = game::blockstates::of("minecraft:air")) game::setBlock(region, {at.x, at.y + dy, at.z}, *air);
     if (auto const* b = game::blockstates::of(id)) game::setBlock(region, at, *b);

@@ -89,6 +89,7 @@ std::optional<Craft> anvilCraft(ItemStack const& left, ItemStack const& right) {
     }
     auto rightEnch = isRightTome ? std::map<int, int>{} : enchantsOf(right);
     for (auto const& [t, l] : rightEnch) {
+        // Quark checks only exclusivity here, not whether the item accepts the enchantment.
         for (auto const& [held, hl] : out) {
             auto const* hd = defOf(held);
             if (hd && held != t && !hd->compatibleWith(t)) return std::nullopt;

@@ -36,6 +36,7 @@ struct MatrixStateMsg {
     static constexpr std::string_view kId = "enchanting:state";
     bool                              open = true;
     std::string                       state;
+    bool                              fresh = false; ///< the table was just opened (else: an update of an open screen)
 };
 
 /// A tome / rune combination is ready in the open anvil or smithing table. Server -> client.

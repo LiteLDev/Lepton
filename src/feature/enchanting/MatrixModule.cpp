@@ -79,9 +79,12 @@ public:
                     auto bid = game::blockIdAt(*r, game::blockPos(pos));
                     if (!cfg().enableMatrixEnchanting) {
                         // Quark: a matrix enchanter of a disabled module turns back into a vanilla table.
-                        if (bid == table::kBlockId)
+                        if (bid == table::kBlockId) {
+                            // The vanilla table has no matrix: give the contents back first.
+                            table::dropContents(*r, pos);
                             if (auto const* b = game::blockstates::of("minecraft:enchanting_table"))
                                 game::setBlock(*r, game::blockPos(pos), *b);
+                        }
                         return;
                     }
                     if (!table::isTableId(bid)) return;
