@@ -306,10 +306,19 @@ Block/item names are in §2 (Quark's English; zh_CN from Quark's zh_cn.json, "Po
 
 ## 8. Tests
 
-Selftests (dx 800..899): `storage.content` (blocks/items registered), `storage.recipes`,
-`storage.fuel`, `storage.compost`, `storage.infiniburn`, `storage.beacon`, `storage.stool_sit`,
-`storage.stool_table`, `storage.stool_piston`, `storage.rope_down_up`, `storage.rope_move_block`,
-`storage.rope_survive`, `storage.rope_dispenser`, `storage.shear_vines`, `storage.potting`,
-`storage.glass_shards`, `storage.dragon_breath`, `storage.gallery` (client screenshots).
-E2E: `tools/e2e/server/scenarios/storage.ps1` (all `storage.*`), `tools/e2e/client/scenarios/storage.ps1`
-(gallery screenshots of every block, a seated player, rope column, potted plants, shards).
+Selftests (dx 800..899, 25): `storage.content` (blocks/items/tags registered), `storage.recipes`
+(every recipe loaded, the vanilla 3x3 nether wart block replaced), `storage.gates` (config gates),
+`storage.fuel`, `storage.compost`, `storage.properties` (climbable, infiniburn, correct tool, stool
+vtable), `storage.charcoal_tool` (no drop without a pickaxe), `storage.beacon` (golden apple crate
+pyramid), `storage.utility` (dragon's breath, smelting XP), `storage.shard_count`,
+`storage.glass_shards` (real block breaking), `storage.stool_sit` (seat, comparator 15, getting
+up), `storage.stool_table`, `storage.stool_fall` (half fall damage), `storage.stool_piston` (a
+piston moves the stool with its rider), `storage.stool_interact` (player use), `storage.rope_down_up`,
+`storage.rope_player` (player use, placement on a floor refused), `storage.rope_move_chest` (block
+entity data moves), `storage.rope_survive`, `storage.rope_dispenser` (a real dispenser),
+`storage.shear_vines`, `storage.shear_vines_player`, `storage.potting` (player use, pot light),
+`storage.gallery` (layout for the client screenshots).
+
+E2E: `tools/e2e/server/scenarios/storage.ps1` (all `storage.*` on BDS), `tools/e2e/client/scenarios/storage.ps1`
+(gallery screenshots: compressed blocks, stools with a seated player and a table, rope column and cut
+vines, potted plants; item icons; then all `storage.*` on the integrated server).

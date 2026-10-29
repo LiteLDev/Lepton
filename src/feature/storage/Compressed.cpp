@@ -273,6 +273,17 @@ LL_TYPE_INSTANCE_HOOK(
     Actor const*                actorContext
 ) {
     auto const& n = block.getTypeName();
+    if (n == "lepton:charcoal_block" && !region.getLevel().isClientSide()) {
+        // Quark: requiresCorrectToolForDrops - a player mining it needs a pickaxe
+        bool mined = false, pickaxe = false;
+        try {
+            mined = ctx.mCause == ResourceDropsCause::PlayerMining && actorContext && actorContext->isPlayer();
+            ItemStack const& used = ctx.mUsedItem;
+            auto const*      item = used.isNull() ? nullptr : used.mItem.get();
+            pickaxe = item && item->hasTag(HashedString("minecraft:is_pickaxe"));
+        } catch (...) {}
+        if (mined && !pickaxe) return;
+    }
     bool glass = n == "minecraft:glass" || n.ends_with("_stained_glass") || n == "lepton:dirty_glass";
     bool pane  = n == "lepton:dirty_glass_pane";
     if ((!glass && !pane) || region.getLevel().isClientSide()) {

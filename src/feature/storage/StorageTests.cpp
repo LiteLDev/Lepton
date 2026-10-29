@@ -262,6 +262,37 @@ LP_REGISTER_SELFTEST("storage.properties", [](Context& ctx) {
     st::applyBlockProperties();
 });
 
+LP_REGISTER_SELFTEST("storage.charcoal_tool", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto p = ctx.testPos(804);
+    p.y += 1;
+    ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
+    stepAside(ctx, p);
+    killItems(ctx, p);
+    auto* sp = static_cast<SimulatedPlayer*>(&ctx.player());
+    sp->simulateSetItem(ItemStack{}, true, 0);
+    ctx.require(put(ctx, p, "lepton:charcoal_block"), "charcoal block");
+    at(ctx, p).playerDestroy(ctx.player(), bp(p));
+    lp::game::clearBlock(regionOf(ctx), bp(p));
+    co_await ctx.ticks(3);
+    ctx.check(countItems(ctx, p, "lepton:charcoal_block") == 0, "no drop without a pickaxe");
+    killItems(ctx, p);
+    auto pick = lp::game::makeItem("minecraft:stone_pickaxe");
+    sp->simulateSetItem(pick, true, 0);
+    ctx.require(put(ctx, p, "lepton:charcoal_block"), "charcoal block again");
+    at(ctx, p).playerDestroy(ctx.player(), bp(p));
+    lp::game::clearBlock(regionOf(ctx), bp(p));
+    co_await ctx.ticks(3);
+    ctx.check(countItems(ctx, p, "lepton:charcoal_block") == 1, "a pickaxe gets it");
+    killItems(ctx, p);
+    ctx.require(put(ctx, p, "lepton:apple_crate"), "crate");
+    sp->simulateSetItem(ItemStack{}, true, 0);
+    at(ctx, p).playerDestroy(ctx.player(), bp(p));
+    lp::game::clearBlock(regionOf(ctx), bp(p));
+    co_await ctx.ticks(3);
+    ctx.check(countItems(ctx, p, "lepton:apple_crate") == 1, "crates drop by hand");
+    killItems(ctx, p);
+});
+
 LP_REGISTER_SELFTEST("storage.beacon", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(800);
     base.y += 4;

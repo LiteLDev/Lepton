@@ -127,7 +127,7 @@ function Add-StorageBlock {
         [double]$Hardness = 1, [double]$Resistance = -1, [string]$MapColor, [string]$Tool, [int[]]$Flame, [int]$Light = 0,
         [string]$RenderMethod = 'opaque', [switch]$Axis, [string]$Category = 'construction', [string]$Group, [string[]]$Tags = @(),
         [string[]]$Gate, [switch]$Hidden, [string]$Loot, $Geometry, $Material, $Collision, $Selection, $States, $Permutations,
-        [switch]$PassLight, [switch]$Waterlog
+        [switch]$PassLight, [switch]$Waterlog, [switch]$Replaceable
     )
     if ($Resistance -lt 0) { $Resistance = $Hardness }
     $spec = @{ Hardness = $Hardness; Resistance = $Resistance; MapColor = $MapColor; Tool = $Tool; Tags = $Tags; Category = $Category; Hidden = $Hidden }
@@ -136,6 +136,7 @@ function Add-StorageBlock {
     if ($Light) { $c['minecraft:light_emission'] = $Light }
     if ($PassLight) { $c['minecraft:light_dampening'] = 0 }
     if ($Waterlog) { $c['minecraft:liquid_detection'] = $script:WaterlogRule }
+    if ($Replaceable) { $c['minecraft:replaceable'] = [ordered]@{} }
     $c['minecraft:geometry'] = if ($Geometry) { $Geometry } else { 'minecraft:geometry.full_block' }
     $c['minecraft:material_instances'] = if ($Material) { $Material } else { Get-MaterialInstances $Textures $RenderMethod }
     if ($null -ne $Collision) { $c['minecraft:collision_box'] = $Collision }
@@ -333,7 +334,7 @@ Write-PackJson (Join-Path $script:BP 'loot_tables/blocks/cut_vine.json') ([order
 $cutVineLoot = 'loot_tables/blocks/cut_vine.json'
 $vineMat = [ordered]@{ texture = (Add-TerrainTexture 'textures/blocks/vine'); render_method = 'alpha_test'; tint_method = 'default_foliage'; ambient_occlusion = $false }
 Add-StorageBlock -Id 'lepton:cut_vine' -Name @{ en = 'Cut Vines'; zh = '已剪切的藤蔓' } -Hardness 0.2 -Sound grass -MapColor '#007c00' -Flame 0, 300 `
-    -Tags 'lepton:cut_vine' -Gate 'enableShearVines' -PassLight -Hidden -Loot $cutVineLoot `
+    -Tags 'lepton:cut_vine' -Gate 'enableShearVines' -PassLight -Replaceable -Hidden -Loot $cutVineLoot `
     -Geometry ([ordered]@{ identifier = $vineGeo; bone_visibility = $vineVis }) -Material ([ordered]@{ '*' = $vineMat }) -Collision $false `
     -States $vineStates -Permutations $vinePerms
 
