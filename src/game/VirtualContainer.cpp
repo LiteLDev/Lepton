@@ -24,7 +24,12 @@
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/containers/managers/models/ChestContainerManagerModel.h"
 #include "mc/world/containers/managers/models/ContainerManagerModel.h"
+#include "mc/network/MinecraftPacketIds.h"
+#include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/ContainerOpenPacket.h"
+#include "mc/world/ContainerID.h"
 #include "mc/world/inventory/network/ContainerScreenContext.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
@@ -60,6 +65,7 @@ struct Session {
     std::set<std::string>    viewers; ///< player UUIDs
     std::map<std::string, int> grace; ///< viewer -> ticks before the screen must be seen open
     int                      readyTick = 0; ///< first tick the helper is known to clients
+    std::set<std::string>    pending;       ///< viewers whose screen opens in a few ticks
 };
 
 std::map<GlobalPos, std::vector<ItemStack>>& cache() {
@@ -249,8 +255,7 @@ SharedTypes::Legacy::ContainerType typeOf(Screen s) {
     switch (s) {
     case Screen::Hopper:
         return SharedTypes::Legacy::ContainerType::Hopper;
-    case Screen::Dispenser:
-        return SharedTypes::Legacy::ContainerType::Dispenser;
+    case Screen::Dispenser: // the helper's own container: see showDispenser
     default:
         return SharedTypes::Legacy::ContainerType::Container;
     }
@@ -280,12 +285,36 @@ constexpr int kSpawnToOpenTicks = 3;
 /// Ticks for a changed name tag (the screen title) to reach the clients before the screen opens.
 constexpr int kNameSyncTicks = 2;
 
+/// The game opens an entity's container only as a chest or hopper screen (its dispenser screen
+/// model needs a dispenser block). A 3x3 screen is the chest model of the helper (same
+/// server-authoritative slots, `LevelEntity` container) announced to the client as a dispenser.
+void showDispenser(ServerPlayer& player, Actor& helper, GlobalPos const& pos) {
+    ContainerID& counter = player.mContainerCounter;
+    auto  next    = static_cast<int>(counter) + 1;
+    if (next >= static_cast<int>(ContainerID::Last)) next = static_cast<int>(ContainerID::First);
+    counter = static_cast<ContainerID>(next);
+    auto model = std::make_shared<ChestContainerManagerModel>(counter, player, helper.getOrCreateUniqueID());
+    model->postInit();
+    model->setContainerType(SharedTypes::Legacy::ContainerType::Dispenser);
+    player._setContainerManagerModel(model);
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::ContainerOpen);
+    if (!pkt) return;
+    auto& open           = static_cast<ContainerOpenPacket&>(*pkt);
+    open.mContainerId    = counter;
+    open.mType           = SharedTypes::Legacy::ContainerType::Dispenser;
+    open.mPos            = blockPos(pos);
+    open.mEntityUniqueID = helper.getOrCreateUniqueID();
+    open.sendTo(player);
+    player.refreshContainer(*model);
+}
+
 /// Opens the helper's screen for the player now (the helper and its name are known to the client).
 void showScreen(Player& player, Actor& helper, Spec const& spec, GlobalPos const& pos) {
     auto* comp = componentOf(helper);
     if (!comp) return;
     comp->setCustomName(trFor(player, spec.titleKey, spec.titleFallback));
-    helper.openContainerComponent(player);
+    if (spec.screen == Screen::Dispenser) showDispenser(static_cast<ServerPlayer&>(player), helper, pos);
+    else helper.openContainerComponent(player);
     log().info("virtual container {} opened by {}", pos.key(), player.getRealName());
 }
 
@@ -293,10 +322,17 @@ void showScreen(Player& player, Actor& helper, Spec const& spec, GlobalPos const
 /// and its name tag carries the title. Clients title an entity's container screen with the
 /// entity's name tag (synced actor data, shared by all viewers: the last opener's language wins).
 void requestShow(Player& player, Session& session, Actor& helper, Spec const& spec, GlobalPos const& pos) {
-    auto uuid  = player.getUuid().asString();
+    auto uuid = player.getUuid().asString();
+    // Already on its way. (A screen the server thinks open is sent again: the client may have
+    // dropped it, and the server cannot tell.)
+    if (session.pending.contains(uuid)) return;
     auto title = trFor(player, spec.titleKey, spec.titleFallback);
     int  wait  = std::max(0, session.readyTick - gTick);
-    if (helper.getNameTag() != title) {
+    // The title changes only while nobody looks at the screen (it would change for them too).
+    bool watched = false;
+    for (auto const& v : session.viewers)
+        if (auto* p = playerByUuid(v); p && v != uuid && hasOpen(*p, session.entity)) watched = true;
+    if (!watched && helper.getNameTag() != title) {
         helper.setNameTag(title);
         wait = std::max(wait, kNameSyncTicks);
     }
@@ -305,11 +341,14 @@ void requestShow(Player& player, Session& session, Actor& helper, Spec const& sp
         showScreen(player, helper, spec, pos);
         return;
     }
+    session.pending.insert(uuid);
     int64_t entity = session.entity;
     ll::coro::keepThis([uuid, pos, spec, entity, wait]() -> ll::coro::CoroTask<> {
         co_await ll::chrono::ticks(wait);
         auto it = sessions().find(pos);
-        if (it == sessions().end() || it->second.entity != entity || !it->second.viewers.contains(uuid)) co_return;
+        if (it == sessions().end() || it->second.entity != entity) co_return;
+        it->second.pending.erase(uuid);
+        if (!it->second.viewers.contains(uuid)) co_return;
         auto* p      = playerByUuid(uuid);
         auto* helper = entities::find(entity);
         if (!p || !helper || (p->mContainerManager.get() && !hasOpen(*p, entity))) {
@@ -390,8 +429,10 @@ bool open(Player& player, GlobalPos const& pos, Spec const& spec) {
     if (auto open = openBy(player)) {
         if (*open != pos) return false;
         // Asked again: the client may not have shown the screen (it rejects a container opened
-        // while another of its screens, e.g. the chat, is still closing). Send it again.
+        // while another of its screens, e.g. the chat, is still closing). Send it again, unless
+        // another container screen took its place meanwhile.
         auto it = sessions().find(pos);
+        if (player.mContainerManager.get() && !hasOpen(player, it->second.entity)) return false;
         if (auto* helper = entities::find(it->second.entity)) requestShow(player, it->second, *helper, spec, pos);
         return true;
     }
