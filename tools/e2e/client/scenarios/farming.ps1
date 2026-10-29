@@ -10,6 +10,9 @@ foreach ($view in 'farm', 'petals', 'chicken') {
     Start-Sleep -Seconds 4
     Save-Screenshot $view | Out-Null
 }
+# GrabChickens' client render part moved the carried chicken onto the head and hid its legs.
+Wait-LogLine 'farming: carried chicken drawn on the player''s head' 5 -Since $mark | Out-Null
+Wait-LogLine 'farming: carried chicken legs hidden' 5 -Since $mark | Out-Null
 $line = Wait-LogLine 'SELFTEST (PASS|FAIL) farming\.gallery' 60 -Since $mark
 if ($line -match 'FAIL') { throw "gallery selftest failed: $line" }
 $r = Invoke-SelfTest 'farming.*' -TimeoutSeconds 900

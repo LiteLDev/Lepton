@@ -15,7 +15,9 @@
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/gamemode/InteractionResult.h"
 #include "mc/world/item/HandSlot.h"
+#include "mc/world/item/Item.h"
 #include "mc/world/item/ItemStack.h"
+#include "mc/world/item/ItemUsedOnEventContext.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/GameType.h"
@@ -87,6 +89,10 @@ void drain(BlockSource& region, BlockPos const& a, BlockPos const& b) {
                 auto const& id = region.getBlock(p).getTypeName();
                 if (id == "minecraft:water" || id == "minecraft:flowing_water" || id == "lepton:water_pink_petals")
                     lp::game::clearBlock(region, p);
+                auto const& extra = region.getExtraBlock(p).getTypeName();
+                if (extra == "minecraft:water" || extra == "minecraft:flowing_water") {
+                    if (auto const* air = bs::of("minecraft:air")) region.setExtraBlock(p, *air, 3);
+                }
             }
 }
 
@@ -99,14 +105,21 @@ struct ConfigGuard {
     }
 };
 
-bool interact(Player& p, Actor& target) { return p.mGameMode->interact(target, target.getPosition(), HandSlot::Mainhand); }
-
-/// The game's own "use item on block" (what a client's click runs on the server).
-void useOn(Player& p, ItemStack& item, BlockPos const& pos, int face) {
-    auto const& block = p.getDimensionBlockSource().getBlock(pos);
-    Vec3        hit{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + (face == 1 ? 1.f : 0.f), static_cast<float>(pos.z) + 0.5f};
-    p.mGameMode->useItemOn(item, pos, static_cast<uchar>(face), hit, HandSlot::Mainhand, &block, true);
+/// Spawned chickens and horses are babies by chance: grow them up (adults only can be grabbed/ridden).
+void growUp(Actor* a) {
+    if (a && a->isBaby()) ent::triggerEvent(*a, "minecraft:ageable_grow_up");
 }
+
+/// Why a grab may have failed (selftest diagnostics).
+std::string grabState(Player& p, Actor& chicken) {
+    auto const& hand = p.getSelectedItem();
+    return "hand=" + (hand.isNull() ? std::string("empty") : hand.getTypeName()) + " baby=" + std::to_string(chicken.isBaby())
+         + " host=" + std::to_string(farm::canHostChicken(p)) + " sneaking=" + std::to_string(p.isSneaking())
+         + " riding=" + std::to_string(p.getVehicle() != nullptr) + " passengers=" + std::to_string(p.hasPassenger())
+         + " chickenVehicle=" + std::to_string(chicken.getVehicle() != nullptr);
+}
+
+bool interact(Player& p, Actor& target) { return p.mGameMode->interact(target, target.getPosition(), HandSlot::Mainhand); }
 
 } // namespace
 
@@ -217,11 +230,15 @@ LP_REGISTER_SELFTEST("farming.simple_harvest", [](Context& ctx) -> ll::coro::Cor
     auto  hoe = makeItem("minecraft:wooden_hoe");
     hand(p, hoe);
     co_await ctx.ticks(10);
-    // SimulatedPlayer refuses to click blocks without a collision box: drive GameMode::useItemOn
-    useOn(p, hoe, bp(base, 11, 1, 2), 1);
-    (void)sim;
+    // the client's click (a SimulatedPlayer cannot click a block without a collision box such as
+    // a crop): use the hoe on the farmland below, which SimpleHarvest treats as the crop above
+    sim.simulateUseItemOnBlock(hoe, bp(base, 11, 0, 2), Facing::Up, Vec3{0.5f, 1.0f, 0.5f});
     for (int i = 0; i < 10 && intAt(region, bp(base, 11, 1, 2), "growth") != 0; ++i) co_await ctx.ticks(1);
-    ctx.check(intAt(region, bp(base, 11, 1, 2), "growth") == 0, "using a hoe on ripe carrots harvests them");
+    ctx.check(
+        intAt(region, bp(base, 11, 1, 2), "growth") == 0,
+        "using a hoe on ripe carrots harvests them (" + idAt(region, bp(base, 11, 1, 2)) + " growth "
+            + std::to_string(intAt(region, bp(base, 11, 1, 2), "growth")) + ", below " + idAt(region, bp(base, 11, 0, 2)) + ")"
+    );
     co_await ctx.ticks(2);
     clearEntities(region, around(bp(base), bp(base, 12, 1, 4)), "minecraft:item");
     hand(p, ItemStack{});
@@ -311,6 +328,11 @@ LP_REGISTER_SELFTEST("farming.coral_on_cactus", [](Context& ctx) -> ll::coro::Co
     sim.simulateUseItemOnBlock(fan, bp(base, 4, 1, 1), Facing::Up, Vec3{0.5f, 1.0f, 0.5f});
     for (int i = 0; i < 10 && idAt(region, bp(base, 4, 2, 1)) != "minecraft:brain_coral_fan"; ++i) co_await ctx.ticks(1);
     ctx.check(idAt(region, bp(base, 4, 2, 1)) == "minecraft:brain_coral_fan", "a coral fan can be placed on a cactus");
+    for (auto [dx, dy] : {std::pair{0, 2}, {2, 1}, {4, 2}}) {
+        auto const& liquid = region.getExtraBlock(bp(base, dx, dy, 1)).getTypeName();
+        if (liquid != "minecraft:air") ctx.info("liquid layer at fan " + std::to_string(dx) + ": " + liquid);
+    }
+    drain(region, bp(base, -1, 0, 0), bp(base, 6, 3, 2));
     hand(p, ItemStack{});
 });
 
@@ -320,6 +342,7 @@ LP_REGISTER_SELFTEST("farming.spore_blossom", [](Context& ctx) -> ll::coro::Coro
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto& p      = ctx.player();
     auto& region = p.getDimensionBlockSource();
+    drain(region, bp(base, -1, 0, 0), bp(base, 1, 3, 2));
     put(ctx, region, bp(base, 0, 3, 1), "minecraft:stone");
     put(ctx, region, bp(base, 0, 2, 1), "minecraft:spore_blossom");
     auto box = around(bp(base, 0, 0, 1), bp(base, 0, 3, 1));
@@ -333,17 +356,25 @@ LP_REGISTER_SELFTEST("farming.spore_blossom", [](Context& ctx) -> ll::coro::Coro
     ctx.check(!farm::boneMealSporeBlossom(region, bp(base, 0, 2, 1)), "chance 0 disables it");
     lp::config::mut<farm::FarmingConfig>().boneMealChance = 1.0;
 
-    // through the bone meal item (FertilizerItem hook)
+    // through the bone meal item (the FertilizerItem hook, what the game runs for a player's click;
+    // a SimulatedPlayer cannot click the collision-less blossom itself)
     p.setPlayerGameType(GameType::Survival);
-    auto& sim = static_cast<SimulatedPlayer&>(p);
-    auto  bm  = makeItem("minecraft:bone_meal", 5);
+    auto bm = makeItem("minecraft:bone_meal", 5);
     hand(p, bm);
-    co_await ctx.ticks(10);
-    useOn(p, bm, bp(base, 0, 2, 1), 0);
-    (void)sim;
+    auto target = bp(base, 0, 2, 1);
+    Vec3 hit{static_cast<float>(target.x) + 0.5f, static_cast<float>(target.y) + 0.5f, static_cast<float>(target.z) + 0.5f};
+    ctx.require(bm.mItem.get() != nullptr, "bone meal item");
+    co_await ctx.ticks(2); // the cleared item entities are gone
+    int  n0          = countItems(region, box, "minecraft:spore_blossom");
+    auto blockBefore = idAt(region, target);
+    auto r = bm.mItem.get()->useOn(bm, p, target, 0, HandSlot::Mainhand, hit, ItemUsedOnEventContext{});
+    ctx.check(r.mSuccess, "the bone meal use succeeds (on " + blockBefore + ")");
     co_await ctx.ticks(3);
     ctx.check(bm.mCount == 4, "one bone meal used (" + std::to_string(bm.mCount) + " left)");
-    ctx.check(countItems(region, box, "minecraft:spore_blossom") == 1, "the spore blossom popped");
+    {
+        int n = countItems(region, box, "minecraft:spore_blossom") - n0;
+        ctx.check(n == 1, "the spore blossom popped (" + std::to_string(n) + " new, " + std::to_string(n0) + " before)");
+    }
     clearEntities(region, box, "minecraft:item");
     hand(p, ItemStack{});
 });
@@ -493,9 +524,11 @@ LP_REGISTER_SELFTEST("farming.grab_chickens", [](Context& ctx) -> ll::coro::Coro
     ctx.require(ch != nullptr, "chicken spawned");
     auto id = ent::idOf(*ch);
     co_await ctx.ticks(2);
+    growUp(ent::find(id));
+    co_await ctx.ticks(2);
     hand(p, ItemStack{});
     ch = ent::find(id);
-    ctx.require(ch != nullptr, "chicken still there");
+    ctx.require(ch != nullptr && !ch->isBaby(), "an adult chicken");
     ctx.check(interact(p, *ch), "empty-hand interaction picks the chicken up");
     co_await ctx.ticks(3);
     ch = ent::find(id);
@@ -542,13 +575,19 @@ LP_REGISTER_SELFTEST("farming.horses_swim", [](Context& ctx) -> ll::coro::CoroTa
     ctx.require(horse != nullptr, "horse spawned");
     auto id = ent::idOf(*horse);
     co_await ctx.ticks(2);
+    growUp(ent::find(id));
+    co_await ctx.ticks(2);
     horse = ent::find(id);
-    ctx.require(horse != nullptr, "horse alive");
+    ctx.require(horse != nullptr && !horse->isBaby(), "an adult horse");
     ctx.check(!farm::horseSwimTick(*horse), "an unridden horse is left alone");
     p.startRiding(*horse, true);
     co_await ctx.ticks(2);
     horse = ent::find(id);
-    ctx.require(horse && horse->hasPassenger(), "the player rides the horse");
+    ctx.require(
+        horse && horse->hasPassenger(),
+        "the player rides the horse (player riding=" + std::to_string(p.getVehicle() != nullptr)
+            + " passengers=" + std::to_string(p.hasPassenger()) + ")"
+    );
     horse->teleport(Vec3{at.x, at.y + 1.0f, at.z}, horse->getDimensionId());
     co_await ctx.ticks(1);
     horse = ent::find(id);
@@ -604,7 +643,7 @@ LP_REGISTER_SELFTEST("farming.villagers_follow", [](Context& ctx) -> ll::coro::C
 // with 1..4 petals in all four directions, coral fans on cacti and a chicken carried by the test
 // player. With a real player in the world it is moved in front of the scene ("FARMING view").
 LP_REGISTER_SELFTEST("farming.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
-    auto base = ctx.testPos(2500);
+    auto base = ctx.testPos(2500, 12); // its own strip (south of the other farming tests)
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto& p      = ctx.player();
     auto& region = p.getDimensionBlockSource();
@@ -649,8 +688,14 @@ LP_REGISTER_SELFTEST("farming.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     auto      pos  = p.getPosition();
     auto*     ch   = ent::spawn(region, "minecraft:chicken", Vec3{pos.x + 1.f, static_cast<float>(base.y), pos.z});
     long long chId = ch ? ent::idOf(*ch) : 0;
-    co_await ctx.ticks(5);
-    if (auto* c = ent::find(chId)) ctx.check(interact(p, *c), "the test player picks up a chicken");
+    co_await ctx.ticks(2);
+    growUp(ent::find(chId));
+    co_await ctx.ticks(3);
+    if (auto* c = ent::find(chId)) {
+        hand(p, ItemStack{}); // the harvested wheat may have been picked up
+        auto before = grabState(p, *c);
+        ctx.check(interact(p, *c), "the test player picks up a chicken (" + before + ")");
+    }
 
     Player* viewer = nullptr;
     p.getLevel().forEachPlayer([&](Player& pl) {

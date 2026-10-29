@@ -227,6 +227,22 @@ std::vector<Actor*> carriedChickens(Player& player) {
 
 namespace {
 
+/// Set while GrabChickens seats a chicken on a player: the vanilla player only accepts tame
+/// parrots as passengers (its rideable seats are the shoulder seats).
+bool gSeatingChicken = false;
+
+LL_TYPE_INSTANCE_HOOK(
+    PlayerCanAddPassengerHook,
+    ll::memory::HookPriority::Normal,
+    Player,
+    &Player::$canAddPassenger,
+    bool,
+    Actor& passenger
+) {
+    if (gSeatingChicken && passenger.getEntityTypeId() == ActorType::Chicken) return true;
+    return origin(passenger);
+}
+
 bool grabChicken(Player& player, Actor& target) {
     auto const& c = cfg();
     if (!c.enableGrabChickens || player.isSneaking() || !isRealOrTestPlayer(player)) return false;
@@ -239,7 +255,15 @@ bool grabChicken(Player& player, Actor& target) {
         return true;
     }
     if (canHostChicken(player) && isType(target, ActorType::Chicken) && !target.isBaby()) {
-        bool ok = target.startRiding(player, true);
+        gSeatingChicken = true;
+        bool ok         = false;
+        try {
+            ok = target.startRiding(player, true);
+        } catch (...) {
+            gSeatingChicken = false;
+            throw;
+        }
+        gSeatingChicken = false;
         if (ok) log().info("farming: {} picked up a chicken", player.getRealName());
         return ok;
     }
@@ -411,11 +435,13 @@ void tickAnimals() {
 }
 
 void installAnimals() {
+    PlayerCanAddPassengerHook::hook();
     InteractHook::hook();
     BreedHook::hook();
 }
 
 void uninstallAnimals() {
+    PlayerCanAddPassengerHook::unhook();
     InteractHook::unhook();
     BreedHook::unhook();
     tempts().clear();

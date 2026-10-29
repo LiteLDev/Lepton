@@ -55,7 +55,8 @@ Right-clicking an adult chicken with an empty main hand (not sneaking) picks it 
 rides the player. Right-clicking any entity with an empty hand while carrying chickens puts them
 down. While a chicken is carried the player gets Slow Falling (and Slowness `slownessLevel`, 1 =
 Slowness I) every tick (5-tick ambient effects without particles); a helmet (when `needsNoHelmet`)
-or being under water makes the player drop the chicken. The carried chicken's legs are hidden.
+or being under water makes the player drop the chicken. Mod clients draw the carried chicken on
+the player's head, `0.25 - chickenOffset` blocks down, with its legs hidden (§7).
 
 ### HorsesSwim
 A ridden horse (any AbstractHorse: horse, donkey, mule, skeleton/zombie horse, llama, trader llama,
@@ -205,7 +206,7 @@ Section `farming` (`config/farming.json`), version 1.
 | `enableGrabChickens` | bool | true | GrabChickens module |
 | `needsNoHelmet` | bool | true | |
 | `slownessLevel` | int | 1 | Set to 0 to disable |
-| `chickenOffset` | double | 0.0 | -1..1; Negative numbers moves the chicken down, positive up (see §7) |
+| `chickenOffset` | double | 0.0 | -1..1; Negative numbers moves the chicken down, positive up (client render, §7) |
 | `enableHorsesSwim` | bool | true | HorsesSwim module |
 | `enableVillagersFollowEmeralds` | bool | true | VillagersFollowEmeralds module |
 
@@ -223,12 +224,15 @@ Block name (RP `texts.d/*/farming.lang`): `tile.lepton:water_pink_petals.name` =
   `age`, `beetroot`, `direction` for cocoa, cave vines split into two berry blocks).
 - `SimpleHarvestEvent` (Quark's API event for other mods) and the Flan claim integration: Java mod
   APIs, not ported (SPEC §8).
-- GrabChickens: a Bedrock player's passengers sit on the player's built-in rideable seats (the
-  parrot shoulder seats); passenger positions are computed by each client from the vanilla player
-  definition and cannot be moved by the server, so the chicken sits on the shoulder instead of above
-  the head and `chickenOffset` has no visible effect (Quark itself only reads it in a test helper).
-  Hiding the carried chicken's legs is a client render tweak with no Bedrock hook short of replacing
-  the vanilla chicken render controller, which U18 (VariantAnimalTextures) owns; not done.
+- GrabChickens: the vanilla Bedrock player only accepts tame parrots as passengers (its rideable
+  seats are the shoulder seats), so the server lets a chicken through `Player::canAddPassenger`
+  only while GrabChickens seats it. Bedrock positions passengers on each client from the vanilla
+  player definition, so the chicken's real position is the shoulder seat. The client mod
+  (`src/client/farming/ChickenRender.cpp`) reproduces Quark's render tweaks: a chicken carried by a
+  player is drawn on the player's head (the top of the 1.8 high player box) pushed down by
+  `0.25 - chickenOffset` blocks (Quark's `LivingEntityRendererMixin`), with its `leg0`/`leg1`
+  model parts hidden (Quark's `ChickenModel` tweak). Vanilla clients see the chicken on the
+  shoulder with its legs.
 - PoisonPotatoUsage: the advancement trigger (`poison_baby`) is not ported (no custom advancements).
 - PigLitters: the "animals bred" statistic/advancement for extra piglets is not ported.
 - HorsesSwim: a horse ridden by a real client is moved by that client (Bedrock vehicle movement is
