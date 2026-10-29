@@ -1,0 +1,24 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:blaze_lantern",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:block_placer": {
+        "block": "lepton:blaze_lantern",
+        "replace_block_item": true
+      },
+      "minecraft:display_name": {
+        "value": "tile.lepton:blaze_lantern.name"
+      },
+      "minecraft:fuel": {
+        "duration": 1200
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

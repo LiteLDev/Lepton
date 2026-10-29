@@ -9,6 +9,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_storage_storage_clear_shard",
+      "minecraft:display_name": {
+        "value": "item.lepton:clear_shard.name"
+      },
       "minecraft:tags": {
         "tags": [
           "lepton:shards"

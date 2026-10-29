@@ -4,7 +4,7 @@
     "description": {
       "identifier": "lepton:golden_apple_crate",
       "menu_category": {
-        "category": "construction"
+        "category": "none"
       }
     },
     "components": {

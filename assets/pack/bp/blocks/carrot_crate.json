@@ -4,7 +4,7 @@
     "description": {
       "identifier": "lepton:carrot_crate",
       "menu_category": {
-        "category": "construction"
+        "category": "none"
       }
     },
     "components": {

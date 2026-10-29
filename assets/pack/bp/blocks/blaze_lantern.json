@@ -4,7 +4,7 @@
     "description": {
       "identifier": "lepton:blaze_lantern",
       "menu_category": {
-        "category": "construction"
+        "category": "none"
       }
     },
     "components": {

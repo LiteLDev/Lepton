@@ -299,9 +299,10 @@ Block/item names are in §2 (Quark's English; zh_CN from Quark's zh_cn.json, "Po
 - **Blaze lantern animation**: the texture is static (Bedrock's flipbook table is a single shared file).
 - **Dirty glass beacon tint** (Quark: beacon colour multiplier 0x3F1F00) needs U12's beam colouring
   (`lepton:dirty_glass` is listed for it in the PR); without U12 the beam passes through untinted.
-- **Fuel in vanilla clients' furnace screen**: the fuel slot check runs on the server for hoppers and
-  item requests; a vanilla client may refuse to drag a Lepton block into the fuel slot by hand (the
-  client mod has the same hook).
+- **Fuel on vanilla clients**: the 28 fuel blocks (charcoal block, blaze lantern, bundles, crates, stools)
+  have an item definition with `minecraft:fuel` (Quark's default time), so a client without the client mod
+  also moves them into the furnace's fuel slot; the actual burn time comes from the native hook (config).
+  Torches as fuel (a vanilla item) are only known to clients with the client mod.
 - **Vanilla clients and climbing**: rope and cut vine climbing is predicted by the client; without the
   client mod the server corrects the movement, so climbing is less smooth.
 - **Dispenser rope sounds**: Bedrock's block sounds need an actor; a dispenser placing or lowering rope is

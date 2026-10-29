@@ -754,7 +754,7 @@ LP_REGISTER_SELFTEST("storage.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         };
         co_await view("compressed-1", 5.5f, 1.6f, -3.5f, 22.f, 0.f);     // looking south at z 0
         co_await view("compressed-2", 16.5f, 1.6f, -3.5f, 22.f, 0.f);
-        co_await view("stools", 7.5f, 3.f, -1.5f, 40.f, 0.f);            // over row 0 at the stools
+        co_await view("stools", 7.5f, 4.5f, 3.5f, 55.f, 180.f);           // above the pots, down onto the stools
         co_await view("rope-vine", 20.5f, 2.5f, 7.5f, 10.f, 180.f);      // looking north at the rope / vines
         co_await view("potted-1", 5.5f, 2.f, 8.5f, 32.f, 180.f);         // the pots from the south
         co_await view("potted-2", 18.5f, 2.f, 8.5f, 32.f, 180.f);
@@ -762,4 +762,36 @@ LP_REGISTER_SELFTEST("storage.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     ctx.player().stopRiding(true, false, false, false);
     co_await ctx.ticks(2);
     ctx.info("STORAGE GALLERY done");
+});
+// Client scenario `storage-furnace`: reports what the real player's furnace (within 4 blocks) holds,
+// so the scenario can check that a client could put a Lepton fuel block into the fuel slot.
+LP_REGISTER_SELFTEST("storage.furnace_report", [](Context& ctx) {
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) return;
+    auto& r    = viewer->getDimensionBlockSource();
+    auto  feet = lp::game::blockPosOf(viewer->getFeetPos());
+    for (int dx = -4; dx <= 4; ++dx)
+        for (int dy = -2; dy <= 2; ++dy)
+            for (int dz = -4; dz <= 4; ++dz) {
+                BlockPos q{feet.x + dx, feet.y + dy, feet.z + dz};
+                if (r.getBlock(q).getTypeName() != "minecraft:furnace") continue;
+                auto* be = r.getBlockEntity(q);
+                if (!be) continue;
+                auto* fa = static_cast<FurnaceBlockActor*>(be);
+                auto const& in   = fa->getItem(0);
+                auto const& fuel = fa->getItem(1);
+                lp::log().info(
+                    "STORAGE FURNACE input={} x{} fuel={} x{}",
+                    lp::game::itemId(in),
+                    lp::game::isEmpty(in) ? 0 : in.mCount,
+                    lp::game::itemId(fuel),
+                    lp::game::isEmpty(fuel) ? 0 : fuel.mCount
+                );
+                return;
+            }
+    lp::log().info("STORAGE FURNACE none");
 });

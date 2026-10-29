@@ -4,4 +4,4 @@
 Wait-LogLine 'storage: ready' 60 | Out-Null
 $r = Invoke-SelfTest 'storage.*' -TimeoutSeconds 600
 if ($r.Fail -gt 0) { throw "$($r.Fail) storage selftest(s) failed" }
-if ($r.Pass -lt 25) { throw "expected 25 storage selftests to pass, got $($r.Pass)" }
+if ($r.Pass -lt 26) { throw "expected 26 storage selftests to pass, got $($r.Pass)" }

@@ -4,7 +4,7 @@
     "description": {
       "identifier": "lepton:cactus_block",
       "menu_category": {
-        "category": "construction"
+        "category": "none"
       },
       "traits": {
         "minecraft:placement_position": {

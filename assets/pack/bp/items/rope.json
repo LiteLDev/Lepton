@@ -9,6 +9,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_storage_storage_rope",
+      "minecraft:display_name": {
+        "value": "tile.lepton:rope.name"
+      },
       "minecraft:block_placer": {
         "block": "lepton:rope",
         "replace_block_item": true
