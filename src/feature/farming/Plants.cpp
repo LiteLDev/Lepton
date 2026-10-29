@@ -221,6 +221,8 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
         later(1, [id, above, itemId] {
             auto* p = playerById(id);
             if (!p) return;
+            auto const& held = p->getSelectedItem();
+            if (held.isNull() || held.getTypeName() != itemId) return; // switched items meanwhile
             auto& r = p->getDimensionBlockSource();
             if (!game::replaceable(r, above) || !onCactus(r, above)) return;
             auto const* fan = bs::of(itemId);
@@ -255,8 +257,7 @@ bool boneMealSporeBlossom(BlockSource& region, BlockPos const& pos) {
     if (!c.enableRenewableSporeBlossoms || c.boneMealChance <= 0) return false;
     if (region.getBlock(pos).getTypeName() != "minecraft:spore_blossom") return false;
     if (random01() < c.boneMealChance) popItem(region, pos, game::makeItem("minecraft:spore_blossom"));
-    if (auto level = ll::service::getLevel())
-        level->broadcastLevelEvent(SharedTypes::Legacy::LevelEvent::ParticleCropGrowth, center(pos), 15, nullptr);
+    levelEvent(region, center(pos), SharedTypes::Legacy::LevelEvent::ParticleCropGrowth, 15);
     return true;
 }
 

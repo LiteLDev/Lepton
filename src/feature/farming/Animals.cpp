@@ -360,9 +360,6 @@ std::unordered_map<long long, TemptState>& tempts() {
 }
 
 void tempt(std::vector<Player*> const& holders, ActorType type, float speed) {
-    if (holders.empty()) return;
-    auto level = ll::service::getLevel();
-    if (!level) return;
     std::set<long long> seen;
     for (auto* p : holders) {
         auto& region = p->getDimensionBlockSource();
@@ -385,13 +382,22 @@ void tempt(std::vector<Player*> const& holders, ActorType type, float speed) {
         }
     }
     // tempted mobs whose player went away calm down for 100 ticks (Java TemptGoal)
-    for (auto& [id, s] : tempts()) {
+    for (auto it = tempts().begin(); it != tempts().end();) {
+        auto& [id, s] = *it;
         if (s.player != 0 && !seen.contains(id)) {
-            if (auto* a = game::entities::find(id); a && isType(*a, type)) {
+            auto* a = game::entities::find(id);
+            if (!a) {
+                it = tempts().erase(it); // despawned or unloaded
+                continue;
+            }
+            if (isType(*a, type)) {
                 s.player    = 0;
                 s.calmUntil = now() + 100;
+                if (auto nav = a->getEntityContext().tryGetComponent<NavigationComponent>(); nav && nav->mNavigation)
+                    nav->mNavigation->stop(*nav, static_cast<Mob&>(*a));
             }
         }
+        ++it;
     }
 }
 
@@ -433,6 +439,8 @@ void tickAnimals() {
         }
     }
 }
+
+void resetTempts() { tempts().clear(); }
 
 void installAnimals() {
     PlayerCanAddPassengerHook::hook();

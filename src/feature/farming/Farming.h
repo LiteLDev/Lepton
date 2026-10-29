@@ -10,6 +10,9 @@
 #include <utility>
 #include <vector>
 
+#include "mc/deps/core/math/Vec3.h"
+#include "mc/deps/shared_types/legacy/LevelEvent.h"
+
 class Actor;
 class Block;
 class BlockPos;
@@ -102,7 +105,9 @@ void consumeOne(Player& player, ItemStack const& stack);
 void playSoundAt(BlockSource& region, float x, float y, float z, std::string const& name, float volume, float pitch);
 /// Spawns an item entity at the centre of a block.
 void popItem(BlockSource& region, BlockPos const& pos, ItemStack const& stack);
-/// Block-break particles and sound of `block` at `pos`.
+/// A level event (particles) sent to the players of `region`'s dimension near `at`.
+void levelEvent(BlockSource& region, Vec3 const& at, SharedTypes::Legacy::LevelEvent event, int data);
+/// Block-break particles of `block` at `pos`.
 void destroyEffect(BlockSource& region, BlockPos const& pos, Block const& block);
 [[nodiscard]] bool hasItemTag(ItemStackBase const& stack, std::string_view tag);
 [[nodiscard]] bool isHoe(ItemStackBase const& stack);
@@ -154,6 +159,8 @@ bool boneMealSporeBlossom(BlockSource& region, BlockPos const& pos);
 void installAnimals();
 void uninstallAnimals();
 void tickAnimals();
+/// Forgets the tempt state (world closed).
+void resetTempts();
 /// GameMode::interact handling; returns true if the interaction was consumed.
 bool onInteractEntity(Player& player, Actor& target);
 /// PoisonPotatoUsage on `target`; returns true if the potato was used.

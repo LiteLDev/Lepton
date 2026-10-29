@@ -1,6 +1,7 @@
 #include "feature/farming/Farming.h"
 
 #include <algorithm>
+#include <cmath>
 #include <random>
 
 #include "ll/api/event/EventBus.h"
@@ -10,6 +11,9 @@
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/legacy/ActorUniqueID.h"
+#include "mc/network/MinecraftPacketIds.h"
+#include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/LevelEventPacket.h"
 #include "mc/network/packet/PlaySoundPacket.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
@@ -83,15 +87,26 @@ void onTick(ll::event::ServerLevelTickEvent&) {
 
 } // namespace
 
+namespace {
+
+/// Writes only when the value changes, so the steady state never writes to the shared config
+/// (the client render thread reads it).
+template <class T>
+void setIfChanged(T& field, T value) {
+    if (field != value) field = value;
+}
+
+} // namespace
+
 FarmingConfig const& cfg() {
-    auto& c              = config::mut<FarmingConfig>();
-    c.regularHoeRadius   = std::clamp(c.regularHoeRadius, 1, 5);
-    c.highTierHoeRadius  = std::clamp(c.highTierHoeRadius, 1, 5);
-    c.minPigLitterSize   = std::max(c.minPigLitterSize, 1);
-    c.maxPigLitterSize   = std::max(c.maxPigLitterSize, 1);
-    c.minGoldenCarrotBoost = std::max(c.minGoldenCarrotBoost, 0);
-    c.maxGoldenCarrotBoost = std::max(c.maxGoldenCarrotBoost, 0);
-    c.chickenOffset      = std::clamp(c.chickenOffset, -1.0, 1.0);
+    auto& c = config::mut<FarmingConfig>();
+    setIfChanged(c.regularHoeRadius, std::clamp(c.regularHoeRadius, 1, 5));
+    setIfChanged(c.highTierHoeRadius, std::clamp(c.highTierHoeRadius, 1, 5));
+    setIfChanged(c.minPigLitterSize, std::max(c.minPigLitterSize, 1));
+    setIfChanged(c.maxPigLitterSize, std::max(c.maxPigLitterSize, 1));
+    setIfChanged(c.minGoldenCarrotBoost, std::max(c.minGoldenCarrotBoost, 0));
+    setIfChanged(c.maxGoldenCarrotBoost, std::max(c.maxGoldenCarrotBoost, 0));
+    setIfChanged(c.chickenOffset, std::clamp(c.chickenOffset, -1.0, 1.0));
     return c;
 }
 
@@ -115,7 +130,7 @@ Player* playerById(long long uniqueId) {
     return a && a->isPlayer() ? static_cast<Player*>(a) : nullptr;
 }
 
-bool isCreative(Player const& player) { return player.getPlayerGameType() == GameType::Creative; }
+bool isCreative(Player const& player) { return player.isCreative(); }
 
 ItemStack& mainHand(Player& player) { return const_cast<ItemStack&>(player.getSelectedItem()); }
 
@@ -151,12 +166,21 @@ void popItem(BlockSource& region, BlockPos const& pos, ItemStack const& stack) {
     level->getSpawner().spawnItem(region, stack, nullptr, at, 10);
 }
 
+void levelEvent(BlockSource& region, Vec3 const& at, SharedTypes::Legacy::LevelEvent event, int data) {
+    auto base = MinecraftPackets::createPacket(MinecraftPacketIds::LevelEvent);
+    if (!base) return;
+    auto& pkt   = static_cast<LevelEventPacket&>(*base);
+    pkt.mEventId = static_cast<int>(event);
+    pkt.mPos     = at;
+    pkt.mData    = data;
+    // only to the players of this dimension (Level::broadcastLevelEvent reaches every dimension)
+    pkt.sendTo(BlockPos{static_cast<int>(std::floor(at.x)), static_cast<int>(std::floor(at.y)), static_cast<int>(std::floor(at.z))},
+               region.getDimensionId());
+}
+
 void destroyEffect(BlockSource& region, BlockPos const& pos, Block const& block) {
-    auto level = ll::service::getLevel();
-    if (!level) return;
     Vec3 at{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f, static_cast<float>(pos.z) + 0.5f};
-    (void)region;
-    level->broadcastLevelEvent(SharedTypes::Legacy::LevelEvent::ParticlesDestroyBlock, at, static_cast<int>(block.mNetworkId), nullptr);
+    levelEvent(region, at, SharedTypes::Legacy::LevelEvent::ParticlesDestroyBlock, static_cast<int>(block.mNetworkId));
 }
 
 bool hasItemTag(ItemStackBase const& stack, std::string_view tag) {
@@ -177,7 +201,13 @@ public:
         static bool registered = false;
         if (!registered) {
             registered = true;
-            game::db::onWorldClosed([] { st() = State{}; });
+            game::db::onWorldClosed([] {
+                st() = State{};
+                resetTempts();
+            });
+            // blocks of the behavior packs exist only once a world is loaded (client: mods are
+            // enabled before any world), so the crop tables are resolved again for every world
+            game::db::onWorldReady([] { rebuildHarvestTables(); });
             config::onReload([] { rebuildHarvestTables(); });
         }
         rebuildHarvestTables();
