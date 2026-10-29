@@ -275,8 +275,13 @@ LP_REGISTER_SELFTEST("logistics.trough", [](Context& ctx) -> ll::coro::CoroTask<
     auto  saved     = conf;
     conf.loveChance = 1.0;
     conf.lookChance = 1.0;
-    auto* cow       = ent::spawn(region, "minecraft:cow", Vec3{t.x + 0.5f, t.y + 0.0f, t.z + 1.6f});
-    ctx.require(cow != nullptr, "cow spawned");
+    // 5% of spawned cows are babies, which cannot fall in love: spawn until an adult comes out
+    Actor* cow = nullptr;
+    for (int i = 0; i < 10 && (!cow || cow->isBaby()); ++i) {
+        if (cow) ent::despawn(*cow);
+        cow = ent::spawn(region, "minecraft:cow", Vec3{t.x + 0.5f, t.y + 0.0f, t.z + 1.6f});
+    }
+    ctx.require(cow != nullptr && !cow->isBaby(), "adult cow spawned");
     auto cowId = ent::idOf(*cow);
     bool loved = false;
     for (int i = 0; i < 40 && !loved; ++i) {
