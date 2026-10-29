@@ -32,6 +32,7 @@
 #include "mc/world/level/Tick.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockType.h"
+#include "mc/world/phys/AABB.h"
 
 #include "feature/frames/SignAttachment.h"
 #include "game/BlockStates.h"
@@ -169,13 +170,29 @@ SignInfo signInfoOf(Block const& block) {
 
 namespace {
 
-/// The support of a frame facing `dir` holds it (any face part, or a sign: Java signs are
-/// `forceSolidOn`).
+/// Java's BlockState#isSolid: a collision shape whose bounding box is at least 0.73 on average or
+/// a full block high (chests, slabs, fences, leaves, glass; not carpets, flowers, liquids).
+bool javaSolid(BlockSource& region, BlockPos const& pos, Block const& b) {
+    if (b.isAir()) return false;
+    AABB box = b.getBlockType().getCollisionShape(b, region, pos, nullptr);
+    Vec3 d   = box.max - box.min;
+    if (d.x <= 0.f || d.y <= 0.f || d.z <= 0.f) return false;
+    return (d.x + d.y + d.z) / 3.f >= 0.7291666f || d.y >= 1.f;
+}
+
+bool isDiode(Block const& b) {
+    auto const& id = b.getTypeName();
+    return id == "minecraft:unpowered_repeater" || id == "minecraft:powered_repeater"
+        || id == "minecraft:unpowered_comparator" || id == "minecraft:powered_comparator";
+}
+
+/// The support of a frame facing `dir` holds it (Java's HangingEntity#survives: a solid block or a
+/// diode; signs are `forceSolidOn` in Java, so they count as solid).
 bool supportOk(BlockSource& region, BlockPos const& framePos, int dir) {
     BlockPos    sp = offset(framePos, oppositeDir(dir));
     auto const& b  = region.getBlock(sp);
-    if (signInfoOf(b).kind != SignKind::None) return true;
-    return b.canProvideSupport(static_cast<uchar>(dir), BlockSupportType::Any);
+    if (signInfoOf(b).kind != SignKind::None || isDiode(b)) return true;
+    return javaSolid(region, sp, b);
 }
 
 void updateAttachment(BlockSource& region, BlockPos const& pos, int dir, Frame& f) {

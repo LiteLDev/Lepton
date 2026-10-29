@@ -81,10 +81,12 @@ untinted), grey dyed frame entity texture.
 
 ### 3.1 Glass item frames
 - **Placing.** Using a glass frame item on a block face puts the frame block in front of that face
-  (native block placement), when Bedrock would allow an item frame there (`minecraft:frame`'s own
-  `mayPlace` for that face) or the clicked block is a sign (standing, wall or hanging; Java signs are
-  `forceSolidOn`). Otherwise nothing is placed. Sneak to place on blocks that react to use (chests,
-  signs), as with every block.
+  (native block placement, `minecraft:block_face`) when the clicked block holds a hanging frame by
+  Java's rule (HangingEntity#survives): a solid block in Java's sense (BlockState#isSolid: the
+  collision box is at least 0.729 on average or a full block high: stone, chests, slabs, fences,
+  glass, leaves; not carpets, flowers, liquids), a repeater / comparator, or a sign (standing, wall
+  or hanging; Java signs are `forceSolidOn`). Otherwise nothing is placed. Sneak to place on blocks
+  that react to use (chests, signs), as with every block.
 - **Using** a glass frame (`PlayerInteractBlockEvent` on the frame block, server side):
   1. Filled, not sneaking, the item is no banner, the block behind (the support) has a block entity:
      the support block is used instead (chest, barrel, furnace, sign, ...).
@@ -97,8 +99,8 @@ untinted), grey dyed frame entity texture.
   breaks (`block.itemframe.break`) and drops itself unless creative.
 - **Explosions / pistons / other removal** of the block: the frame drops itself (loot) and its item.
 - **Survival.** When the support block changes (`BlockChangedEvent` next to a tracked frame) and on a
-  100-tick sweep: if the support no longer holds an item frame and the frame is not on a sign, the
-  frame breaks and drops itself and its item.
+  100-tick sweep: if the support no longer holds a frame (same rule as placing), the frame breaks and
+  drops itself and its item.
 - **Sign attachment** (recomputed every 100 ticks and after each use, Quark's rule): support =
   standing sign or ceiling hanging sign (Bedrock: hanging sign with `hanging` = true; rotation from
   `ground_sign_direction`, or `facing_direction` when not `attached_bit`): ours = the yaw of the
@@ -149,8 +151,9 @@ already has that many layers, and so does the crafting-table pattern recipe
 ### 3.4 MapWashing
 Using a `minecraft:filled_map` (any count) on a cauldron with plain water (level > 0, no dye, no
 potion; Java only knows plain water) replaces the held stack with as many `minecraft:empty_map`,
-lowers the water by one level (2 fill levels) and plays `cauldron.cleanbanner`. Sneaking does it too
-(Java's cauldron interactions run before the item's own use). Other cauldron contents: no effect.
+lowers the water by one level (2 fill levels) and plays `cauldron.cleanbanner`. Not while sneaking
+(Java skips block interactions for a sneaking player holding an item). Other cauldron contents
+(dyed water, potions, lava, powder snow, empty): no effect.
 
 ### 3.5 Disabled modules
 `enableGlassItemFrame = false`: the two glass frame recipes are removed, using a glass frame item
@@ -224,12 +227,15 @@ No mod strings (Quark's only strings are the JEI hints, not ported per SPEC §8;
 9. Disabled GlassItemFrame keeps the (unobtainable) items registered (see 3.5).
 
 ## 8. Tests
-Selftests `frames.*`, dx 2400..2499:
-`frames.config`, `frames.recipes`, `frames.glass_place`, `frames.glass_use` (insert, rotate, punch,
-break, drops), `frames.glass_container` (frame on a chest opens it), `frames.glass_sign`
-(attachments for every sign kind), `frames.glass_survive`, `frames.glass_display` (entity, item,
-properties, name), `frames.glass_maps`, `frames.dye`, `frames.dyed_place`, `frames.dyed_break`,
-`frames.wash_frame`, `frames.map_washing`, `frames.banner_limit`, `frames.disabled`.
+Selftests `frames.*`, dx 2400..2499 (13 tests):
+`frames.config`, `frames.sign_rule` (Quark's attachment rule), `frames.recipes` (incl. removal when
+disabled), `frames.glass_use` (real placement, insert, display entity + properties, rotate, punch,
+removal drops), `frames.glass_place_rules` (floor frame, disabled module), `frames.glass_survive`,
+`frames.glass_container` (frame on a chest opens it; sneaking rotates), `frames.glass_sign`
+(standing front/behind, wall sign, ceiling hanging, wall hanging), `frames.glass_maps` (sweep and
+every-tick updates, option off), `frames.dye` (cauldron dyeing, re-dyeing, sneaking, disabled),
+`frames.wash` (dyed frame washing, map washing, dyed water, emptying), `frames.dyed_frames` (real
+placement, overlay properties, glow frame, dyed drop on break, disabled), `frames.banner_limit`.
 E2E: `tools/e2e/server/scenarios/frames.ps1` (all selftests + log lines);
 `tools/e2e/client/scenarios/frames.ps1` (a wall of glass frames with an item, a block, a tool, a
 banner, a shield and a map, glow frames, a frame on standing/wall/hanging signs, and dyed frames of
