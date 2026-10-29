@@ -103,7 +103,10 @@ public:
             if (region.getLevel().isClientSide()) return;
             auto const& pos = ev.pos();
             if (ev.newBlock().getTypeName() == kChute) mQueue.insert(game::globalPos(region, pos));
-            for (int f : kFaces) mQueue.insert(game::globalPos(region, offset(pos, f)));
+            for (int f : kFaces) {
+                auto n = offset(pos, f);
+                if (region.getBlock(n).getTypeName() == kChute) mQueue.insert(game::globalPos(region, n));
+            }
         }));
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([this](auto&) {
             if (mQueue.empty()) return;

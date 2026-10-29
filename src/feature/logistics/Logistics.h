@@ -6,6 +6,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -76,7 +77,7 @@ inline constexpr std::array<std::array<int, 3>, 6> kFaceStep{{{0, -1, 0}, {0, 1,
 [[nodiscard]] BlockPos         offset(BlockPos const& p, int face);
 
 /// Inverse of `GlobalPos::key()` ("dim:x:y:z").
-[[nodiscard]] core::GlobalPos parseKey(std::string_view key);
+[[nodiscard]] std::optional<core::GlobalPos> parseKey(std::string_view key);
 /// Block id at a global position ("" when not loaded).
 [[nodiscard]] std::string idAt(core::GlobalPos const& pos);
 /// Redstone next to the block (game/Shapes approximation).
@@ -114,6 +115,8 @@ void unregisterPort(std::string const& blockId);
 /// The container at `pos`: a vanilla block entity / entity container (as droppers see it) or a
 /// Lepton port. nullptr if none.
 [[nodiscard]] Container* containerAt(BlockSource& region, BlockPos const& pos);
+/// A Lepton port block is at `pos` (no proxy is built).
+[[nodiscard]] bool hasPort(BlockSource& region, BlockPos const& pos);
 /// Only Lepton ports (nullptr for anything else).
 [[nodiscard]] Container* portAt(BlockSource& region, BlockPos const& pos);
 

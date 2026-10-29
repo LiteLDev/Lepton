@@ -68,9 +68,9 @@ std::unordered_map<std::string, PortFactory>& factories() {
     static std::unordered_map<std::string, PortFactory> m;
     return m;
 }
-std::vector<std::unique_ptr<PortContainer>>& live() {
-    static std::vector<std::unique_ptr<PortContainer>> v;
-    return v;
+std::unordered_map<Container const*, std::unique_ptr<PortContainer>>& live() {
+    static std::unordered_map<Container const*, std::unique_ptr<PortContainer>> m;
+    return m;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -104,14 +104,21 @@ LL_TYPE_STATIC_HOOK(
 void registerPort(std::string const& blockId, PortFactory factory) { factories()[blockId] = std::move(factory); }
 void unregisterPort(std::string const& blockId) { factories().erase(blockId); }
 
+bool hasPort(BlockSource& region, BlockPos const& pos) {
+    if (factories().empty() || region.getLevel().isClientSide()) return false;
+    return factories().contains(game::blockIdAt(region, pos));
+}
+
 Container* portAt(BlockSource& region, BlockPos const& pos) {
     if (factories().empty() || region.getLevel().isClientSide()) return nullptr;
     auto it = factories().find(game::blockIdAt(region, pos));
     if (it == factories().end()) return nullptr;
     auto port = it->second(game::globalPos(region, pos));
     if (!port) return nullptr;
-    live().push_back(std::make_unique<PortContainer>(std::move(port)));
-    return live().back().get();
+    auto  c   = std::make_unique<PortContainer>(std::move(port));
+    auto* raw = c.get();
+    live().emplace(raw, std::move(c));
+    return raw;
 }
 
 Container* containerAt(BlockSource& region, BlockPos const& pos) {
@@ -122,9 +129,8 @@ Container* containerAt(BlockSource& region, BlockPos const& pos) {
 
 /// The port behind a container we created (nullptr for game containers).
 Port const* portOf(Container const& c) {
-    for (auto const& p : live())
-        if (p.get() == &c) return &p->port();
-    return nullptr;
+    auto it = live().find(&c);
+    return it == live().end() ? nullptr : &it->second->port();
 }
 
 int insertThroughFace(Container& c, ItemStack& stack, int face, bool simulate) {

@@ -79,7 +79,7 @@ void ensureLoaded() {
     s.loaded = true;
     if (auto j = game::db::load(kIndexKey); j && j->is_array())
         for (auto const& k : *j)
-            if (k.is_string()) s.known.insert(parseKey(k.get<std::string>()));
+            if (auto pos = k.is_string() ? parseKey(k.get<std::string>()) : std::nullopt) s.known.insert(*pos);
 }
 
 void saveIndex() {
@@ -237,25 +237,38 @@ bool valid(Actor& a, Pointer& ptr, int dim) {
 void tickAnimals() {
     auto& s = st();
     if (s.known.empty() && s.pointers.empty()) return;
-    // animals around troughs that hold food
-    std::map<int64_t, std::pair<Actor*, int>> candidates;
-    for (auto const& p : s.known) {
-        auto* region = game::regionOf(p.dim);
-        if (!region || !region->hasChunksAt(game::blockPos(p), 0, false)) continue;
-        if (game::blockIdAt(*region, game::blockPos(p)) != kFeedingTrough) continue;
-        if (!vc::hasItems(p)) continue;
-        float r = static_cast<float>(cfg().range);
-        AABB  box{Vec3{p.x - r, p.y - r, p.z - r}, Vec3{p.x + 1 + r, p.y + 1 + r, p.z + 1 + r}};
-        for (auto* a : game::entities::inBox(*region, box))
-            if (a && breedable(*a)) candidates[game::entities::idOf(*a)] = {a, p.dim};
-    }
-    // forget pointers of animals that are gone
+    // animals with a trough: every tick (Quark ticks the pointer on every tempt check)
+    std::map<int64_t, std::pair<Actor*, int>> animals;
     for (auto it = s.pointers.begin(); it != s.pointers.end();) {
-        if (!candidates.contains(it->first) && !game::entities::find(it->first)) it = s.pointers.erase(it);
-        else ++it;
+        auto* a = game::entities::find(it->first);
+        if (!a) {
+            it = s.pointers.erase(it);
+            continue;
+        }
+        animals[it->first] = {a, game::globalPos(a->getDimensionBlockSource(), BlockPos{0, 0, 0}).dim};
+        ++it;
+    }
+    // animals around troughs that hold food look for one: the broad scan runs every kScanTicks
+    // ticks with the look chance compounded over those ticks
+    constexpr int kScanTicks = 4;
+    double        look       = std::clamp(cfg().lookChance * 20, 0.0, 1.0);
+    double        lookScan   = 1 - std::pow(1 - look, kScanTicks);
+    if (s.tick % kScanTicks == 0) {
+        for (auto const& p : s.known) {
+            auto* region = game::regionOf(p.dim);
+            if (!region || !region->hasChunksAt(game::blockPos(p), 0, false)) continue;
+            if (game::blockIdAt(*region, game::blockPos(p)) != kFeedingTrough) continue;
+            bool food = false;
+            for (auto const& it : vc::items(p, kSize)) food = food || !game::isEmpty(it);
+            if (!food) continue;
+            float r = static_cast<float>(cfg().range);
+            AABB  box{Vec3{p.x - r, p.y - r, p.z - r}, Vec3{p.x + 1 + r, p.y + 1 + r, p.z + 1 + r}};
+            for (auto* a : game::entities::inBox(*region, box))
+                if (a && breedable(*a)) animals.try_emplace(game::entities::idOf(*a), a, p.dim);
+        }
     }
     std::uniform_real_distribution<double> unit(0, 1);
-    for (auto& [id, entry] : candidates) {
+    for (auto& [id, entry] : animals) {
         auto [a, dim] = entry;
         if (!canFallInLove(*a)) {
             s.pointers.erase(id);
@@ -265,9 +278,10 @@ void tickAnimals() {
         if (it != s.pointers.end() && !valid(*a, it->second, dim)) {
             s.pointers.erase(it);
             it = s.pointers.end();
+            continue;
         }
         if (it == s.pointers.end()) {
-            if (unit(s.random) > cfg().lookChance * 20) continue;
+            if (s.tick % kScanTicks != 0 || unit(s.random) > lookScan) continue;
             auto found = find(*a, dim);
             if (!found) continue;
             it = s.pointers.emplace(id, Pointer{*found}).first;

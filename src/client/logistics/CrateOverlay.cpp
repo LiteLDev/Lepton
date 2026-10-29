@@ -23,6 +23,7 @@ namespace {
 
 CrateView gView;
 bool      gReported = false;
+bool      gShown    = false; ///< the crate's chest screen was on top since the view opened
 
 /// CrateMenu#fullyOccupiedRows.
 int fullRows(int stacks) { return std::max(0, (stacks - 1) / 9); }
@@ -33,6 +34,11 @@ void scroll(bool down) {
 }
 
 } // namespace
+
+// Back in the game (no screen) or in another world: no crate is open any more.
+LP_REGISTER_HUD([](ui::DrawContext&) {
+    if (gView.open && gShown && ui::topScreen() == "hud_screen") gView = {};
+});
 
 LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](ui::Overlay& o, ui::ScreenInfo const& s) {
     if (!gView.open) return;
@@ -50,6 +56,7 @@ LP_REGISTER_SCREEN_OVERLAY("*chest_screen", [](ui::Overlay& o, ui::ScreenInfo co
         any = true;
     }
     if (!any) return;
+    gShown   = true;
     auto& dc = o.draw();
     // "total/max" above the window, right aligned (Quark draws it on the title line)
     auto count = ctr("lp.logistics.crate.count", "{}/{}", gView.total, gView.max);
@@ -80,7 +87,7 @@ class CrateOverlayModule {
 public:
     void install() {
         mHandler = net::onClient<CrateView>([](CrateView const& v) {
-            if (v.open && !gView.open) gReported = false;
+            if (v.open && !gView.open) gReported = gShown = false;
             gView = v;
         });
     }

@@ -134,9 +134,11 @@ void ensureLoaded() {
     s.loaded = true;
     if (auto j = game::db::load(kIndexKey); j && j->is_array())
         for (auto const& k : *j)
-            if (k.is_string()) s.known.insert(parseKey(k.get<std::string>()));
+            if (auto pos = k.is_string() ? parseKey(k.get<std::string>()) : std::nullopt) s.known.insert(*pos);
     game::db::forEachKey("lp:logistics:pipe:", [&](std::string_view suffix) {
-        auto pos = parseKey(suffix);
+        auto parsed = parseKey(suffix);
+        if (!parsed) return;
+        auto pos = *parsed;
         auto j   = game::db::load(dbKey(pos));
         if (!j || !j->is_array()) return;
         PipeData d;
@@ -189,6 +191,12 @@ bool enabledAt(BlockSource& region, BlockPos const& pos) {
     return isPipe(game::blockIdAt(region, pos)) && !powered(region, pos);
 }
 
+/// A container could be at `pos` (a Lepton port or a block entity with a container), without building it.
+bool hasTerminal(BlockSource& region, BlockPos const& pos) {
+    if (hasPort(region, pos)) return true;
+    return region.getBlockEntity(pos) && containerAt(region, pos);
+}
+
 /// A container (not a pipe) at `pos`: vanilla block entity or a Lepton port.
 Container* terminalAt(BlockSource& region, BlockPos const& pos) {
     if (auto* c = portAt(region, pos)) return c;
@@ -200,7 +208,7 @@ int computeConnection(BlockSource& region, BlockPos const& pos, int face, bool r
     BlockPos n  = offset(pos, face);
     auto     id = game::blockIdAt(region, n);
     if (isPipe(id)) return Pipe;
-    if (!id.empty() && id != "minecraft:air" && terminalAt(region, n)) return Terminal;
+    if (!id.empty() && id != "minecraft:air" && hasTerminal(region, n)) return Terminal;
     if (!recursed) {
         int other = computeConnection(region, pos, opposite(face), true);
         if (isSolid(other)) {
@@ -465,7 +473,7 @@ void tickPipe(BlockSource& region, GlobalPos const& p) {
             item.lastTick = s.tick;
             ++item.ticks;
             ++item.time;
-            if (item.ticks == speed / 2 - 1) item.out = targetFace(region, game::blockPos(p), item);
+            if (item.ticks == std::max(1, speed / 2 - 1)) item.out = targetFace(region, game::blockPos(p), item);
             if (item.out < 0) {
                 item.valid = false;
                 fin        = true;
@@ -677,7 +685,13 @@ public:
             if (!isPipe(id)) return;
             auto item = game::itemId(ev.item());
             if (item == "minecraft:stick") {
-                if (fixNetwork(region, ev.blockPos())) ev.cancel();
+                // defer: block changes made while a cancelled interaction runs are rolled back
+                auto pos = game::globalPos(region, ev.blockPos());
+                ll::coro::keepThis([pos]() -> ll::coro::CoroTask<> {
+                    co_await ll::chrono::ticks(1);
+                    if (auto* r = regionFor(pos); r && isPipe(game::blockIdAt(*r, game::blockPos(pos))))
+                        if (fixNetwork(*r, game::blockPos(pos))) log().info("pipe network at {} fixed", pos.key());
+                }).launch(ll::thread::ServerThreadExecutor::getDefault());
             } else if (item == "minecraft:glass" && id == kPipe && cfg().enableEncasedPipes) {
                 ev.cancel();
                 encase(game::globalPos(region, ev.blockPos()), player.getUuid().asString());

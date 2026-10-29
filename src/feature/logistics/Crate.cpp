@@ -64,8 +64,8 @@ struct Data {
 
 struct Session {
     int                    scroll = 0;
-    std::vector<ItemStack> last; ///< the window as last written
-    bool                   seen = false;
+    std::vector<ItemStack> last;    ///< the window as last written
+    std::set<std::string>  viewers; ///< UUIDs of players who opened it (for the close message)
 };
 
 struct State {
@@ -165,10 +165,22 @@ void sendView(GlobalPos const& p, bool open) {
     view.max    = cfg().maxItems;
     view.stacks = stackCount(p);
     view.scroll = it != st().sessions.end() ? it->second.scroll : 0;
+    std::set<std::string> const* recorded = it != st().sessions.end() ? &it->second.viewers : nullptr;
     for (auto* pl : net::modPlayers()) {
         if (!pl) continue;
-        if (auto o = vc::openBy(*pl); o && *o == p) net::sendToClient(*pl, view);
+        auto o     = vc::openBy(*pl);
+        bool sees  = o && *o == p;
+        bool known = recorded && recorded->contains(pl->getUuid().asString());
+        if (sees || (!open && known)) net::sendToClient(*pl, view);
     }
+}
+
+void onWindowChanged(GlobalPos const& p);
+
+/// Takes edits the viewers made in the window since the last poll into the crate first, so a
+/// change from outside (hopper, pipe) never overwrites them.
+void syncWindow(GlobalPos const& p) {
+    if (st().sessions.contains(p)) onWindowChanged(p);
 }
 
 /// Rewrites the open window from the crate (after scrolling or a change from outside).
@@ -282,6 +294,7 @@ bool openAt(Player& player, GlobalPos const& p, int scroll) {
         if (vc::viewers(p) == 0) sessions.erase(p);
         return false;
     }
+    st().sessions[p].viewers.insert(player.getUuid().asString());
     setOpenState(p, true);
     sendView(p, true);
     log().info("crate {} opened by {} ({} items)", p.key(), player.getRealName(), total(p));
@@ -315,6 +328,7 @@ void openFor(Player& player, GlobalPos const& p) {
 /// Spills the crate when its block disappears (CrateBlockEntity#spillTheTea, stacks merged).
 void spill(BlockSource& region, GlobalPos const& p) {
     vc::closeAll(p);
+    if (st().sessions.contains(p)) sendView(p, false);
     st().sessions.erase(p);
     auto& d      = dataAt(p);
     auto  stacks = std::move(d.stacks);
@@ -340,7 +354,11 @@ void spill(BlockSource& region, GlobalPos const& p) {
 
 class CratePort final : public Port {
 public:
-    explicit CratePort(GlobalPos p) : mPos(p), mItems(dataAt(p).stacks) { mItems.emplace_back(); }
+    explicit CratePort(GlobalPos p) : mPos(p) {
+        syncWindow(p);
+        mItems = dataAt(p).stacks;
+        mItems.emplace_back();
+    }
     int              size() const override { return static_cast<int>(mItems.size()); }
     ItemStack const& get(int slot) const override { return mItems[static_cast<size_t>(slot)]; }
     void             set(int slot, ItemStack const& item) override {
@@ -430,14 +448,12 @@ public:
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
             auto& s = st();
             std::vector<GlobalPos> ended;
-            for (auto& [p, sess] : s.sessions) {
-                if (vc::viewers(p) > 0) sess.seen = true;
-                else ended.push_back(p);
-            }
+            for (auto const& [p, sess] : s.sessions)
+                if (vc::viewers(p) == 0) ended.push_back(p);
             for (auto const& p : ended) {
+                sendView(p, false);
                 s.sessions.erase(p);
                 setOpenState(p, false);
-                sendView(p, false);
                 s.clearVc[p] = 2; // the container helper writes the window back when it closes
             }
             for (auto it = s.clearVc.begin(); it != s.clearVc.end();) {
@@ -472,6 +488,7 @@ int total(GlobalPos const& p) { return totalOf(dataAt(p).stacks); }
 int stackCount(GlobalPos const& p) { return static_cast<int>(dataAt(p).stacks.size()); }
 std::vector<ItemStack> contents(GlobalPos const& p) { return dataAt(p).stacks; }
 void setContents(GlobalPos const& p, std::vector<ItemStack> stacks) {
+    syncWindow(p);
     compact(stacks);
     dataAt(p).stacks = std::move(stacks);
     st().dirty.insert(p);

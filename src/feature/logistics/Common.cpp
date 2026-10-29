@@ -37,15 +37,18 @@ BlockPos offset(BlockPos const& p, int face) {
     return {p.x + s[0], p.y + s[1], p.z + s[2]};
 }
 
-core::GlobalPos parseKey(std::string_view key) {
+std::optional<core::GlobalPos> parseKey(std::string_view key) {
     int  v[4] = {0, 0, 0, 0};
     auto p    = key.data();
     auto end  = key.data() + key.size();
-    for (int i = 0; i < 4 && p < end; ++i) {
+    for (int i = 0; i < 4; ++i) {
         auto r = std::from_chars(p, end, v[i]);
-        p      = r.ptr + 1;
+        if (r.ec != std::errc{}) return std::nullopt;
+        bool last = i == 3;
+        if (last ? r.ptr != end : (r.ptr == end || *r.ptr != ':')) return std::nullopt;
+        p = r.ptr + 1;
     }
-    return {v[0], v[1], v[2], v[3]};
+    return core::GlobalPos{v[0], v[1], v[2], v[3]};
 }
 
 std::string idAt(core::GlobalPos const& pos) {
