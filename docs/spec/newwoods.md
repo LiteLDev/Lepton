@@ -287,8 +287,9 @@ The client mod shows the hints in the item tooltips (Quark shows them in JEI).
 - **Potted saplings** are custom blocks the vanilla pot is swapped for (§2.2), not the vanilla pot
   holding the sapling: `minecraft:flower_pottable` makes the 1.26.51 client crash while it builds the
   mesh of a pot holding a custom block.
-- **Cross models** turn their planes by bones: a cube with its own `rotation` makes the 1.26.51 client
-  drop every custom block of that sub-chunk from its mesh.
+- **Cross models**: every number in a block geometry must be a JSON number. A number stored as a string
+  (the generator once wrote the plane rotation as `"-45"`) makes the 1.26.51 client drop every custom
+  block of that sub-chunk from its mesh; per-cube or per-bone rotation itself is fine.
 - **Wind of the falling leaves** follows the world (day) time instead of the game time; they are the
   same unless the time was changed.
 - **Leaf decay** is computed when logs/leaves change instead of from a stored `distance` state;

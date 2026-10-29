@@ -22,10 +22,10 @@ $script:NwGeoFormat = '1.12.0'
 
 # Two crossed planes (saplings), 16 px wide, 16 px high.
 function Write-NwCrossGeometry {
-    # The planes are turned by their bones: a cube with its own "rotation" breaks the 1.26.51
-    # client's chunk mesh (every custom block of that sub-chunk disappears).
+    # [double]: in command mode `& $plane 'x' -45` passes the string '-45', and a number stored as a
+    # string in block geometry makes the 1.26.51 client drop every custom block of that sub-chunk.
     $plane = {
-        param($name, $rot)
+        param([string]$name, [double]$rot)
         [ordered]@{
             name = $name; pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
             cubes = @([ordered]@{
@@ -113,8 +113,8 @@ function New-NwSapling {
 # 1.26.51 client), so src/feature/newwoods swaps the pot for this block when a sapling is planted.
 function Write-NwPottedGeometry {
     $wall = { param($b) New-WvCube $b @{ '*' = 'pot' } }
-    $plant = { # turned by the bone (see Write-NwCrossGeometry)
-        param($name, $rot)
+    $plant = { # [double] $rot: see Write-NwCrossGeometry
+        param([string]$name, [double]$rot)
         [ordered]@{
             name = $name; pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
             cubes = @([ordered]@{
