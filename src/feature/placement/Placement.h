@@ -212,6 +212,8 @@ bool useHammer(Player& player, BlockPos const& pos, int face, Vec3 const& click)
 [[nodiscard]] std::string variantLabel(Player const& player, std::string const& type);
 /// Vanilla clients: the variant form for the held block.
 void openVariantForm(Player& player);
+/// Server: sends the saved variant to a mod client (Quark's PlaceVariantRestoreMessage on join).
+void sendVariantRestore(Player& player);
 
 // ---- EnhancedLadders ----------------------------------------------------------------------------
 

@@ -125,7 +125,14 @@ bool replaceableAt(BlockSource& region, BlockPos const& pos) {
 
 Block const* blockOfItem(ItemStackBase const& stack) {
     if (game::isEmpty(stack)) return nullptr;
-    return stack.mBlock;
+    if (stack.mBlock) return stack.mBlock;
+    // stacks read from NBT may not carry their block yet: the item's block type
+    auto const* item = stack.mItem.get();
+    if (!item) return nullptr;
+    BlockType const* type = item->mBlockType;
+    if (!type) return nullptr;
+    Block const* def = type->mDefaultState;
+    return def;
 }
 
 std::string itemIdOf(ItemStackBase const& stack) { return game::itemId(stack); }

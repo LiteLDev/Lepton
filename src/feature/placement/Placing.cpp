@@ -216,9 +216,10 @@ bool doReacharound(Player& player) {
     auto&       held   = const_cast<ItemStack&>(player.getSelectedItem());
     std::string id     = game::itemId(held);
     Vec3        hit{0.5f, 1.0f, 0.5f}; // Quark: the target's centre + 0.5 y
-    gm->useItemOn(held, target->pos, static_cast<uchar>(target->face), hit, HandSlot::Mainhand, &before, true);
+    auto res = gm->useItemOn(held, target->pos, static_cast<uchar>(target->face), hit, HandSlot::Mainhand, &before, true);
     auto const& now = region.getBlock(target->pos);
     if (&now == &before) return false;
+    (void)res;
     playPlaceSound(region, target->pos, now, player);
     player.sendInventory(false);
     log().info(

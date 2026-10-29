@@ -413,6 +413,11 @@ void openVariantForm(Player& player) {
     form.sendTo(player);
 }
 
+void sendVariantRestore(Player& player) {
+    if (!variantsEnabled()) return;
+    net::sendToClient(player, VariantRestoreMsg{savedVariant(player)});
+}
+
 struct VariantCommandParams {
     std::string name;
 };
@@ -428,10 +433,7 @@ public:
         static bool once = false;
         if (!once) {
             once = true;
-            net::onClientModJoined([](Player& player) {
-                if (!variantsEnabled()) return;
-                net::sendToClient(player, VariantRestoreMsg{savedVariant(player)});
-            });
+            net::onClientModJoined([](Player& player) { sendVariantRestore(player); });
             game::db::onWorldReady([] {
                 savedCache().clear();
                 rebuildVariants();
