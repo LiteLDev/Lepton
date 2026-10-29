@@ -1,0 +1,20 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:gravisand",
+      "materials": {
+        "default": "entity"
+      },
+      "textures": {
+        "default": "textures/blocks/gravisand"
+      },
+      "geometry": {
+        "default": "geometry.lepton.redstone_gravisand"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

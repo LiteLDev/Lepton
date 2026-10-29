@@ -1,0 +1,68 @@
+{
+  "lepton_redstone_ender_watcher": {
+    "textures": "textures/blocks/ender_watcher"
+  },
+  "lepton_redstone_ender_watcher_on": {
+    "textures": "textures/blocks/ender_watcher_on"
+  },
+  "lepton_redstone_gold_block": {
+    "textures": "textures/blocks/gold_block"
+  },
+  "lepton_redstone_gravisand": {
+    "textures": "textures/blocks/gravisand"
+  },
+  "lepton_redstone_iron_block": {
+    "textures": "textures/blocks/iron_block"
+  },
+  "lepton_redstone_iron_rod": {
+    "textures": "textures/blocks/iron_rod"
+  },
+  "lepton_redstone_obsidian": {
+    "textures": "textures/blocks/obsidian"
+  },
+  "lepton_redstone_redstone_randomizer_left_east": {
+    "textures": "textures/blocks/redstone_randomizer_left_east"
+  },
+  "lepton_redstone_redstone_randomizer_left_north": {
+    "textures": "textures/blocks/redstone_randomizer_left_north"
+  },
+  "lepton_redstone_redstone_randomizer_left_south": {
+    "textures": "textures/blocks/redstone_randomizer_left_south"
+  },
+  "lepton_redstone_redstone_randomizer_left_west": {
+    "textures": "textures/blocks/redstone_randomizer_left_west"
+  },
+  "lepton_redstone_redstone_randomizer_off_east": {
+    "textures": "textures/blocks/redstone_randomizer_off_east"
+  },
+  "lepton_redstone_redstone_randomizer_off_north": {
+    "textures": "textures/blocks/redstone_randomizer_off_north"
+  },
+  "lepton_redstone_redstone_randomizer_off_south": {
+    "textures": "textures/blocks/redstone_randomizer_off_south"
+  },
+  "lepton_redstone_redstone_randomizer_off_west": {
+    "textures": "textures/blocks/redstone_randomizer_off_west"
+  },
+  "lepton_redstone_redstone_randomizer_right_east": {
+    "textures": "textures/blocks/redstone_randomizer_right_east"
+  },
+  "lepton_redstone_redstone_randomizer_right_north": {
+    "textures": "textures/blocks/redstone_randomizer_right_north"
+  },
+  "lepton_redstone_redstone_randomizer_right_south": {
+    "textures": "textures/blocks/redstone_randomizer_right_south"
+  },
+  "lepton_redstone_redstone_randomizer_right_west": {
+    "textures": "textures/blocks/redstone_randomizer_right_west"
+  },
+  "lepton_redstone_redstone_torch_off": {
+    "textures": "textures/blocks/redstone_torch_off"
+  },
+  "lepton_redstone_redstone_torch_on": {
+    "textures": "textures/blocks/redstone_torch_on"
+  },
+  "lepton_redstone_stone_slab_top": {
+    "textures": "textures/blocks/stone_slab_top"
+  }
+}
