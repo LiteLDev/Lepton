@@ -73,6 +73,8 @@ struct State {
     std::map<GlobalPos, Session> sessions;
     std::set<GlobalPos>          dirty;
     std::map<GlobalPos, int>     clearVc; ///< vc storage to wipe after a session (ticks left)
+    std::map<std::string, int64_t> recentUse; ///< player uuid -> tick of the last crate use
+    int64_t                      tick = 0;
     std::mt19937                 random{std::random_device{}()};
 };
 State& st() {
@@ -424,10 +426,15 @@ public:
             auto uuid = player.getUuid().asString();
             auto pos  = game::globalPos(region, ev.blockPos());
             if (vc::openBy(player)) return;
+            // a click can arrive as several interactions: a second row picker would replace the
+            // first one, whose answer the client then sends to the second (lost) form
+            if (auto last = st().recentUse.find(uuid); last != st().recentUse.end() && st().tick - last->second < 20) return;
+            st().recentUse[uuid] = st().tick;
             ll::coro::keepThis([uuid, pos]() -> ll::coro::CoroTask<> {
                 co_await ll::chrono::ticks(1);
                 auto* p = playerByUuid(uuid);
                 if (!p || idAt(pos) != kCrate) co_return;
+
                 openFor(*p, pos);
             }).launch(ll::thread::ServerThreadExecutor::getDefault());
         }));
@@ -460,6 +467,8 @@ public:
         }));
         mListeners.push_back(bus.emplaceListener<ll::event::ServerLevelTickEvent>([](auto&) {
             auto& s = st();
+            ++s.tick;
+            if (s.tick % 200 == 0) std::erase_if(s.recentUse, [&](auto const& kv) { return s.tick - kv.second > 100; });
             std::vector<GlobalPos> ended;
             for (auto const& [p, sess] : s.sessions)
                 if (vc::viewers(p) == 0) ended.push_back(p);

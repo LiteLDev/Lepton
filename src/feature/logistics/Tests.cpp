@@ -275,11 +275,15 @@ LP_REGISTER_SELFTEST("logistics.trough", [](Context& ctx) -> ll::coro::CoroTask<
     auto  saved     = conf;
     conf.loveChance = 1.0;
     conf.lookChance = 1.0;
-    auto* cow       = ent::spawn(region, "minecraft:cow", Vec3{t.x + 0.5f, t.y + 0.0f, t.z + 1.6f});
-    ctx.require(cow != nullptr, "cow spawned");
+    Actor* cow = nullptr;
+    for (int i = 0; i < 8 && (!cow || cow->isBaby()); ++i) { // spawned cows are sometimes calves
+        if (cow) ent::despawn(*cow);
+        cow = ent::spawn(region, "minecraft:cow", Vec3{t.x + 0.5f, t.y + 0.0f, t.z + 1.6f});
+    }
+    ctx.require(cow != nullptr && !cow->isBaby(), "adult cow spawned");
     auto cowId = ent::idOf(*cow);
     bool loved = false;
-    for (int i = 0; i < 40 && !loved; ++i) {
+    for (int i = 0; i < 80 && !loved; ++i) {
         co_await ctx.ticks(5);
         if (auto* c = ent::find(cowId)) {
             auto b = c->getEntityContext().tryGetComponent<BreedableComponent>();
