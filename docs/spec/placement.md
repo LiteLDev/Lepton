@@ -308,10 +308,11 @@ Rotation Lock, `key.lepton.variant_selector` Variant Selector (RP `texts.d/*/pla
 ## 7. Bedrock differences / not ported
 
 - Offhand: Bedrock can't place blocks from the offhand; reacharound uses the main hand only.
-- Bedrock clients (vanilla and modded) bridge on their own: in many reacharound poses the client
-  itself clicks a face of the edge block and the game places the block before the "use item in the
-  air" reaches the server, which then finds the target filled. The server's reacharound covers the
-  remaining cases; the result is the same block at the edge.
+- Bedrock's crosshair hit detection is lenient near block edges: close to an edge the game already
+  targets the edge block's side (with any item) and a click is the game's own placement against
+  it. Like Quark (no indicator while the game targets a block) the indicator is hidden then; the
+  reacharound takes over farther out, where the game targets nothing and the client sends "use
+  item" in the air (checked on real vanilla and mod clients by the client e2e scenario).
 - Pick block on nothing never reaches the game's pick code on Bedrock: the client mod catches the
   middle mouse button itself for LongRangePickBlock.
 - Reach: the game's pick range (Bedrock) instead of Java's 4.5/5 block interaction range.

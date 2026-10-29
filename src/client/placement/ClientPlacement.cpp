@@ -23,7 +23,9 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockProperty.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/phys/AABB.h"
+#include "mc/world/phys/HitResult.h"
 
 #include "client/Client.h"
 #include "mod/Log.h"
@@ -366,6 +368,13 @@ void onClientTick() {
     std::optional<ReachTarget> reach;
     try {
         reach = fp::reacharoundTarget(*p);
+        // Quark: no indicator while the game's own crosshair target is a block. Bedrock's hit
+        // detection is lenient near block edges, so it may target a face our exact ray misses;
+        // a click then places against that face (the game's own placement), not a reacharound.
+        if (reach) {
+            auto& hit = p->getLevel().getHitResult();
+            if (hit.mType == HitResultType::Tile && !p->getDimensionBlockSource().getBlock(hit.mBlock).isAir()) reach.reset();
+        }
     } catch (...) {
         reach.reset();
     }
