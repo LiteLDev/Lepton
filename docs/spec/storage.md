@@ -206,8 +206,8 @@ its blocks/items are left out of the creative inventory, and its native behaviou
   every 80 ticks (Java: 1..4 layers below, `x-l..x+l`, `z-l..z+l`) counting golden apple crates as
   base blocks; if that gives more levels than the game found, the beacon's level count is raised and
   its effects are applied with Java's numbers (range `10 * levels + 10`, duration `(9 + 2 * levels) * 20`
-  ticks, amplifier 1 for level 4 with the same primary and secondary effect). Client side the level count
-  is raised too so the beam shows.
+  ticks, amplifier 1 for level 4 with the same primary and secondary effect). Only while the beacon sees
+  the sky (Java: a blocked beam leaves the beacon inactive). Client side the level count is raised too.
 - **Compost** (`ComposterBlock::getFillChance` hook): the compostable compressed blocks 100%;
   poisonous potato 85, rotten flesh 30 (`compostableToxins`).
 - **Stools**: `PlayerInteractBlockEvent` on a stool with an empty main hand, nothing above (air) and the
@@ -217,8 +217,10 @@ its blocks/items are left out of the creative inventory, and its native behaviou
   moving stool); otherwise, or without a rider, the seat is removed and the stool's `sat_in` is cleared.
   `big` = the block above has a collision box starting at its bottom (`minY == 0`), recomputed when the
   block above changes (`BlockChangedEvent`) and after a sneak-use with a block item on the stool's top.
-  Comparator signal 15 while `sat_in` (hook on the comparator's input). Falling on a stool: fall
-  damage halved and the entity bounces like on a bed (`getBounciness` / fall hooks).
+  Comparator signal 15 while `sat_in` and a bed-like bounce (0.66): the 16 stool block types get a copy of the
+  custom-block vtable with `getBounciness`, `hasComparatorSignal` and `getComparatorSignal` replaced (slots
+  from `ll::memory::getVtableIndex`; other blocks keep the shared vtable; applied on the client too).
+  Falling on a stool halves the fall distance (`BlockType::onFallOnBase` hook).
 - **Rope**: right-click handling in `PlayerInteractBlockEvent` (deferred to the next tick when the
   event is cancelled). Pull down: walk down the column; the first non-rope position must be in the
   world; if it is air/liquid ("was air at end") rope goes there, otherwise the block there is moved one
@@ -302,6 +304,12 @@ Block/item names are in §2 (Quark's English; zh_CN from Quark's zh_cn.json, "Po
   client mod has the same hook).
 - **Vanilla clients and climbing**: rope and cut vine climbing is predicted by the client; without the
   client mod the server corrects the movement, so climbing is less smooth.
+- **Dispenser rope sounds**: Bedrock's block sounds need an actor; a dispenser placing or lowering rope is
+  silent (players' rope actions play Quark's sounds).
+- **Stool bounce on vanilla clients**: movement is predicted by the client; only the client mod knows the
+  stool bounces (the server corrects a vanilla client). Fall damage is server side and works for everyone.
+- **Charcoal block tool rule**: drops are suppressed natively when a player mines it without a pickaxe
+  (any item tagged `minecraft:is_pickaxe`); explosions still drop it, as in Java.
 - **Potted plants** use the game's own plant textures in a flower pot (Quark draws miniature versions).
 
 ## 8. Tests
