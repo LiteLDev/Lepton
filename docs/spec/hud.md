@@ -247,13 +247,15 @@ Keybinds (`config/keybinds.json`, Controls screen): `autorun` (unbound), `back` 
 ## 8. Tests
 
 Selftests (dx 1600..1699; logic, run on BDS and in local worlds):
-`hud.ticker_anim`, `hud.ticker_count`, `hud.ticker_bow`, `hud.food_tiers`, `hud.food_shanks`,
-`hud.fuel`, `hud.shulker_dims`, `hud.shulker_contents`, `hud.enchant_items`, `hud.attributes`,
-`hud.elytra`, `hud.config`; client build only: `hud.tooltip_lines`, `hud.keybinds`.
+`hud.config`, `hud.ticker_anim`, `hud.ticker_layout`, `hud.ticker_count`, `hud.ticker_bow`,
+`hud.elytra`, `hud.food`, `hud.fuel`, `hud.shulker`, `hud.enchanting`, `hud.attributes`; client build only: `hud.tooltip_lines`, `hud.keybinds`.
 
 E2E: `tools/e2e/server/scenarios/hud.ps1` runs `hud.*`. `tools/e2e/client/scenarios/hud.ps1`
 gives items and takes screenshots: `ticker` (main hand stack + counts above the hotbar),
 `ticker-armor` (armour pieces), `elytra` (armour bar with the elytra icon), `tooltip-sword`
 (attribute icons), `tooltip-food`, `tooltip-shulker` (grid preview), `tooltip-book` (enchanting
-items), `tooltip-map`, `tooltip-fuel` (furnace screen), `autowalk` (banner, the player moved),
-`back` (inventory closed by the back keybind).
+items), `tooltip-poison`, `tooltip-sword-shift` (vanilla lines with Shift), `tooltip-fuel` (furnace screen), `autowalk` (banner, the player moved),
+`back` (inventory closed by the back keybind). The scenario does not fill a map: on the e2e client,
+filling a map crashes the game in vanilla code during the next UI frame even with every hud
+module disabled (ItemStackBase::matchesItem under the UI render, no Lepton frame); the map
+preview was checked by hand (a filled map hovered in the inventory shows its 64x64 picture).
