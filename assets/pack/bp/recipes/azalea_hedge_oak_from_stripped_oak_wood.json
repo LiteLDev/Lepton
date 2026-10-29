@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_hedge_oak_from_stripped_oak_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:azalea_leaves"
+      },
+      "W": {
+        "item": "minecraft:stripped_oak_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:azalea_leaves"
+      },
+      {
+        "item": "minecraft:stripped_oak_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_hedge",
+      "count": 2
+    }
+  }
+}

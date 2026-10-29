@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:acacia_hedge_from_acacia_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:acacia_leaves"
+      },
+      "W": {
+        "item": "minecraft:acacia_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:acacia_leaves"
+      },
+      {
+        "item": "minecraft:acacia_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:acacia_hedge",
+      "count": 2
+    }
+  }
+}

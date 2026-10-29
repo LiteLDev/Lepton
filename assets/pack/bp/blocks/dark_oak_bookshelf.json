@@ -1,0 +1,60 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:dark_oak_bookshelf",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.5
+      },
+      "minecraft:map_color": "#43301a",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 5,
+        "destroy_chance_modifier": 20
+      },
+      "tag:lepton:bookshelf": {},
+      "tag:lepton:wv_variant_bookshelves": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_woodvariants_dark_oakdark_oak_bookshelf",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_woodvariants_dark_oakdark_oak_bookshelf",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_woodvariants_dark_oakdark_oak_bookshelf",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_woodvariants_dark_oakdark_oak_bookshelf",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_woodvariants_dark_oakdark_oak_bookshelf",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_woodvariants_planks_big_oak",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_woodvariants_planks_big_oak",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/dark_oak_bookshelf.json"
+    }
+  }
+}

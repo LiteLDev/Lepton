@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:birch_hedge_from_birch_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:birch_leaves"
+      },
+      "W": {
+        "item": "minecraft:birch_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:birch_leaves"
+      },
+      {
+        "item": "minecraft:birch_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:birch_hedge",
+      "count": 2
+    }
+  }
+}

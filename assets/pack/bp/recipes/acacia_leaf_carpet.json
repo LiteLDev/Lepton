@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:acacia_leaf_carpet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:acacia_leaves"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:acacia_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:acacia_leaf_carpet",
+      "count": 3
+    }
+  }
+}

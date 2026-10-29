@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:oak_hedge_from_stripped_oak_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:oak_leaves"
+      },
+      "W": {
+        "item": "minecraft:stripped_oak_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:oak_leaves"
+      },
+      {
+        "item": "minecraft:stripped_oak_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:oak_hedge",
+      "count": 2
+    }
+  }
+}

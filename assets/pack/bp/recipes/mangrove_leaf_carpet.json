@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mangrove_leaf_carpet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:mangrove_leaves"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:mangrove_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:mangrove_leaf_carpet",
+      "count": 3
+    }
+  }
+}

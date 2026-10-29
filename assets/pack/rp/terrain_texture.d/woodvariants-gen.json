@@ -1,0 +1,254 @@
+{
+  "lepton_woodvariants_acaciaacacia_bookshelf": {
+    "textures": "acaciaacacia_bookshelf"
+  },
+  "lepton_woodvariants_acaciaacacia_ladder": {
+    "textures": "acaciaacacia_ladder"
+  },
+  "lepton_woodvariants_acaciavertical_acacia_planks": {
+    "textures": "acaciavertical_acacia_planks"
+  },
+  "lepton_woodvariants_azalea_leaves": {
+    "textures": "textures/blocks/azalea_leaves"
+  },
+  "lepton_woodvariants_azalea_leaves_flowers": {
+    "textures": "textures/blocks/azalea_leaves_flowers"
+  },
+  "lepton_woodvariants_bamboo_planks": {
+    "textures": "textures/blocks/bamboo_planks"
+  },
+  "lepton_woodvariants_bamboobamboo_bookshelf": {
+    "textures": "bamboobamboo_bookshelf"
+  },
+  "lepton_woodvariants_bamboobamboo_ladder": {
+    "textures": "bamboobamboo_ladder"
+  },
+  "lepton_woodvariants_bamboobamboo_post": {
+    "textures": "bamboobamboo_post"
+  },
+  "lepton_woodvariants_bamboostripped_bamboo_post": {
+    "textures": "bamboostripped_bamboo_post"
+  },
+  "lepton_woodvariants_bamboovertical_bamboo_planks": {
+    "textures": "bamboovertical_bamboo_planks"
+  },
+  "lepton_woodvariants_birchbirch_bookshelf": {
+    "textures": "birchbirch_bookshelf"
+  },
+  "lepton_woodvariants_birchbirch_ladder": {
+    "textures": "birchbirch_ladder"
+  },
+  "lepton_woodvariants_birchvertical_birch_planks": {
+    "textures": "birchvertical_birch_planks"
+  },
+  "lepton_woodvariants_cherry_leaves": {
+    "textures": "textures/blocks/cherry_leaves"
+  },
+  "lepton_woodvariants_cherry_log_side": {
+    "textures": "textures/blocks/cherry_log_side"
+  },
+  "lepton_woodvariants_cherry_log_top": {
+    "textures": "textures/blocks/cherry_log_top"
+  },
+  "lepton_woodvariants_cherry_planks": {
+    "textures": "textures/blocks/cherry_planks"
+  },
+  "lepton_woodvariants_cherrycherry_bookshelf": {
+    "textures": "cherrycherry_bookshelf"
+  },
+  "lepton_woodvariants_cherrycherry_ladder": {
+    "textures": "cherrycherry_ladder"
+  },
+  "lepton_woodvariants_cherryvertical_cherry_planks": {
+    "textures": "cherryvertical_cherry_planks"
+  },
+  "lepton_woodvariants_crimsoncrimson_bookshelf": {
+    "textures": "crimsoncrimson_bookshelf"
+  },
+  "lepton_woodvariants_crimsoncrimson_ladder": {
+    "textures": "crimsoncrimson_ladder"
+  },
+  "lepton_woodvariants_crimsonvertical_crimson_planks": {
+    "textures": "crimsonvertical_crimson_planks"
+  },
+  "lepton_woodvariants_dark_oakdark_oak_bookshelf": {
+    "textures": "dark_oakdark_oak_bookshelf"
+  },
+  "lepton_woodvariants_dark_oakdark_oak_ladder": {
+    "textures": "dark_oakdark_oak_ladder"
+  },
+  "lepton_woodvariants_dark_oakvertical_dark_oak_planks": {
+    "textures": "dark_oakvertical_dark_oak_planks"
+  },
+  "lepton_woodvariants_huge_fungus_crimson_log_side": {
+    "textures": "textures/blocks/huge_fungus/crimson_log_side"
+  },
+  "lepton_woodvariants_huge_fungus_crimson_log_top": {
+    "textures": "textures/blocks/huge_fungus/crimson_log_top"
+  },
+  "lepton_woodvariants_huge_fungus_crimson_planks": {
+    "textures": "textures/blocks/huge_fungus/crimson_planks"
+  },
+  "lepton_woodvariants_huge_fungus_stripped_crimson_stem_side": {
+    "textures": "textures/blocks/huge_fungus/stripped_crimson_stem_side"
+  },
+  "lepton_woodvariants_huge_fungus_stripped_warped_stem_side": {
+    "textures": "textures/blocks/huge_fungus/stripped_warped_stem_side"
+  },
+  "lepton_woodvariants_huge_fungus_warped_planks": {
+    "textures": "textures/blocks/huge_fungus/warped_planks"
+  },
+  "lepton_woodvariants_huge_fungus_warped_stem_side": {
+    "textures": "textures/blocks/huge_fungus/warped_stem_side"
+  },
+  "lepton_woodvariants_huge_fungus_warped_stem_top": {
+    "textures": "textures/blocks/huge_fungus/warped_stem_top"
+  },
+  "lepton_woodvariants_junglejungle_bookshelf": {
+    "textures": "junglejungle_bookshelf"
+  },
+  "lepton_woodvariants_junglejungle_ladder": {
+    "textures": "junglejungle_ladder"
+  },
+  "lepton_woodvariants_junglevertical_jungle_planks": {
+    "textures": "junglevertical_jungle_planks"
+  },
+  "lepton_woodvariants_leaves_acacia": {
+    "textures": "textures/blocks/leaves_acacia"
+  },
+  "lepton_woodvariants_leaves_big_oak": {
+    "textures": "textures/blocks/leaves_big_oak"
+  },
+  "lepton_woodvariants_leaves_birch": {
+    "textures": "textures/blocks/leaves_birch"
+  },
+  "lepton_woodvariants_leaves_jungle": {
+    "textures": "textures/blocks/leaves_jungle"
+  },
+  "lepton_woodvariants_leaves_oak": {
+    "textures": "textures/blocks/leaves_oak"
+  },
+  "lepton_woodvariants_leaves_spruce": {
+    "textures": "textures/blocks/leaves_spruce"
+  },
+  "lepton_woodvariants_log_acacia": {
+    "textures": "textures/blocks/log_acacia"
+  },
+  "lepton_woodvariants_log_acacia_top": {
+    "textures": "textures/blocks/log_acacia_top"
+  },
+  "lepton_woodvariants_log_big_oak": {
+    "textures": "textures/blocks/log_big_oak"
+  },
+  "lepton_woodvariants_log_big_oak_top": {
+    "textures": "textures/blocks/log_big_oak_top"
+  },
+  "lepton_woodvariants_log_birch": {
+    "textures": "textures/blocks/log_birch"
+  },
+  "lepton_woodvariants_log_birch_top": {
+    "textures": "textures/blocks/log_birch_top"
+  },
+  "lepton_woodvariants_log_jungle": {
+    "textures": "textures/blocks/log_jungle"
+  },
+  "lepton_woodvariants_log_jungle_top": {
+    "textures": "textures/blocks/log_jungle_top"
+  },
+  "lepton_woodvariants_log_oak": {
+    "textures": "textures/blocks/log_oak"
+  },
+  "lepton_woodvariants_log_oak_top": {
+    "textures": "textures/blocks/log_oak_top"
+  },
+  "lepton_woodvariants_log_spruce": {
+    "textures": "textures/blocks/log_spruce"
+  },
+  "lepton_woodvariants_log_spruce_top": {
+    "textures": "textures/blocks/log_spruce_top"
+  },
+  "lepton_woodvariants_mangrove_leaves": {
+    "textures": "textures/blocks/mangrove_leaves"
+  },
+  "lepton_woodvariants_mangrove_log_side": {
+    "textures": "textures/blocks/mangrove_log_side"
+  },
+  "lepton_woodvariants_mangrove_log_top": {
+    "textures": "textures/blocks/mangrove_log_top"
+  },
+  "lepton_woodvariants_mangrove_planks": {
+    "textures": "textures/blocks/mangrove_planks"
+  },
+  "lepton_woodvariants_mangrovemangrove_bookshelf": {
+    "textures": "mangrovemangrove_bookshelf"
+  },
+  "lepton_woodvariants_mangrovemangrove_ladder": {
+    "textures": "mangrovemangrove_ladder"
+  },
+  "lepton_woodvariants_mangrovevertical_mangrove_planks": {
+    "textures": "mangrovevertical_mangrove_planks"
+  },
+  "lepton_woodvariants_oakvertical_oak_planks": {
+    "textures": "oakvertical_oak_planks"
+  },
+  "lepton_woodvariants_planks_acacia": {
+    "textures": "textures/blocks/planks_acacia"
+  },
+  "lepton_woodvariants_planks_big_oak": {
+    "textures": "textures/blocks/planks_big_oak"
+  },
+  "lepton_woodvariants_planks_birch": {
+    "textures": "textures/blocks/planks_birch"
+  },
+  "lepton_woodvariants_planks_jungle": {
+    "textures": "textures/blocks/planks_jungle"
+  },
+  "lepton_woodvariants_planks_spruce": {
+    "textures": "textures/blocks/planks_spruce"
+  },
+  "lepton_woodvariants_sprucespruce_bookshelf": {
+    "textures": "sprucespruce_bookshelf"
+  },
+  "lepton_woodvariants_sprucespruce_ladder": {
+    "textures": "sprucespruce_ladder"
+  },
+  "lepton_woodvariants_sprucevertical_spruce_planks": {
+    "textures": "sprucevertical_spruce_planks"
+  },
+  "lepton_woodvariants_stripped_acacia_log": {
+    "textures": "textures/blocks/stripped_acacia_log"
+  },
+  "lepton_woodvariants_stripped_birch_log": {
+    "textures": "textures/blocks/stripped_birch_log"
+  },
+  "lepton_woodvariants_stripped_cherry_log_side": {
+    "textures": "textures/blocks/stripped_cherry_log_side"
+  },
+  "lepton_woodvariants_stripped_dark_oak_log": {
+    "textures": "textures/blocks/stripped_dark_oak_log"
+  },
+  "lepton_woodvariants_stripped_jungle_log": {
+    "textures": "textures/blocks/stripped_jungle_log"
+  },
+  "lepton_woodvariants_stripped_mangrove_log_side": {
+    "textures": "textures/blocks/stripped_mangrove_log_side"
+  },
+  "lepton_woodvariants_stripped_oak_log": {
+    "textures": "textures/blocks/stripped_oak_log"
+  },
+  "lepton_woodvariants_stripped_spruce_log": {
+    "textures": "textures/blocks/stripped_spruce_log"
+  },
+  "lepton_woodvariants_warpedvertical_warped_planks": {
+    "textures": "warpedvertical_warped_planks"
+  },
+  "lepton_woodvariants_warpedwarped_bookshelf": {
+    "textures": "warpedwarped_bookshelf"
+  },
+  "lepton_woodvariants_warpedwarped_ladder": {
+    "textures": "warpedwarped_ladder"
+  },
+  "lepton_woodvariants_woodvariants_post_chain": {
+    "textures": "textures/blocks/woodvariants/post_chain"
+  }
+}

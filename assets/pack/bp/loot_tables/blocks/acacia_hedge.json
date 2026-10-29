@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:acacia_hedge",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
