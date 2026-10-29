@@ -652,7 +652,7 @@ LP_REGISTER_SELFTEST("newstones.gallery", [](Context& ctx) -> ll::coro::CoroTask
             co_await showView(std::string(names[line]) + "-" + str(half + 1));
         }
     }
-    view(8.f, 2.f, 17.f, 15.f, 0.f); // the tint row and the brick wall
+    view(8.f, 1.f, 19.f, 10.f, 0.f); // the tint row and the brick wall, from behind the permafrost row
     co_await showView("myalite-tints");
     ctx.info("NEWSTONES GALLERY done");
 });
