@@ -2,11 +2,11 @@
   "lepton_logistics_glass": {
     "textures": "textures/blocks/glass"
   },
-  "lepton_logistics_hayblock_side": {
-    "textures": "textures/blocks/hayblock_side"
+  "lepton_logistics_hay_block_side": {
+    "textures": "textures/blocks/hay_block_side"
   },
-  "lepton_logistics_hayblock_top": {
-    "textures": "textures/blocks/hayblock_top"
+  "lepton_logistics_hay_block_top": {
+    "textures": "textures/blocks/hay_block_top"
   },
   "lepton_logistics_logistics_chute_bottom": {
     "textures": "textures/blocks/logistics/chute_bottom"

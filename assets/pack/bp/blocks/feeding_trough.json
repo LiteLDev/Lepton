@@ -56,11 +56,11 @@
           "render_method": "alpha_test"
         },
         "hay": {
-          "texture": "lepton_logistics_hayblock_top",
+          "texture": "lepton_logistics_hay_block_top",
           "render_method": "alpha_test"
         },
         "hay_side": {
-          "texture": "lepton_logistics_hayblock_side",
+          "texture": "lepton_logistics_hay_block_side",
           "render_method": "alpha_test"
         }
       },
@@ -138,6 +138,7 @@
           16
         ]
       },
+      "minecraft:light_dampening": 0,
       "minecraft:loot": "loot_tables/blocks/feeding_trough.json",
       "tag:lepton:logistics": {}
     },

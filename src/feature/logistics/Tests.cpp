@@ -1,5 +1,6 @@
 // Selftests of U11 logistics (dx 1100..1199).
 
+#include <cmath>
 #include <format>
 #include <set>
 
@@ -437,7 +438,8 @@ LP_REGISTER_SELFTEST("logistics.drops_recipes", [](Context& ctx) -> ll::coro::Co
 });
 
 // Showcase for the client e2e scenario: builds a chute, a pipe line with items moving, a trough with
-// a cow and a crate, moves the real player in front of them and opens the trough and crate screens.
+// a cow and a crate, moves the real player in front of them and waits for the client scenario to use
+// the trough and the crate (real right clicks), scroll the crate and close the screens.
 // On a server without a real player it only builds and checks the setup.
 LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTask<> {
     namespace crate = lg::crate;
@@ -467,7 +469,7 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
     lp::game::vc::setItems(trough, {lp::game::makeItem("minecraft:wheat", 32), lp::game::makeItem("minecraft:carrot", 12)});
     std::vector<ItemStack> stacks;
     for (int i = 0; i < 40; ++i) stacks.push_back(lp::game::makeItem(i % 3 ? "minecraft:iron_sword" : "minecraft:bread", i % 3 ? 1 : 16));
-    for (int i = 0; i < 25; ++i) stacks.push_back(lp::game::makeItem("minecraft:oak_log", 16));
+    for (int i = 0; i < 24; ++i) stacks.push_back(lp::game::makeItem("minecraft:oak_log", 16)); // 64 stacks, 634 items
     crate::setContents(crateA, stacks);
     auto* cow = ent::spawn(region, "minecraft:cow", Vec3{trough.x + 0.5f, trough.y + 0.0f, trough.z + 2.5f});
     co_await ctx.ticks(40);
@@ -480,34 +482,78 @@ LP_REGISTER_SELFTEST("logistics.showcase", [](Context& ctx) -> ll::coro::CoroTas
         return viewer == nullptr;
     });
     if (viewer) {
+        // The real player is moved in front of each block; the client scenario uses the blocks with
+        // a real right click (the path a player takes), takes screenshots and closes the screens.
         auto uid  = viewer->getOrCreateUniqueID();
-        auto view = [&](float dx, float dy, float dz, float pitch, float yaw) {
-            if (auto* v = ctx.player().getLevel().getPlayer(uid))
-                v->teleport(Vec3{base.x + dx, base.y + dy, base.z + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
+        auto real = [&]() { return ctx.player().getLevel().getPlayer(uid); };
+        // stand on the floor at (x, z) and look at the point `target` (coordinates relative to base)
+        auto look = [&](float x, float z, Vec3 target) {
+            auto* v = real();
+            if (!v) return;
+            Vec3  eye{x, 1.62f, z};
+            Vec3  d     = target - eye;
+            float yaw   = std::atan2(-d.x, d.z) * 57.29578f;
+            float pitch = -std::atan2(d.y, std::sqrt(d.x * d.x + d.z * d.z)) * 57.29578f;
+            v->teleport(Vec3{base.x + x, base.y + eye.y, base.z + z}, DimensionType(base.dim), Vec2{pitch, yaw});
         };
+        auto vcOpen  = [&](GlobalPos const& p) { return lp::game::vc::viewers(p) > 0; };
+        auto formFor = [&]() { auto* v = real(); return v ? lp::game::forms::testing::pendingTitle(*v) : std::string{}; };
+        constexpr int kWait = 30 * 20; // ticks the scenario has for each step
+
+        look(6.f, 7.f, Vec3{6.f, 1.f, 0.5f});
         ctx.info("LOGISTICS view blocks");
-        view(6.f, 1.5f, 7.f, 25.f, 180.f);
         co_await ctx.ticks(120);
+        look(4.5f, 2.6f, Vec3{4.5f, 1.5f, 0.5f});
         ctx.info("LOGISTICS view pipes");
-        view(4.5f, 1.2f, 2.6f, 20.f, 180.f);
         co_await ctx.ticks(120);
-        if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
-            view(9.5f, 1.f, 2.5f, 30.f, 180.f);
-            co_await ctx.ticks(10);
-            if ((v = ctx.player().getLevel().getPlayer(uid)) && lg::trough::open(*v, trough)) ctx.info("LOGISTICS screen trough");
-            co_await ctx.ticks(100);
-            lp::game::vc::closeAll(trough);
-            co_await ctx.ticks(20);
-            view(11.5f, 1.f, 2.5f, 30.f, 180.f);
-            co_await ctx.ticks(10);
-            if ((v = ctx.player().getLevel().getPlayer(uid)) && crate::open(*v, crateA)) ctx.info("LOGISTICS screen crate");
-            co_await ctx.ticks(300);
-            lp::game::vc::closeAll(crateA);
-            lp::game::forms::closeFor(*ctx.player().getLevel().getPlayer(uid));
+
+        // feeding trough: right click opens the dispenser-style screen
+        look(9.5f, 2.2f, Vec3{9.5f, 0.3f, 0.5f});
+        co_await ctx.ticks(10);
+        ctx.info("LOGISTICS aim trough");
+        int t = 0;
+        for (; t < kWait && !vcOpen(trough); ++t) co_await ctx.ticks(1);
+        ctx.check(vcOpen(trough), "using the trough opens its screen");
+        if (vcOpen(trough)) ctx.info("LOGISTICS screen trough");
+        for (t = 0; t < kWait && vcOpen(trough); ++t) co_await ctx.ticks(1);
+        ctx.check(!vcOpen(trough), "the trough screen was closed");
+        lp::game::vc::closeAll(trough);
+
+        // storage crate: a vanilla client with more than 54 stacks first picks the rows
+        look(11.5f, 2.2f, Vec3{11.5f, 0.5f, 0.5f});
+        co_await ctx.ticks(10);
+        ctx.info("LOGISTICS aim crate");
+        for (t = 0; t < kWait && !vcOpen(crateA) && formFor().empty(); ++t) co_await ctx.ticks(1);
+        if (!formFor().empty()) {
+            ctx.info("LOGISTICS form crate");
+            for (t = 0; t < kWait && !formFor().empty() && !vcOpen(crateA); ++t) co_await ctx.ticks(1);
+            if (!vcOpen(crateA)) {
+                // the form was dismissed: with one screen of stacks the crate opens directly
+                stacks.resize(crate::kWindow);
+                crate::setContents(crateA, stacks);
+                ctx.info("LOGISTICS aim crate again");
+                for (t = 0; t < kWait && !vcOpen(crateA); ++t) co_await ctx.ticks(1);
+            }
         }
+        ctx.check(vcOpen(crateA), "using the crate opens its screen");
+        if (vcOpen(crateA)) {
+            ctx.info(std::format("LOGISTICS screen crate (scroll {})", crate::scrollOf(crateA)));
+            int first = crate::scrollOf(crateA);
+            for (t = 0; t < kWait && vcOpen(crateA); ++t) {
+                if (crate::scrollOf(crateA) > first) {
+                    ctx.info(std::format("LOGISTICS crate scrolled to {}", crate::scrollOf(crateA)));
+                    first = crate::scrollOf(crateA);
+                }
+                co_await ctx.ticks(1);
+            }
+            ctx.check(!vcOpen(crateA), "the crate screen was closed");
+        }
+        lp::game::vc::closeAll(crateA);
+        if (auto* v = real()) lp::game::forms::closeFor(*v);
+        co_await ctx.ticks(2);
+        ctx.check(stateOf(region, crateA, "lepton:open") == 0, "the crate lid closed");
         ctx.info("LOGISTICS done");
-    }
-    if (cow) ent::despawn(*cow);
+    }    if (cow) ent::despawn(*cow);
     crate::setContents(crateA, {});
     lp::game::vc::takeAll(trough);
     if (auto* c = container(region, chest)) c->removeAllItems();

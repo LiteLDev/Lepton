@@ -58,6 +58,7 @@ $c['minecraft:material_instances'] = [ordered]@{
 }
 $c['minecraft:collision_box'] = Get-CollisionJson $chuteBoxes
 $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 0 0 0 16 16 16)
+$c['minecraft:light_dampening'] = 0
 $c['minecraft:loot'] = Write-LootTable 'chute' 'lepton:chute'
 $c['tag:lepton:logistics'] = [ordered]@{}
 Write-BlockJson -Id 'lepton:chute' -Menu ([ordered]@{ category = 'items'; group = 'minecraft:itemGroup.name.redstone' }) `
@@ -91,10 +92,11 @@ $c['minecraft:geometry'] = [ordered]@{
 }
 $c['minecraft:material_instances'] = [ordered]@{
     '*' = (Mat "$T/trough_side"); side = (Mat "$T/trough_side"); top = (Mat "$T/trough_top"); bottom = (Mat "$T/trough_bottom")
-    inner = (Mat "$T/trough_side_inner"); floor = (Mat "$T/trough_bottom"); hay = (Mat 'textures/blocks/hayblock_top'); hay_side = (Mat 'textures/blocks/hayblock_side')
+    inner = (Mat "$T/trough_side_inner"); floor = (Mat "$T/trough_bottom"); hay = (Mat 'textures/blocks/hay_block_top'); hay_side = (Mat 'textures/blocks/hay_block_side')
 }
 $c['minecraft:collision_box'] = Get-CollisionJson (@($walls) + @(New-Box 2 0 2 14 2 14))
 $c['minecraft:selection_box'] = ConvertTo-BoxJson (New-Box 0 0 0 16 8 16)
+$c['minecraft:light_dampening'] = 0
 $c['minecraft:loot'] = Write-LootTable 'feeding_trough' 'lepton:feeding_trough'
 $c['tag:lepton:logistics'] = [ordered]@{}
 $troughPerms = @([ordered]@{
@@ -193,6 +195,7 @@ $c['minecraft:material_instances'] = $pipeMats
 $c['minecraft:collision_box'] = ConvertTo-BoxJson $center
 $c['minecraft:selection_box'] = ConvertTo-BoxJson $center
 $c['minecraft:liquid_detection'] = $liquid
+$c['minecraft:light_dampening'] = 0
 $c['minecraft:loot'] = Write-LootTable 'pipe' 'lepton:pipe'
 $c['tag:lepton:pipes'] = [ordered]@{}
 $c['tag:lepton:logistics'] = [ordered]@{}
@@ -283,8 +286,8 @@ Write-PackJson (Join-Path $script:RP 'models/entity/lepton_pipe_item.geo.json') 
                     visible_bounds_width = 1; visible_bounds_height = 1; visible_bounds_offset = @(0, 0.25, 0) }
                 bones       = @(
                     [ordered]@{ name = 'root'; pivot = @(0, 0, 0) },
-                    [ordered]@{ name = 'rightArm'; parent = 'root'; pivot = @(0, 6, 0); rotation = @(-90, 0, 0) },
-                    [ordered]@{ name = 'rightItem'; parent = 'rightArm'; pivot = @(0, 6, 0) }
+                    [ordered]@{ name = 'rightArm'; parent = 'root'; pivot = @(0, -3, 0); rotation = @(-90, 0, 0) },
+                    [ordered]@{ name = 'rightItem'; parent = 'rightArm'; pivot = @(0, -3, 0) }
                 )
             })
     })

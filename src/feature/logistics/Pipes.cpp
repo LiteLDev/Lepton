@@ -246,8 +246,10 @@ Vec3 displayPos(GlobalPos const& p, Item const& i) {
     float shift = fract - 0.5f;
     int   face  = fract < 0.5f ? opposite(i.in) : i.out;
     auto const& s = kFaceStep[static_cast<size_t>(face)];
-    // the display entity's origin is its feet: lower it so the item sits at the pipe's centre
-    return Vec3{p.x + 0.5f + s[0] * shift, p.y + 0.5f + s[1] * shift - 0.25f, p.z + 0.5f + s[2] * shift};
+    // the display entity holds the item a little above its feet (its arm bone is lowered to
+    // cancel the game's held-item offset): lower the entity by the rest
+    constexpr float kHeldItemHeight = 0.07f;
+    return Vec3{p.x + 0.5f + s[0] * shift, p.y + 0.5f + s[1] * shift - kHeldItemHeight, p.z + 0.5f + s[2] * shift};
 }
 
 void removeDisplay(Item& i) {
