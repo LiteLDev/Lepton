@@ -1,6 +1,10 @@
-#include <format>
-
 // Selftests of U11 logistics (dx 1100..1199).
+
+#include <format>
+#include <set>
+
+#include "mc/world/item/crafting/Recipes.h"
+#include "mc/world/level/block/BlockChangeContext.h"
 
 #include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
@@ -398,6 +402,38 @@ LP_REGISTER_SELFTEST("logistics.crate_spill", [](Context& ctx) -> ll::coro::Coro
     ctx.check(itemsNear(region, c, 2.0f, "minecraft:stick") == 20, "breaking the crate spills its items");
     ctx.check(crate::total(c) == 0, "and empties it");
     clearItems(region, base);
+});
+
+// Every block drops itself when broken (loot tables), the trough also its contents, and every
+// recipe of the unit is in the level's recipe table (behaviour pack recipes parsed).
+LP_REGISTER_SELFTEST("logistics.drops_recipes", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(1160);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto& region = regionOf(ctx);
+    stepAway(ctx, base);
+    char const* ids[] = {lg::kChute, lg::kPipe, lg::kEncasedPipe, lg::kFeedingTrough, lg::kCrate};
+    for (int i = 0; i < 5; ++i) {
+        ctx.setBlock(at(base, i * 3, 0, 0), "minecraft:stone");
+        ctx.require(ctx.setBlock(at(base, i * 3, 1, 0), ids[i]), std::format("{} placed", ids[i]));
+    }
+    co_await ctx.ticks(2);
+    clearItems(region, base, 16);
+    auto trough = at(base, 9, 1, 0);
+    lp::game::vc::setItems(trough, {lp::game::makeItem("minecraft:wheat", 3)});
+    for (int i = 0; i < 5; ++i) {
+        BlockChangeContext change{};
+        ctx.player().getLevel().destroyBlock(region, lp::game::blockPos(at(base, i * 3, 1, 0)), true, change);
+    }
+    co_await ctx.ticks(5);
+    for (int i = 0; i < 5; ++i)
+        ctx.check(itemsNear(region, at(base, i * 3, 1, 0), 1.2f, ids[i]) == 1, std::format("{} drops itself", ids[i]));
+    ctx.check(itemsNear(region, trough, 1.5f, "minecraft:wheat") == 3, "a broken trough drops its contents");
+    clearItems(region, base, 16);
+    std::set<std::string> want{"lepton:chute", "lepton:pipe", "lepton:encased_pipe", "lepton:encased_pipe_revert",
+                               "lepton:feeding_trough", "lepton:crate"};
+    for (auto& [tag, byId] : ctx.player().getLevel().getRecipes().mRecipes.get())
+        for (auto const& [id, recipe] : byId) want.erase(id);
+    for (auto const& id : want) ctx.check(false, std::format("recipe {} is registered", id));
 });
 
 // Showcase for the client e2e scenario: builds a chute, a pipe line with items moving, a trough with
