@@ -33,6 +33,32 @@ Start-Sleep -Milliseconds 1200
 Save-Screenshot 'container' | Out-Null
 Close-Screen
 
+# The 3x3 screen (Screen::Dispenser, a client-only dispenser block): shows the stored apples and
+# emeralds; move the diamonds from the hotbar into its last slot.
+Invoke-Chat '/give @s diamond 3'
+Start-Sleep -Seconds 1
+$m = Get-LogMark
+Invoke-Chat '/quark debug container dispenser'
+Wait-LogLine 'virtual container .* opened by' 15 -Since $m | Out-Null
+Start-Sleep -Milliseconds 1200
+Save-Screenshot 'dispenser' | Out-Null
+$m = Get-LogMark
+Click 0.3648 0.7292 -Relative   # first hotbar slot (screenshot 467,525)
+Start-Sleep -Milliseconds 500
+Click 0.5336 0.4236 -Relative   # last slot of the 3x3 grid (683,305)
+Wait-LogLine 'debug container: contents changed' 10 -Since $m | Out-Null
+Start-Sleep -Milliseconds 500
+Save-Screenshot 'dispenser-moved' | Out-Null
+Close-Screen
+
+# A 54-slot chest (a client-only double chest): all six rows, gold in slot 41.
+$m = Get-LogMark
+Invoke-Chat '/quark debug container large'
+Wait-LogLine 'virtual container .* opened by' 15 -Since $m | Out-Null
+Start-Sleep -Milliseconds 1200
+Save-Screenshot 'large-chest' | Out-Null
+Close-Screen
+
 # Form (fallback UI): shown, then closed with Esc.
 $m = Get-LogMark
 Invoke-Chat '/quark debug form'
