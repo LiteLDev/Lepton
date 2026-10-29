@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include "mc/world/level/BlockPos.h"
+
 #include "feature/newwoods/JavaRandom.h"
 
 class Block;
@@ -143,6 +145,14 @@ struct BlossomRoll {
     bool rarityHit;
 };
 [[nodiscard]] BlossomRoll blossomRoll(uint64_t seed, int cx, int cz, int colour, int rarity);
+/// Columns within `radius` chunks of chunk (cx, cz) where a blossom tree of colour `colour` passes the
+/// rarity roll and the biome filter (biomes from the world generator: no chunk needs to be loaded),
+/// nearest first. For the world generation selftest.
+struct BlossomCandidate {
+    BlockPos pos;
+    int      colour;
+};
+[[nodiscard]] std::vector<BlossomCandidate> blossomCandidates(int cx, int cz, int radius);
 /// Generates the blossom trees of chunk (cx, cz). Returns how many trees were placed.
 int generateBlossomChunk(BlockSource& region, int cx, int cz, std::string_view dim, uint64_t seed);
 /// Replaces the oak logs of generated azalea trees in chunk (cx, cz). Returns the logs replaced.

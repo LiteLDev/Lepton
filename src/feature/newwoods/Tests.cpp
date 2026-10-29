@@ -13,7 +13,9 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/GameType.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/ComposterBlock.h"
 #include "mc/world/level/block/actor/FurnaceBlockActor.h"
@@ -407,6 +409,67 @@ LP_REGISTER_SELFTEST("newwoods.worldgen_filters", [](Context& ctx) {
         for (int cz = 0; cz < 100; ++cz) hits += nw::blossomRoll(12345, cx, cz, 4, 30).rarityHit ? 1 : 0;
     double rate = hits / 20000.0;
     ctx.check(std::abs(rate - 1.0 / 30) < 0.006, "1 in 30 chunks: " + std::to_string(rate));
+});
+
+// A generated azalea tree (rooted dirt, oak trunk, azalea leaves) in a decorated chunk gets azalea logs.
+LP_REGISTER_SELFTEST("newwoods.azalea_gen", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto p = ctx.testPos(784, 320);
+    ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
+    stepAside(ctx, p, 6);
+    ctx.require(put(ctx, p, "minecraft:dirt_with_roots"), "rooted dirt");
+    for (int y = 1; y <= 3; ++y) ctx.require(put(ctx, off(p, 0, y, 0), "minecraft:oak_log"), "trunk");
+    ctx.require(put(ctx, off(p, 1, 3, 0), "minecraft:oak_log", {{"pillar_axis", "x"}}), "branch");
+    for (int dx = -1; dx <= 2; ++dx)
+        for (int dz = -1; dz <= 1; ++dz) put(ctx, off(p, dx, 4, dz), dz == 0 ? "minecraft:azalea_leaves_flowered" : "minecraft:azalea_leaves");
+    ctx.require(put(ctx, off(p, 3, 1, 0), "minecraft:oak_log"), "a lone oak log nearby");
+    auto bp = lp::game::blockPos(p);
+    int  n  = nw::replaceAzaleaTreesInChunk(regionOf(ctx), bp.x >> 4, bp.z >> 4);
+    ctx.check(n == 4, "4 logs replaced, got " + std::to_string(n));
+    ctx.check(idAt(ctx, off(p, 0, 2, 0)) == "lepton:azalea_log", "trunk is azalea");
+    auto const& branch = at(ctx, off(p, 1, 3, 0));
+    ctx.check(branch.getTypeName() == "lepton:azalea_log" && bs::getString(branch, "minecraft:block_face").value_or("") == "east",
+        "branch keeps its x axis");
+    ctx.check(idAt(ctx, off(p, 3, 1, 0)) == "minecraft:oak_log", "the lone oak log stays");
+});
+
+// Real world generation (server scenario newwoods-worldgen, level-type DEFAULT): trumpet trees stand
+// where the generator rolled them. Skipped in flat worlds.
+LP_REGISTER_SELFTEST("newwoods.worldgen_live", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto& player = ctx.player();
+    if (player.getLevel().getLevelData().getGenerator() != GeneratorType::Overworld) {
+        ctx.info("not a generated overworld: skipped");
+        co_return;
+    }
+    player.setPlayerGameType(GameType::Creative);
+    auto spawn      = ctx.testPos(799);
+    auto candidates = nw::blossomCandidates(spawn.x >> 4, spawn.z >> 4, 40);
+    ctx.info(std::to_string(candidates.size()) + " candidate columns within 40 chunks");
+    ctx.require(!candidates.empty(), "blossom tree candidates near the spawn");
+    int found = 0, tried = 0;
+    for (auto const& c : candidates) {
+        if (tried++ >= 12 || found > 0) break;
+        GP top{0, c.pos.x, std::min(c.pos.y + 40, 300), c.pos.z};
+        if (!co_await ctx.ensureLoaded(top)) continue;
+        co_await ctx.ticks(80); // neighbours generate, post-processing runs
+        auto&       region = regionOf(ctx);
+        auto const& tree   = nw::treeTypes()[1 + c.colour];
+        int         logs = 0, leaves = 0;
+        for (int x = -16; x <= 16; ++x)
+            for (int z = -16; z <= 16; ++z)
+                for (int y = -20; y <= 40; ++y) {
+                    BlockPos q{c.pos.x + x, c.pos.y + y, c.pos.z + z};
+                    if (!region.hasChunksAt(q, 0, false)) continue;
+                    auto const& n = region.getBlock(q).getTypeName();
+                    if (n == "lepton:blossom_log") ++logs;
+                    else if (n == tree.leaves) ++leaves;
+                }
+        ctx.info("candidate " + std::string(tree.name) + " at " + std::to_string(c.pos.x) + " " + std::to_string(c.pos.z) + ": "
+                 + std::to_string(logs) + " logs, " + std::to_string(leaves) + " leaves");
+        if (logs > 0 && leaves > 0) ++found;
+    }
+    ctx.info(nw::genStats());
+    ctx.check(found > 0, "a generated trumpet tree was found");
+    player.setPlayerGameType(GameType::Survival);
 });
 
 LP_REGISTER_SELFTEST("newwoods.fuel_compost", [](Context& ctx) {

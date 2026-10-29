@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "ll/api/memory/Hook.h"
+#include "ll/api/service/Bedrock.h"
 
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/actor/Actor.h"
@@ -24,8 +25,13 @@
 #include "mc/world/level/block/AzaleaBlock.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockChangeContext.h"
+#include "mc/world/level/DividedPos2d.h"
+#include "mc/world/level/biome/source/BiomeArea.h"
 #include "mc/world/level/chunk/LevelChunk.h"
+#include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/DimensionType.h"
+#include "mc/world/level/levelgen/WorldGenerator.h"
+#include "mc/world/level/levelgen/structure/BoundingBox.h"
 #include "mc/world/level/levelgen/v1/NetherGenerator.h"
 #include "mc/world/level/levelgen/v1/OverworldGeneratorMultinoise.h"
 #include "mc/world/level/levelgen/v1/TheEndGenerator.h"
@@ -34,6 +40,7 @@
 #include "feature/newwoods/Palette.h"
 #include "feature/newwoods/Runtime.h"
 #include "game/BlockStates.h"
+#include "game/Blocks.h"
 #include "mod/Log.h"
 
 namespace lp::feature::newwoods {
@@ -282,6 +289,44 @@ int replaceAzaleaTreesInChunk(BlockSource& region, int cx, int cz) {
     }
     stats().azaleaLogs += replaced;
     return replaced;
+}
+
+std::vector<BlossomCandidate> blossomCandidates(int cx, int cz, int radius) {
+    std::vector<BlossomCandidate> out;
+    auto                          level = ll::service::getLevel();
+    if (!level) return out;
+    auto dim = level->getDimension(0).lock();
+    if (!dim || !dim->mWorldGenerator) return out;
+    auto const& gen  = *dim->mWorldGenerator;
+    auto*       region = game::regionOf(0);
+    if (!region) return out;
+    uint64_t    seed = region->getLevelSeed64().mValue;
+    for (int x = cx - radius; x <= cx + radius; ++x) {
+        for (int z = cz - radius; z <= cz + radius; ++z) {
+            for (int colour = 0; colour < 5; ++colour) {
+                auto const& tc = colourConfig(colour);
+                if (tc.rarity <= 0 || !dimensionAllowed("minecraft:overworld", tc.dimensions)) continue;
+                auto roll = blossomRoll(seed, x, z, colour, tc.rarity);
+                if (!roll.rarityHit) continue;
+                auto surface = gen.getPreliminarySurfaceLevel(DividedPos2d<4>(roll.x >> 2, roll.z >> 2));
+                int  y       = surface ? *surface : 64;
+                BoundingBox box;
+                box.min   = BlockPos{roll.x, y, roll.z};
+                box.max   = BlockPos{roll.x + 1, y + 1, roll.z + 1};
+                auto area = gen.getBiomeArea(box, 1);
+                auto const& biomes = area.mBiomes.get();
+                if (biomes.empty() || !biomes[0]) continue;
+                if (!biomeAllowed(biomes[0]->mHash->getString(), tc.biomes)) continue;
+                out.push_back({BlockPos{roll.x, y, roll.z}, colour});
+            }
+        }
+    }
+    int ox = cx * 16 + 8, oz = cz * 16 + 8;
+    std::sort(out.begin(), out.end(), [&](BlossomCandidate const& a, BlossomCandidate const& b) {
+        auto d = [&](BlockPos const& p) { return (p.x - ox) * (p.x - ox) + (p.z - oz) * (p.z - oz); };
+        return d(a.pos) < d(b.pos);
+    });
+    return out;
 }
 
 std::string genStats() {
