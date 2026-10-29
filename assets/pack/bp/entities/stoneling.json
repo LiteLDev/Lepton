@@ -300,7 +300,8 @@
         "remove": {
           "component_groups": [
             "lepton:wild",
-            "lepton:wary"
+            "lepton:wary",
+            "lepton:startled"
           ]
         },
         "add": {
@@ -309,7 +310,8 @@
           ]
         },
         "set_property": {
-          "lepton:player_made": true
+          "lepton:player_made": true,
+          "lepton:startled": false
         }
       },
       "lepton:startle": {

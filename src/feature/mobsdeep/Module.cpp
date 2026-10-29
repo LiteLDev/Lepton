@@ -273,6 +273,15 @@ Actor* directOf(ActorDamageSource const& src) {
     return nullptr;
 }
 
+// The wraith's voice: entity property `lepton:voice` (index into wraithSounds, -1 = not chosen yet;
+// the pack defines events lepton:voice_0..63). An index past the list's end is silent.
+constexpr int kWraithVoiceMax = 63;
+Voice voiceOf(Actor& wraith) {
+    int  idx = intProp(wraith, "lepton:voice");
+    auto all = wraithVoices();
+    return idx >= 0 && idx < static_cast<int>(all.size()) ? all[idx] : Voice{};
+}
+
 // ================================================================================================
 
 class MobsdeepModule {
@@ -288,7 +297,6 @@ public:
     std::unordered_map<int64_t, StonelingState> stonelings;
     std::unordered_map<int64_t, FoxState>       foxes;
     std::unordered_map<int64_t, WraithState>    wraiths;
-    std::unordered_map<int64_t, Voice>          voices;
     std::unordered_map<int64_t, int>            taters;
     std::unordered_map<int64_t, BeadState>      beads;
     std::deque<PendingLeap>                     leaps;
@@ -334,8 +342,6 @@ void MobsdeepModule::load() {
     clear();
     auto doc = game::db::load(kDbKey);
     if (!doc) return;
-    for (auto& [k, v] : doc->value("voices", nlohmann::json::object()).items())
-        voices[std::stoll(k)] = Voice{v.value("idle", ""), v.value("hurt", ""), v.value("death", "")};
     for (auto& [k, v] : doc->value("taters", nlohmann::json::object()).items()) taters[std::stoll(k)] = v.get<int>();
     for (auto& [k, v] : doc->value("beads", nlohmann::json::object()).items()) {
         BeadState b;
@@ -351,9 +357,7 @@ void MobsdeepModule::load() {
 void MobsdeepModule::save() {
     if (!dirty || !game::db::available()) return;
     nlohmann::json doc;
-    auto&          jv = doc["voices"] = nlohmann::json::object();
-    for (auto& [id, v] : voices) jv[std::to_string(id)] = {{"idle", v.idle}, {"hurt", v.hurt}, {"death", v.death}};
-    auto& jt = doc["taters"] = nlohmann::json::object();
+    auto&          jt = doc["taters"] = nlohmann::json::object();
     for (auto& [id, t] : taters) jt[std::to_string(id)] = t;
     auto& jb = doc["beads"] = nlohmann::json::object();
     for (auto& [id, b] : beads)
@@ -367,7 +371,6 @@ void MobsdeepModule::clear() {
     stonelings.clear();
     foxes.clear();
     wraiths.clear();
-    voices.clear();
     taters.clear();
     beads.clear();
     leaps.clear();
@@ -540,9 +543,12 @@ void MobsdeepModule::tickStoneling(Actor& a, std::vector<Player*> const& players
         // ActWaryGoal: range 6, startled by any non-sneaking non-creative player
         bool near = false, scare = false;
         for (auto* p : players) {
-            if (p->getDimensionId() != a.getDimensionId() || p->isCreative()) continue;
+            if (p->getDimensionId() != a.getDimensionId() || isCreativeLike(*p)) continue;
             auto pp = p->getPosition();
-            if (pp.distanceToSqr(pos) >= 36.0f) continue;
+            if (pp.distanceToSqr(pos) >= 36.0f) {
+                st.watched.erase(ent::idOf(*p)); // its motion is measured afresh when it comes back
+                continue;
+            }
             near = true;
             if (!p->isSneaking()) {
                 scare = true;
@@ -627,7 +633,10 @@ void MobsdeepModule::tickForgotten(Actor& a) {
     }
     bool useBow   = shouldUseBow(a);
     bool usingBow = game::itemId(a.getCarriedItem()) == "minecraft:bow";
-    if (useBow != usingBow) {
+    // swap only when the other weapon is actually sheathed (a Forgotten that lost one keeps the other)
+    auto offId   = game::itemId(a.getOffhandSlot());
+    bool canSwap = useBow ? offId == "minecraft:bow" : !offId.empty() && offId != "minecraft:bow";
+    if (useBow != usingBow && canSwap) {
         ItemStack hand = a.getCarriedItem();
         ItemStack off  = a.getOffhandSlot();
         a.setCarriedItem(off);
@@ -715,14 +724,14 @@ void MobsdeepModule::tickFoxhound(Actor& a, std::unordered_set<uint64_t>& booste
 
 void MobsdeepModule::tickWraith(Actor& a) {
     if (!config().enableWraith || !a.isAlive()) return;
-    auto id = ent::idOf(a);
-    if (!voices.contains(id)) {
+    if (intProp(a, "lepton:voice") < 0) {
+        // Quark picks the voice once on spawn; it is kept as an index into wraithSounds
         auto all = wraithVoices();
-        voices[id] = all.empty() ? Voice{} : all[randInt(static_cast<int>(all.size()))];
-        dirty      = true;
+        int  idx = randInt(static_cast<int>(std::min<size_t>(all.size(), kWraithVoiceMax + 1)));
+        ent::triggerEvent(a, "lepton:voice_" + std::to_string(idx));
     }
-    auto& st = wraiths[id];
-    if (st.ambient.roll(80)) playSoundAt(a, voices[id].idle, a.getPosition(), 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
+    auto& st = wraiths[ent::idOf(a)];
+    if (st.ambient.roll(80)) playSoundAt(a, voiceOf(a).idle, a.getPosition(), 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
 }
 
 void MobsdeepModule::tickSoulBead(Actor& a) {
@@ -795,13 +804,18 @@ void MobsdeepModule::runPending() {
         if (level)
             level->broadcastLevelEvent(SharedTypes::Legacy::LevelEvent::ParticlesDestroyBlock, center,
                                        static_cast<int>(block.mNetworkId), nullptr);
-        game::clearBlock(*region, h.pos);
         auto* st = ent::spawn(*region, std::string(kStoneling) + "<lepton:from_heart>", center);
-        if (!st) continue;
+        if (!st) continue; // the block stays when no stoneling can appear
+        game::clearBlock(*region, h.pos);
         ent::triggerEvent(*st, "lepton:variant_" + std::to_string(h.variant));
         auto rot = p->getRotation();
         st->teleport(center, static_cast<int>(h.dim), Vec2{0.0f, rot.y + 180.0f});
-        shrinkHeld(*p);
+        if (game::itemId(p->getSelectedItem()) == kDiamondHeart) shrinkHeld(*p);
+        else if (!p->isCreative()) { // the hand changed since the use: take a heart from elsewhere
+            game::inv::remove(game::inv::playerInventory(*p), [](ItemStack const& s) { return game::itemId(s) == kDiamondHeart; }, 1,
+                              game::inv::kPlayerAll);
+            game::inv::sync(*p);
+        }
         log().info("mobsdeep: stoneling made ({})", kVariants[h.variant].name);
     }
     while (!forgottenSpawns.empty()) {
@@ -890,8 +904,7 @@ void MobsdeepModule::onHurt(ll::event::ActorHurtEvent& ev) {
     }
     if (vtype == kWraith && cfg.enableWraith) {
         auto id = ent::idOf(victim);
-        if (auto it = voices.find(id); it != voices.end())
-            playSoundAt(victim, it->second.hurt, victim.getPosition(), 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
+        playSoundAt(victim, voiceOf(victim).hurt, victim.getPosition(), 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
         // only a player's own hit (not a projectile) makes a wraith hostile
         if (attacker && attacker->isPlayer() && cause != Cause::Projectile && !src.isChildEntitySource()) {
             auto& st = wraiths[id];
@@ -957,11 +970,7 @@ void MobsdeepModule::onDie(ll::event::MobDieEvent& ev) {
         foxes.erase(id);
         if (taters.erase(id)) dirty = true;
     } else if (type == kWraith) {
-        if (auto it = voices.find(id); it != voices.end()) {
-            playSoundAt(mob, it->second.death, pos, 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
-            voices.erase(it);
-            dirty = true;
-        }
+        playSoundAt(mob, voiceOf(mob).death, pos, 1.0f, 0.75f + static_cast<float>(rand01() * 0.1));
         wraiths.erase(id);
     }
 }
@@ -1005,12 +1014,21 @@ void MobsdeepModule::onSpawning(ll::event::SpawningMobEvent& ev) {
     auto const& pos  = ev.pos();
     auto&       region = ev.blockSource();
     int         dim  = static_cast<int>(region.getDimensionId());
+    bool        natural = ev.naturalSpawn() && !ev.fromSpawner();
+    // a disabled module's mob never spawns; the config filters apply to natural spawns only (not to
+    // spawn eggs, /summon or Lepton's own spawns)
+    if ((type == kStoneling && !cfg.enableStonelings) || (type == kFoxhound && !cfg.enableFoxhound) || (type == kWraith && !cfg.enableWraith)
+        || (type == kForgotten && !cfg.enableForgotten)) {
+        ev.cancel();
+        return;
+    }
+    if (!natural) return;
 
     if (type == kStoneling) {
         bool dimOk = false;
         for (auto const& d : cfg.dimensions.dimensions) dimOk |= d == dimensionName(dim);
         if (cfg.dimensions.isBlacklist) dimOk = !dimOk;
-        if (!cfg.enableStonelings || pos.y > cfg.maxYLevel || !dimOk
+        if (pos.y > cfg.maxYLevel || !dimOk
             || !biomeAllowed(cfg.stonelingsSpawnConfig, dim, biomeName(region, pos)) || !weightAllows(cfg.stonelingsSpawnConfig, 80))
             ev.cancel();
         return;
@@ -1019,16 +1037,15 @@ void MobsdeepModule::onSpawning(ll::event::SpawningMobEvent& ev) {
         auto biome = biomeName(region, pos);
         bool lesser = biome == "soulsand_valley";
         auto const& sc = lesser ? cfg.lesserSpawnConfig : cfg.foxhoundSpawnConfig;
-        if (!cfg.enableFoxhound || !biomeAllowed(sc, dim, biome) || !weightAllows(sc, lesser ? 2 : 30)) ev.cancel();
+        if (!biomeAllowed(sc, dim, biome) || !weightAllows(sc, lesser ? 2 : 30)) ev.cancel();
         return;
     }
     if (type == kWraith) {
-        if (!cfg.enableWraith || !biomeAllowed(cfg.wraithSpawnConfig, dim, biomeName(region, pos)) || !weightAllows(cfg.wraithSpawnConfig, 5))
+        if (!biomeAllowed(cfg.wraithSpawnConfig, dim, biomeName(region, pos)) || !weightAllows(cfg.wraithSpawnConfig, 5))
             ev.cancel();
         return;
     }
-    if (type == "minecraft:skeleton" && cfg.enableForgotten && !ev.fromSpawner() && ev.naturalSpawn()
-        && testing::replacesSkeleton(rand01(), pos.y, ev.fromSpawner())) {
+    if (type == "minecraft:skeleton" && testing::replacesSkeleton(rand01(), pos.y, false)) {
         ev.cancel();
         forgottenSpawns.push_back({dim, pos});
     }
@@ -1100,9 +1117,9 @@ int64_t spawnSoulBead(Player& player, Vec3 const& start, int targetX, int target
 namespace testing {
 void forceTameChance(std::optional<double> chance) { gForcedTameChance = chance; }
 std::optional<Voice> voiceOf(int64_t id) {
-    auto& v = M().voices;
-    if (auto it = v.find(id); it != v.end()) return it->second;
-    return std::nullopt;
+    auto* a = ent::find(id);
+    if (!a || intProp(*a, "lepton:voice") < 0) return std::nullopt;
+    return lp::feature::mobsdeep::voiceOf(*a);
 }
 int soulBeadAge(int64_t id) {
     auto& b = M().beads;

@@ -191,7 +191,8 @@ the Nether Fortress.
 - On a successful hit: Slowness II (amplifier 1) for 60 ticks on the target, and the wraith jumps
   back: velocity `normalize(normalize(dx, 0, dz) + (0, 0.5, 0)) * 0.85` away from the target.
 - Voice: on spawn it picks one entry of `wraithSounds` (idle|hurt|death; empty = silent), kept with
-  the entity; pitch 0.75-0.85. Java ids are mapped to Bedrock sounds (table in
+  the entity as its index in the list (entity property `lepton:voice`, -1 = not chosen yet; only the
+  first 64 entries are used; an index past the end of an edited list is silent); pitch 0.75-0.85. Java ids are mapped to Bedrock sounds (table in
   `src/feature/mobsdeep/Common.cpp`); unknown ids are used as Bedrock sound names.
 - Prefers walking on soul sand / soul soil. Mycelium-like and soul particles.
 - Spawning: `wraithSpawnConfig` (weight 5, 1-3, Soul Sand Valley), monster light rules, on soul sand
@@ -247,7 +248,8 @@ Spawn config shape (Quark's `EntitySpawnConfig` / `CostSensitiveEntitySpawnConfi
 ```
 
 `biomes` holds biome ids (`minecraft:soul_sand_valley`), `tags` Bedrock biome tags. A spawn needs both
-filters to pass. The pack's spawn rules use Quark's default weights and biomes; the config narrows
+filters to pass. A disabled module's mob never spawns (eggs and `/summon` included); the filters and
+weights apply to natural spawns only. The pack's spawn rules use Quark's default weights and biomes; the config narrows
 them natively (veto of the attempt; a lower weight vetoes with probability `1 - weight / default`).
 
 ## 6. Strings

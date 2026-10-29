@@ -181,7 +181,8 @@ $stonelingEvents = O `
         (O add (O component_groups @('lepton:wild', 'lepton:carry_loot', 'lepton:loot_heart', 'lepton:tempt_diamond'))),
         (O randomize $variantRandom))) `
     'lepton:from_heart' (O add (O component_groups @('lepton:tame', 'lepton:loot_heart', 'lepton:tempt_diamond')) set_property (O 'lepton:player_made' $true)) `
-    'lepton:make_player_made' (O remove (O component_groups @('lepton:wild', 'lepton:wary')) add (O component_groups @('lepton:tame')) set_property (O 'lepton:player_made' $true)) `
+    'lepton:make_player_made' (O remove (O component_groups @('lepton:wild', 'lepton:wary', 'lepton:startled')) add (O component_groups @('lepton:tame')) `
+        set_property (O 'lepton:player_made' $true 'lepton:startled' $false)) `
     'lepton:startle' (O remove (O component_groups @('lepton:tempt_diamond', 'lepton:tempt_glow_shroom', 'lepton:wary')) add (O component_groups @('lepton:startled')) set_property (O 'lepton:startled' $true)) `
     'lepton:tempt_none' (O remove (O component_groups @('lepton:tempt_diamond', 'lepton:tempt_glow_shroom'))) `
     'lepton:tempt_diamond' (O remove (O component_groups @('lepton:tempt_glow_shroom')) add (O component_groups @('lepton:tempt_diamond'))) `
@@ -319,7 +320,11 @@ Write-Entity 'foxhound' @{ en = 'Foxhound'; zh = '猎狐犬' } (O properties (O 
             'lepton:tatering' (O type 'bool' default $false client_sync $true))) $foxGroups $foxComponents $foxEvents
 
 # ---- Wraith -----------------------------------------------------------------------------------
-Write-Entity 'wraith' @{ en = 'Wraith'; zh = '游魂' } $null (O `
+# The voice (an index into the wraithSounds config list, -1 = not chosen yet) lives on the entity.
+$WraithVoiceMax = 63
+$wraithEvents = O 'lepton:aggro' (O add (O component_groups @('lepton:aggro')))
+for ($i = 0; $i -le $WraithVoiceMax; $i++) { $wraithEvents["lepton:voice_$i"] = Event-Set 'lepton:voice' $i }
+Write-Entity 'wraith' @{ en = 'Wraith'; zh = '游魂' } (O properties (O 'lepton:voice' (O type 'int' range @(-1, $WraithVoiceMax) default -1))) (O `
         'lepton:aggro' (O `
             'minecraft:behavior.hurt_by_target' (O priority 1) `
             'minecraft:behavior.nearest_attackable_target' (O priority 2 must_see $true reselect_targets $true within_radius 35 entity_types @(
@@ -349,8 +354,7 @@ Write-Entity 'wraith' @{ en = 'Wraith'; zh = '游魂' } $null (O `
         'minecraft:behavior.melee_attack' (O priority 3 speed_multiplier 1.0 track_target $false) `
         'minecraft:behavior.random_stroll' (O priority 7 speed_multiplier 1.0) `
         'minecraft:behavior.look_at_player' (O priority 8 look_distance 8) `
-        'minecraft:behavior.random_look_around' (O priority 9)) (O `
-        'lepton:aggro' (O add (O component_groups @('lepton:aggro'))))
+        'minecraft:behavior.random_look_around' (O priority 9)) $wraithEvents
 
 # ---- Soul bead --------------------------------------------------------------------------------
 Write-Entity 'soul_bead' @{ en = 'Soul Bead'; zh = '灵魂珠' } (O is_spawnable $false) (O) (O `

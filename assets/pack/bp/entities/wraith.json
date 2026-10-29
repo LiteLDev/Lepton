@@ -5,7 +5,17 @@
       "identifier": "lepton:wraith",
       "is_spawnable": true,
       "is_summonable": true,
-      "is_experimental": false
+      "is_experimental": false,
+      "properties": {
+        "lepton:voice": {
+          "type": "int",
+          "range": [
+            -1,
+            63
+          ],
+          "default": "-1"
+        }
+      }
     },
     "component_groups": {
       "lepton:aggro": {
@@ -155,6 +165,326 @@
           "component_groups": [
             "lepton:aggro"
           ]
+        }
+      },
+      "lepton:voice_0": {
+        "set_property": {
+          "lepton:voice": 0
+        }
+      },
+      "lepton:voice_1": {
+        "set_property": {
+          "lepton:voice": 1
+        }
+      },
+      "lepton:voice_2": {
+        "set_property": {
+          "lepton:voice": 2
+        }
+      },
+      "lepton:voice_3": {
+        "set_property": {
+          "lepton:voice": 3
+        }
+      },
+      "lepton:voice_4": {
+        "set_property": {
+          "lepton:voice": 4
+        }
+      },
+      "lepton:voice_5": {
+        "set_property": {
+          "lepton:voice": 5
+        }
+      },
+      "lepton:voice_6": {
+        "set_property": {
+          "lepton:voice": 6
+        }
+      },
+      "lepton:voice_7": {
+        "set_property": {
+          "lepton:voice": 7
+        }
+      },
+      "lepton:voice_8": {
+        "set_property": {
+          "lepton:voice": 8
+        }
+      },
+      "lepton:voice_9": {
+        "set_property": {
+          "lepton:voice": 9
+        }
+      },
+      "lepton:voice_10": {
+        "set_property": {
+          "lepton:voice": 10
+        }
+      },
+      "lepton:voice_11": {
+        "set_property": {
+          "lepton:voice": 11
+        }
+      },
+      "lepton:voice_12": {
+        "set_property": {
+          "lepton:voice": 12
+        }
+      },
+      "lepton:voice_13": {
+        "set_property": {
+          "lepton:voice": 13
+        }
+      },
+      "lepton:voice_14": {
+        "set_property": {
+          "lepton:voice": 14
+        }
+      },
+      "lepton:voice_15": {
+        "set_property": {
+          "lepton:voice": 15
+        }
+      },
+      "lepton:voice_16": {
+        "set_property": {
+          "lepton:voice": 16
+        }
+      },
+      "lepton:voice_17": {
+        "set_property": {
+          "lepton:voice": 17
+        }
+      },
+      "lepton:voice_18": {
+        "set_property": {
+          "lepton:voice": 18
+        }
+      },
+      "lepton:voice_19": {
+        "set_property": {
+          "lepton:voice": 19
+        }
+      },
+      "lepton:voice_20": {
+        "set_property": {
+          "lepton:voice": 20
+        }
+      },
+      "lepton:voice_21": {
+        "set_property": {
+          "lepton:voice": 21
+        }
+      },
+      "lepton:voice_22": {
+        "set_property": {
+          "lepton:voice": 22
+        }
+      },
+      "lepton:voice_23": {
+        "set_property": {
+          "lepton:voice": 23
+        }
+      },
+      "lepton:voice_24": {
+        "set_property": {
+          "lepton:voice": 24
+        }
+      },
+      "lepton:voice_25": {
+        "set_property": {
+          "lepton:voice": 25
+        }
+      },
+      "lepton:voice_26": {
+        "set_property": {
+          "lepton:voice": 26
+        }
+      },
+      "lepton:voice_27": {
+        "set_property": {
+          "lepton:voice": 27
+        }
+      },
+      "lepton:voice_28": {
+        "set_property": {
+          "lepton:voice": 28
+        }
+      },
+      "lepton:voice_29": {
+        "set_property": {
+          "lepton:voice": 29
+        }
+      },
+      "lepton:voice_30": {
+        "set_property": {
+          "lepton:voice": 30
+        }
+      },
+      "lepton:voice_31": {
+        "set_property": {
+          "lepton:voice": 31
+        }
+      },
+      "lepton:voice_32": {
+        "set_property": {
+          "lepton:voice": 32
+        }
+      },
+      "lepton:voice_33": {
+        "set_property": {
+          "lepton:voice": 33
+        }
+      },
+      "lepton:voice_34": {
+        "set_property": {
+          "lepton:voice": 34
+        }
+      },
+      "lepton:voice_35": {
+        "set_property": {
+          "lepton:voice": 35
+        }
+      },
+      "lepton:voice_36": {
+        "set_property": {
+          "lepton:voice": 36
+        }
+      },
+      "lepton:voice_37": {
+        "set_property": {
+          "lepton:voice": 37
+        }
+      },
+      "lepton:voice_38": {
+        "set_property": {
+          "lepton:voice": 38
+        }
+      },
+      "lepton:voice_39": {
+        "set_property": {
+          "lepton:voice": 39
+        }
+      },
+      "lepton:voice_40": {
+        "set_property": {
+          "lepton:voice": 40
+        }
+      },
+      "lepton:voice_41": {
+        "set_property": {
+          "lepton:voice": 41
+        }
+      },
+      "lepton:voice_42": {
+        "set_property": {
+          "lepton:voice": 42
+        }
+      },
+      "lepton:voice_43": {
+        "set_property": {
+          "lepton:voice": 43
+        }
+      },
+      "lepton:voice_44": {
+        "set_property": {
+          "lepton:voice": 44
+        }
+      },
+      "lepton:voice_45": {
+        "set_property": {
+          "lepton:voice": 45
+        }
+      },
+      "lepton:voice_46": {
+        "set_property": {
+          "lepton:voice": 46
+        }
+      },
+      "lepton:voice_47": {
+        "set_property": {
+          "lepton:voice": 47
+        }
+      },
+      "lepton:voice_48": {
+        "set_property": {
+          "lepton:voice": 48
+        }
+      },
+      "lepton:voice_49": {
+        "set_property": {
+          "lepton:voice": 49
+        }
+      },
+      "lepton:voice_50": {
+        "set_property": {
+          "lepton:voice": 50
+        }
+      },
+      "lepton:voice_51": {
+        "set_property": {
+          "lepton:voice": 51
+        }
+      },
+      "lepton:voice_52": {
+        "set_property": {
+          "lepton:voice": 52
+        }
+      },
+      "lepton:voice_53": {
+        "set_property": {
+          "lepton:voice": 53
+        }
+      },
+      "lepton:voice_54": {
+        "set_property": {
+          "lepton:voice": 54
+        }
+      },
+      "lepton:voice_55": {
+        "set_property": {
+          "lepton:voice": 55
+        }
+      },
+      "lepton:voice_56": {
+        "set_property": {
+          "lepton:voice": 56
+        }
+      },
+      "lepton:voice_57": {
+        "set_property": {
+          "lepton:voice": 57
+        }
+      },
+      "lepton:voice_58": {
+        "set_property": {
+          "lepton:voice": 58
+        }
+      },
+      "lepton:voice_59": {
+        "set_property": {
+          "lepton:voice": 59
+        }
+      },
+      "lepton:voice_60": {
+        "set_property": {
+          "lepton:voice": 60
+        }
+      },
+      "lepton:voice_61": {
+        "set_property": {
+          "lepton:voice": 61
+        }
+      },
+      "lepton:voice_62": {
+        "set_property": {
+          "lepton:voice": 62
+        }
+      },
+      "lepton:voice_63": {
+        "set_property": {
+          "lepton:voice": 63
         }
       }
     }
