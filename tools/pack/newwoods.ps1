@@ -22,8 +22,9 @@ $script:NwGeoFormat = '1.21.0'
 
 # Two crossed planes (saplings), 16 px wide, 16 px high.
 function Write-NwCrossGeometry {
+    # [int]: in command mode `& $plane -45` passes the string '-45' (see Assert-BlockGeometryNumbers)
     $plane = {
-        param($rot)
+        param([int]$rot)
         [ordered]@{
             origin = @(-8, 0, 0); size = @(16, 16, 0); pivot = @(0, 0, 0); rotation = @(0, $rot, 0)
             uv = [ordered]@{

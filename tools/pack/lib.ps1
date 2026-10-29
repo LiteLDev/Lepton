@@ -82,8 +82,30 @@ function Add-PackFile([string]$Path) {
 
 function ConvertTo-PackJson($Object) { return ($Object | ConvertTo-Json -Depth 100) }
 
+# Block geometry takes plain numbers only (no Molang). A string such as "-45" (PowerShell passes
+# `& $block -45` as a string in command mode) makes the 1.26.51 client drop every custom block of
+# the sub-chunk holding such a block from its mesh (the server still has them). Fail the generator.
+function Assert-BlockGeometryNumbers($Node, [string]$Where) {
+    if ($null -eq $Node -or $Node -is [string] -or $Node -is [ValueType]) { return }
+    if ($Node -is [System.Collections.IDictionary]) {
+        foreach ($k in @($Node.Keys)) {
+            $v = $Node[$k]
+            if ($k -in 'origin', 'size', 'pivot', 'rotation', 'uv', 'uv_size', 'inflate', 'uv_rotation',
+                'texture_width', 'texture_height', 'visible_bounds_width', 'visible_bounds_height', 'visible_bounds_offset') {
+                foreach ($x in @($v)) {
+                    if ($x -is [string]) { throw "block geometry ${Where}: '$k' holds the string '$x' (numbers only)" }
+                }
+            }
+            Assert-BlockGeometryNumbers $v "$Where.$k"
+        }
+        return
+    }
+    if ($Node -is [System.Collections.IEnumerable]) { foreach ($x in $Node) { Assert-BlockGeometryNumbers $x $Where } }
+}
+
 function Write-PackJson {
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)]$Object, [switch]$Shared)
+    if ($Path -match '[\\/]models[\\/]blocks[\\/]') { Assert-BlockGeometryNumbers $Object (Split-Path $Path -Leaf) }
     Write-PackText -Path $Path -Text (ConvertTo-PackJson $Object) -Shared:$Shared
 }
 
