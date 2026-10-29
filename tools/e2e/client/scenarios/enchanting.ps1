@@ -114,6 +114,7 @@ if ($vanilla) {
     $c = Get-LogMark
     Click $apply[0] $apply[1] -Relative
     Wait-LogLine 'enchanting: .* applied tome -> minecraft:diamond_sword' 10 -Since $c | Out-Null
+    Wait-LogLine 'enchanting: closed the .* after applying' 10 -Since $c | Out-Null
     Start-Sleep -Milliseconds 1000
     Save-Screenshot 'anvil-done' | Out-Null
 }
@@ -137,6 +138,7 @@ if ($vanilla) {
     $c = Get-LogMark
     Click $apply[0] $apply[1] -Relative
     Wait-LogLine 'enchanting: .* applied rune -> minecraft:diamond_sword' 10 -Since $c | Out-Null
+    Wait-LogLine 'enchanting: closed the .* after applying' 10 -Since $c | Out-Null
     Start-Sleep -Milliseconds 1000
     Save-Screenshot 'smithing-done' | Out-Null
 }

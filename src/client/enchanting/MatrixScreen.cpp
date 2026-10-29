@@ -10,6 +10,8 @@
 #include "nlohmann/json.hpp"
 
 #include "mc/world/Container.h"
+#include "mc/client/game/ClientInstance.h"
+#include "mc/client/gui/screens/interfaces/ISceneStack.h"
 #include "mc/client/player/LocalPlayer.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
@@ -517,6 +519,17 @@ public:
     void install() {
         mHandlers.push_back(net::onClient<fe::MatrixStateMsg>(onState));
         mHandlers.push_back(net::onClient<fe::CraftPreviewMsg>([](fe::CraftPreviewMsg const& m) {
+            if (m.kind == "applied") {
+                // The server applied the combination: leave the anvil / smithing screen (its own
+                // close packets do not close the screen of a mod client).
+                gPreview = {};
+                auto top = topScreen();
+                if (top.find("anvil") != std::string::npos || top.find("smithing") != std::string::npos) {
+                    if (auto* c = client::currentClient()) c->getClientSceneStack()->schedulePopScreen(1);
+                    log().info("enchanting: closed the {} after applying", top);
+                }
+                return;
+            }
             gPreview = m;
             if (!m.kind.empty()) log().info("enchanting: craft preview {} (cost {})", m.kind, m.cost);
         }));

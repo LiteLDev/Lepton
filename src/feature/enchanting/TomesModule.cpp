@@ -348,6 +348,11 @@ bool applyOffer(Player& p, Offer const& o) {
                   static_cast<int>(SharedTypes::Legacy::LevelSoundEvent::SmithingTableUse));
     }
     log().info("enchanting: {} applied {} -> {}", p.getRealName(), o.craft.kind, game::itemId(result));
+    if (net::hasClientMod(p)) {
+        CraftPreviewMsg done;
+        done.kind = "applied";
+        net::sendToClient(p, done);
+    }
     closeStationScreen(p);
     forcedStations().erase(uuidOf(p));
     return true;
