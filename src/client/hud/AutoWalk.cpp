@@ -11,6 +11,7 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/input/KeyInputEvent.h"
+#include "ll/api/event/render/UIRenderEvent.h"
 #include "ll/api/event/world/ClientLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 
@@ -27,6 +28,7 @@
 
 #include "client/Client.h"
 #include "client/ui/Ui.h"
+#include "client/hud/Painter.h"
 #include "feature/hud/HudConfig.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -120,20 +122,20 @@ void onTick() {
     if (running) setForward(true);
 }
 
-void drawBanner(ui::DrawContext& dc) {
+void drawBanner(Painter& p) {
     if (!gAutorun || !cfg().drawHud || !cfg().enableAutoWalkKeybind) return;
     auto* c = client::currentClient();
     if (!c || c->getOptions().getHideHud()) return;
     auto        message = ctr("quark.misc.autowalking", "Auto-Walking");
-    float       w       = dc.textWidth("OoO" + message + "oOo");
-    float       x       = std::floor((dc.screenSize().x - w) / 2);
+    float       w       = p.textWidth("OoO" + message + "oOo");
+    float       x       = std::floor((uiScreenSize().x - w) / 2);
     float       y       = static_cast<float>(cfg().hudHeight);
     auto        ms      = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now().time_since_epoch()
     )
                     .count();
     std::string shown = (ms / 500) % 2 == 0 ? "OoO " + message + " oOo" : "oOo " + message + " OoO";
-    dc.text(shown, x, y, ui::colors::white);
+    p.text(shown, x, y, ui::colors::white);
 }
 
 } // namespace
@@ -147,12 +149,18 @@ public:
         mKey = bus.emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
             if (gAutorun && ev.isDown() && ui::topScreen() == "hud_screen") gPressedKey = ev.keyCode();
         });
+        mPaint = bus.emplaceListener<ll::event::AfterUIRenderEvent>([](ll::event::AfterUIRenderEvent& ev) {
+            if (!gAutorun || !isHudView(ev.screenView())) return;
+            Painter p(ev.uiRenderContext());
+            drawBanner(p);
+        });
         AutoJumpHook::hook();
     }
     void uninstall() {
         auto& bus = ll::event::EventBus::getInstance();
         bus.removeListener(mTick);
         bus.removeListener(mKey);
+        bus.removeListener(mPaint);
         AutoJumpHook::unhook();
         if (gAutorun.exchange(false)) setForward(false); // do not leave the forced forward flag behind
     }
@@ -160,12 +168,12 @@ public:
 private:
     ll::event::ListenerPtr mTick;
     ll::event::ListenerPtr mKey;
+    ll::event::ListenerPtr mPaint;
 };
 
 } // namespace lp::client::hud
 
 LP_REGISTER_MODULE(lp::client::hud::AutoWalkModule);
 LP_REGISTER_KEYBIND("autorun", lp::client::ui::Key::Unbound, [] { lp::client::hud::toggleAutoWalk(); });
-LP_REGISTER_HUD([](lp::client::ui::DrawContext& dc) { lp::client::hud::drawBanner(dc); });
 
 #endif // LP_CLIENT

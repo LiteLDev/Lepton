@@ -99,8 +99,9 @@ bar's left end (`x = barX - 8 + shift`). Shown even when the armour value is 0.
 
 ### ImprovedTooltips (`enableImprovedTooltips`)
 Hook: the game's hover-text builder (`ClientInstanceModel::getFormattedHoverText`) for the lines,
-and the hover-text renderer (`HoverTextRenderer::render`) to draw icons, items and maps into blank
-lines reserved for them (Quark's tooltip components). Components are inserted at line 1 (just below
+and the hover-text renderer (`HoverTextRenderer::render`) to find where the box and the blank
+lines reserved for icons, items and maps (Quark's tooltip components) are; they are painted there
+after the screen (`AfterUIRenderEvent`), on top of the box. Components are inserted at line 1 (just below
 the name), in Quark's order: attributes, food, saturation, shulker, map; enchanting rows go after
 their enchantment line; the fuel row goes last.
 
@@ -156,9 +157,9 @@ shadow, x from the width of `"OoO" + text + "oOo"`.
 ### BackButtonKeybind (`enableBackButtonKeybind`)
 Default binding: mouse button 5 (`ActionX2`, Quark's mouse button value 4), plus the keyboard
 keybind `key.lepton.back` (unbound by default, rebindable). When pressed while a screen (not the
-HUD) is on top: the screen receives the game's "back" input (an Escape press), which presses its
-Back / Done / Cancel button or closes it — exactly what Quark's search for those buttons does on
-Bedrock, where every screen maps Escape to its back action.
+HUD) is on top: the top scene runs its own leave action (`AbstractScene::leaveScreen`, what its
+Back / Done / Cancel button and Escape do), which goes back or closes it — what Quark's search for
+those buttons does, on Bedrock, where every screen has exactly one leave action.
 
 ## 4. Screens
 
@@ -232,10 +233,10 @@ Keybinds (`config/keybinds.json`, Controls screen): `autorun` (unbound), `back` 
 - **Auto-jump**: instead of switching the option on and back, the client reports auto-jump as on
   while auto-walking; the saved option is never touched (same visible behaviour).
 - **Back button**: Bedrock screens are JSON-UI scenes without Java's button objects; the back action
-  is the scene's Escape handling, which is what the Back/Done/Cancel buttons do there.
+  is the scene's leave action, which is what the Back/Done/Cancel buttons and Escape do there.
 - **Controls screen**: Quark ignores the key in Java's separate Controls screen. Bedrock's key
   bindings are a section of the single `settings_screen` (no separate screen to exclude), so Back
-  acts there as Escape does, like on every other settings section.
+  leaves it as Escape does, like on every other settings section.
 - **Side mouse buttons** cannot be stored in Bedrock key bindings, so the default mouse binding of
   Back is the config key `backMouseButton`; the keyboard binding is a normal rebindable keybind.
 - **ChestSearching darkening** in the shulker preview depends on U15's search filter; it is applied

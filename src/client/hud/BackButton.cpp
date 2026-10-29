@@ -35,11 +35,11 @@ void pressBack() {
     if (!c) return;
     auto name = c->getTopScreenName();
     if (name.empty() || name == "hud_screen") return; // in game: no screen to go back from
-    auto* scene = c->getClientSceneStack()->getTopScene();
-    if (!scene) return;
-    constexpr int kEscape = 0x1B;
-    scene->handleRawInputEvent(kEscape, RawInputType::Keyboard, ButtonState::Down, false);
-    scene->handleRawInputEvent(kEscape, RawInputType::Keyboard, ButtonState::Up, false);
+    auto stack = c->getClientSceneStack();
+    if (!stack->getTopScene()) return;
+    // What the screen's Back / Done / Cancel button and Escape end in: the scene stack pops the top
+    // screen (scheduled: the scene must not go away while the frame is being drawn).
+    stack->schedulePopScreen(1);
     log().info("hud: back button on {}", name);
 }
 

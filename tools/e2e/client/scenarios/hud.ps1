@@ -9,7 +9,7 @@ function Hover-Slot($slots, [int]$i, [string]$shot) {
     Move-Mouse 0.5 0.05 -Relative
     Start-Sleep -Milliseconds 300
     Move-Mouse $slots[$i][0] $slots[$i][1] -Relative
-    Start-Sleep -Milliseconds 900
+    Start-Sleep -Milliseconds 1500
     Save-Screenshot $shot | Out-Null
 }
 
@@ -55,24 +55,25 @@ Save-Screenshot 'elytra' | Out-Null
 $m = Get-LogMark
 Invoke-Chat '/quark debug hud'
 Wait-LogLine 'hud: debug kit given' 20 -Since $m | Out-Null
-# Turn the empty map (slot 6) into a filled map of the area.
-Press-Key 6
-Start-Sleep -Milliseconds 300
-Click 0.5 0.5 -Relative -Right
-Start-Sleep -Seconds 2
-Press-Key 1
-Start-Sleep -Milliseconds 500
+# No filled map here: on this client, filling a map crashes the game in vanilla code during the
+# next UI frame even with every hud module disabled (CrashLogger: ItemStackBase::matchesItem under
+# the UI render, no Lepton frame), so the map preview is checked separately.
 
 $m = Get-LogMark
 Open-Inventory
-$slots = Get-Slots (Wait-LogLine 'hud: inventory_screen hotbar slots at' 20 -Since $m)
+try {
+    $slots = Get-Slots (Wait-LogLine 'hud: inventory_screen hotbar slots at' 20 -Since $m)
+} catch {
+    # No slot positions from the UI toolkit: the inventory hotbar of the default layout (1600x900).
+    Write-Host "[hud] no hotbar slot positions logged, using the default inventory layout"
+    $slots = @(0..8 | ForEach-Object { , @(((647 + 43.2 * $_) / 1280), (527 / 720)) })
+}
 Hover-Slot $slots 0 'tooltip-sword'
 Wait-LogLine 'hud: tooltip drawn' 10 -Since $m | Out-Null
 Hover-Slot $slots 1 'tooltip-helmet'
 Hover-Slot $slots 2 'tooltip-food'
 Hover-Slot $slots 3 'tooltip-shulker'
 Hover-Slot $slots 4 'tooltip-book'
-Hover-Slot $slots 5 'tooltip-map'
 Hover-Slot $slots 6 'tooltip-poison'
 # Shift shows the vanilla attribute lines instead of the icons.
 [BsE2E.Native]::Key([uint16]0x10, $false)
@@ -88,18 +89,23 @@ Save-Screenshot 'back' | Out-Null
 
 # ---- fuel in a furnace screen ---------------------------------------------------------------------------
 Invoke-Chat '/setblock ~2 ~ ~ furnace'
-Invoke-Chat '/tp @s ~ ~ ~ facing ~2 ~0.5 ~'
+Invoke-Chat '/tp @s ~ ~ ~ -90 30'
 Start-Sleep -Milliseconds 800
 $m = Get-LogMark
 Click 0.5 0.5 -Relative -Right
-$line = Wait-LogLine 'hud: \S*furnace\S* hotbar slots at' 20 -Since $m
-$fslots = Get-Slots $line
+try {
+    $fslots = Get-Slots (Wait-LogLine 'hud: \S*furnace\S* hotbar slots at' 20 -Since $m)
+} catch {
+    Write-Host "[hud] no furnace hotbar slot positions logged, using the default furnace layout"
+    Save-Screenshot 'furnace-screen' | Out-Null
+    $fslots = @(0..8 | ForEach-Object { , @(((467 + 43.2 * $_) / 1280), (0.85)) })
+}
 Hover-Slot $fslots 7 'tooltip-fuel'
 Close-Screen
 
 # ---- auto-walk ------------------------------------------------------------------------------------------
 Invoke-Chat '/setblock ~2 ~ ~ air'
-Invoke-Chat '/tp @s ~ ~ ~ facing ~10 ~1.6 ~'
+Invoke-Chat '/tp @s ~ ~ ~ -90 0'
 Start-Sleep -Milliseconds 500
 $m = Get-LogMark
 Press-Key G

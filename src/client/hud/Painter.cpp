@@ -9,6 +9,10 @@
 #include "mc/client/game/ClientInstance.h"
 #include "mc/client/gui/CaretMeasureData.h"
 #include "mc/client/gui/FontHandle.h"
+#include "mc/client/gui/GuiData.h"
+#include "mc/client/gui/ScreenSizeData.h"
+#include "mc/client/gui/controls/VisualTree.h"
+#include "mc/client/gui/screens/ScreenView.h"
 #include "mc/client/gui/TextAlignment.h"
 #include "mc/client/gui/TextMeasureData.h"
 #include "mc/client/gui/controls/UIControl.h"
@@ -120,6 +124,21 @@ ui::Vec screenPos(UIControl const& c) {
         cur         = parent.get();
     }
     return v;
+}
+
+bool isHudView(ScreenView const& view) {
+    auto const& tree = view.mVisualTree.get();
+    if (!tree) return false;
+    // Root control names are "<namespace>.<name>" ("hud.hud_screen").
+    std::string_view name = tree->mRootControlName.get();
+    return name == "hud_screen" || name.ends_with(".hud_screen");
+}
+
+ui::Vec uiScreenSize() {
+    auto* c = client::currentClient();
+    if (!c) return {};
+    auto const& s = c->getGuiData()->mScreenSizeData.get().clientUIScreenSize.get();
+    return {s.x, s.y};
 }
 
 bool durabilityBar(ItemStackBase const& stack, int& width, Color& color) {

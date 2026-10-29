@@ -3,8 +3,9 @@
 // Quark adds "tooltip components" (images) to item tooltips. Bedrock tooltips are text, built by
 // `ClientInstanceModel::getFormattedHoverText` and drawn by `HoverTextRenderer`. Lepton inserts
 // blank lines that reserve the components' space (each component's first line carries an
-// invisible marker of format codes) and draws the components into those lines from a hook on the
-// renderer, right after the game drew the tooltip box and text.
+// invisible marker of format codes). A hook on the renderer records where the box and those lines
+// are; the components are painted there after the screen (the game draws the batched box later,
+// so anything drawn inside the renderer would end up below it).
 
 #ifdef LP_CLIENT
 
@@ -17,6 +18,7 @@
 #include <format>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <set>
 #include <string>
@@ -24,6 +26,8 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/input/KeyInputEvent.h"
+#include "ll/api/event/render/UIRenderEvent.h"
+#include "ll/api/event/world/ClientLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 
 #include "mc/client/game/ClientInstance.h"
@@ -36,8 +40,10 @@
 #include "mc/client/gui/screens/models/ClientInstanceModel.h"
 #include "mc/client/multiplayer/ClientLevel.h"
 #include "mc/client/player/LocalPlayer.h"
+#include "mc/world/actor/player/Inventory.h"
 #include "mc/client/renderer/screen/MinecraftUIRenderContext.h"
 #include "mc/deps/core/math/Color.h"
+#include "mc/deps/nbt/CompoundTag.h"
 #include "mc/locale/I18n.h"
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/world/item/ItemStack.h"
@@ -93,7 +99,15 @@ struct Layout {
     std::vector<Component> comps;
 };
 
-std::map<std::string, std::shared_ptr<Layout const>> gLayouts; ///< final hover text -> layout
+/// Final hover text -> layout. The game may build hover texts off the render thread: guarded.
+std::map<std::string, std::shared_ptr<Layout const>> gLayouts;
+std::mutex                                           gLayoutsMutex;
+
+std::shared_ptr<Layout const> findLayout(std::string const& text) {
+    std::lock_guard lock(gLayoutsMutex);
+    auto            it = gLayouts.find(text);
+    return it == gLayouts.end() ? nullptr : it->second;
+}
 
 Font* font() {
     auto* c = client::currentClient();
@@ -155,10 +169,16 @@ constexpr char kHex[] = "0123456789abcdef";
 
 /// Invisible format codes that identify the stack the tooltip is built for (a hash of the item and
 /// its data), so two items with the same text (two shulker boxes, two maps) never share a layout.
-std::string gStackCodes;
+thread_local std::string gStackCodes;
 
 std::string stackCodes(ItemStackBase const& stack) {
-    auto        h = static_cast<uint32_t>(std::hash<std::string>{}(game::itemToSnbt(stack)));
+    // Only what tells apart items whose tooltips read the same: the map a map shows, the contents of
+    // a shulker box (cheap, and no ItemStackBase::save, which runs item fix-ups).
+    auto key = game::itemId(stack) + ":" + std::to_string(stack.getAuxValue());
+    if (key.starts_with("minecraft:filled_map")) key += ":" + std::to_string(MapItem::getMapId(stack.mUserData.get()).rawID);
+    if (isShulkerBox(stack))
+        for (auto const& is : shulkerContents(stack)) key += ":" + game::itemId(is) + "x" + std::to_string(is.mCount);
+    auto        h = static_cast<uint32_t>(std::hash<std::string>{}(key));
     std::string out;
     for (int i = 7; i >= 0; --i) out += std::string("\xC2\xA7") + kHex[(h >> (i * 4)) & 15];
     return out;
@@ -235,9 +255,11 @@ float attributeWidth(Component const& c) {
 
 /// enchantItems() per enchantment type, until the config is reloaded.
 std::map<int, std::vector<std::string>> gEnchantCache;
+std::mutex                              gEnchantMutex;
 
-std::vector<std::string> const& cachedEnchantItems(int type) {
-    auto it = gEnchantCache.find(type);
+std::vector<std::string> cachedEnchantItems(int type) {
+    std::lock_guard lock(gEnchantMutex);
+    auto            it = gEnchantCache.find(type);
     if (it == gEnchantCache.end()) it = gEnchantCache.emplace(type, enchantItems(type)).first;
     return it->second;
 }
@@ -484,31 +506,63 @@ void drawShulker(Painter& p, Component const& c, float x, float y, float screenW
     }
 }
 
-void drawMap(Painter& p, Component const& c, float x, float y) {
+// The level's map data is only touched on the client tick: drawing works on a copy of the pixels.
+std::mutex                                gMapMutex;
+std::optional<ActorUniqueID>              gMapWanted; ///< the hovered map (drawing -> client tick)
+std::map<int64, std::vector<uint>>        gMapPixels; ///< map id -> 128x128 ABGR pixels
+
+/// Client tick: copies the pixels of the hovered map, or asks the server for the data when the
+/// client has none (vanilla MapInfoRequestPacket; remote servers send map data only for held maps),
+/// at most once a second and 10 times per map (a server may not know it).
+void updateWantedMap() {
+    std::optional<ActorUniqueID> wanted;
+    {
+        std::lock_guard lock(gMapMutex);
+        wanted.swap(gMapWanted);
+    }
     auto* client = client::currentClient();
     auto* level  = client ? client->getLevel() : nullptr;
-    if (!level) return;
-    auto* data = level->getMapSavedData(c.mapId);
-    p.image("textures/lepton/hud/map_background", x + 3 - 3.5f, y + 3 - 3.5f, 71, 71);
-    if (!data || data->mPixels.get().size() < 128 * 128) {
-        // The client has no data for this map yet (remote servers send it only for held maps):
-        // ask the server with the vanilla MapInfoRequestPacket, at most once a second and 10 times
-        // per map (a server may not know the map).
-        struct Asked {
-            std::chrono::steady_clock::time_point at;
-            int                                   tries = 0;
-        };
-        static std::map<int64, Asked> asked;
-        auto  now = std::chrono::steady_clock::now();
-        auto& a   = asked[c.mapId.rawID];
-        if (a.tries < 10 && (a.tries == 0 || now - a.at > std::chrono::seconds(1))) {
-            a.at = now;
-            level->requestMapInfo(c.mapId, false);
-            if (a.tries++ == 0) log().info("hud: map {} requested from the server", c.mapId.rawID);
+    auto* player = client::currentPlayer();
+    if (!wanted || !level) return;
+    // The level finds a map's data by the map item's data: look for the item in the inventory.
+    MapItemSavedData* data = nullptr;
+    if (player) {
+        auto& inv = player->getInventory();
+        for (int i = 0; i < inv.getContainerSize() && !data; ++i) {
+            auto const& s = inv.getItem(i);
+            if (s.mUserData && game::itemId(s) == "minecraft:filled_map" && MapItem::getMapId(s.mUserData.get()) == *wanted)
+                data = level->getMapSavedData(s.mUserData.get());
         }
+    }
+    if (!data) data = level->getMapSavedData(*wanted);
+    if (data && data->mPixels.get().size() >= 128 * 128) {
+        std::lock_guard lock(gMapMutex);
+        if (gMapPixels.size() > 32) gMapPixels.clear();
+        gMapPixels[wanted->rawID] = data->mPixels.get();
         return;
     }
-    auto const& pixels = data->mPixels.get();
+    struct Asked {
+        std::chrono::steady_clock::time_point at;
+        int                                   tries = 0;
+    };
+    static std::map<int64, Asked> asked;
+    auto  now = std::chrono::steady_clock::now();
+    auto& a   = asked[wanted->rawID];
+    if (a.tries >= 10 || (a.tries > 0 && now - a.at < std::chrono::seconds(1))) return;
+    a.at = now;
+    level->requestMapInfo(*wanted, false);
+    if (a.tries++ == 0) log().info("hud: map {} requested from the server", wanted->rawID);
+}
+
+void drawMap(Painter& p, Component const& c, float x, float y) {
+    p.image("textures/lepton/hud/map_background", x + 3 - 3.5f, y + 3 - 3.5f, 71, 71);
+    std::vector<uint> pixels;
+    {
+        std::lock_guard lock(gMapMutex);
+        gMapWanted = c.mapId; // refreshed every tick while shown
+        if (auto it = gMapPixels.find(c.mapId.rawID); it != gMapPixels.end()) pixels = it->second;
+    }
+    if (pixels.size() < 128 * 128) return;
     float const s = 0.5f;
     for (int row = 0; row < 128; ++row) {
         int col = 0;
@@ -540,6 +594,15 @@ void drawFuel(Painter& p, Component const& c, float x, float y) {
 }
 
 int gRenderLogs = 0;
+int gPaintLogs  = 0;
+
+struct PendingDraw {
+    std::shared_ptr<Layout const> layout;
+    float                         textX = 0, textY = 0, screenW = 0;
+    std::vector<int>              lines; ///< line of each component (-1: not found)
+};
+std::mutex                 gPendingMutex;
+std::optional<PendingDraw> gPending;
 
 LL_TYPE_INSTANCE_HOOK(
     HoverRenderHook,
@@ -556,48 +619,81 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         auto const& content = mContent.get();
         if (content.empty()) return;
-        auto it = gLayouts.find(content);
+        auto        layout    = findLayout(content);
         auto const& formatted = mFormattedContent.get();
-        if (it == gLayouts.end()) it = gLayouts.find(formatted);
+        if (!layout) layout = findLayout(formatted);
         auto lines   = split(formatted.empty() ? content : formatted);
         auto box     = mBoxDimensions.get();
         auto cursor  = mCursorPosition.get();
         auto offset  = mOffset.get();
         auto base    = screenPos(owner);
-        if (gRenderLogs < 3 && it != gLayouts.end()) {
+        if (gRenderLogs < 3 && layout) {
             ++gRenderLogs;
             log().info(
                 "hud: tooltip drawn ({} lines, box {:.1f}x{:.1f}, cursor {:.1f},{:.1f}, offset {:.1f},{:.1f}, owner {:.1f},{:.1f} "
-                "{:.1f}x{:.1f}, max width {})",
+                "{:.1f}x{:.1f}, max width {}, formatted {} raw {} bytes)",
                 lines.size(), box.x, box.y, cursor.x, cursor.y, offset.x, offset.y, base.x, base.y, owner.mSize.get().x,
-                owner.mSize.get().y, mMaxWidth
+                owner.mSize.get().y, mMaxWidth, formatted.size(), content.size()
             );
         }
         if (!lines.empty() && box.y > 0) gLineHeight = std::clamp((box.y - 8) / static_cast<float>(lines.size()), 8.f, 12.f);
-        if (it == gLayouts.end()) return;
-        float boxX  = base.x + cursor.x + offset.x;
-        float boxY  = base.y + cursor.y + offset.y;
-        float textX = boxX + 4;
-        float textY = boxY + 4;
+        if (!layout) return;
+        // The cursor position is in screen UI units (not relative to the owner control).
+        float boxX  = cursor.x + offset.x;
+        float boxY  = cursor.y + offset.y;
         float sw    = 0;
         if (auto* c = client::currentClient()) sw = c->getGuiData()->mScreenSizeData.get().clientUIScreenSize.get().x;
-        Painter p(rc);
-        for (auto const& comp : it->second->comps) {
-            size_t li = 0;
-            while (li < lines.size() && lines[li].find(comp.marker) == std::string::npos) ++li;
-            if (li == lines.size()) continue;
-            float y = textY + li * gLineHeight;
-            switch (comp.kind) {
-            case Kind::Attributes: drawAttributes(p, comp, textX, y); break;
-            case Kind::Food: drawFood(p, comp, textX, y); break;
-            case Kind::Shulker: drawShulker(p, comp, textX, y, sw > 0 ? sw : 1e9f); break;
-            case Kind::Map: drawMap(p, comp, textX, y); break;
-            case Kind::Enchant: drawEnchant(p, comp, textX, y); break;
-            case Kind::Fuel: drawFuel(p, comp, textX, y); break;
-            }
+        // The game batches the tooltip box and draws it after this renderer returns, so whatever is
+        // drawn here ends up below it: remember what to draw, and paint it after the screen.
+        PendingDraw pending{layout, boxX + 4, boxY + 4, sw > 0 ? sw : 1e9f, {}};
+        auto rawLines = split(content);
+        for (auto const& comp : layout->comps) {
+            // The formatted text may rewrite format codes: fall back to the raw lines (the tooltip
+            // has no maximum width, so its lines are not wrapped).
+            auto find = [&](std::vector<std::string> const& ls) {
+                size_t li = 0;
+                while (li < ls.size() && ls[li].find(comp.marker) == std::string::npos) ++li;
+                return li < ls.size() ? std::optional<size_t>(li) : std::nullopt;
+            };
+            auto at = find(lines);
+            if (!at) at = find(rawLines);
+            pending.lines.push_back(at ? static_cast<int>(*at) : -1);
         }
+        std::lock_guard lock(gPendingMutex);
+        gPending = std::move(pending);
     } catch (std::exception const& e) {
         log().error("hud: tooltip drawing failed: {}", e.what());
+    }
+}
+
+/// Paints the tooltip components recorded by the hover renderer this frame, on top of the screen.
+void paintPending(MinecraftUIRenderContext& rc) {
+    std::optional<PendingDraw> pending;
+    {
+        std::lock_guard lock(gPendingMutex);
+        pending.swap(gPending);
+    }
+    if (!pending) return;
+    Painter     p(rc);
+    auto const& comps = pending->layout->comps;
+    for (size_t i = 0; i < comps.size() && i < pending->lines.size(); ++i) {
+        auto const& comp = comps[i];
+        int         li   = pending->lines[i];
+        if (gPaintLogs < 8) {
+            ++gPaintLogs;
+            log().info("hud: tooltip component {} painted at line {}", static_cast<int>(comp.kind), li);
+        }
+        if (li < 0) continue;
+        float x = pending->textX;
+        float y = pending->textY + static_cast<float>(li) * gLineHeight;
+        switch (comp.kind) {
+        case Kind::Attributes: drawAttributes(p, comp, x, y); break;
+        case Kind::Food: drawFood(p, comp, x, y); break;
+        case Kind::Shulker: drawShulker(p, comp, x, y, pending->screenW); break;
+        case Kind::Map: drawMap(p, comp, x, y); break;
+        case Kind::Enchant: drawEnchant(p, comp, x, y); break;
+        case Kind::Fuel: drawFuel(p, comp, x, y); break;
+        }
     }
 }
 
@@ -621,6 +717,7 @@ LL_TYPE_INSTANCE_HOOK(
             log().debug("hud: hover text of {}: {}", game::itemId(item), text);
         }
         if (layout) {
+            std::lock_guard lock(gLayoutsMutex);
             if (gLayouts.size() > 64) gLayouts.clear();
             // The game rebuilds the hover text often: log only tooltips not seen yet.
             bool fresh = !gLayouts.contains(out);
@@ -651,12 +748,31 @@ public:
         mKey = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
             if (ev.keyCode() == ui::Key::Shift) gShift = ev.isDown();
         });
+        mPaint = ll::event::EventBus::getInstance().emplaceListener<ll::event::AfterUIRenderEvent>(
+            [](ll::event::AfterUIRenderEvent& ev) {
+                try {
+                    paintPending(ev.uiRenderContext());
+                } catch (std::exception const& e) {
+                    log().error("hud: tooltip painting failed: {}", e.what());
+                }
+            },
+            ll::event::EventPriority::Low // after the UI toolkit's overlays
+        );
+        mTick = ll::event::EventBus::getInstance().emplaceListener<ll::event::ClientLevelTickEvent>(
+            [](ll::event::ClientLevelTickEvent&) {
+                try {
+                    updateWantedMap();
+                } catch (std::exception const& e) {
+                    log().error("hud: map request failed: {}", e.what());
+                }
+            }
+        );
         static bool reloadHooked = false;
         if (!reloadHooked) {
             reloadHooked = true;
             config::onReload([] {
-                gEnchantCache.clear();
-                gLayouts.clear();
+                { std::lock_guard lock(gEnchantMutex); gEnchantCache.clear(); }
+                { std::lock_guard lock(gLayoutsMutex); gLayouts.clear(); }
             });
         }
         HoverTextHook::hook();
@@ -664,13 +780,17 @@ public:
     }
     void uninstall() {
         ll::event::EventBus::getInstance().removeListener(mKey);
+        ll::event::EventBus::getInstance().removeListener(mPaint);
+        ll::event::EventBus::getInstance().removeListener(mTick);
         HoverTextHook::unhook();
         HoverRenderHook::unhook();
-        gLayouts.clear();
+        { std::lock_guard lock(gLayoutsMutex); gLayouts.clear(); }
     }
 
 private:
     ll::event::ListenerPtr mKey;
+    ll::event::ListenerPtr mPaint;
+    ll::event::ListenerPtr mTick;
 };
 
 } // namespace lp::client::hud

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/render/UIRenderEvent.h"
 #include "ll/api/event/world/ClientLevelTickEvent.h"
 
 #include "mc/client/game/ClientInstance.h"
@@ -42,6 +43,7 @@ struct Element {
 std::vector<Element>                  gElements;
 std::chrono::steady_clock::time_point gLastTick = std::chrono::steady_clock::now();
 bool                                  gLogged   = false;
+bool                                  gDrawLogged = false;
 
 std::vector<TickerSlot> wantedSlots() {
     auto const&             c = cfg();
@@ -91,14 +93,15 @@ void onTick() {
     }
 }
 
-void draw(ui::DrawContext& dc) {
+void draw(Painter& p) {
     if (!cfg().enableUsageTicker || gElements.empty()) return;
     auto* c      = client::currentClient();
     auto* player = client::currentPlayer();
     if (!c || !player || c->getOptions().getHideHud()) return;
     float partial = std::chrono::duration<float>(std::chrono::steady_clock::now() - gLastTick).count() * 20.f;
     partial       = std::clamp(partial, 0.f, 1.f);
-    auto  size    = dc.screenSize();
+    auto  size    = uiScreenSize();
+    if (size.x <= 0) return;
     bool  offEmpty = game::isEmpty(player->getOffhandSlot());
     auto const& conf = cfg();
     for (auto const& e : gElements) {
@@ -107,16 +110,10 @@ void draw(ui::DrawContext& dc) {
         if (game::isEmpty(shown.stack)) continue;
         float x = std::floor(tickerX(size.x, e.slot, conf.invert, offEmpty, conf.shiftLeft, conf.shiftRight));
         float y = std::floor(size.y - e.anim.offset(partial));
-        dc.item(shown.stack, x, y, 1, false);
-        int   w = 0;
-        Color col;
-        if (durabilityBar(shown.stack, w, col)) {
-            dc.fill({x + 2, y + 13, 13, 2}, ui::colors::black);
-            dc.fill({x + 2, y + 13, static_cast<float>(w), 1}, col);
-        }
-        if (shown.count > 1) {
-            auto n = std::to_string(shown.count);
-            dc.text(n, x + 17, y + 9, ui::colors::white, 1, ui::Align::Right);
+        p.item(shown.stack, x, y, 1, shown.count, true);
+        if (!gDrawLogged) {
+            gDrawLogged = true;
+            log().info("hud: usage ticker drawn at {:.0f},{:.0f} (screen {:.0f}x{:.0f})", x, y, size.x, size.y);
         }
     }
 }
@@ -135,19 +132,32 @@ public:
                 }
             }
         );
+        // Painted after the game drew its HUD (the hotbar is below the ticker).
+        mPaint = ll::event::EventBus::getInstance().emplaceListener<ll::event::AfterUIRenderEvent>(
+            [](ll::event::AfterUIRenderEvent& ev) {
+                if (!isHudView(ev.screenView())) return;
+                try {
+                    Painter p(ev.uiRenderContext());
+                    draw(p);
+                } catch (std::exception const& e) {
+                    log().error("hud: usage ticker drawing failed: {}", e.what());
+                }
+            }
+        );
     }
     void uninstall() {
         ll::event::EventBus::getInstance().removeListener(mTick);
+        ll::event::EventBus::getInstance().removeListener(mPaint);
         gElements.clear();
     }
 
 private:
     ll::event::ListenerPtr mTick;
+    ll::event::ListenerPtr mPaint;
 };
 
 } // namespace lp::client::hud
 
 LP_REGISTER_MODULE(lp::client::hud::UsageTickerModule);
-LP_REGISTER_HUD([](lp::client::ui::DrawContext& dc) { lp::client::hud::draw(dc); });
 
 #endif // LP_CLIENT

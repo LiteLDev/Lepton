@@ -15,6 +15,7 @@ class MinecraftUIRenderContext;
 class ItemStack;
 class ItemStackBase;
 class UIControl;
+class ScreenView;
 
 namespace lp::client::hud {
 
@@ -52,6 +53,11 @@ bool durabilityBar(ItemStackBase const& stack, int& width, Color& color);
 /// Position of a control on the screen (read-only: the cached position, or the sum of the relative
 /// positions while the cache is dirty, as client/ui does).
 [[nodiscard]] ui::Vec screenPos(UIControl const& c);
+
+/// True for the view of the in-game HUD (`hud_screen`): HUD elements are painted after it.
+[[nodiscard]] bool isHudView(ScreenView const& view);
+/// Size of the screen in UI units (0 outside the game).
+[[nodiscard]] ui::Vec uiScreenSize();
 
 /// Width of one space in the game font (measured on the first rendered frame; 4 before).
 [[nodiscard]] float spaceWidth();
