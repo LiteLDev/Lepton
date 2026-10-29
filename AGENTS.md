@@ -199,7 +199,7 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
   `"rotation": [0, "-45", 0]`) makes the client drop **every custom block of that 16x16x16
   sub-chunk** from its mesh: vanilla blocks still render, the server still has the blocks, and
   nothing is logged. In PowerShell, `& $block -45` passes the string `'-45'` (command mode): type
-  the parameter (`param([int]$rot)`) or write `(-45)`. `Write-PackJson` rejects such geometry; the
+  the parameter (`param([double]$rot)`) or write `(-45)`. `Write-PackJson` and the build (`assemble.lua`) reject such geometry; the
   client scenario `renderprobe` puts one block per model kind in its own sub-chunk next to a canary.
   (Per-cube and per-bone `rotation` with numbers both render fine.)
 

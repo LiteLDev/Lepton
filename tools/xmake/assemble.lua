@@ -152,6 +152,34 @@ local function merge_texts(src, dst)
     json.savefile(path.join(dst, "texts", "languages.json"), locales)
 end
 
+-- Block geometry takes plain numbers only: one string number (e.g. "rotation": [0, "-45", 0]) makes
+-- the client drop every custom block of the sub-chunk holding such a block from its mesh, silently.
+local geometry_number_keys = {
+    origin = true, size = true, pivot = true, rotation = true, uv = true, uv_size = true, inflate = true,
+    uv_rotation = true, texture_width = true, texture_height = true, visible_bounds_width = true,
+    visible_bounds_height = true, visible_bounds_offset = true,
+}
+local function check_geometry_node(node, file, where)
+    if type(node) ~= "table" then return end
+    for k, v in pairs(node) do
+        if type(k) == "string" and geometry_number_keys[k] then
+            local values = type(v) == "table" and v or {v}
+            for _, x in pairs(values) do
+                if type(x) == "string" then
+                    raise("block geometry %s: '%s%s' holds the string '%s' (numbers only)", file, where, k, x)
+                end
+            end
+        end
+        check_geometry_node(v, file, where .. tostring(k) .. ".")
+    end
+end
+
+local function check_block_geometry(src)
+    for _, file in ipairs(os.files(path.join(src, "models", "blocks", "**.json"))) do
+        check_geometry_node(json.loadfile(file), file, "")
+    end
+end
+
 function main(target, target_type)
     local projectdir = os.projectdir()
     local outdir = path.join(projectdir, "bin", target_type, "Lepton")
@@ -181,6 +209,7 @@ function main(target, target_type)
     local rpsrc = path.join(projectdir, "assets", "pack", "rp")
     local bpdst = path.join(outdir, "behavior_packs", "Lepton_BP")
     local rpdst = path.join(outdir, "resource_packs", "Lepton_RP")
+    check_block_geometry(rpsrc)
     copy_pack(bpsrc, bpdst, version)
     copy_pack(rpsrc, rpdst, version)
     merge_atlas(rpsrc, rpdst, "item_texture.d", "item_texture.json", "atlas.items")
