@@ -63,7 +63,8 @@ namespace ent = lp::game::entities;
 struct Entry {
     char const* type;
     int         skin; ///< forced SkinId (-1 = leave it to the rules)
-    char const* tag = nullptr;
+    char const* tag   = nullptr;
+    char const* event = nullptr; ///< run after spawning (profession, size)
 };
 
 std::vector<std::vector<Entry>> rows() {
@@ -78,7 +79,7 @@ std::vector<std::vector<Entry>> rows() {
     for (int i = 0; i <= 5; ++i) allays.push_back({"minecraft:allay", i});
     allays.push_back({"minecraft:allay", kShinySkin});
     r.push_back(allays);
-    r.push_back({{"minecraft:rabbit", kShinySkin}, {"minecraft:llama", kShinySkin}, {"minecraft:dolphin", kShinySkin}, {"minecraft:slime", kShinySkin},
+    r.push_back({{"minecraft:rabbit", kShinySkin}, {"minecraft:llama", kShinySkin}, {"minecraft:dolphin", kShinySkin}, {"minecraft:slime", kShinySkin, nullptr, "spawn_small"},
                  {"minecraft:armadillo", kShinySkin}, {"minecraft:frog", kShinySkin}});
     std::vector<Entry> bees;
     for (int i = 1; i <= static_cast<int>(kBeeVariants.size()); ++i) {
@@ -86,7 +87,12 @@ std::vector<std::vector<Entry>> rows() {
         if (bees.size() == 9) r.push_back(bees), bees.clear();
     }
     if (!bees.empty()) r.push_back(bees);
-    r.push_back({{"minecraft:villager_v2", -1, kBeachTag.data()}, {"minecraft:villager_v2", -1, kOceanTag.data()},
+    // Villagers with fixed professions, so mod and vanilla clients show the same layers: unskilled
+    // (biome clothes only) and fishermen (profession overlay on top, as vanilla layers them).
+    r.push_back({{"minecraft:villager_v2", -1, kBeachTag.data(), "minecraft:become_unskilled"},
+                 {"minecraft:villager_v2", -1, kOceanTag.data(), "minecraft:become_unskilled"},
+                 {"minecraft:villager_v2", -1, kBeachTag.data(), "minecraft:become_fisherman"},
+                 {"minecraft:villager_v2", -1, kOceanTag.data(), "minecraft:become_fisherman"},
                  {"minecraft:zombie_villager_v2", -1, kBeachTag.data()}, {"minecraft:zombie_villager_v2", -1, kOceanTag.data()},
                  {"minecraft:armor_stand", -1}});
     return r;
@@ -156,6 +162,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
                 Actor* a = ent::spawn(dim, e.type, at);
                 if (!a) continue;
                 if (e.tag) a->addTag(e.tag);
+                if (e.event) ent::triggerEvent(*a, e.event);
                 if (e.skin >= 0) forcedSkins()[ent::idOf(*a)] = e.skin;
                 if (std::string_view(e.type) == "minecraft:armor_stand")
                     a->setArmor(SharedTypes::Legacy::ArmorSlot::Head, enchanted("minecraft:player_head", Enchant::Type::CurseOfBinding));

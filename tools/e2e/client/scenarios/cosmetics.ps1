@@ -20,12 +20,16 @@ Invoke-Chat '/gamemode creative'
 Start-Sleep -Seconds 1
 
 # ---- gallery ----------------------------------------------------------------------------------
+# Hostile mobs (slime, zombie villagers) need a difficulty above peaceful.
+Invoke-Chat '/difficulty easy'
 $mark = Get-LogMark
 Invoke-Chat '/quark cosmetics gallery'
 $line = Wait-LogLine 'cosmetics: gallery of \d+ mobs in \d+ rows' 30 -Since $mark
 $rows = if ($line -match 'in (\d+) rows') { [int]$Matches[1] } else { 8 }
-Start-Sleep -Seconds 3
-for ($row = 0; $row -lt $rows; $row++) {
+Start-Sleep -Seconds 2
+# The villager row first: the zombie villagers burn in daylight after a few seconds.
+$order = @($rows - 1) + (0..($rows - 2))
+foreach ($row in $order) {
     $m = Get-LogMark
     Invoke-Chat "/quark cosmetics view $row"
     Wait-LogLine "cosmetics: viewing gallery row $row" 20 -Since $m | Out-Null
@@ -33,6 +37,7 @@ for ($row = 0; $row -lt $rows; $row++) {
     Save-Screenshot "gallery-$row" | Out-Null
 }
 Invoke-Chat '/tp @s ~ ~ ~-30 0 10'
+Invoke-Chat '/difficulty peaceful'
 Start-Sleep -Seconds 1
 
 # ---- carried chicken (third person) -------------------------------------------------------------
@@ -63,6 +68,30 @@ Save-Screenshot 'candles' | Out-Null
 Invoke-Chat '/time set noon'
 
 if (-not $vanilla) {
+    # ---- quiet minecarts: two carts launched by powered rails. Track A runs over wool, then stone;
+    # track B (control) only over stone. The loop sounds of the cart on A are muted over the wool and
+    # audible again on the stone; the cart on B is never muted (client log lines with positions).
+    $mark = Get-LogMark
+    foreach ($t in @(@{ z = 3; under = 'white_wool' }, @{ z = 6; under = 'stone' })) {
+        $z = $t.z
+        Invoke-Chat "/fill ~2 ~-1 ~$z ~16 ~-1 ~$z stone"
+        Invoke-Chat "/fill ~4 ~-1 ~$z ~8 ~-1 ~$z $($t.under)"
+        Invoke-Chat "/setblock ~3 ~-1 ~$z redstone_block"
+        Invoke-Chat "/setblock ~2 ~ ~$z stone"
+        Invoke-Chat "/fill ~4 ~ ~$z ~16 ~ ~$z rail"
+        Invoke-Chat "/setblock ~3 ~ ~$z golden_rail"
+    }
+    Invoke-Chat '/summon minecart ~3 ~ ~3'
+    Invoke-Chat '/summon minecart ~3 ~ ~6'
+    Wait-LogLine "cosmetics: minecart loop '.*' muted over wool" 30 -Since $mark | Out-Null
+    Wait-LogLine "cosmetics: minecart loop '.*' audible" 30 -Since $mark | Out-Null
+    Start-Sleep -Seconds 2
+    $muted = @(Get-LeviLog -Since $mark | Select-String "minecart loop '.*' muted over wool at [-0-9.]+ [-0-9.]+ ([-0-9.]+)")
+    $zs = @($muted | ForEach-Object { [double]$_.Matches[0].Groups[1].Value } | ForEach-Object { [Math]::Floor($_) } | Sort-Object -Unique)
+    if ($zs.Count -ne 1) { throw "expected only the cart on the wool track to be muted, muted at z = $($zs -join ', ')" }
+    Invoke-Chat '/kill @e[type=minecart]'
+    Write-Step "quiet minecarts: $($muted.Count) loop(s) muted over wool (z $($zs[0])), audible again on stone; the stone-only cart stayed audible"
+
     # ---- pumpkin overlay ----------------------------------------------------------------------------
     $mark = Get-LogMark
     Invoke-Chat '/quark cosmetics pumpkin false'

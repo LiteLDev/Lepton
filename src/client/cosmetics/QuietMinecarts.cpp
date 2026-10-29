@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <functional>
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -77,13 +78,23 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     if (Minecart* cart = tRegistering) {
         // The vanilla callback captures the cart too: the loop is unregistered before the cart dies.
-        auto wrapped = [inner = std::move(getSoundState), cart](::LoopingSoundState& state) {
+        // Muted state per loop, logged when it changes (one line per cart moving onto / off wool).
+        auto muted = std::make_shared<bool>(false);
+        log().info("cosmetics: minecart loop '{}' registered", name);
+        auto wrapped = [inner = std::move(getSoundState), cart, muted, loop = name](::LoopingSoundState& state) {
             if (inner) inner(state);
             try {
-                if (cos::config().enableWoolShutsUpMinecarts && overWool(*cart)) {
+                bool mute = cos::config().enableWoolShutsUpMinecarts && overWool(*cart);
+                if (mute) {
                     // The state starts with the emitter position: put it far out of hearing range
                     // (a fixed point, so a callback that keeps the old position cannot drift).
                     *reinterpret_cast<Vec3*>(&state) = Vec3{0.f, 1.0e6f, 0.f};
+                }
+                if (mute != *muted) {
+                    *muted          = mute;
+                    auto const& pos = cart->getPosition();
+                    log().info("cosmetics: minecart loop '{}' {} at {:.1f} {:.1f} {:.1f}", loop, mute ? "muted over wool" : "audible",
+                               pos.x, pos.y, pos.z);
                 }
             } catch (...) {}
         };
