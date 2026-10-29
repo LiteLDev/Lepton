@@ -274,7 +274,7 @@ bool updateFenceOrPane(BlockSource& region, BlockPos const& pos, Block const& b,
     bs::Changes ch;
     for (auto d : kDir) {
         auto const& other = region.getBlock(neighbor(pos, d));
-        bool        c     = pane ? paneConnects(other, opposite(d)) :fenceConnects(b, other, opposite(d));
+        bool        c     = pane ? paneConnects(other, opposite(d)) : fenceConnects(b, other, opposite(d));
         ch.emplace_back("lepton:" + std::string(d), c);
     }
     return setIfChanged(region, pos, b, bs::with(b, ch));

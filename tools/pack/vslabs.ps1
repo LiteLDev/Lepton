@@ -10,7 +10,7 @@
 #     allowSideConnections) on the two side faces, per lepton:type (minecraft:connection_rule),
 # Recipes: 3 slabs in a column -> 3 vertical slabs, 1 vertical slab -> 1 slab (generator), and the
 # stonecutter recipes of Quark 4.1-488 (inputs below). SlabsToBlocks recipes are added natively at
-# world load (src/feature/vslabs/SlabsToBlocks.cpp), for every slab including other units'.
+# world load (src/feature/vslabs/Recipes.cpp), for every slab including other units'.
 . "$PSScriptRoot/lib.ps1"
 
 Start-PackUnit 'vslabs'
