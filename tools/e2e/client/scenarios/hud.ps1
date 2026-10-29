@@ -55,9 +55,8 @@ Save-Screenshot 'elytra' | Out-Null
 $m = Get-LogMark
 Invoke-Chat '/quark debug hud'
 Wait-LogLine 'hud: debug kit given' 20 -Since $m | Out-Null
-# No filled map here: on this client, filling a map crashes the game in vanilla code during the
-# next UI frame even with every hud module disabled (CrashLogger: ItemStackBase::matchesItem under
-# the UI render, no Lepton frame), so the map preview is checked separately.
+# No filled map here: the mapcrash scenario fills one and hovers its preview (the crash after filling
+# a map was MapItem::getMapId corrupting the new map's data; see mapIdOf in Tooltips.cpp).
 
 $m = Get-LogMark
 Open-Inventory
