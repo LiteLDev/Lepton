@@ -334,6 +334,8 @@ bool openFurnace(Player& player, BlockPos const& pos) {
         open.mEntityUniqueID = ActorUniqueID{-1};
         player.sendNetworkPacket(open);
     }
+    sp.refreshContainer(*model); // the slots go to the client now
+
     bool ok = hasFurnaceOpen(player, pos);    log().info("variantcontainers: {} opened {} at {} {} {}{}", player.getRealName(), b.getTypeName(), pos.x, pos.y, pos.z, ok ? "" : " (failed)");
     return ok;
 }

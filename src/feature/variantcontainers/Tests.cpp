@@ -693,33 +693,26 @@ LP_REGISTER_SELFTEST("variantcontainers.gallery", [](Context& ctx) -> ll::coro::
     ctx.info("VCGALLERY furnaces");
     view(4.5f, -5.5f, 180.f, 20.f);
     co_await ctx.ticks(100);
-    ctx.info("VCGALLERY chest-screen");
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
-        view(6.5f, 2.f, 180.f, 25.f);
-        vc::setItems(at(0, 0), {makeItem("minecraft:diamond", 5), makeItem("minecraft:oak_log", 32)});
-        vcf::openChest(*v, bp(at(0, 0)));
+    // the screens open with a real click of the player (the client scenario right-clicks)
+    // the screens open with real clicks of the player: the client scenario right-clicks after each
+    // "aim" line and waits for the module's "opened" log line
+    auto aim = [&](std::string const& what, lp::core::GlobalPos const& target) -> ll::coro::CoroTask<> {
+        if (auto* v = ctx.player().getLevel().getPlayer(uid))
+            v->teleport(Vec3{target.x + 0.5f, static_cast<float>(target.y), target.z + 1.8f}, DimensionType(base.dim), Vec2{55.f, 180.f});
+        co_await ctx.ticks(10);
+        ctx.info("VCGALLERY aim " + what);
+        co_await ctx.ticks(160);
+        if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
+        co_await ctx.ticks(20);
+    };
+    vc::setItems(at(0, 0), {makeItem("minecraft:diamond", 5), makeItem("minecraft:oak_log", 32)});
+    co_await aim("chest", at(0, 0));
+    co_await aim("double", at(12, -6));
+    if (auto* c = containerAt(region, bp(at(2, -9)))) {
+        c->setItem(0, makeItem("minecraft:raw_copper", 8));
+        c->setItem(1, makeItem("minecraft:coal", 4));
     }
-    co_await ctx.ticks(100);
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
-    co_await ctx.ticks(20);
-    ctx.info("VCGALLERY double-screen");
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) vcf::openChest(*v, bp(at(11, -6)));
-    co_await ctx.ticks(100);
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
-    co_await ctx.ticks(20);
-    ctx.info("VCGALLERY furnace-screen");
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
-        if (auto* c = containerAt(region, bp(at(2, -9)))) {
-            c->setItem(0, makeItem("minecraft:raw_copper", 8));
-            c->setItem(1, makeItem("minecraft:coal", 4));
-        }
-        view(2.5f, -6.5f, 180.f, 20.f);
-        vcf::openFurnace(*v, bp(at(2, -9)));
-    }
-    co_await ctx.ticks(120);
-    if (auto* v = ctx.player().getLevel().getPlayer(uid)) static_cast<ServerPlayer*>(v)->initiateContainerClose();
-    co_await ctx.ticks(10);
-    vc::takeAll(at(0, 0));
+    co_await aim("furnace", at(2, -9));    vc::takeAll(at(0, 0));
     ctx.info("VCGALLERY done");
     for (int dx : {0, 2, 4, 6, 8})
         if (auto* c = containerAt(region, bp(at(dx, -9)))) c->removeAllItems();
