@@ -90,7 +90,7 @@ thread_local bool gInTeleport = false;
 
 std::optional<Vec3> redirect(Actor& actor, Vec3 const& pos) {
     if (gInTeleport || actor.isClientSide()) return std::nullopt;
-    auto cfg = config();
+    auto const& cfg = config();
     if (!cfg.enableSpiralSpires || !cfg.enableMyaliteViaducts) return std::nullopt;
     if (!blocks().ready()) return std::nullopt;
     // Player positions are at eye height; Quark works with feet positions.
@@ -119,7 +119,9 @@ std::optional<Vec3> redirect(Actor& actor, Vec3 const& pos) {
         int         sourceEntityType,                                                                                  \
         bool        keepVelocity                                                                                       \
     ) {                                                                                                                \
-        if (gInTeleport) return origin(pos, shouldStopRiding, cause, sourceEntityType, keepVelocity);                  \
+        /* Quark reacts to EntityTeleportEvent: pearls, chorus fruit, endermen/shulkers, commands */           \
+        if (gInTeleport || cause < 1 || cause > 4)                                                                     \
+            return origin(pos, shouldStopRiding, cause, sourceEntityType, keepVelocity);                               \
         auto np     = redirect(*this, pos);                                                                            \
         gInTeleport = true;                                                                                            \
         origin(np ? *np : pos, shouldStopRiding, cause, sourceEntityType, keepVelocity);                               \
@@ -184,7 +186,7 @@ void onTick(ll::event::ServerLevelTickEvent&) {
     for (auto const& g : hue) {
         if (auto* region = game::regionOf(g.dim)) fixCrystalHue(*region, game::blockPos(g));
     }
-    auto cfg = config();
+    auto const& cfg = config();
     if (!cfg.enableSpiralSpires || !cfg.renewableMyalite) return;
     auto const& b = blocks();
     for (auto const& g : corundum) {
@@ -210,7 +212,7 @@ void onTick(ll::event::ServerLevelTickEvent&) {
 } // namespace
 
 std::optional<Vec3> viaductTarget(BlockSource& region, BlockPos target, Actor const& entity) {
-    auto cfg = config();
+    auto const& cfg = config();
     if (!region.hasChunksAt(target, 0, false)) return std::nullopt; // Quark: !world.isLoaded(pos)
     BlockPos pos     = target;
     auto     myalite = adjacentCrystals(region, pos, nullptr);

@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/level/BlockPos.h"
@@ -19,9 +20,14 @@ namespace lp::feature::worldbeyond {
 
 namespace {
 
+/// The current set is published through an atomic pointer (lock-free reads on every thread).
+/// Replaced sets are kept alive for the whole process: callers hold plain references across
+/// nested calls and generation threads may still use the previous world's set (one small
+/// struct per world load).
 struct Cache {
-    std::mutex                      mutex;
-    std::shared_ptr<BlockSet const> set;
+    std::mutex                                   mutex;
+    std::atomic<BlockSet const*>                 current{nullptr};
+    std::vector<std::shared_ptr<BlockSet const>> all;
 };
 Cache& cache() {
     static Cache c;
@@ -80,18 +86,16 @@ bool BlockSet::isChorus(Block const& b) const {
 bool BlockSet::isCrystal(Block const& b) const { return crystalType && &b.getBlockType() == crystalType; }
 
 BlockSet const& blocks() {
-    // The set is replaced (never mutated) so references handed out stay valid until the next
-    // world: thread_local keeps the last set alive for generation threads.
-    thread_local std::shared_ptr<BlockSet const> held;
-    auto&                                        c = cache();
-    std::lock_guard                              lock(c.mutex);
-    if (!c.set) {
-        c.set = resolve(); // once per world (resetBlocks), even when our pack is missing
-        gFastWeeds.store(c.set->weedsType);
-        gFastTwist.store(c.set->twistType);
-    }
-    held = c.set;
-    return *held;
+    auto& c = cache();
+    if (auto const* s = c.current.load(std::memory_order_acquire)) return *s;
+    std::lock_guard lock(c.mutex);
+    if (auto const* s = c.current.load(std::memory_order_acquire)) return *s;
+    auto set = resolve(); // once per world (resetBlocks), even when our pack is missing
+    c.all.push_back(set);
+    gFastWeeds.store(set->weedsType);
+    gFastTwist.store(set->twistType);
+    c.current.store(set.get(), std::memory_order_release);
+    return *set;
 }
 
 bool isChorusType(BlockType const* type) {
@@ -101,7 +105,7 @@ bool isChorusType(BlockType const* type) {
 void resetBlocks() {
     auto&           c = cache();
     std::lock_guard lock(c.mutex);
-    c.set.reset();
+    c.current.store(nullptr, std::memory_order_release); // the old set stays alive in `all`
     gFastWeeds.store(nullptr);
     gFastTwist.store(nullptr);
 }

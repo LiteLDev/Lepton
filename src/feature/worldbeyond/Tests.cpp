@@ -374,7 +374,7 @@ LP_REGISTER_SELFTEST("worldbeyond.viaduct", [](Context& ctx) -> ll::coro::CoroTa
     auto& p   = ctx.player();
     float eye = p.getPosition().y - p.getFeetPos().y;
     // teleport next to the west end of the line: Quark sends us past the east end
-    p.teleportTo(Vec3{base.x - 0.5f, base.y + 1.0f + eye, base.z + 0.5f}, true, 0, 1, false);
+    p.teleportTo(Vec3{base.x - 0.5f, base.y + 1.0f + eye, base.z + 0.5f}, true, 3, 1, false); // cause 3: command
     co_await ctx.ticks(3);
     auto     feet = p.getFeetPos();
     BlockPos fb   = lp::game::blockPosOf(feet);

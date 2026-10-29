@@ -1,6 +1,7 @@
 #include "feature/worldbeyond/Config.h"
 
 #include <algorithm>
+#include <atomic>
 #include <fstream>
 #include <memory>
 #include <mutex>
@@ -59,9 +60,13 @@ bool CompoundBiomeConfig::canSpawn(std::string_view biome, int dimId) const {
 }
 
 namespace {
+/// Published snapshots: the current one behind an atomic pointer (lock-free reads from every
+/// thread); earlier ones stay alive (a reload or a selftest change publishes a new one, so callers
+/// may keep references across calls).
 struct Snapshot {
-    std::mutex                               mutex;
-    std::shared_ptr<WorldBeyondConfig const> value = std::make_shared<WorldBeyondConfig const>();
+    std::mutex                                            mutex;
+    std::vector<std::unique_ptr<WorldBeyondConfig const>> all;
+    std::atomic<WorldBeyondConfig const*>                 current{nullptr};
 };
 Snapshot& snapshot() {
     static Snapshot s;
@@ -69,19 +74,19 @@ Snapshot& snapshot() {
 }
 } // namespace
 
-WorldBeyondConfig config() {
-    // World generation threads read this snapshot; the live struct is only touched on the server
-    // thread (`publishConfig` after load / reload / selftest changes).
-    auto&           s = snapshot();
-    std::lock_guard lock(s.mutex);
-    return *s.value;
+WorldBeyondConfig const& config() {
+    auto& s = snapshot();
+    if (auto const* c = s.current.load(std::memory_order_acquire)) return *c;
+    publishConfig();
+    return *s.current.load(std::memory_order_acquire);
 }
 
 void publishConfig() {
-    auto            fresh = std::make_shared<WorldBeyondConfig const>(lp::config::get<WorldBeyondConfig>());
+    auto            fresh = std::make_unique<WorldBeyondConfig const>(lp::config::get<WorldBeyondConfig>());
     auto&           s     = snapshot();
     std::lock_guard lock(s.mutex);
-    s.value = std::move(fresh);
+    s.current.store(fresh.get(), std::memory_order_release);
+    s.all.push_back(std::move(fresh));
 }
 
 std::string dimensionName(int dimId) {

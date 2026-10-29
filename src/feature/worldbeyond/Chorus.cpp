@@ -98,6 +98,7 @@ struct Pending {
     std::mutex                      mutex;
     std::set<core::GlobalPos>       schedule;  ///< chorus placed: make sure it ticks
     std::set<core::GlobalPos>       water;     ///< water appeared next to chorus
+    std::set<core::GlobalPos>       ticks;     ///< plant ticks that fired off the server thread
     std::vector<std::tuple<int64_t, core::GlobalPos>> bonemeal; ///< (player id, pos)
 };
 Pending& pending() {
@@ -197,14 +198,15 @@ void ambientParticles(Level& level) {
 void onTick(ll::event::ServerLevelTickEvent& ev) {
     gServerThread.store(std::this_thread::get_id());
     auto& level = ev.level();
-    auto  cfg   = config();
+    auto const& cfg = config();
     if (!blocks().ready()) return;
-    std::set<core::GlobalPos>                         schedule, water;
+    std::set<core::GlobalPos>                         schedule, water, ticks;
     std::vector<std::tuple<int64_t, core::GlobalPos>> bonemeal;
     {
         std::lock_guard lock(pending().mutex);
         schedule.swap(pending().schedule);
         water.swap(pending().water);
+        ticks.swap(pending().ticks);
         bonemeal.swap(pending().bonemeal);
     }
     auto const& b = blocks();
@@ -214,6 +216,13 @@ void onTick(ll::event::ServerLevelTickEvent& ev) {
         if (!region || !region->hasChunksAt(pos, 0, false)) continue;
         auto const& blk = region->getBlock(pos);
         if (b.isChorus(blk)) scheduleChorusTick(*region, pos, blk);
+    }
+    for (auto const& g : ticks) { // the random tick of a plant ticked during a chunk load
+        auto* region = game::regionOf(g.dim);
+        auto  pos    = game::blockPos(g);
+        if (!region || !region->hasChunksAt(pos, 0, false) || !b.isChorus(region->getBlock(pos))) continue;
+        chorusRandomTick(*region, pos);
+        if (b.isChorus(region->getBlock(pos))) scheduleChorusTick(*region, pos, region->getBlock(pos));
     }
     if (cfg.enableChorusVegetation) {
         for (auto const& g : water) {
@@ -255,7 +264,7 @@ LL_TYPE_INSTANCE_HOOK(
     if (std::this_thread::get_id() != gServerThread.load()) {
         // instaticks while chunks load run on worker threads: redo it on the server thread
         std::lock_guard lock(pending().mutex);
-        pending().schedule.insert(game::globalPos(region, pos));
+        pending().ticks.insert(game::globalPos(region, pos));
         return;
     }
     auto const& b = blocks();
@@ -314,7 +323,7 @@ std::optional<BlockPos> chorusTeleport(BlockSource& region, BlockPos const& pos,
 }
 
 void chorusRandomTick(BlockSource& region, BlockPos const& pos) {
-    auto cfg = config();
+    auto const& cfg = config();
     if (!cfg.enableChorusVegetation) return;
     if (serverRandom().nextDouble() < cfg.passiveTeleportChance) {
         Block const& state = region.getBlock(pos);
@@ -323,7 +332,7 @@ void chorusRandomTick(BlockSource& region, BlockPos const& pos) {
 }
 
 void chorusEntityInside(BlockSource& region, BlockPos const& pos, Actor& entity) {
-    auto cfg = config();
+    auto const& cfg = config();
     if (!cfg.enableChorusVegetation) return;
     Block const& state = region.getBlock(pos);
     if (&state.getBlockType() != blocks().weedsType) return; // only the "simple" plant reacts
@@ -368,6 +377,7 @@ void uninstallChorus() {
     std::lock_guard lock(pending().mutex);
     pending().schedule.clear();
     pending().water.clear();
+    pending().ticks.clear();
     pending().bonemeal.clear();
 }
 

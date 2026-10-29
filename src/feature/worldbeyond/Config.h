@@ -76,8 +76,8 @@ struct WorldBeyondConfig {
     bool renewableMyalite       = true;
 };
 
-/// A copy of the current config (safe to use from world generation threads).
-[[nodiscard]] WorldBeyondConfig config();
+/// The current config snapshot (lock-free, safe on world generation threads; stays valid).
+[[nodiscard]] WorldBeyondConfig const& config();
 /// Copies `lp::config::get<WorldBeyondConfig>()` into the snapshot `config()` returns (server thread:
 /// after loading, `/quark reload` and selftests that change values).
 void publishConfig();

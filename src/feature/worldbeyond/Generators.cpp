@@ -389,7 +389,7 @@ bool makeSpire(GenRegion& region, JavaRandom& rand, BlockPos const& pos) {
 // ---- entry ---------------------------------------------------------------------------------------
 
 void decorateChunk(BlockSource& source, int dimId, int chunkX, int chunkZ, int64_t seed, TheEndGenerator const* endGen) {
-    auto const cfg = config();
+    auto const& cfg = config();
     if (!blocks().ready()) return;
     gChunks.fetch_add(1, std::memory_order_relaxed);
     GenRegion   region(source, chunkX, chunkZ, 2);
