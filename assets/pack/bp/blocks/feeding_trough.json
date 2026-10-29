@@ -1,0 +1,215 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:feeding_trough",
+      "menu_category": {
+        "category": "items"
+      },
+      "states": {
+        "lepton:full": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.6
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.6
+      },
+      "minecraft:map_color": "#8f7748",
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.logistics_feeding_trough",
+        "bone_visibility": {
+          "floor_empty": "!q.block_state('lepton:full')",
+          "floor_full": "q.block_state('lepton:full')"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_logistics_logistics_trough_side",
+          "render_method": "alpha_test"
+        },
+        "side": {
+          "texture": "lepton_logistics_logistics_trough_side",
+          "render_method": "alpha_test"
+        },
+        "top": {
+          "texture": "lepton_logistics_logistics_trough_top",
+          "render_method": "alpha_test"
+        },
+        "bottom": {
+          "texture": "lepton_logistics_logistics_trough_bottom",
+          "render_method": "alpha_test"
+        },
+        "inner": {
+          "texture": "lepton_logistics_logistics_trough_side_inner",
+          "render_method": "alpha_test"
+        },
+        "floor": {
+          "texture": "lepton_logistics_logistics_trough_bottom",
+          "render_method": "alpha_test"
+        },
+        "hay": {
+          "texture": "lepton_logistics_hay_block_top",
+          "render_method": "alpha_test"
+        },
+        "hay_side": {
+          "texture": "lepton_logistics_hay_block_side",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:collision_box": [
+        {
+          "origin": [
+            -8,
+            0,
+            -8
+          ],
+          "size": [
+            2,
+            8,
+            16
+          ]
+        },
+        {
+          "origin": [
+            6,
+            0,
+            -8
+          ],
+          "size": [
+            2,
+            8,
+            16
+          ]
+        },
+        {
+          "origin": [
+            -6,
+            0,
+            -8
+          ],
+          "size": [
+            12,
+            8,
+            2
+          ]
+        },
+        {
+          "origin": [
+            -6,
+            0,
+            6
+          ],
+          "size": [
+            12,
+            8,
+            2
+          ]
+        },
+        {
+          "origin": [
+            -6,
+            0,
+            -6
+          ],
+          "size": [
+            12,
+            2,
+            12
+          ]
+        }
+      ],
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          8,
+          16
+        ]
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:loot": "loot_tables/blocks/feeding_trough.json",
+      "tag:lepton:logistics": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:full')",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -8,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                8,
+                16
+              ]
+            },
+            {
+              "origin": [
+                6,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                8,
+                16
+              ]
+            },
+            {
+              "origin": [
+                -6,
+                0,
+                -8
+              ],
+              "size": [
+                12,
+                8,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -6,
+                0,
+                6
+              ],
+              "size": [
+                12,
+                8,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -6,
+                0,
+                -6
+              ],
+              "size": [
+                12,
+                6,
+                12
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

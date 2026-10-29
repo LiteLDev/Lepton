@@ -1,0 +1,108 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:encased_pipe",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.redstone"
+      },
+      "states": {
+        "lepton:conn_down": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "lepton:conn_up": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "lepton:conn_north": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "lepton:conn_south": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "lepton:conn_west": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "lepton:conn_east": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 3
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 10
+      },
+      "minecraft:map_color": "#c0714f",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.logistics_encased_pipe",
+        "bone_visibility": {
+          "center": "true",
+          "arm_down": "q.block_state('lepton:conn_down') != 0",
+          "flare_in_down": "false",
+          "flare_edge_down": "(q.block_state('lepton:conn_down') == 2 || q.block_state('lepton:conn_down') == 3)",
+          "arm_up": "q.block_state('lepton:conn_up') != 0",
+          "flare_in_up": "false",
+          "flare_edge_up": "(q.block_state('lepton:conn_up') == 2 || q.block_state('lepton:conn_up') == 3)",
+          "arm_north": "q.block_state('lepton:conn_north') != 0",
+          "flare_in_north": "false",
+          "flare_edge_north": "(q.block_state('lepton:conn_north') == 2 || q.block_state('lepton:conn_north') == 3)",
+          "arm_south": "q.block_state('lepton:conn_south') != 0",
+          "flare_in_south": "false",
+          "flare_edge_south": "(q.block_state('lepton:conn_south') == 2 || q.block_state('lepton:conn_south') == 3)",
+          "arm_west": "q.block_state('lepton:conn_west') != 0",
+          "flare_in_west": "false",
+          "flare_edge_west": "(q.block_state('lepton:conn_west') == 2 || q.block_state('lepton:conn_west') == 3)",
+          "arm_east": "q.block_state('lepton:conn_east') != 0",
+          "flare_in_east": "false",
+          "flare_edge_east": "(q.block_state('lepton:conn_east') == 2 || q.block_state('lepton:conn_east') == 3)",
+          "glass": "true"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_logistics_logistics_pipe_structure",
+          "render_method": "alpha_test"
+        },
+        "pipe": {
+          "texture": "lepton_logistics_logistics_pipe_structure",
+          "render_method": "alpha_test"
+        },
+        "flare": {
+          "texture": "lepton_logistics_logistics_pipe_connectors",
+          "render_method": "alpha_test"
+        },
+        "glass": {
+          "texture": "lepton_logistics_glass",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:loot": "loot_tables/blocks/encased_pipe.json",
+      "tag:lepton:pipes": {},
+      "tag:lepton:logistics": {}
+    }
+  }
+}
