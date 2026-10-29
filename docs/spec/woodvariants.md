@@ -157,8 +157,8 @@ or the other, never both; the total stays capped at 15 by the game).
 ### 3.3 Ladders
 - Placement: only on the side of a block; `minecraft:block_face` (the clicked face) is the facing.
   Placing on the top/bottom face is refused (Java), unless U17's EnhancedLadders allows it.
-- Survival: when the block behind (opposite the facing) is air or a liquid, the ladder pops off
-  (drops itself).
+- Survival: when the block behind (opposite the facing) can't give full support on the face
+  towards the ladder (air, liquid, glass pane, fence, ...), the ladder pops off (drops itself).
 - Climbing: the ladder's block type gets the game's `Climbable` property, so movement is the
   vanilla ladder's (also for EnhancedLadders, U17).
 - Fuel: 300 ticks in furnaces (`FurnaceBlockActor::getBurnDuration`).
@@ -285,8 +285,7 @@ Selftests (`woodvariants.*`, dx 600..699):
 | `woodvariants.post_lantern` | 614 | a lantern hangs below a post |
 | `woodvariants.hedge_connections` | 620 | hedges connect to hedges only, extend above a hedge |
 | `woodvariants.hedge_plant` | 626 | a flower can be placed on a hedge |
-| `woodvariants.ladder_place` | 630 | ladder facing from the clicked face; refused on top faces |
-| `woodvariants.ladder_survive` | 634 | a ladder pops off when its wall is removed |
+| `woodvariants.ladder_place` | 630 | ladder facing from the clicked face; refused on top faces; pops off when its wall is removed |
 | `woodvariants.ladder_climb` | 638 | the ladder's block type is climbable |
 | `woodvariants.carpet_survive` | 642 | a leaf carpet pops off over air |
 | `woodvariants.carpet_compost` | 646 | composter fill chance 20 |
@@ -294,8 +293,11 @@ Selftests (`woodvariants.*`, dx 600..699):
 | `woodvariants.hollow_axis` | 660 | hollow log axis + climbable |
 | `woodvariants.hollow_crawl` | 664 | sneaking towards a horizontal hollow log crawls into it |
 | `woodvariants.fuel` | - | variant ladders burn 300 ticks |
+| `woodvariants.gallery` | 670..699 (rows stacked up to +18) | builds a gallery of every block and checks its connections; with a real player, shows each row and waits for the player to crawl into a hollow log |
 
 E2E: `tools/e2e/server/scenarios/woodvariants.ps1` runs `woodvariants.*` and checks the pass
-count. `tools/e2e/client/scenarios/woodvariants.ps1` builds a gallery of every block (vertical
-planks, bookshelves, ladders on a wall, posts along each axis with chains and lanterns, connected
-hedges with an extended one, leaf carpets, hollow logs on each axis) and saves screenshots.
+count. `tools/e2e/client/scenarios/woodvariants.ps1` runs the gallery (vertical planks,
+bookshelves, ladders on a wall, posts with chains and lanterns, stripped posts, connected hedges
+with extended ones, a post under a hedge, leaf carpets, hollow logs on each axis), saves a
+screenshot of each row, then holds sneak in front of a horizontal hollow log and checks that the
+player crawled into it.

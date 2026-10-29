@@ -13,6 +13,7 @@
 #include "mc/world/item/enchanting/EnchantUtils.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockProperty.h"
 #include "mc/world/level/block/BlockType.h"
@@ -349,4 +350,158 @@ LP_REGISTER_SELFTEST("woodvariants.hollow_crawl", [](Context& ctx) -> ll::coro::
     player.setSneaking(false);
     stepAside(ctx, p);
     co_await ctx.ticks(2);
+});
+
+// A gallery of every block of the unit for screenshots (client scenario `woodvariants`), dx 670..699
+// inside U6's z band (dz -2..2). The rows are stacked (ground, +6, +12, +16; a smooth stone floor
+// under the raised ones), each seen from the south:
+//   A  vertical planks / bookshelf / vertical planks columns, a ladder on the top planks
+//   B  posts along x with a chain + lantern or a lantern below, stripped posts standing in front
+//   C  a connected hedge row (every other hedge extended by one above), a post under a hedge,
+//      a leaf carpet row in front
+//   D  hollow logs along z (open towards the viewer), x and y; a crawl log for the real player
+// With a real player online the player is moved in front of each row (and into the crawl spot); on
+// a dedicated server the gallery is only built and checked.
+LP_REGISTER_SELFTEST("woodvariants.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    static constexpr char const* kAll[] = {
+        "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "bamboo", "crimson", "warped"};
+    static constexpr char const* kLeaves[] = {
+        "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "azalea", "flowering_azalea"};
+    static constexpr char const* kHollow[] = {
+        "hollow_oak_log", "hollow_spruce_log", "hollow_birch_log", "hollow_jungle_log", "hollow_acacia_log",
+        "hollow_dark_oak_log", "hollow_mangrove_log", "hollow_cherry_log", "hollow_crimson_stem", "hollow_warped_stem"};
+    auto base = ctx.testPos(670);
+    GP   rowA = base, rowB = off(base, 0, 6, 0), rowC = off(base, 0, 12, 0), rowD = off(base, 0, 16, 0);
+    ctx.require(co_await ctx.ensureLoaded(base), "gallery loaded");
+    ctx.require(co_await ctx.ensureLoaded(off(base, 28, 0, 0)), "gallery end loaded");
+    int  failed = 0;
+    auto place  = [&](GP const& p, std::string const& id, bs::Changes const& states = {}) {
+        if (!put(ctx, p, id, states)) {
+            ++failed;
+            ctx.check(false, "placed " + id);
+        }
+    };
+    std::string const ns = "lepton:";
+    for (auto const& r : {rowB, rowC, rowD}) {
+        for (int x = -1; x <= 28; ++x) {
+            for (int z = -2; z <= 2; ++z) place(off(r, x, -1, z), "minecraft:smooth_stone");
+        }
+    }
+    // the ground row stands on whatever is there: make sure carpets and ladders have support
+    for (int x = -1; x <= 28; ++x) {
+        for (int z = -2; z <= 2; ++z) {
+            if (regionOf(ctx).getBlock(lp::game::blockPos(off(rowA, x, -1, z))).isAir())
+                place(off(rowA, x, -1, z), "minecraft:smooth_stone");
+        }
+    }
+    // A: planks, bookshelves, ladders
+    for (int i = 0; i < 11; ++i) {
+        std::string w = kAll[i];
+        auto        c = off(rowA, 2 * i, 0, 0);
+        place(c, ns + "vertical_" + w + "_planks");
+        place(off(c, 0, 1, 0), w == "oak" ? std::string("minecraft:bookshelf") : ns + w + "_bookshelf");
+        place(off(c, 0, 2, 0), ns + "vertical_" + w + "_planks");
+        if (w == "oak") place(off(c, 0, 2, 1), "minecraft:ladder", {{"facing_direction", 3}});
+        else place(off(c, 0, 2, 1), ns + w + "_ladder", {{"minecraft:block_face", "south"}});
+    }
+    // B: posts with chains and lanterns, stripped posts
+    for (int i = 0; i < 11; ++i) {
+        std::string w = kAll[i];
+        auto        c = off(rowB, 2 * i, 0, 0);
+        place(off(c, 0, 3, 0), ns + w + "_post", {{"minecraft:block_face", "east"}});
+        if (i % 2 == 0) {
+            place(off(c, 0, 2, 0), "minecraft:chain", {{"pillar_axis", "y"}});
+            place(off(c, 0, 1, 0), "minecraft:lantern", {{"hanging", true}});
+        } else {
+            place(off(c, 0, 2, 0), i % 4 == 3 ? "minecraft:soul_lantern" : "minecraft:lantern", {{"hanging", true}});
+        }
+        place(off(c, 0, 0, 2), ns + "stripped_" + w + "_post", {{"minecraft:block_face", "up"}});
+        place(off(c, 0, 1, 2), ns + "stripped_" + w + "_post", {{"minecraft:block_face", "up"}});
+    }
+    // C: hedges, a post below a hedge, leaf carpets
+    for (int i = 0; i < 10; ++i) {
+        std::string w = kLeaves[i];
+        place(off(rowC, i, 0, 0), ns + w + "_hedge");
+        if (i % 2 == 0) place(off(rowC, i, 1, 0), ns + w + "_hedge");
+        place(off(rowC, i, 0, 2), ns + w + "_leaf_carpet");
+    }
+    place(off(rowC, 13, 0, 0), "lepton:dark_oak_post", {{"minecraft:block_face", "up"}});
+    place(off(rowC, 13, 1, 0), "lepton:oak_hedge");
+    // D: hollow logs on each axis, the crawl log (x axis) with free space west of it
+    for (int i = 0; i < 10; ++i) {
+        auto c = off(rowD, 2 * i, 0, 0);
+        place(c, ns + kHollow[i], {{"minecraft:block_face", "south"}});
+        place(off(c, 0, 1, 0), ns + kHollow[i], {{"minecraft:block_face", "east"}});
+        place(off(c, 0, 2, 0), ns + kHollow[i], {{"minecraft:block_face", "up"}});
+    }
+    auto crawl = off(rowD, 25, 0, 0);
+    place(crawl, "lepton:hollow_birch_log", {{"minecraft:block_face", "east"}});
+    for (int dy = 0; dy < 2; ++dy) ctx.cleanupBlock(off(crawl, -1, dy, 0));
+    co_await ctx.ticks(6);
+    ctx.check(failed == 0, std::to_string(failed) + " gallery blocks not placed");
+    ctx.check(str(at(ctx, off(rowB, 0, 3, 0)), "lepton:connect_down") == "chain", "chain below the first post");
+    ctx.check(str(at(ctx, off(rowB, 2, 3, 0)), "lepton:connect_down") == "chain", "lantern below the second post");
+    ctx.check(idAt(ctx, off(rowB, 2, 2, 0)) == "minecraft:lantern", "the lantern hangs below the post");
+    ctx.check(flag(at(ctx, off(rowC, 0, 0, 0)), "lepton:east"), "hedges connect");
+    ctx.check(flag(at(ctx, off(rowC, 0, 1, 0)), "lepton:extend"), "a hedge above a hedge extends");
+    ctx.check(str(at(ctx, off(rowC, 13, 0, 0)), "lepton:connect_up") == "other_post", "post below a hedge");
+    ctx.check(idAt(ctx, off(rowA, 2, 2, 1)) == "lepton:spruce_ladder", "ladders stay on the planks");
+    ctx.check(idAt(ctx, off(rowC, 0, 0, 2)) == "lepton:oak_leaf_carpet", "leaf carpets stay on the floor");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) co_return;
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](GP const& row, float dx, float dz, float pitch, float yaw) {
+        if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
+            v->teleport(
+                Vec3{static_cast<float>(row.x) + dx, static_cast<float>(row.y), static_cast<float>(row.z) + dz},
+                DimensionType(row.dim),
+                Vec2{pitch, yaw}
+            );
+        }
+    };
+    struct View {
+        char const* name;
+        GP          row;
+        float       dx, dz, pitch;
+    };
+    View const views[] = {
+        {"a-left",  rowA, 5.5f,  8.5f, 12.f},
+        {"a-right", rowA, 15.5f, 8.5f, 12.f},
+        {"b-left",  rowB, 5.5f,  9.5f, 8.f },
+        {"b-right", rowB, 15.5f, 9.5f, 8.f },
+        {"c",       rowC, 6.5f,  9.5f, 22.f},
+        {"d-left",  rowD, 5.5f,  7.5f, 10.f},
+        {"d-right", rowD, 14.5f, 7.5f, 10.f},
+    };
+    for (auto const& v : views) {
+        ctx.info(std::string("GALLERY view ") + v.name);
+        // south of the row, looking north; the raised rows have no floor there: hold the player
+        for (int t = 0; t < 120; ++t) {
+            view(v.row, v.dx, v.dz, v.pitch, 180.f);
+            co_await ctx.ticks(1);
+        }
+    }
+    // the real player crawls into the crawl log: west of it looking east; the scenario holds sneak
+    ctx.info("GALLERY crawl");
+    view(crawl, -0.5f, 0.5f, 10.f, -90.f);
+    bool crawled = false;
+    for (int t = 0; t < 20 && !crawled; ++t) {
+        co_await ctx.ticks(10);
+        auto* v = ctx.player().getLevel().getPlayer(uid);
+        if (!v) break;
+        auto f  = v->getFeetPos();
+        crawled = static_cast<int>(std::floor(f.x)) == crawl.x && static_cast<int>(std::floor(f.z)) == crawl.z
+               && v->isSwimming();
+    }
+    // not a check: in the `full` scenarios nobody sneaks; the woodvariants client scenario asserts this line
+    ctx.info(std::string("GALLERY crawled ") + (crawled ? "yes" : "no"));
+    co_await ctx.ticks(100);
+    view(rowA, 5.5f, 8.5f, 12.f, 180.f); // back on the ground
+    co_await ctx.ticks(10);
+    ctx.info("GALLERY done");
 });

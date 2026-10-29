@@ -138,10 +138,20 @@ std::string ladderFacing(Block const& b) {
     return shapes::faceName(bs::getInt(b, "facing_direction").value_or(2)).data();
 }
 
-/// Java LadderBlock#canSurvive (+ U17 EnhancedLadders' freestanding rule when that unit enables it).
+/// FacingID of a direction name (down 0, up 1, north 2, south 3, west 4, east 5).
+uchar faceIndex(std::string_view dir) {
+    for (int i = 0; i < 6; ++i) {
+        if (shapes::faceName(i) == dir) return static_cast<uchar>(i);
+    }
+    return 2;
+}
+
+/// Java LadderBlock#canSurvive: the wall behind has a sturdy face towards the ladder (+ U17
+/// EnhancedLadders' freestanding rule when that unit enables it).
 bool ladderSurvives(BlockSource& region, BlockPos const& pos, Block const& b) {
-    auto facing = ladderFacing(b);
-    if (isAirLike(region.getBlock(shapes::neighbor(pos, shapes::opposite(facing))))) {
+    auto        facing = ladderFacing(b);
+    auto const& wall   = region.getBlock(shapes::neighbor(pos, shapes::opposite(facing)));
+    if (isAirLike(wall) || !wall.canProvideFullSupport(faceIndex(facing))) {
         if (!external().freestandingLadder) return false;
         auto const& above = region.getBlock(shapes::neighbor(pos, "up"));
         return isLadder(above) && ladderFacing(above) == facing;
@@ -201,10 +211,10 @@ void onTick(ll::event::ServerLevelTickEvent& ev) {
             }
         }
     }
-    for (auto* a : ev.level().getRuntimeActorList()) {
-        if (!a || !a->isPlayer() || a->isClientSide()) continue;
-        autoCrawlTick(*static_cast<Player*>(a));
-    }
+    ev.level().forEachPlayer([](Player& p) {
+        if (!p.isClientSide()) autoCrawlTick(p);
+        return true;
+    });
 }
 
 void onBlockChanged(ll::event::BlockChangedEvent& ev) {
@@ -234,7 +244,13 @@ bool azaleaWoodEnabled() { return external().azaleaWood; }
 
 WoodVariantsConfig const& config() { return lp::config::get<WoodVariantsConfig>(); }
 
-bool hasTag(Block const& block, std::string_view tag) { return block.hasTag(HashedString(std::string(tag))); }
+bool hasTag(Block const& block, std::string_view tag) {
+    // tags are a handful of constants: hash each once per thread (the client asks from the render thread)
+    thread_local std::map<std::string, HashedString, std::less<>> cache;
+    auto it = cache.find(tag);
+    if (it == cache.end()) it = cache.emplace(std::string(tag), HashedString(std::string(tag))).first;
+    return block.hasTag(it->second);
+}
 
 std::string moduleOf(Block const& block) {
     static constexpr std::string_view kModules[] = {
@@ -350,7 +366,8 @@ std::vector<BlockPos> variantBookshelfPositions(BlockSource& region, BlockPos co
                 auto const& b = region.getBlock(shelf);
                 if (!hasTag(b, "lepton:bookshelf") || !moduleEnabled(b)) continue;
                 BlockPos mid{table.x + dx / 2, table.y + dy, table.z + dz / 2};
-                if (!game::replaceable(region, mid)) continue;
+                // the game's rule for its own bookshelf: only air between shelf and table
+                if (!region.getBlock(mid).isAir()) continue;
                 out.push_back(shelf);
             }
         }
@@ -389,7 +406,10 @@ void autoCrawlTick(Player& player) {
         }
     }
     bool crawling = ours && player.isSwimming();
-    bool trying   = crawling || (player.isSneaking() && !hasTag(here, "lepton:hollow_log"));
+    // Java: crouching and not colliding with the block at the feet (a player inside a hollow log
+    // doesn't touch its walls, so crawling out of one works too)
+    bool colliding = !hasTag(here, "lepton:hollow_log") && !isAirLike(here) && here._isSolid();
+    bool trying    = crawling || (player.isSneaking() && !colliding);
     bool was      = s.wasTrying[uid];
     if (!crawling && trying && !was) {
         std::string dir(shapes::lookDirection(player.getRotation().y));
