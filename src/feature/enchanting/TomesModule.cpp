@@ -9,6 +9,7 @@
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 
+#include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/shared_types/legacy/ContainerType.h"
 #include "mc/deps/shared_types/legacy/LevelSoundEvent.h"
 #include "mc/server/ServerPlayer.h"
@@ -361,6 +362,7 @@ void offerForm(Player& p, Offer const& o) {
         .onNo([](Player& pl) { pendingForms().erase(uuidOf(pl)); })
         .onClose([](Player& pl) { pendingForms().erase(uuidOf(pl)); })
         .sendTo(p);
+    log().info("enchanting: {} was sent the {} form", p.getRealName(), o.craft.kind == "rune" ? "rune" : "tome");
 }
 
 void tickStations() {
@@ -505,6 +507,57 @@ private:
 };
 
 // ---- commands ----------------------------------------------------------------------------------
+
+/// `/quark enchanting demo anvil|smithing` (operators): places the station two blocks east of the
+/// player; `/quark enchanting demo fill` puts a tome / rune combination into the open station's
+/// slots. Used by the client scenario.
+void placeStation(CommandOrigin const& origin, CommandOutput& output, char const* id) {
+    auto* p = commands::playerOf(origin);
+    if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+    auto& region = p->getDimensionBlockSource();
+    auto  eye    = p->getPosition();
+    auto  feet   = game::blockPosOf(Vec3{eye.x, eye.y - 1.5f, eye.z});
+    BlockPos at{feet.x + 2, feet.y, feet.z};
+    for (int dy = 0; dy <= 2; ++dy)
+        if (auto const* air = game::blockstates::of("minecraft:air")) game::setBlock(region, {at.x, at.y + dy, at.z}, *air);
+    if (auto const* b = game::blockstates::of(id)) game::setBlock(region, at, *b);
+    log().info("enchanting: demo station {} at {} {} {}", id, at.x, at.y, at.z);
+    output.success("Placed " + std::string(id));
+}
+
+LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
+    cmd.overload().text("enchanting").text("demo").text("anvil").execute([](CommandOrigin const& o, CommandOutput& out) {
+        placeStation(o, out, "minecraft:anvil");
+    });
+    cmd.overload().text("enchanting").text("demo").text("smithing").execute([](CommandOrigin const& o, CommandOutput& out) {
+        placeStation(o, out, "minecraft:smithing_table");
+    });
+    cmd.overload().text("enchanting").text("demo").text("fill").execute([](CommandOrigin const& origin, CommandOutput& output) {
+        auto* p = commands::playerOf(origin);
+        if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+        auto const& cm = p->mContainerManager;
+        if (!cm) return output.error("Open an anvil or a smithing table first.");
+        auto  type  = cm->getContainerType();
+        auto& ui    = uiContainer(*p);
+        int   sharp = defById("minecraft:sharpness") ? defById("minecraft:sharpness")->type : 0;
+        auto  sword = game::makeItem("minecraft:diamond_sword");
+        if (type == SharedTypes::Legacy::ContainerType::Anvil) {
+            setEnchants(sword, {{sharp, 5}});
+            ui.setItem(static_cast<int>(PlayerUISlot::AnvilInput), sword);
+            ui.setItem(static_cast<int>(PlayerUISlot::AnvilMaterial), makeTome(sharp));
+            addLevels(*p, 40);
+        } else if (type == SharedTypes::Legacy::ContainerType::SmithingTable) {
+            setEnchants(sword, {{sharp, 1}});
+            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableTemplate), game::makeItem(kRuneId));
+            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableInput), sword);
+            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial), game::makeItem("minecraft:lime_dye"));
+        } else {
+            return output.error("Open an anvil or a smithing table first.");
+        }
+        log().info("enchanting: demo station filled");
+        output.success("Filled the station.");
+    });
+});
 
 LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload<TomeCommandParams>().text("enchanting").text("tome").required("enchant").execute(

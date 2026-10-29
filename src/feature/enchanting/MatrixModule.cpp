@@ -161,8 +161,9 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
             }
         for (int dz = -1; dz <= 1; ++dz)
             for (int dy = 0; dy <= 1; ++dy) set(2, dy, dz, "minecraft:bookshelf");
+        // A lit red candle on a bookshelf (influences fire aspect, counts as one bookshelf).
         if (auto const* c = game::blockstates::of("minecraft:red_candle", {{"lit", true}, {"candles", 3}}))
-            game::setBlock(region, {center.x + 2, center.y + 2, center.z}, *c);
+            game::setBlock(region, {center.x + 2, center.y + 1, center.z}, *c);
         set(0, 0, 0, "minecraft:enchanting_table");
         auto pos = game::globalPos(region, center);
         auto& d  = table::data(pos);
@@ -171,13 +172,8 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         table::markDirty(pos);
         addLevels(*p, 30);
         if (!table::open(*p, pos)) return output.error("Matrix enchanting is disabled.");
-        for (int i = 0; i < 4; ++i) table::operate(*p, OperAdd, 0, 0, 0);
-        if (auto m = table::matrixOf(table::data(pos).item); m && !m->benched.empty()) {
-            int  id     = m->benched.back();
-            bool placed = false;
-            for (int x = 1; x < 4 && !placed; ++x)
-                for (int y = 1; y < 4 && !placed; ++y) placed = table::operate(*p, OperPlace, id, x, y);
-        }
+        // Three pieces on the bench; the grid stays empty (the client scenario places one).
+        for (int i = 0; i < 3; ++i) table::operate(*p, OperAdd, 0, 0, 0);
         log().info("enchanting: demo table ready at {}", pos.key());
         output.success("Matrix enchanter demo opened.");
     });

@@ -552,6 +552,10 @@ bool operate(Player& player, int op, int arg0, int arg1, int arg2) {
     case OperMerge: changed = m->merge(arg0, arg1, env); break;
     default: return false;
     }
+    if (changed && op != OperAdd) {
+        static constexpr char const* kNames[] = {"generated", "placed", "removed", "rotated", "merged"};
+        log().info("enchanting: {} {} a piece", player.getRealName(), kNames[op]);
+    }
     if (changed) {
         writeMatrix(d.item, *m);
         markDirty(*pos);

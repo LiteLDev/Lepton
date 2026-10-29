@@ -178,6 +178,16 @@ public:
             }
         }
 
+        // Once per opening, after a few frames: widget positions as fractions of the screen (for the
+        // client e2e scenario).
+        if (++mFrames == 10) {
+            auto at = [&](char const* what, float x, float y) { log().info("enchanting: matrix {} at {:.4f},{:.4f}", what, x / sz.x, y / sz.y); };
+            at("plus", L + 111, T + 69);
+            at("bench", L + 153, T + 21);
+            at("grid", L + 111, T + 36);
+            at("output", L + 67, T + 40);
+        }
+
         // Tooltips last.
         if (mHoverPiece) tooltip(dc, mouse, pieceTooltip(*mHoverPiece));
         else tooltip(dc, mouse, mHoverLines);
@@ -255,6 +265,7 @@ private:
     fe::Piece const*           mHoverPiece = nullptr;
     bool                       mHoverInGrid = false;
     bool                       mLogged      = false;
+    int                        mFrames      = 0;
     std::vector<std::pair<Rect, int>> mListRects;
 
     [[nodiscard]] Rect invSlot(int i) const {
@@ -438,10 +449,10 @@ void craftOverlay(Overlay& o, ScreenInfo const& s) {
                 gPreview.affordable ? Color::rgb(0x80ff20) : Color::rgb(0xff6060));
     auto label = gPreview.kind == "rune" ? ctr("lp.enchanting.craft.apply_rune", "Apply Rune") : ctr("lp.enchanting.craft.apply", "Apply");
     o.button({x + 4, y + 30, 72, 16}, label, [] { net::sendToServer(fe::CraftMsg{}); }, tooltipFor(result));
-    static bool logged = false;
-    if (!logged) {
-        logged = true;
-        log().info("enchanting: craft overlay drawn on {}", s.name);
+    static std::string logged;
+    if (s.settled && logged != gPreview.result) {
+        logged = gPreview.result;
+        log().info("enchanting: craft overlay drawn on {}, apply at {:.4f},{:.4f}", s.name, (x + 40) / s.size.x, (y + 38) / s.size.y);
     }
 }
 
