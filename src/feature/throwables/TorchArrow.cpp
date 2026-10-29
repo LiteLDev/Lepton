@@ -3,6 +3,7 @@
 #include "feature/throwables/Throwables.h"
 
 #include <cmath>
+#include <vector>
 
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -179,7 +180,16 @@ void uninstall() {
 
 /// Flame trail of flying torch arrows (Quark draws it on the client).
 void tickTrails() {
-    for (auto* a : ent::ofType(kTorchArrow)) {
+    // The full actor scan runs every 4 ticks; in between only the known torch arrows are looked up.
+    static std::vector<int64_t> known;
+    static uint64_t             n = 0;
+    if (n++ % 4 == 0) {
+        known.clear();
+        for (auto* a : ent::ofType(kTorchArrow))
+            if (a) known.push_back(ent::idOf(*a));
+    }
+    for (auto id : known) {
+        auto* a = ent::find(id);
         if (!a) continue;
         Vec3 d = a->getPosDelta();
         if (d.x * d.x + d.y * d.y + d.z * d.z < 0.01) continue;

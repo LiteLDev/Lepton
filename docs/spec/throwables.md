@@ -106,7 +106,7 @@ Parrot feed (`quark:parrot_feed`): beetroot seeds.
 - **Piercing** (from an anvil book): the pickarang keeps flying until it has hit
   `piercing + 1` things; after each hit it slows to 80 %.
 - **Return**: after `timeout` ticks without a hit, after its hits, or when leaving the world
-  border (`entity.pickarang.spark`). Returning, it flies through blocks towards the thrower's
+  border (Bedrock has none: leaving the build height range instead; `entity.pickarang.spark`). Returning, it flies through blocks towards the thrower's
   body (`0.7 + 0.325 × efficiency` blocks/tick) and picks up item entities and experience orbs
   within 2 blocks, carrying them. Within `sqrt(3.25 + 0.25 × efficiency)` blocks of the thrower it
   is caught (`entity.pickarang.pickup`): it goes back to its slot if empty, otherwise into the
@@ -216,8 +216,9 @@ Pickarang type fields: `timeout` (ticks before returning), `harvestLevel` (2 iro
 4 netherite), `durability` (−1 unbreakable), `maxHardness` (22.5 ender chest, 50 obsidian),
 `attackDamage` (when swung), `cooldown` (ticks), `canActAsHoe/Shovel/Axe`.
 
-A disabled module's recipes are not loaded, its items are removed from players' inventories
-(every second) and its interactions do nothing.
+A disabled module's recipes are not loaded, its items leave the creative inventory and its
+interactions do nothing; items players already own are kept (inert), so toggling a module never
+destroys anything.
 
 ## 6. Strings
 Mod lang (`assets/lang/*/throwables.json`):
@@ -259,6 +260,7 @@ Torch Arrow, Parrot Egg).
 - **Slime data**: the slime's full NBT is stored in the bucket; on release the custom name is
   restored onto a fresh tiny slime (Bedrock has no safe "load actor from NBT" entry point; a tiny
   slime's other state, e.g. its 1 health, is the default anyway).
+- **Unbreakable blocks** (bedrock, barriers) make the pickarang clank, as in Quark.
 - **Flamerang trigger advancement** and the other advancements: not ported (SPEC §8).
 - **Dispensed parrot eggs**: not dispensable, as in Quark (its dispenser behaviour is commented
   out).

@@ -8,6 +8,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ll/api/event/EventBus.h"
+#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 
@@ -30,6 +32,7 @@
 #include "mc/world/item/enchanting/EnchantmentInstance.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/GameType.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/ShapeType.h"
 #include "mc/world/level/block/Block.h"
@@ -214,6 +217,15 @@ float digSpeedFactor(Player& player, bool inWater) {
     return f;
 }
 
+/// Whether the player may break the block at `pos` (adventure mode can't; protection plugins and
+/// other units can cancel the LeviLamina break event).
+bool mayBreak(Player& player, BlockPos const& pos) {
+    if (player.getPlayerGameType() == GameType::Adventure || player.isSpectator()) return false;
+    ll::event::PlayerDestroyBlockEvent ev(player, pos);
+    ll::event::EventBus::getInstance().publish(ev);
+    return !ev.isCancelled();
+}
+
 bool isImmune(Block const& block) {
     static std::set<std::string> const ids{
         "minecraft:sculk_sensor", "minecraft:calibrated_sculk_sensor", "minecraft:sculk", "minecraft:sculk_vein",
@@ -233,7 +245,10 @@ void hitBlock(Rang& r, Actor& self, BlockSource& region, BlockPos const& pos, in
     if (!owner || owner->isClientSide()) return;
     auto const& type     = typeOf(r.flame);
     float       hardness = block.getBlockType().getDestroySpeed();
-    if (hardness < 0) return; // unbreakable: Quark's progress is 0 and it just returns
+    if (hardness < 0) { // unbreakable (bedrock, barriers): Quark clanks
+        clank(r, self, &region, &pos);
+        return;
+    }
     auto  tool    = harvestTool(block, type);
     bool  harvest = tool.has_value() || !block.getBlockType().mRequiresCorrectToolForDrops;
     float f       = digSpeedFactor(*owner, self.isInWater());
@@ -248,7 +263,7 @@ void hitBlock(Rang& r, Actor& self, BlockSource& region, BlockPos const& pos, in
     owner->setSelectedItem(use);
     bool broken = false;
     if (owner->mGameMode.get()) broken = owner->mGameMode->destroyBlock(pos, static_cast<uchar>(face));
-    if (!broken && !isCreative(*owner) && &region.getBlock(pos) == &block) {
+    if (!broken && !isCreative(*owner) && &region.getBlock(pos) == &block && mayBreak(*owner, pos)) {
         // The survival game mode only finishes breaks it started itself: break it as the player would.
         block.playerDestroy(*owner, pos);
         game::clearBlock(region, pos);
@@ -413,6 +428,12 @@ void tickRang(Rang& r) {
     int eff = enchant(r.stack, Enchant::Type::Efficiency);
     if (!r.returning) {
         if (r.liveTime > typeOf(r.flame).timeout) r.returning = true;
+        // Bedrock has no world border: the build height limits reflect it instead (Quark: spark).
+        auto& region = self->getDimensionBlockSource();
+        if (next.y < region.getMinHeight() || next.y > region.getMaxHeight()) {
+            playSound("lepton.pickarang.spark", next, 1.0f, 1.0f);
+            r.returning = true;
+        }
     } else {
         auto& region = self->getDimensionBlockSource();
         AABB  box{Vec3{next.x - 2.2f, next.y - 2.2f, next.z - 2.2f}, Vec3{next.x + 2.2f, next.y + 2.6f, next.z + 2.2f}};

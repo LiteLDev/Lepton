@@ -153,6 +153,7 @@ bool onUseOnBlock(Player& player, ItemStack& item, BlockPos const& pos, int /*fa
         if (id == kBottledCloud || (id == "minecraft:glass_bottle" && atCloudLevel(player))) return onUse(player, item);
         return false;
     }
+    if (id != "minecraft:glass_bottle" && (!item.mBlock || item.mBlock->isAir())) return false;
     if (debounced(player)) return true;
     auto gp = game::globalPos(region, pos);
     if (id == "minecraft:glass_bottle") {

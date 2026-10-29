@@ -207,7 +207,6 @@ void onTick(ll::event::ServerLevelTickEvent&) {
     skullpikes::tick();
     cloud::tick();
     slime::tick();
-    if (ticks() % 20 == 0) purgeDisabled();
     if (ticks() % 200 == 0) {
         std::erase_if(lastInteract(), [](auto const& kv) { return ticks() - kv.second > 100; });
         std::erase_if(lastThrow(), [](auto const& kv) { return ticks() - kv.second > 100; });
@@ -292,27 +291,6 @@ private:
 
 } // namespace
 
-void purgeDisabled() {
-    auto level = ll::service::getLevel();
-    if (!level) return;
-    level->forEachPlayer([](Player& p) {
-        auto& pinv    = game::inv::playerInventory(p);
-        bool  changed = false;
-        for (int i = 0; i < pinv.getContainerSize(); ++i) {
-            auto const& s = pinv.getItem(i);
-            if (!game::isEmpty(s) && !itemEnabled(game::itemId(s))) {
-                pinv.setItem(i, ItemStack{});
-                changed = true;
-            }
-        }
-        if (auto const& off = p.getOffhandSlot(); !game::isEmpty(off) && !itemEnabled(game::itemId(off))) {
-            p.setOffhandSlot(ItemStack{});
-            changed = true;
-        }
-        if (changed) p.refreshInventory();
-        return true;
-    });
-}
 
 namespace testing {
 bool recipeOn(std::string_view id) { return recipeEnabled(id); }

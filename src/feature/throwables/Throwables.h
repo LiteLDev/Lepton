@@ -169,8 +169,6 @@ bool onInteract(Player& player, Actor& target);
 bool onUseOnBlock(Player& player, ItemStack& item, BlockPos const& pos, int face);
 } // namespace slime
 
-/// Removes the items of disabled modules from online players (every second).
-void purgeDisabled();
 
 namespace testing {
 [[nodiscard]] bool recipeOn(std::string_view id);
