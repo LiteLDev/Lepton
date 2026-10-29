@@ -17,6 +17,7 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/Spawner.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/actor/PistonBlockActor.h"
 #include "mc/world/level/block/actor/PistonState.h"
@@ -24,6 +25,7 @@
 #include "feature/crystals/Common.h"
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
+#include "game/Items.h"
 #include "mod/Config.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
@@ -231,7 +233,12 @@ void supportTick() {
         if (!region) continue;
         BlockPos bp{gp.x, gp.y, gp.z};
         auto const& b = region->getBlock(bp);
-        if (isCluster(b) && !clusterSupported(*region, bp, b)) destroyBlock(*region, bp, true);
+        if (!isCluster(b) || clusterSupported(*region, bp, b)) continue;
+        // Java Level#destroyBlock(pos, true) drops without a tool; the pack's loot table needs a
+        // pickaxe (requiresCorrectToolForDrops for players), so the drop is spawned here.
+        auto drop = game::makeItem(game::blockId(b));
+        destroyBlock(*region, bp, false);
+        region->getLevel().getSpawner().spawnItem(*region, drop, nullptr, center(bp), 10);
     }
 }
 

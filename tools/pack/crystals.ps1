@@ -177,10 +177,12 @@ foreach ($c in $colors.Keys) {
 # ---------------------------------------------------------------------------------------------
 Save-MagnetTextures $blocks
 foreach ($f in 'front', 'back', 'side') { foreach ($s in 'off', 'on') { $null = Add-PackFile (Join-Path $blocks "magnet_${f}_$s.png") } }
-# model front = north; Bedrock FacingID order: down, up, north, south, west, east
+# model front = north. The placement trait stores the direction the placer looks in
+# (minecraft:facing_direction); Quark's FACING (the pushing face) is its opposite, so the front
+# faces the placer: looking south -> front north (no rotation).
 $magnetFacings = @(
-    @{ v = 0; rot = @(-90, 0, 0) }, @{ v = 1; rot = @(90, 0, 0) }, @{ v = 2; rot = @(0, 0, 0) },
-    @{ v = 3; rot = @(0, 180, 0) }, @{ v = 4; rot = @(0, 90, 0) }, @{ v = 5; rot = @(0, -90, 0) }
+    @{ v = 'up'; rot = @(-90, 0, 0) }, @{ v = 'down'; rot = @(90, 0, 0) }, @{ v = 'south'; rot = @(0, 0, 0) },
+    @{ v = 'north'; rot = @(0, 180, 0) }, @{ v = 'east'; rot = @(0, 90, 0) }, @{ v = 'west'; rot = @(0, -90, 0) }
 )
 $mi = {
     param([string]$s)
@@ -199,11 +201,12 @@ $comp = [ordered]@{
 }
 & $tagged $comp @('minecraft:is_pickaxe_item_destructible', 'metal', 'lepton:magnet')
 $perms = @(foreach ($f in $magnetFacings) {
-        [ordered]@{ condition = (Get-StateCond 'lepton:facing' $f.v); components = [ordered]@{ 'minecraft:transformation' = [ordered]@{ rotation = $f.rot } } }
+        [ordered]@{ condition = (Get-StateCond 'minecraft:facing_direction' $f.v); components = [ordered]@{ 'minecraft:transformation' = [ordered]@{ rotation = $f.rot } } }
     }) + @([ordered]@{ condition = (Get-StateCond 'lepton:powered' $true); components = [ordered]@{
             'minecraft:light_emission' = 3; 'minecraft:material_instances' = (& $mi 'on') } })
 Write-BlockJson -Id 'lepton:magnet' -Menu ([ordered]@{ category = 'construction'; group = 'minecraft:itemGroup.name.redstone' }) `
-    -States ([ordered]@{ 'lepton:facing' = @(0, 1, 2, 3, 4, 5); 'lepton:powered' = @($false, $true); 'lepton:waxed' = @($false, $true) }) `
+    -Traits ([ordered]@{ 'minecraft:placement_direction' = [ordered]@{ enabled_states = @('minecraft:facing_direction') } }) `
+    -States ([ordered]@{ 'lepton:powered' = @($false, $true); 'lepton:waxed' = @($false, $true) }) `
     -Components $comp -Permutations $perms
 Register-BlockClient 'lepton:magnet' 'metal' @{ en = 'Magnet'; zh = '磁铁' }
 

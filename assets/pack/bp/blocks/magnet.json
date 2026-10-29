@@ -8,14 +8,6 @@
         "group": "minecraft:itemGroup.name.redstone"
       },
       "states": {
-        "lepton:facing": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5
-        ],
         "lepton:powered": [
           false,
           true
@@ -24,6 +16,13 @@
           false,
           true
         ]
+      },
+      "traits": {
+        "minecraft:placement_direction": {
+          "enabled_states": [
+            "minecraft:facing_direction"
+          ]
+        }
       }
     },
     "components": {
@@ -80,7 +79,7 @@
     },
     "permutations": [
       {
-        "condition": "q.block_state('lepton:facing') == 0",
+        "condition": "q.block_state('minecraft:facing_direction') == 'up'",
         "components": {
           "minecraft:transformation": {
             "rotation": [
@@ -92,7 +91,7 @@
         }
       },
       {
-        "condition": "q.block_state('lepton:facing') == 1",
+        "condition": "q.block_state('minecraft:facing_direction') == 'down'",
         "components": {
           "minecraft:transformation": {
             "rotation": [
@@ -104,7 +103,7 @@
         }
       },
       {
-        "condition": "q.block_state('lepton:facing') == 2",
+        "condition": "q.block_state('minecraft:facing_direction') == 'south'",
         "components": {
           "minecraft:transformation": {
             "rotation": [
@@ -116,7 +115,7 @@
         }
       },
       {
-        "condition": "q.block_state('lepton:facing') == 3",
+        "condition": "q.block_state('minecraft:facing_direction') == 'north'",
         "components": {
           "minecraft:transformation": {
             "rotation": [
@@ -128,7 +127,7 @@
         }
       },
       {
-        "condition": "q.block_state('lepton:facing') == 4",
+        "condition": "q.block_state('minecraft:facing_direction') == 'east'",
         "components": {
           "minecraft:transformation": {
             "rotation": [
@@ -140,7 +139,7 @@
         }
       },
       {
-        "condition": "q.block_state('lepton:facing') == 5",
+        "condition": "q.block_state('minecraft:facing_direction') == 'west'",
         "components": {
           "minecraft:transformation": {
             "rotation": [

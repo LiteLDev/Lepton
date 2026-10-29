@@ -32,6 +32,8 @@ struct Beam {
 
 /// Walks the beam of the beacon at `beacon` like Quark's BeaconRedirectionModule#tickBeacon.
 [[nodiscard]] Beam computeBeam(BlockSource& region, BlockPos const& beacon);
+/// The beacon block actor has ticked on the server since the mod was enabled (selftests).
+[[nodiscard]] bool beaconTicked(core::GlobalPos const& beacon);
 /// The lepton:beacon_beam entities the server spawned for the beacon (selftests).
 [[nodiscard]] std::vector<int64_t> beamEntitiesOf(core::GlobalPos const& beacon);
 

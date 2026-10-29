@@ -63,11 +63,9 @@ int removeRecipes() {
         }
     }
     if (gone.empty()) return 0;
-    auto& byNet = recipes.mRecipesByNetId.get();
-    for (auto it = byNet.begin(); it != byNet.end();) {
-        if (gone.contains(it->second)) it = byNet.erase(it);
-        else ++it;
-    }
+    // mRecipesByNetId is left alone: the game has no std::hash for RecipeNetId in the headers, and
+    // the entries stay valid (the removed recipes are kept alive in the graveyard). Clients never
+    // learn the net ids of removed recipes because the crafting data is built from mRecipes.
     auto& byOut = recipes.mRecipesByOutput.get();
     for (auto& [item, map] : byOut) {
         for (auto it = map.begin(); it != map.end();) {

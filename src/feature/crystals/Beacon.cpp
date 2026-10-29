@@ -26,6 +26,7 @@
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/components/BlockComponentDirectData.h"
 #include "mc/world/level/block/actor/BeaconBlockActor.h"
+#include "mc/world/level/block/actor/component/IVanillaTickBlockActorComponent.h"
 
 #include "feature/crystals/Common.h"
 #include "game/BlockStates.h"
@@ -33,6 +34,9 @@
 #include "game/Entities.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
+#ifdef LP_CLIENT
+#include "net/Net.h"
+#endif
 
 namespace lp::feature::crystals {
 
@@ -313,6 +317,42 @@ void cleanup() {
         if (a && !known.contains(game::entities::idOf(*a))) game::entities::despawn(*a);
 }
 
+#ifdef LP_CLIENT
+// Client: the beam of a beacon whose Quark beam differs from vanilla's (redirected, tinted by
+// Quark blocks, dimmed) or is broken is drawn by the server's lepton:beacon_beam entities, so the
+// vanilla beam sections are dropped. Only when the server runs Lepton (local worlds included).
+struct ClientBeacon {
+    uint64_t nextCheck = 0;
+    bool     hide      = false;
+};
+std::map<core::GlobalPos, ClientBeacon>& clientBeacons() {
+    static std::map<core::GlobalPos, ClientBeacon> m;
+    return m;
+}
+uint64_t& clientTicks() {
+    static uint64_t t = 0;
+    return t;
+}
+
+void clientTick(BeaconBlockActor& beacon, BlockSource& region) {
+    if (!net::serverHasMod() && !ll::service::getLevel()) return;
+    auto const& pos = beacon.getPosition();
+    auto        key = game::globalPos(region, pos);
+    auto&       st  = clientBeacons()[key];
+    auto        now = ++clientTicks();
+    if (now >= st.nextCheck) {
+        st.nextCheck = now + 10;
+        auto beam    = computeBeam(region, pos);
+        st.hide      = beam.broke || beam.redirected || beam.quarkTint;
+        if (clientBeacons().size() > 256) clientBeacons().clear();
+    }
+    if (st.hide) beacon.mBeamSections->clear();
+}
+#endif
+
+// BeaconBlockActor::tick overrides IVanillaTickBlockActorComponent::tick (a secondary base), so
+// MSVC calls it with `this` pointing at that subobject, not at the BeaconBlockActor: the hook's
+// `this` is reinterpreted and the actor is fetched through getBlockActor().
 LL_TYPE_INSTANCE_HOOK(
     BeaconTickHook,
     ll::memory::HookPriority::Normal,
@@ -321,27 +361,35 @@ LL_TYPE_INSTANCE_HOOK(
     void,
     BlockSource& region
 ) {
-    if (!beaconOn() || region.getLevel().isClientSide()) {
+    if (!beaconOn()) {
         origin(region);
         return;
     }
+    auto& self = static_cast<BeaconBlockActor&>(reinterpret_cast<IVanillaTickBlockActorComponent*>(this)->getBlockActor());
+    if (region.getLevel().isClientSide()) {
+        origin(region);
+#ifdef LP_CLIENT
+        clientTick(self, region);
+#endif
+        return;
+    }
     // Java: a broken beam leaves the beacon without effects. Bedrock's tick re-checks the pyramid
-    // and applies the effects in one go (checkShape is inlined on the server), so the chosen
-    // effects are hidden from the vanilla tick while the beam is broken.
-    auto key   = game::globalPos(region, getPosition());
+    // and applies the effects in one go, so the chosen effects are hidden from the vanilla tick
+    // while the beam is broken.
+    auto key   = game::globalPos(region, self.getPosition());
     bool broke = false;
     if (auto it = beacons().find(key); it != beacons().end()) broke = it->second.beam.broke;
     if (broke) {
-        int primary = mPrimaryEffectId, secondary = mSecondaryEffectId;
-        mPrimaryEffectId   = 0;
-        mSecondaryEffectId = 0;
+        int primary = self.mPrimaryEffectId, secondary = self.mSecondaryEffectId;
+        self.mPrimaryEffectId   = 0;
+        self.mSecondaryEffectId = 0;
         origin(region);
-        mPrimaryEffectId   = primary;
-        mSecondaryEffectId = secondary;
+        self.mPrimaryEffectId   = primary;
+        self.mSecondaryEffectId = secondary;
     } else {
         origin(region);
     }
-    serverTick(*this, region);
+    serverTick(self, region);
 }
 
 class BeaconModule {
@@ -366,6 +414,8 @@ public:
 };
 
 } // namespace
+
+bool beaconTicked(core::GlobalPos const& beacon) { return beacons().contains(beacon); }
 
 std::vector<int64_t> beamEntitiesOf(core::GlobalPos const& beacon) {
     auto it = beacons().find(beacon);

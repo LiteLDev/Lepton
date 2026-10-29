@@ -1,0 +1,16 @@
+{
+  "quark.jei.hint.corundum": "以每簇两种颜色的大型晶簇形式生成于地下。放置在深层地下时会缓慢向上生长。涂蜡后将停止生长并不再产生粒子。",
+  "quark.jei.hint.crystal_lamp": "这些灯只有在点亮时才会改变信标光柱的颜色。",
+  "quark.jei.hint.magnet": "充能后可根据朝向推动或吸引任何由铜或铁制成的方块。如果多个磁铁同时作用于同一方块，力最大者胜出。磁铁对方块的力等于其接收的红石信号强度减去与方块的距离。被磁铁移动的漏斗每移动一格会在前方掉落一个物品；如果该物品是种子，则会尝试将其种下。被磁铁移动的切石机会尝试破坏其上方的方块。",
+  "quark.jei.hint.beacon_redirection": "将{}放置在信标光柱的路径上即可改变光柱方向。注意最后一个必须朝向天空，且光柱可覆盖的水平距离有限。",
+  "quark.jei.hint.beacon_amethyst": "紫水晶",
+  "quark.jei.hint.beacon_corundum": "刚玉",
+  "quark.jei.hint.corundum_cluster_grow": "会随相应的刚玉一同生长，无论是自然生成的还是任其生长的。",
+  "quark.jei.hint.corundum_cluster_redirect": "可改变信标光柱的方向，详见信标物品的说明。",
+  "quark.jei.hint.minecraft.tinted_glass": "放置在光柱路径上可使信标光柱变暗。多个可叠加。",
+  "lp.crystals.info.header": "水晶（{}）：",
+  "lp.crystals.info.disabled": "此模块已禁用。",
+  "lp.crystals.magnetic": "{} 具有磁性：{}",
+  "lp.crystals.yes": "是",
+  "lp.crystals.no": "否"
+}

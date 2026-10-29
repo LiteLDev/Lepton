@@ -30,6 +30,7 @@
 #include "feature/crystals/Common.h"
 #include "feature/crystals/Noise.h"
 #include "game/BlockStates.h"
+#include "game/Blocks.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
 
