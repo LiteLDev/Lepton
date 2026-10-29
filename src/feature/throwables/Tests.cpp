@@ -224,7 +224,9 @@ LP_REGISTER_SELFTEST("throwables.pickarang_held", [](Context& ctx) -> ll::coro::
     sp.simulateDestroyBlock(lp::game::blockPos(dirt), Facing::West);
     co_await ctx.ticks(40); // bare hands break dirt in 15 ticks
     sp.simulateStopDestroyingBlock();
-    ctx.check(idAt(ctx, dirt) == "minecraft:dirt", "a held pickarang does not mine");
+    // not broken (on the flat world the dirt may turn into grass meanwhile)
+    auto left = idAt(ctx, dirt);
+    ctx.check(left == "minecraft:dirt" || left == "minecraft:grass_block", "a held pickarang does not mine (" + left + ")");
 
     auto& region = sp.getDimensionBlockSource();
     auto* pig    = ent::spawn(region, "minecraft:pig", Vec3{dirt.x + 0.5f, float(dirt.y + 1), dirt.z + 0.5f});
