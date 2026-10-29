@@ -707,12 +707,19 @@ LP_REGISTER_SELFTEST("variantcontainers.gallery", [](Context& ctx) -> ll::coro::
     };
     vc::setItems(at(0, 0), {makeItem("minecraft:diamond", 5), makeItem("minecraft:oak_log", 32)});
     co_await aim("chest", at(0, 0));
+    {
+        std::vector<ItemStack> both(54);
+        both[0]  = makeItem("minecraft:emerald", 7);  // top half (the west chest)
+        both[30] = makeItem("minecraft:gold_ingot", 9); // bottom half (the east chest)
+        vc::setItems(at(11, -6), both);
+    }
     co_await aim("double", at(12, -6));
     if (auto* c = containerAt(region, bp(at(2, -9)))) {
         c->setItem(0, makeItem("minecraft:raw_copper", 8));
         c->setItem(1, makeItem("minecraft:coal", 4));
     }
     co_await aim("furnace", at(2, -9));    vc::takeAll(at(0, 0));
+    vc::takeAll(at(11, -6));
     ctx.info("VCGALLERY done");
     for (int dx : {0, 2, 4, 6, 8})
         if (auto* c = containerAt(region, bp(at(dx, -9)))) c->removeAllItems();
