@@ -78,6 +78,8 @@ inline constexpr std::array<std::array<int, 3>, 6> kFaceStep{{{0, -1, 0}, {0, 1,
 
 /// Inverse of `GlobalPos::key()` ("dim:x:y:z").
 [[nodiscard]] std::optional<core::GlobalPos> parseKey(std::string_view key);
+/// The dimension's region when the chunk of pos is loaded (nullptr otherwise).
+[[nodiscard]] BlockSource* loadedRegion(core::GlobalPos const& pos);
 /// Block id at a global position ("" when not loaded).
 [[nodiscard]] std::string idAt(core::GlobalPos const& pos);
 /// Redstone next to the block (game/Shapes approximation).

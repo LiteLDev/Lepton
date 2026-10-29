@@ -86,7 +86,6 @@ struct State {
     std::set<GlobalPos>           known;   ///< every pipe position seen (for open-end pickup)
     std::set<GlobalPos>           dirty;
     std::set<GlobalPos>           refresh; ///< connection updates for the next tick
-    std::set<GlobalPos>           erasedKeys;
     bool                          loaded = false;
     int64_t                       tick   = 0;
     std::mt19937_64               rng{std::random_device{}()};
@@ -173,11 +172,7 @@ void flush() {
 
 // ---- world helpers ----------------------------------------------------------------------------------
 
-BlockSource* regionFor(GlobalPos const& p) {
-    auto* r = game::regionOf(p.dim);
-    if (!r || !r->hasChunksAt(game::blockPos(p), 0, false)) return nullptr;
-    return r;
-}
+BlockSource* regionFor(GlobalPos const& p) { return loadedRegion(p); }
 
 int connOf(Block const& b, int face) { return game::blockstates::getInt(b, stateName(face)).value_or(None); }
 
@@ -458,6 +453,7 @@ void tickPipe(BlockSource& region, GlobalPos const& p) {
     if (it == s.pipes.end()) return;
     auto& d = it->second;
     if (d.items.empty() && d.queued.empty()) return;
+    if (!isPipe(game::blockIdAt(region, game::blockPos(p)))) return; // removed: its items drop next tick
     int maxItems = cfg().maxPipeItems;
     if (maxItems > 0 && static_cast<int>(d.items.size()) > maxItems) {
         breakPipe(region, p);
@@ -579,8 +575,8 @@ bool fixNetwork(BlockSource& region, BlockPos const& start) {
 }
 
 /// Glass on a copper pipe encases it (CopperPipeBlock#useItemOn); the items stay.
-void encase(GlobalPos p, std::string uuid) {
-    ll::coro::keepThis([p, uuid]() -> ll::coro::CoroTask<> {
+void encase(GlobalPos p, std::string uuid, int slot) {
+    ll::coro::keepThis([p, uuid, slot]() -> ll::coro::CoroTask<> {
         co_await ll::chrono::ticks(1);
         auto* r = regionFor(p);
         if (!r) co_return;
@@ -588,6 +584,16 @@ void encase(GlobalPos p, std::string uuid) {
         if (game::blockIdAt(*r, bp) != kPipe) co_return;
         auto level = ll::service::getLevel();
         auto* pl   = level ? level->getPlayer(mce::UUID::fromString(uuid)) : nullptr;
+        if (!pl) co_return;
+        // the glass is used up (survival): from the slot it was used from, else from anywhere
+        auto  isGlass = [](ItemStack const& s) { return game::itemId(s) == "minecraft:glass"; };
+        auto& inv     = game::inv::playerInventory(*pl);
+        if (!pl->isCreative()) {
+            int taken = game::inv::remove(inv, isGlass, 1, {slot, slot + 1});
+            if (taken == 0) taken = game::inv::remove(inv, isGlass, 1, game::inv::kPlayerAll);
+            if (taken == 0) co_return; // the glass is gone meanwhile
+            game::inv::sync(*pl);
+        }
         auto const* encased = game::blockstates::of(kEncasedPipe);
         if (!encased) co_return;
         auto const* target = game::blockstates::copyStates(r->getBlock(bp), *encased);
@@ -595,11 +601,6 @@ void encase(GlobalPos p, std::string uuid) {
         game::setBlock(*r, bp, *target);
         refresh(*r, bp);
         playSoundAt(*r, Vec3{p.x + 0.5f, p.y + 0.5f, p.z + 0.5f}, "dig.glass", 1.0f, 0.8f);
-        if (pl && !pl->isCreative()) {
-            auto& inv = game::inv::playerInventory(*pl);
-            game::inv::remove(inv, [](ItemStack const& s) { return game::itemId(s) == "minecraft:glass"; }, 1, {pl->getSelectedItemSlot(), pl->getSelectedItemSlot() + 1});
-            game::inv::sync(*pl);
-        }
         log().info("pipe {} encased", p.key());
     }).launch(ll::thread::ServerThreadExecutor::getDefault());
 }
@@ -696,7 +697,7 @@ public:
                 }).launch(ll::thread::ServerThreadExecutor::getDefault());
             } else if (item == "minecraft:glass" && id == kPipe && cfg().enableEncasedPipes) {
                 ev.cancel();
-                encase(game::globalPos(region, ev.blockPos()), player.getUuid().asString());
+                encase(game::globalPos(region, ev.blockPos()), player.getUuid().asString(), player.getSelectedItemSlot());
             }
         }));
     }

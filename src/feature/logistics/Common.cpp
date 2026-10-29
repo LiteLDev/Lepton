@@ -51,12 +51,15 @@ std::optional<core::GlobalPos> parseKey(std::string_view key) {
     return core::GlobalPos{v[0], v[1], v[2], v[3]};
 }
 
-std::string idAt(core::GlobalPos const& pos) {
+BlockSource* loadedRegion(core::GlobalPos const& pos) {
     auto* region = game::regionOf(pos.dim);
-    if (!region) return {};
-    auto bp = game::blockPos(pos);
-    if (!region->hasChunksAt(bp, 0, false)) return {};
-    return game::blockIdAt(*region, bp);
+    if (!region || !region->hasChunksAt(game::blockPos(pos), 0, false)) return nullptr;
+    return region;
+}
+
+std::string idAt(core::GlobalPos const& pos) {
+    auto* region = loadedRegion(pos);
+    return region ? game::blockIdAt(*region, game::blockPos(pos)) : std::string{};
 }
 
 bool powered(BlockSource& region, BlockPos const& pos) { return game::shapes::isPowered(region, pos); }

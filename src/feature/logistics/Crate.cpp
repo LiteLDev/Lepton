@@ -136,11 +136,10 @@ Player* playerByUuid(std::string const& uuid) {
 }
 
 void setOpenState(GlobalPos const& p, bool open) {
-    auto* r = game::regionOf(p.dim);
+    auto* r = loadedRegion(p);
     if (!r) return;
-    auto bp = game::blockPos(p);
-    if (!r->hasChunksAt(bp, 0, false)) return;
-    auto const& b = r->getBlock(bp);
+    auto        bp = game::blockPos(p);
+    auto const& b  = r->getBlock(bp);
     if (game::blockId(b) != kCrate || game::blockstates::getBool(b, "lepton:open").value_or(false) == open) return;
     if (auto const* n = game::blockstates::with(b, {{"lepton:open", open}})) game::setBlock(*r, bp, *n);
     float pitch = std::uniform_real_distribution<float>(0.9f, 1.0f)(st().random);
@@ -287,6 +286,7 @@ bool openAt(Player& player, GlobalPos const& p, int scroll) {
         it = sessions.emplace(p, std::move(s)).first;
         st().clearVc.erase(p);
     } else if (scroll != it->second.scroll) {
+        syncWindow(p); // keep what the other viewers changed before moving the window
         it->second.scroll = scroll;
         refreshWindow(p);
     }
@@ -319,6 +319,11 @@ void openFor(Player& player, GlobalPos const& p) {
         int last   = std::min(rows, first + kRows);
         int scroll = std::min(first * kCols, maxScroll(stacks));
         form.button(trFor(player, "lp.logistics.crate.rows", "Rows {}-{}", first + 1, last), [p, scroll](Player& pl) {
+            // the form may be answered much later: the crate must still be there and in reach
+            if (!cfg().enableCrate || idAt(p) != kCrate || vc::openBy(pl)) return;
+            auto at = pl.getPosition();
+            float dx = at.x - (p.x + 0.5f), dy = at.y - (p.y + 0.5f), dz = at.z - (p.z + 0.5f);
+            if (game::globalPos(pl.getDimensionBlockSource(), BlockPos{0, 0, 0}).dim != p.dim || dx * dx + dy * dy + dz * dz > 8 * 8) return;
             openAt(pl, p, scroll);
         });
     }
@@ -508,7 +513,8 @@ bool open(Player& player, GlobalPos const& p) {
 bool scroll(GlobalPos const& p, bool down) {
     auto it = st().sessions.find(p);
     if (it == st().sessions.end()) return false;
-    auto& s = it->second;
+    syncWindow(p); // edits made in the window this tick go to the crate before it moves
+    auto& s      = it->second;
     int   target = s.scroll + (down ? kCols : -kCols);
     if (target < 0 || target > maxScroll(stackCount(p))) return false;
     s.scroll = target;

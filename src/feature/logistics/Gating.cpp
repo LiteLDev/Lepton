@@ -1,6 +1,7 @@
 // Disabled modules leave no working recipes behind (SPEC §2.3): when a world loads, the recipes of
 // disabled modules are taken out of the level's recipe table (clients joining later never receive
-// them and the server refuses to craft them). Toggling a module takes effect on the next world load.
+// them, so the recipe book and crafting grid never offer them). Toggling a module takes effect on the
+// next world load.
 
 #include <memory>
 #include <set>
@@ -43,11 +44,13 @@ void removeDisabledRecipes() {
     if (ids.empty()) return;
     auto level = ll::service::getLevel();
     if (!level) return;
-    auto& recipes = level->getRecipes();
-    int   removed = 0;
+    auto&                recipes = level->getRecipes();
+    int                  removed = 0;
+    std::set<Recipe const*> gone;
     for (auto& [tag, byId] : recipes.mRecipes.get()) {
         for (auto it = byId.begin(); it != byId.end();) {
             if (ids.contains(it->first)) {
+                gone.insert(it->second.get());
                 graveyard().push_back(it->second);
                 it = byId.erase(it);
                 ++removed;
@@ -56,6 +59,10 @@ void removeDisabledRecipes() {
             }
         }
     }
+    // lookups by output and recipe unlocks must not find them either (the net id table keeps its
+    // entries: the recipes stay alive in the graveyard, and clients never receive their net ids)
+    for (auto& [item, byId] : recipes.mRecipesByOutput.get()) std::erase_if(byId, [&](auto const& kv) { return gone.contains(kv.second); });
+    std::erase_if(recipes.mUnlockableRecipes.get(), [&](auto const& r) { return gone.contains(r.get()); });
     if (removed) log().info("logistics: removed {} recipes of disabled modules", removed);
 }
 

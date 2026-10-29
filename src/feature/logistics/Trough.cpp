@@ -91,11 +91,10 @@ void saveIndex() {
 
 /// FeedingTroughBlockEntity#setChanged: keeps lepton:full in sync with the contents.
 void updateFull(GlobalPos const& p) {
-    auto* r = game::regionOf(p.dim);
+    auto* r = loadedRegion(p);
     if (!r) return;
-    auto bp = game::blockPos(p);
-    if (!r->hasChunksAt(bp, 0, false)) return;
-    auto const& b = r->getBlock(bp);
+    auto        bp = game::blockPos(p);
+    auto const& b  = r->getBlock(bp);
     if (game::blockId(b) != kFeedingTrough) return;
     bool full = false;
     for (auto const& s : vc::items(p, kSize))
@@ -255,8 +254,8 @@ void tickAnimals() {
     double        lookScan   = 1 - std::pow(1 - look, kScanTicks);
     if (s.tick % kScanTicks == 0) {
         for (auto const& p : s.known) {
-            auto* region = game::regionOf(p.dim);
-            if (!region || !region->hasChunksAt(game::blockPos(p), 0, false)) continue;
+            auto* region = loadedRegion(p);
+            if (!region) continue;
             if (game::blockIdAt(*region, game::blockPos(p)) != kFeedingTrough) continue;
             bool food = false;
             for (auto const& it : vc::items(p, kSize)) food = food || !game::isEmpty(it);

@@ -31,6 +31,7 @@
 #include "game/Blocks.h"
 #include "game/Entities.h"
 #include "game/Forms.h"
+#include "game/Inventory.h"
 #include "game/Items.h"
 #include "game/VirtualContainer.h"
 #include "mod/Config.h"
@@ -240,9 +241,16 @@ LP_REGISTER_SELFTEST("logistics.pipe_encase", [](Context& ctx) -> ll::coro::Coro
     player.teleport(Vec3{p.x + 0.5f, p.y + 1.0f, p.z - 1.5f}, p.dim);
     co_await ctx.ticks(5);
     auto glass = lp::game::makeItem("minecraft:glass", 4);
+    auto& inv  = lp::game::inv::playerInventory(player);
+    inv.removeAllItems();
+    ctx.give(player, glass, player.getSelectedItemSlot());
+    bool creative = player.isCreative();
     player.simulateUseItemOnBlock(glass, lp::game::blockPos(p), ScriptModuleMinecraft::ScriptFacing::North, Vec3{0.5f, 0.5f, 0.0f});
     co_await ctx.ticks(5);
     ctx.check(lp::game::blockIdAt(region, lp::game::blockPos(p)) == lg::kEncasedPipe, "glass encases a copper pipe");
+    ctx.check(creative || lp::game::inv::count(inv, [](ItemStack const& s) { return lp::game::itemId(s) == "minecraft:glass"; }, lp::game::inv::kPlayerAll) == 3,
+              "it uses up one glass");
+    inv.removeAllItems();
     ctx.check(stateOf(region, p, "lepton:conn_east") == 1, "the encased pipe keeps its connections");
     clearItems(region, base);
 });

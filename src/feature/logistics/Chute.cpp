@@ -61,7 +61,7 @@ public:
     int              size() const override { return 1; }
     ItemStack const& get(int) const override { return ItemStack::EMPTY_ITEM(); }
     void             set(int, ItemStack const& item) override {
-        auto* region = game::regionOf(mPos.dim);
+        auto* region = loadedRegion(mPos);
         if (!region || item.isNull() || item.mCount == 0) return;
         auto bp = game::blockPos(mPos);
         if (!canDrop(*region, bp)) return;
@@ -69,7 +69,7 @@ public:
     }
     bool canPushIn(int, int face, ItemStack const&) const override {
         if (face == Down) return false;
-        auto* region = game::regionOf(mPos.dim);
+        auto* region = loadedRegion(mPos);
         return region && canDrop(*region, game::blockPos(mPos));
     }
     bool canPullOut(int, int, ItemStack const&) const override { return false; }
@@ -113,8 +113,8 @@ public:
             auto queue = std::move(mQueue);
             mQueue.clear();
             for (auto const& p : queue) {
-                auto* region = game::regionOf(p.dim);
-                if (!region || !region->hasChunksAt(game::blockPos(p), 0, false)) continue;
+                auto* region = loadedRegion(p);
+                if (!region) continue;
                 if (game::blockIdAt(*region, game::blockPos(p)) == kChute) chute::updatePower(*region, game::blockPos(p));
             }
         }));
