@@ -112,7 +112,8 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
 - The block found must be `minecraft:campfire` or `minecraft:soul_campfire` with `extinguished` =
   false and a **signal fire**. Bedrock has no `signal_fire` state: a campfire is a signal fire when a
   hay bale is directly below it (the same rule that makes its smoke rise high).
-- `force = boostStrength`; if `moves > 16`: `force -= force * (1 - (moves - 16) / 4)`; soul campfire:
+- `force = boostStrength`; if `moves > 16`: `force -= force * (1 - (moves - 16) / 4)` (Quark's
+  formula as written: it drops to 1/4 at 17 blocks and climbs back to full at 20); soul campfire:
   `force *= -1.5`. New velocity `(vx, min(maxSpeed, vy + force), vz)` sent with
   `SetActorMotionPacket` (Bedrock players move client-side; this is the knockback path).
 
@@ -156,7 +157,8 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
   dimension is not allowed. Dimension names accept Java and Bedrock spellings
   (`minecraft:the_nether` = `minecraft:nether`).
 - Ice roads: hook `Boat::normalTick`: when the boat is on the ground (not in water) the horizontal
-  velocity is scaled by `0.45 / friction` of the block below, i.e. ground friction 0.45 as in Quark.
+  velocity is scaled by `0.45 / friction` of the block below, i.e. ground friction 0.45 as in Quark
+  (Quark returns 0.45 for every ground block, so boats on any land are a bit slower too).
 - Falling block: hook `FallingBlockActor::normalTick`: skip when the actor is removed.
 - Mushrooms: hook `HugeMushroomFeature::placeFixed`: cap blocks that replaced anything but air or
   leaves are restored. (Tested: Bedrock's own growth already refuses to grow a huge mushroom whose
@@ -209,7 +211,8 @@ None. The unit adds no blocks, items, recipes or textures. Referenced ids: `mine
   "No item". Other screens: the screen's name.
 
 ### ClimateControlRemover
-- Hook the `ParameterList` constructor (the multi-noise biome table of a dimension): for each biome
+- Hook the `ParameterList` constructor (the multi-noise biome table of a dimension; installed at mod
+  load because BDS builds its world before mods are enabled): for each biome
   target the disabled parameters (temperature, humidity, continentalness, erosion, depth, weirdness)
   become the dummy range `[0, 0]` in the parameter space and the climate parameters, and the offset
   becomes 0 (`disableOffset`). With every biome sharing the same dummy value, the parameter adds the
@@ -371,7 +374,9 @@ Selftests (dx 2700..2799, each in this unit's 5-block row):
 - `misctweaks.ice_roads` (dx 2755) - a boat pushed over packed ice slides much less with the nerf.
 
 E2E: `tools/e2e/server/scenarios/misctweaks.ps1` runs `misctweaks.*` and checks the pass count and
-the log lines. `tools/e2e/client/scenarios/misctweaks.ps1` (local, remote-mod, remote-vanilla):
+the log lines. `misctweaks-worldgen` (DEFAULT world, ClimateControlRemover and the village nerf on)
+checks that the biome tables were neutralised and that a village search goes through the nerf.
+`tools/e2e/client/scenarios/misctweaks.ps1` (local, remote-mod, remote-vanilla):
 recipe unlock without a toast, the shifted chat, the inventory without recipe book, the narrator
 readout (block, hovered slot), the shield on an armor stand, the anvil Mending nerf and the
 "(Was Repaired)" tooltip, and a rocket launch with an elytra (screenshots).
