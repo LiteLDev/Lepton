@@ -13,6 +13,7 @@
 #include "mc/util/MolangVariableMap.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/ILevel.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/AbstractCandleBlock.h"
 #include "mc/world/level/block/Block.h"
@@ -90,8 +91,15 @@ LL_TYPE_INSTANCE_HOOK(
     bool               isGlobal
 ) {
     if (tSoulCandle) {
-        if (type == ParticleType::CandleFlame || type == ParticleType::Flame) type = ParticleType::BlueFlame;
-        else if (type == ParticleType::Smoke && random01() < 0.1f) type = ParticleType::Soul;
+        if (type == ParticleType::CandleFlame || type == ParticleType::Flame) {
+            // The candle flame is a long-lived particle; the soul one keeps its size and lifetime
+            // (lepton:soul_candle_flame in the resource pack) with the soul fire flame sprite.
+            static HashedString const soulFlame("lepton:soul_candle_flame");
+
+            static_cast<ILevel*>(this)->addParticleEffect(soulFlame, pos);
+            return nullptr;
+        }
+        if (type == ParticleType::Smoke && random01() < 0.1f) type = ParticleType::Soul;
     }
     return origin(type, pos, dir, data, tag, isGlobal);
 }
@@ -106,10 +114,10 @@ LL_TYPE_INSTANCE_HOOK(
     ::Vec3 const&              pos,
     ::MolangVariableMap const& vars
 ) {
-    if (tSoulCandle) {
+    if (tSoulCandle && !effect.getString().starts_with("lepton:")) {
         std::string_view name = effect.getString();
         if (name.find("candle_flame") != std::string_view::npos || name.find("basic_flame") != std::string_view::npos) {
-            static HashedString const soulFlame("minecraft:blue_flame_particle");
+            static HashedString const soulFlame("lepton:soul_candle_flame");
             return origin(soulFlame, pos, vars);
         }
         if (name.find("smoke") != std::string_view::npos && random01() < 0.1f) {

@@ -15,20 +15,29 @@
 
 #include "mc/client/game/ClientInstance.h"
 #include "mc/client/multiplayer/ClientLevel.h"
+#include "mc/client/gui/controls/renderers/BaseActorInventoryRenderContext.h"
+#include "mc/client/gui/controls/renderers/InventoryItemRenderer.h"
+#include "mc/client/gui/screens/UIItemRenderInfo.h"
 #include "mc/client/renderer/BaseActorRenderContext.h"
 #include "mc/client/renderer/actor/ItemRenderer.h"
 #include "mc/client/renderer/texture/TextureUVCoordinateSet.h"
+#include "mc/deps/core/utility/PropertyBag.h"
+#include "mc/deps/json/Value.h"
 #include "mc/deps/nbt/ByteTag.h"
 #include "mc/deps/nbt/CompoundTag.h"
 #include "mc/deps/nbt/Int64Tag.h"
 #include "mc/deps/nbt/IntTag.h"
 #include "mc/deps/nbt/ShortTag.h"
 #include "mc/deps/nbt/StringTag.h"
+#include "mc/client/player/LocalPlayer.h"
+#include "mc/world/Container.h"
+#include "mc/world/containers/managers/models/ContainerManagerModel.h"
 #include "mc/world/item/ItemStack.h"
 
 #include "client/Client.h"
 #include "feature/cosmetics/Cosmetics.h"
 #include "game/Items.h"
+#include "game/Inventory.h"
 #include "mod/Log.h"
 #include "mod/Module.h"
 
@@ -144,8 +153,10 @@ std::vector<ItemStack const*> bucketLayers(ItemStack const& item) {
         auto uid = intOf(*static_cast<CompoundTag const*>(t), "UniqueID");
         if (uid && cos::isShiny(cos::mostBits(*uid), c.shinyAnimalChance)) push(icon("slime_shiny"));
     }
-    if (out.size() == 1 || out.size() == 3) return out;
-    out.clear();
+    if (out.size() != 1 && out.size() != 3) out.clear();
+    static std::set<std::string> reported;
+    if (reported.insert(id + ":" + std::to_string(out.size())).second)
+        log().info("cosmetics: bucket {} drawn with {} icon layer(s)", id, out.size());
     return out;
 }
 
@@ -204,13 +215,92 @@ LL_TYPE_INSTANCE_HOOK(
     for (auto const* layer : layers) origin(ctx, chunk, *layer, x, y, light, alpha, scale, frame, animate, zOrder, none);
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    InventoryItemChunkHook,
+    ll::memory::HookPriority::Normal,
+    BaseActorInventoryRenderContext,
+    &BaseActorInventoryRenderContext::$renderGuiItemInChunk,
+    void,
+    ::ItemRenderChunkType                            chunk,
+    ::ItemStack const&                               item,
+    float                                            x,
+    float                                            y,
+    float                                            light,
+    float                                            alpha,
+    float                                            scale,
+    int                                              frame,
+    bool                                             animate,
+    int                                              zOrder,
+    ::std::optional<::TextureUVCoordinateSet> const& uv
+) {
+    std::vector<ItemStack const*> layers;
+    try {
+        layers = bucketLayers(item);
+    } catch (...) {}
+    if (layers.empty()) return origin(chunk, item, x, y, light, alpha, scale, frame, animate, zOrder, uv);
+    std::optional<TextureUVCoordinateSet> none;
+    for (auto const* layer : layers) origin(chunk, *layer, x, y, light, alpha, scale, frame, animate, zOrder, none);
+}
+
+bool interesting(std::string const& id) {
+    return id == "minecraft:axolotl_bucket" || id == "minecraft:tropical_fish_bucket" || id == "lepton:crab_bucket"
+        || id == "lepton:slime_in_a_bucket" || id == "lepton:slime_in_a_bucket_excited";
+}
+
+/// The real stack behind a UI slot: the renderer only gets id/aux/colour from the slot's property
+/// bag ("#collection_name", "#collection_index"), so the bucket's NBT is looked up here.
+ItemStack const* realStack(std::string const& collection, int index, std::string const& id) {
+    auto* player = client::currentPlayer();
+    if (!player || index < 0) return nullptr;
+    auto matches = [&](ItemStack const& s) { return !s.isNull() && s.getTypeName() == id && s.mUserData; };
+    if (collection == "hotbar_items" || collection == "inventory_items" || collection == "combined_hotbar_and_inventory_items") {
+        auto& inv = game::inv::playerInventory(*player);
+        for (int slot : {index, index + 9}) {
+            if (slot >= inv.getContainerSize()) continue;
+            if (collection == "hotbar_items" && slot != index) continue;
+            auto const& s = inv.getItem(slot);
+            if (matches(s)) return &s;
+        }
+        return nullptr;
+    }
+    if (auto const& mgr = player->mContainerManager.get()) {
+        auto const& s = mgr->getSlot(index);
+        if (matches(s)) return &s;
+    }
+    return nullptr;
+}
+
+/// Gives the renderer's stripped copy of a bucket the NBT of the real stack, so bucketLayers can
+/// read the creature inside.
+LL_TYPE_INSTANCE_HOOK(SlotUpdateHook, ll::memory::HookPriority::Normal, InventoryItemRenderer, &InventoryItemRenderer::_update, bool,
+                      InventoryItemRenderer::UpdateData const& data) {
+    bool r = origin(data);
+    try {
+        ItemStack& it = mItemInstance;
+        if (it.isNull() || !cos::config().enableBucketsShowInhabitants) return r;
+        auto id = it.getTypeName();
+        if (!interesting(id)) return r;
+        PropertyBag const* bag = data.mOwnerPropertyBag;
+        if (!bag) return r;
+        Json::Value const& json = bag->mJsonValue;
+        auto collection = json.get("#collection_name", Json::Value()).asString("");
+        int  index      = json.get("#collection_index", Json::Value()).asInt(-1);
+        if (auto const* real = realStack(collection, index, id)) it.setUserData(real->mUserData->clone());
+    } catch (...) {}
+    return r;
+}
+
 class Buckets {
 public:
     void install() {
         GuiItemHook::hook();
         GuiItemChunkHook::hook();
+        InventoryItemChunkHook::hook();
+        SlotUpdateHook::hook();
     }
     void uninstall() {
+        SlotUpdateHook::unhook();
+        InventoryItemChunkHook::unhook();
         GuiItemChunkHook::unhook();
         GuiItemHook::unhook();
     }

@@ -121,7 +121,7 @@ Lepton additions keyed on `query.skin_id` / `query.mark_variant`): `minecraft:co
 `<animal>_shiny.png` (all ten animals), `textures/entity/lepton/bees/<variant>/<normal|angry|nectar|angry_nectar>.png`,
 villager clothes `textures/entity/lepton/villager/biome_<beach|ocean>[_baby].png` and
 `textures/entity/lepton/zombie_villager/biome_<beach|ocean>[_baby].png`, bucket icons
-`textures/lepton/cosmetics/buckets/*.png`, `textures/lepton/cosmetics/empty.png` (transparent). They
+`textures/lepton/cosmetics/buckets/*.png`, particle `lepton:soul_candle_flame`. They
 are painted by `tools/textures/cosmetics.ps1` (+ `cosmetics-painter.cs`, `cosmetics-mobs.cs`) on the box-UV
 layouts of the vanilla models (cube sizes and UV origins only; colours, patterns and features are
 procedural). The camera icon is pixel art in `Camera.cpp`. Sound `lepton.camera.shutter`
@@ -167,24 +167,30 @@ so component groups that reset synced data are corrected at once):
   position-agnostic resolver used for items/particles): if the block's name is in `blockList` (or
   `leavesList` with `affectLeaves`, or the tint method is Water with `affectWater`) the resolved colour
   goes through the matrix. Chunks are re-meshed after `/quark reload`.
-- SoulCandles: hook `AbstractCandleBlock::animateTickBedrockLegacy`; when the soul-base check passes,
-  each lit candle position gets a `BlueFlame` (soul fire flame) particle instead of the candle flame,
-  and smoke is replaced by `Soul` with 10% chance (otherwise normal smoke).
+- SoulCandles: hook `AbstractCandleBlock::animateTickBedrockLegacy`; while it runs on a candle whose
+  soul-base check passes, its long-lived candle flame particle becomes `lepton:soul_candle_flame` (the
+  candle flame's size and lifetime with the soul fire flame sprite, resource pack particle) and smoke
+  becomes `Soul` with 10% chance (otherwise normal smoke).
 - WoolShutsUpMinecarts: the minecart's looping sounds (registered by `Minecart::_registerLoopingSounds`
   through `SoundEngine::registerLoop`) are moved out of hearing range while a wool block or wool carpet
   (Java's `dampens_vibrations`) is inside the cart's box moved down by its height.
-- UsesForCurses (vanishing): lookups of `textures/misc/pumpkinblur` (UI render context and texture
-  group) answer with `textures/lepton/cosmetics/empty` while the local player's head slot is a carved
-  pumpkin with Curse of Vanishing.
-- BucketsShowInhabitants: the GUI item renderer (`ItemRenderer::renderGuiItemNew` /
-  `renderGuiItemInChunk`) draws the hidden icon items of §2 instead of the vanilla bucket; tropical
+- UsesForCurses (vanishing): the overlay is drawn natively from a cached texture, so while the local
+  player's head slot is a carved pumpkin with Curse of Vanishing, `textures/misc/pumpkinblur` is
+  replaced in place (`TextureGroup::updateTextureInPlace`) by a transparent copy of itself, and the
+  original image is put back when the condition ends.
+- BucketsShowInhabitants: the GUI item renderers (`ItemRenderer::renderGuiItemNew` /
+  `renderGuiItemInChunk`, `BaseActorInventoryRenderContext::renderGuiItemInChunk`) draw the hidden
+  icon items of §2 instead of the vanilla bucket. Slot renderers only get the item id from the UI
+  (`InventoryItemRenderer::_update`), so the bucket's NBT is copied in from the real stack, found by
+  the slot's `#collection_name` / `#collection_index` (player inventory, open container); tropical
   fish buckets are drawn as three layers (bucket, body tinted with the base colour, pattern tinted
   with the pattern colour). Variants are read from the bucket's NBT: axolotl `Variant`, tropical fish
   `Variant`/`MarkVariant`/`Color`/`Color2` (Bedrock stores the fish's shape, pattern and colours),
   crab `lepton_crab.variant` (U20), slime `UniqueID` in U22's stored NBT.
 - Camera: §1, drawn with `client/ui` (HUD hook) and raw key events (number keys and Enter are consumed
-  in camera mode, so the hotbar slot does not change, like Quark's slot restore); the HUD is hidden
-  with the game's hide-GUI option (restored on exit). The filter is a full-screen pixel-shader pass over
+  in camera mode, so the hotbar slot does not change, like Quark's slot restore); the hand is hidden
+  with the game's hide-GUI option (restored on exit) and the vanilla HUD screen is not drawn
+  (`BeforeUIRenderEvent` cancelled for `hud_screen`) while Lepton's HUD hooks still draw the camera HUD. The filter is a full-screen pixel-shader pass over
   the swap chain image before it is presented (Direct3D 12 hooks on `IDXGISwapChain::Present` and
   `ID3D12CommandQueue::ExecuteCommandLists`, installed the first time camera mode is used). Enter plays
   the shutter, hides the rulers/settings for 10 frames and grabs the next presented frame (filter

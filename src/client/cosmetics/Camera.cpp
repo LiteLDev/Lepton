@@ -9,9 +9,12 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/input/KeyInputEvent.h"
+#include "ll/api/event/render/UIRenderEvent.h"
 
 #include "mc/client/game/ClientInstance.h"
 #include "mc/client/gui/GuiData.h"
+#include "mc/client/gui/controls/VisualTree.h"
+#include "mc/client/gui/screens/ScreenView.h"
 #include "mc/client/multiplayer/ClientLevel.h"
 #include "mc/client/options/IOptionRegistry.h"
 #include "mc/client/player/LocalPlayer.h"
@@ -384,10 +387,23 @@ void onKey(ll::event::KeyInputEvent& ev) {
     }
 }
 
+/// The vanilla HUD (hotbar, chat, ...) is not drawn in camera mode; Lepton's HUD hooks still run.
+void onBeforeUi(ll::event::BeforeUIRenderEvent& ev) {
+    if (!gState.cameraMode) return;
+    auto const& tree = ev.screenView().mVisualTree.get();
+    if (!tree) return;
+    std::string const& name = tree->mRootControlName.get();
+    if (name.size() >= 10 && name.compare(name.size() - 10, 10, "hud_screen") == 0) ev.cancel();
+}
+
 class Camera {
 public:
-    void install() { mListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>(onKey); }
+    void install() {
+        mListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>(onKey);
+        mUiListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::BeforeUIRenderEvent>(onBeforeUi);
+    }
     void uninstall() {
+        ll::event::EventBus::getInstance().removeListener(mUiListener);
         ll::event::EventBus::getInstance().removeListener(mListener);
         setCameraMode(false);
         filter::shutdown();
@@ -395,6 +411,7 @@ public:
 
 private:
     ll::event::ListenerPtr mListener;
+    ll::event::ListenerPtr mUiListener;
 };
 
 } // namespace
