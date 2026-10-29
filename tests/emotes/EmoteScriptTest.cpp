@@ -181,6 +181,19 @@ TEST(EmoteScript, ByteOrderMarkIsIgnored) {
     EXPECT_EQ(r.emote.name, "BOM");
 }
 
+TEST(EmoteScript, EveryBakedAnimationHasBones) {
+    // Bedrock drops the whole animation file when one animation has an empty "bones" object.
+    auto broken = es::compile("use head\nanimation nonsense\n");
+    ASSERT_FALSE(broken.ok);
+    EXPECT_FALSE(es::bakeAnimation(broken.emote)["bones"].empty());
+    auto still = es::compile("use head\nanimation sequence\npause 100\nend\n");
+    ASSERT_TRUE(still.ok) << still.error;
+    EXPECT_FALSE(es::bakeAnimation(still.emote)["bones"].empty());
+    std::vector<std::pair<std::string, es::Emote const*>> none;
+    auto file = es::bakeAnimationFile(none);
+    for (auto const& [id, anim] : file["animations"].items()) EXPECT_FALSE(anim["bones"].empty()) << id;
+}
+
 TEST(EmoteScript, HugeScriptsStayBounded) {
     auto r = es::compile("use head\nanimation sequence\nmove head_x 100 1 repeat 2000000000 0\nend\n");
     ASSERT_TRUE(r.ok) << r.error;

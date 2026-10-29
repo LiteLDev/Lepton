@@ -628,6 +628,26 @@ bool nearLine(BoneSample const& a, BoneSample const& m, BoneSample const& c, flo
     return true;
 }
 
+/// Appends keyframes (in time order) to a keyframe object. ordered_json's operator[] searches its
+/// keys linearly, which is quadratic for long emotes: keys are appended directly instead (a time
+/// that rounds to the previous key's replaces that keyframe).
+auto keyframeWriter(nlohmann::ordered_json& obj, size_t expected) {
+    using Container = nlohmann::ordered_json::object_t::Container;
+    auto& vec       = static_cast<Container&>(obj.get_ref<nlohmann::ordered_json::object_t&>());
+    vec.reserve(expected);
+    return [&vec](float seconds, nlohmann::ordered_json v) {
+        auto key = fmtNum(round3(seconds), 3);
+        if (!vec.empty() && vec.back().first == key) vec.back().second = std::move(v);
+        else vec.emplace_back(std::move(key), std::move(v));
+    };
+}
+
+/// Bedrock rejects the whole animation file when one animation has no bones: an animation that
+/// moves nothing gets a zero (additive no-op) head rotation.
+nlohmann::ordered_json neutralBones() {
+    return {{"head", {{"rotation", nlohmann::ordered_json::array({0, 0, 0})}}}};
+}
+
 bool sameSample(BoneSample const& a, BoneSample const& b) { return a.b == b.b && a.w == b.w && a.pos == b.pos; }
 
 std::vector<BoneSample> simplify(std::vector<BoneSample> const& in, float tolDeg) {
@@ -672,7 +692,10 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
     anim["animation_length"] = std::max(0.05, round3(std::min(total, 3600000.f) / 1000.0));
     anim["blend_weight"]     = std::string(kBlendWeight);
     auto& bones              = anim["bones"] = nlohmann::ordered_json::object();
-    if (!emote.root) return anim;
+    if (!emote.root) {
+        bones = neutralBones();
+        return anim;
+    }
 
     bool bodyUsed = emote.usesPart(Body);
     std::array<std::vector<BoneSample>, kParts> samples;
@@ -729,17 +752,17 @@ nlohmann::ordered_json bakeAnimation(Emote const& emote, float stepMs, float tol
         auto  keys = simplify(list, toleranceDeg);
         auto& bone = bones[std::string(boneName(part))];
         auto& rot  = bone["rotation"] = nlohmann::ordered_json::object();
-        for (auto const& k : keys) {
-            rot[fmtNum(round3(k.t), 3)] = nlohmann::ordered_json::array(
-                {value(k.b[0], k.w[0]), value(k.b[1], k.w[1]), value(k.b[2], k.w[2])}
-            );
-        }
+        auto  rotKeys = keyframeWriter(rot, keys.size());
+        for (auto const& k : keys)
+            rotKeys(k.t, nlohmann::ordered_json::array({value(k.b[0], k.w[0]), value(k.b[1], k.w[1]), value(k.b[2], k.w[2])}));
         if (part == Model) {
-            auto& pos = bone["position"] = nlohmann::ordered_json::object();
+            auto& pos     = bone["position"] = nlohmann::ordered_json::object();
+            auto  posKeys = keyframeWriter(pos, keys.size());
             for (auto const& k : keys)
-                pos[fmtNum(round3(k.t), 3)] = nlohmann::ordered_json::array({round3(k.pos[0]), round3(k.pos[1]), round3(k.pos[2])});
+                posKeys(k.t, nlohmann::ordered_json::array({round3(k.pos[0]), round3(k.pos[1]), round3(k.pos[2])}));
         }
     }
+    if (bones.empty()) bones = neutralBones();
     return anim;
 }
 
@@ -755,7 +778,7 @@ nlohmann::ordered_json bakeAnimationFile(std::vector<std::pair<std::string, Emot
     auto& anims            = file["animations"] = nlohmann::ordered_json::object();
     for (auto const& [id, emote] : emotes)
         if (emote) anims[animationId(id)] = bakeAnimation(*emote);
-    if (withStop) anims[std::string(kStopAnimation)] = {{"animation_length", 0.05}, {"bones", nlohmann::ordered_json::object()}};
+    if (withStop) anims[std::string(kStopAnimation)] = {{"animation_length", 0.05}, {"bones", neutralBones()}};
     return file;
 }
 

@@ -349,8 +349,9 @@ void updateActive() {
 
 // ---- chat screen buttons ---------------------------------------------------------------------------
 
-bool gVisible  = false; // Quark: emotesVisible (kept while the game runs)
-bool gReported = false;
+bool gVisible      = false; // Quark: emotesVisible (kept while the game runs)
+bool gReported     = false; // positions logged for this opening of the chat screen (e2e scenarios)
+bool gReportedGrid = false;
 
 void drawEmoteButton(ui::Overlay& o, MenuEntry const& e, ui::Rect r) {
     auto& dc = o.draw();
@@ -368,7 +369,12 @@ void drawEmoteButton(ui::Overlay& o, MenuEntry const& e, ui::Rect r) {
 
 void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
     if (!cfg().enableEmotes || !net::serverHasMod() || !gServer.enabled) return;
-    auto  entries = menuEntries();
+    // A gap between frames means the chat screen was opened again: log the positions again.
+    static auto lastFrame = std::chrono::steady_clock::time_point{};
+    auto        frameNow  = std::chrono::steady_clock::now();
+    if (frameNow - lastFrame > std::chrono::milliseconds(500)) gReported = gReportedGrid = false;
+    lastFrame    = frameNow;
+    auto entries = menuEntries();
     int   W       = static_cast<int>(s.size.x);
     int   H       = static_cast<int>(s.size.y);
     int   buttonX = cfg().buttonShiftX;
@@ -427,9 +433,8 @@ void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
         log().info("emotes: chat buttons drawn ({} emotes) toggle at {:.4f},{:.4f}", entries.size(),
                    (toggle.x + toggle.w / 2) / s.size.x, (toggle.y + toggle.h / 2) / s.size.y);
     }
-    static bool reportedGrid = false;
-    if (gVisible && !reportedGrid && !placed.empty()) {
-        reportedGrid = true;
+    if (gVisible && !gReportedGrid && !placed.empty()) {
+        gReportedGrid = true;
         for (auto const& [e, r] : placed)
             log().info("emotes: button {} at {:.4f},{:.4f}", e->id, (r.x + r.w / 2) / s.size.x, (r.y + r.h / 2) / s.size.y);
     }
@@ -460,7 +465,8 @@ void hud(ui::DrawContext& dc) {
 // ---- registrations ---------------------------------------------------------------------------------
 
 LP_REGISTER_HUD(hud);
-LP_REGISTER_SCREEN_OVERLAY("chat_screen", chatOverlay);
+// The chat screen's root is "chat.chat_screen" (namespace-qualified).
+LP_REGISTER_SCREEN_OVERLAY("*chat_screen", chatOverlay);
 
 // Quark's keybinds: `quark.emote.<name>` for the 12 default emotes, `quark.keybind.patreon_emote.<name>`
 // for the patreon ones; all unbound by default.

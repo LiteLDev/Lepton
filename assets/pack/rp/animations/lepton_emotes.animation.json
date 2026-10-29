@@ -20282,7 +20282,15 @@
     },
     "animation.lepton.emote.stop": {
       "animation_length": 0.05,
-      "bones": {}
+      "bones": {
+        "head": {
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
     }
   }
 }

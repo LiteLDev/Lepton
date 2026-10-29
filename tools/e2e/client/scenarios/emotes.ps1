@@ -12,10 +12,6 @@ function Get-Fraction([string]$line) {
     if ($line -notmatch 'at ([0-9.]+),([0-9.]+)') { throw "no position in '$line'" }
     return [double]$Matches[1], [double]$Matches[2]
 }
-function Press-VK([int]$vk) {
-    [BsE2E.Native]::Key([uint16]$vk, $false); Start-Sleep -Milliseconds 60; [BsE2E.Native]::Key([uint16]$vk, $true)
-    Start-Sleep -Milliseconds 400
-}
 function Play-Emote([string]$name, [int]$waitMs, [string]$shot = $name) {
     $m = Get-LogMark
     Invoke-Chat "/quark emote $name"
@@ -26,12 +22,11 @@ function Play-Emote([string]$name, [int]$waitMs, [string]$shot = $name) {
 
 if (-not $vanilla) { Wait-LogLine 'emotes: \d+ emotes available' 60 | Out-Null }
 
-# Look straight ahead and switch to the front third-person view (F5 twice) to see the model.
+# Look straight ahead and switch to the front third-person camera to see the model (the camera
+# command is reliable where an F5 key press can arrive while the chat is still closing).
 Invoke-Chat '/tp @s ~ ~ ~ 0 0'
-Focus-Game
-Press-VK 0x74
-Press-VK 0x74
-Start-Sleep -Milliseconds 600
+Invoke-Chat '/camera @s set minecraft:third_person_front'
+Start-Sleep -Milliseconds 800
 
 try {
     Play-Emote 'wave' 500     # right arm raised, waving
@@ -41,7 +36,7 @@ try {
         Play-Emote 'custom:e2e_spin' 450 'custom'   # custom emote from config/quark_emotes
     }
 } finally {
-    Press-VK 0x74             # back to first person
+    Invoke-Chat '/camera @s clear'   # back to the player's own view
     Start-Sleep -Milliseconds 400
 }
 
