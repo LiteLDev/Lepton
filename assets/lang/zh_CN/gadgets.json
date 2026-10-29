@@ -101,5 +101,7 @@
   "lp.gadgets.cmd.quill": "已给予{}的寻路羽毛笔",
   "lp.gadgets.cmd.unknown_biome": "未知的生物群系：{}",
   "lp.gadgets.cmd.potato": "已给予愤怒的土豆",
+  "lp.gadgets.cmd.op_only": "仅限拥有管理员权限的玩家。",
+  "lp.gadgets.cmd.missing": "缺少{}（行为包未加载？）",
   "lp.gadgets.cmd.potato_named": "已给予名为{}的小土豆"
 }

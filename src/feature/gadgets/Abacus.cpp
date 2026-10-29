@@ -151,6 +151,8 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     auto& player = ev.self();
     if (player.isClientSide() || !cfg().enableAbacus) return;
     if (!isAbacus(ev.item())) return;
+    // Java: a block with its own use (a chest, a furnace...) takes the click unless the player sneaks
+    if (!player.isSneaking() && player.getDimensionBlockSource().getBlockEntity(ev.blockPos())) return;
     auto id = player.getOrCreateUniqueID().rawID;
     auto t  = now();
     if (auto it = gLastUse.find(id); it != gLastUse.end() && t - it->second < 5) return;

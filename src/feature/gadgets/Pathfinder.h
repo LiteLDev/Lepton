@@ -60,7 +60,8 @@ std::optional<BlockPos> searchSteps(
     Spiral&                 sp,
     std::vector<int> const& heights,
     int                     steps,
-    bool&                   failed
+    bool&                   failed,
+    int                     searchRadius
 );
 
 /// The filled map Quark's createMap makes.

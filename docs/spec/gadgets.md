@@ -81,8 +81,9 @@ natively when the world loads.
 - Shape: collision and selection box 6..10 x 0..6 x 6..10 px. Hardness 0.25 (wool), cloth sounds,
   waterloggable (`minecraft:liquid_detection`).
 - States: `minecraft:cardinal_direction` (placement trait; the face looks at the player who placed
-  it), `lepton:variant` (0..25, the look, set natively from the name), `lepton:jump` (0..10, jump
-  animation frame), `lepton:lit` none. Item: the block item, Functional Blocks tab.
+  it), the look (0..24, set natively from the name) stored as `lepton:look` (0..15) +
+  16 * `lepton:look_page` (0..1) because a Bedrock block state holds at most 16 values, and
+  `lepton:jump` (0..10, jump animation frame). Item: the block item.
 - Variants (`lepton:variant`), chosen from the cleaned name (lower case, formatting removed, prefix
   "enchanted/glowy/shiny/gay" and a rune colour removed, as Quark's `TinyPotatoInfo`):
 
@@ -117,7 +118,9 @@ natively when the world loads.
   Names are normalised like Quark (`[^a-z0-9/._-]` -> `_`), so "Kyle Hyde" matches `kyle_hyde`.
 - Drops: the potato item, keeping its name (custom name) and the angry flag, plus the 6 held items.
   Breaking in creative drops only the held items.
-- Comparator output from the held items: `floor(1 + n/6 * 14)` for n > 0 items, 0 when empty.
+- Comparator output (Java `getRedstoneSignalFromBlockEntity`): not ported. Data-driven blocks can't
+  declare an analog output and `BlockType::hasComparatorSignal` is a folded function shared by many
+  blocks (hooking it would change them all).
 
 ### 2.3 Textures and sounds
 
@@ -144,10 +147,11 @@ Sound events (`sounds.d/gadgets.json`): `lepton.ambient.<name>` (category record
   block; nothing is shown when the looked-at block is air or nothing is bound. Shown as `n+1`
   (`48+` when the clamped value is 48). Checked every 2 ticks for players holding an abacus in
   either hand.
-- Mod clients: the server sends `gadgets:abacus` (count, bound pos, target pos, colour); the client
-  draws the abacus icon at (w/2+10, h/2-7) and the text at +17,+5 (white, shadow), and outlines the
-  bound block and the three legs (x, then y, then z) as screen-projected 3D boxes in
-  `highlightColor`.
+- Mod clients: the server sends `gadgets:abacus` (count); the client draws the abacus icon at
+  (w/2+10, h/2-7) and the text at +17,+5 (white, shadow).
+- Outline (every client): the bound block and the three legs (x, then y, then z) are drawn as thin
+  lines in `highlightColor` with the `lepton:abacus_highlight` particle (one camera-facing quad per
+  box edge, sent only to the holder, refreshed every 10 ticks).
 - Vanilla clients: the action bar shows the number (`48+`).
 
 ### PathfinderMaps
@@ -202,11 +206,13 @@ Sound events (`sounds.d/gadgets.json`): `lepton.ambient.<name>` (category record
   and the killer entity is `minecraft:skeleton`/`stray`/`bogged`/`wither_skeleton`
   (Java `instanceof Skeleton` = skeleton only; Bedrock's projectile owner is the killer), drop one
   random ambience disc (with its description as lore).
-- Jukebox: the discs are `minecraft:record` items whose sound event is `lepton.ambient.<name>`.
-  Lepton keeps every jukebox holding an ambience disc in a list and replays the sound at the
-  jukebox every 24 s (the loop length) while the disc stays inside and the chunk is loaded, at
-  volume `volume` (Bedrock attenuation: `volume * 16` blocks, like Java's linear 48 at volume 3).
-  Taking the disc out stops the sound (`StopSoundPacket`).
+- Jukebox: Bedrock record items only accept vanilla sound events, so the discs are `minecraft:record`
+  items declaring `record.13`; Lepton skips the jukebox's own playback for them
+  (`JukeboxBlockActor::_startRecordSound`) and plays `lepton.ambient.<name>` itself, again every 24 s
+  (the loop length) while the disc stays inside and the chunk is loaded, at volume `volume` (heard
+  within `volume * 16` blocks, like Java's linear 48 at volume 3). Jukeboxes are found through
+  `setRecord` / `load`. Taking the disc out stops the sound (`StopSoundPacket`). Endermosh is played
+  the same way (`lepton.music.endermosh`, once, 64 blocks).
 
 ### EndermoshMusicDisc
 - End city loot (`addToEndCityLoot`): when an End City treasure chest fills its loot
@@ -357,6 +363,9 @@ id), `/quark gadgets potato angry` (an angry tiny potato, Java's `is_angry` comp
 - **Ambience loop** uses a server re-trigger (Bedrock sound definitions can't loop a record).
 - **Framed compasses/clocks** (item frames) keep vanilla behaviour: the frame renders through the
   block actor's own sprite calculator.
+- **Wrong neighbourhood**: Quark compares the item's `getDisplayName()` (which is `[name]` with
+  brackets) with the typo list, so the song never plays in Java; Lepton compares the plain name, as
+  intended.
 - **Vanilla clients**: compass changes, HUDs and outlines need the client mod (Quark's are
   client-side too); vanilla clients get the action-bar and lore fallbacks above.
 
@@ -372,15 +381,18 @@ Selftests (dx 2300..2399):
 | `gadgets.quill_spiral` | - | spiral positions match Quark's sequence |
 | `gadgets.quill_search` | - | a quill for the spawn biome completes into a filled map with the name |
 | `gadgets.quill_only_one` | - | second quill refused |
-| `gadgets.trades` | - | trade list parsing (built-ins + customs) |
+| `gadgets.trades` | 2304 | trade list parsing (built-ins + customs), a wandering trader sells a quill |
 | `gadgets.disc_drop` | 2310 | skeleton kills spider -> a disc drops |
-| `gadgets.jukebox_loop` | 2312 | an ambience disc in a jukebox is tracked and re-triggered |
+| `gadgets.jukebox_loop` | 2312 | a disc used on a jukebox plays, loops and stops when taken out |
+| `gadgets.endermosh_loot` | 2314 | the End City treasure table yields Endermosh (weight) |
 | `gadgets.compass_tick` | - | compass/clock flags set in inventory |
 | `gadgets.potato_place` | 2320 | placement, facing, variant from name |
-| `gadgets.potato_slots` | 2322 | put/take items per face, drops on break |
-| `gadgets.potato_jump` | 2324 | jump frames advance and reset |
+| `gadgets.potato_slots` | 2330 | put/take items per face, drops on break |
+| `gadgets.potato_jump` | 2340 | jump frames advance and reset |
 | `gadgets.potato_names` | - | name -> variant table, gender table |
 | `gadgets.recipes` | - | tiny potato recipe selection |
+| `gadgets.gallery` | 2360 | every look selected by its name; views for the client screenshots |
+| `gadgets.client_tooltips` | - | (client build) disc / quill tooltip lines |
 
 E2E: `tools/e2e/server/scenarios/gadgets.ps1` (all `gadgets.*` selftests),
 `tools/e2e/client/scenarios/gadgets.ps1` (gives the items, places tiny potatoes with several

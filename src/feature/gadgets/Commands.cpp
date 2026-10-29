@@ -45,17 +45,25 @@ int colorOf(std::string const& biome) {
     return -1;
 }
 
+std::string opOnly(CommandOrigin const& origin) {
+    auto* p = commands::playerOf(origin);
+    return p ? trFor(*p, "lp.gadgets.cmd.op_only", "Players with operator permission only.")
+             : tr("lp.gadgets.cmd.op_only", "Players with operator permission only.");
+}
+
+constexpr std::string_view g_quillId = kQuill;
+
 } // namespace
 
 LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload<QuillParams>().text("gadgets").text("quill").required("biome").execute(
         [](CommandOrigin const& origin, CommandOutput& output, QuillParams const& params) {
             auto* p = commands::playerOf(origin);
-            if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+            if (!p || !commands::isAdmin(origin)) return output.error(opOnly(origin));
             auto biome = params.biome;
             if (biome.find(':') == std::string::npos) biome = "minecraft:" + biome;
             auto quill = pathfinder::makeQuill(biome, colorOf(biome), p);
-            if (game::isEmpty(quill)) return output.error("lepton:pathfinders_quill is missing (behaviour pack?)");
+            if (game::isEmpty(quill)) return output.error(trFor(*p, "lp.gadgets.cmd.missing", "{} is missing (behaviour pack?)", g_quillId));
             give(*p, quill);
             log().info("gadgets: gave a quill for {} to {}", biome, p->getRealName());
             output.success(trFor(*p, "lp.gadgets.cmd.quill", "Gave a Pathfinder's Quill for {}", pathfinder::biomeName(p, biome)));
@@ -63,14 +71,14 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     );
     cmd.overload().text("gadgets").text("potato").text("angry").execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* p = commands::playerOf(origin);
-        if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+        if (!p || !commands::isAdmin(origin)) return output.error(opOnly(origin));
         give(*p, potato::makePotatoItem("", true, p));
         output.success(trFor(*p, "lp.gadgets.cmd.potato", "Gave an Angry Potato"));
     });
     cmd.overload<PotatoNameParams>().text("gadgets").text("potato").text("name").required("name").execute(
         [](CommandOrigin const& origin, CommandOutput& output, PotatoNameParams const& params) {
             auto* p = commands::playerOf(origin);
-            if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+            if (!p || !commands::isAdmin(origin)) return output.error(opOnly(origin));
             give(*p, potato::makePotatoItem(params.name, false, p));
             output.success(trFor(*p, "lp.gadgets.cmd.potato_named", "Gave a Tiny Potato named {}", params.name));
         }

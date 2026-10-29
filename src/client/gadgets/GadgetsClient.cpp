@@ -8,6 +8,8 @@
 #include <cmath>
 #include <mutex>
 
+#include "ll/api/event/EventBus.h"
+#include "ll/api/event/client/ClientExitLevelEvent.h"
 #include "ll/api/memory/Hook.h"
 
 #include "mc/deps/core/math/Vec2.h"
@@ -138,6 +140,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 struct GadgetsClientModule {
     std::vector<net::HandlerId> mHandlers;
+    ll::event::ListenerPtr      mExit;
 
     void install() {
         mHandlers.push_back(net::onClient<AbacusMessage>([](AbacusMessage const& m) { gState.abacus = m.count; }));
@@ -151,12 +154,16 @@ struct GadgetsClientModule {
         }));
         CompassFrameHook::hook();
         ClockFrameHook::hook();
+        // the server only sends changes: start clean in every world
+        mExit = ll::event::EventBus::getInstance().emplaceListener<ll::event::ClientExitLevelEvent>([](auto&) { gState = {}; });
     }
     void uninstall() {
         for (auto id : mHandlers) net::removeHandler(id);
         mHandlers.clear();
         CompassFrameHook::unhook();
         ClockFrameHook::unhook();
+        if (mExit) ll::event::EventBus::getInstance().removeListener(mExit);
+        mExit.reset();
         gState = {};
     }
 };

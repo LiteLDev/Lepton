@@ -344,12 +344,36 @@ void onInteractEvent(ll::event::PlayerInteractBlockEvent& ev) {
     });
 }
 
+struct HeldPotato {
+    std::string name;
+    bool        angry = false;
+    uint64_t    at    = 0;
+};
+std::unordered_map<int64_t, HeldPotato> gPlacing; ///< the potato item in hand when placing started
+
+void onPlacingEvent(ll::event::PlayerPlacingBlockEvent& ev) {
+    auto& player = ev.self();
+    if (player.isClientSide()) return;
+    auto const& held = player.getSelectedItem();
+    if (game::itemId(held) != kPotato) return;
+    gPlacing[player.getOrCreateUniqueID().rawID] = HeldPotato{customNameOf(held), getBool(held, "quark:is_angry"), now()};
+}
+
 void onPlacedEvent(ll::event::PlayerPlacedBlockEvent& ev) {
     auto& player = ev.self();
     if (player.isClientSide() || !isPotato(ev.placedBlock())) return;
-    auto const& held  = player.getSelectedItem();
-    std::string name  = game::itemId(held) == kPotato ? customNameOf(held) : std::string();
-    bool        angry = game::itemId(held) == kPotato && getBool(held, "quark:is_angry");
+    // the stack may already be used up: take the name captured when the placement started
+    std::string name;
+    bool        angry = false;
+    auto        it    = gPlacing.find(player.getOrCreateUniqueID().rawID);
+    if (it != gPlacing.end() && now() - it->second.at <= 2) {
+        name  = it->second.name;
+        angry = it->second.angry;
+        gPlacing.erase(it);
+    } else if (auto const& held = player.getSelectedItem(); game::itemId(held) == kPotato) {
+        name  = customNameOf(held);
+        angry = getBool(held, "quark:is_angry");
+    }
     auto        pos   = game::globalPos(player.getDimensionBlockSource(), ev.pos());
     later(1, [pos, name, angry] {
         auto* r = game::regionOf(pos.dim);
@@ -372,7 +396,8 @@ void onBlockChanged(ll::event::BlockChangedEvent& ev) {
     if (ev.layer() != 0) return;
     auto& region = ev.blockSource();
     if (region.getLevel().isClientSide()) return;
-    if (!isPotato(ev.previousBlock()) || isPotato(ev.newBlock())) return;
+    // cheap check first: this runs for every block change of the server
+    if (ev.previousBlock().getTypeName() != kPotato || ev.newBlock().getTypeName() == kPotato) return;
     auto pos = game::globalPos(region, ev.pos());
     if (!gPendingBreaks.insert(pos).second) return; // one break can report several changes
     int dim = pos.dim;
@@ -558,6 +583,7 @@ void interact(Player& player, GlobalPos const& pos, int face) {
 void install() {
     auto& bus = ll::event::EventBus::getInstance();
     gListeners.push_back(bus.emplaceListener<ll::event::PlayerInteractBlockEvent>(onInteractEvent));
+    gListeners.push_back(bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>(onPlacingEvent));
     gListeners.push_back(bus.emplaceListener<ll::event::PlayerPlacedBlockEvent>(onPlacedEvent));
     gListeners.push_back(bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>(onDestroyEvent));
     gListeners.push_back(bus.emplaceListener<ll::event::BlockChangedEvent>(onBlockChanged));
@@ -625,6 +651,7 @@ void onWorldClosed() {
     gDirty.clear();
     gCreativeBreaks.clear();
     gPendingBreaks.clear();
+    gPlacing.clear();
     gLastUse.clear();
     gLooking.clear();
 }

@@ -308,11 +308,12 @@ std::optional<BlockPos> searchSteps(
     Spiral&                 sp,
     std::vector<int> const& hs,
     int                     steps,
-    bool&                   failed
+    bool&                   failed,
+    int                     searchRadius
 ) {
     failed = false;
     for (int i = 0; i < steps; ++i) {
-        auto p = nextPos(sp, cfg().searchRadius);
+        auto p = nextPos(sp, searchRadius);
         if (!p) {
             failed = true;
             return std::nullopt;
@@ -340,6 +341,7 @@ struct Job {
     Key              key;
     Dimension*       dim = nullptr; ///< alive until the world closes (the worker is stopped first)
     std::vector<int> heights;
+    int              radius = 6400; ///< searchRadius, copied: the worker never reads the config
 };
 
 std::mutex              gMutex;
@@ -368,7 +370,7 @@ void workerLoop() {
         auto name   = bedrockBiome(job.key.biome);
         // the whole spiral, in slices so a stop request is seen quickly
         while (!gStop) {
-            res.found = searchSteps(*job.dim, name, sp, job.heights, 256, failed);
+            res.found = searchSteps(*job.dim, name, sp, job.heights, 256, failed, job.radius);
             if (res.found || failed) break;
         }
         res.failed = !res.found;
@@ -405,7 +407,7 @@ std::optional<Result> concurrent(Dimension& d, int dim, int sx, int sz, std::vec
     if (gComputing.contains(key)) return std::nullopt;
     if (auto it = gResults.find(key); it != gResults.end()) return it->second;
     gComputing.insert(key);
-    gQueue.push_back(Job{key, &d, std::move(heights)});
+    gQueue.push_back(Job{key, &d, std::move(heights), cfg().searchRadius});
     ensureWorker();
     gWake.notify_one();
     return std::nullopt;
@@ -416,9 +418,9 @@ std::optional<Result> concurrent(Dimension& d, int dim, int sx, int sz, std::vec
 struct Running {
     Spiral   sp;
     uint64_t savedAt = 0;
-    bool     sentHud = false;
 };
 std::unordered_map<int64_t, Running> gRunning;
+std::set<int64_t>                    gHudOn; ///< mod clients told that a quill searches
 
 Spiral spiralOf(ItemStackBase const& s) {
     Spiral sp;
@@ -566,7 +568,7 @@ void tick() {
         // HUD state for mod clients
         if (net::hasClientMod(*p)) {
             bool searching = ref.has_value() && c.enablePathfinderMaps;
-            bool was       = running != gRunning.end() && running->second.sentHud;
+            bool was       = gHudOn.contains(id);
             if (searching != was) {
                 QuillMessage m;
                 m.searching = searching;
@@ -576,8 +578,8 @@ void tick() {
                     m.color = getInt(s, kColor).value_or(-1);
                 }
                 net::sendToClient(*p, m);
-                if (searching) gRunning[id].sentHud = true;
-                else if (running != gRunning.end()) running->second.sentHud = false;
+                if (searching) gHudOn.insert(id);
+                else gHudOn.erase(id);
             }
         }
         if (!ref || !c.enablePathfinderMaps) {
@@ -612,7 +614,7 @@ void tick() {
             run.savedAt = now();
         }
         bool failed = false;
-        auto found  = searchSteps(*d, bedrockBiome(*target), run.sp, heights, std::max(1, c.pathfindersQuillSpeed), failed);
+        auto found  = searchSteps(*d, bedrockBiome(*target), run.sp, heights, std::max(1, c.pathfindersQuillSpeed), failed, c.searchRadius);
         if (found || failed) {
             finish(*p, *ref, stack, found);
             continue;
@@ -646,7 +648,7 @@ MerchantRecipe makeOffer(TradeInfo const& t, bool withCompass) {
     r.mMaxUses           = 12;
     r.mTraderExp         = static_cast<uint>(cfg().xpFromTrade * std::max(1, t.level - 1));
     r.mRewardExp         = true;
-    r.mBuyCountA         = price;
+    r.mBuyCountA         = std::clamp(price, 1, 64);
     r.mBuyCountB         = withCompass ? 1 : 0;
     r.mPriceMultiplierA  = 0.2f;
     r.mPriceMultiplierB  = 0.2f;
@@ -741,11 +743,13 @@ void uninstall() {
     GenerateTradesHook::unhook();
     stopWorker();
     gRunning.clear();
+    gHudOn.clear();
 }
 
 void onWorldClosed() {
     stopWorker();
     gRunning.clear();
+    gHudOn.clear();
 }
 
 } // namespace lp::feature::gadgets::pathfinder

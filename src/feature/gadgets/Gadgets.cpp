@@ -320,6 +320,7 @@ struct GadgetsModule {
             });
             game::db::onWorldClosed([] {
                 gTasks.clear();
+                gRemovedRecipes.clear(); // the level that held them is closing
                 pathfinder::onWorldClosed();
                 discs::onWorldClosed();
                 potato::onWorldClosed();
