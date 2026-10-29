@@ -417,12 +417,13 @@ public:
             auto& p = ev.self();
             if (p.isClientSide() || !cfg().enableSeedPouch || !isItem(p.getSelectedItem(), kSeedPouch)) return;
             if (pouchContents(p.getSelectedItem()).empty()) return;
-            ev.cancel();
+            // Not cancelled: the block's own use (doors, chests, ...) still happens, as in Java
+            // where the block is used before the item. Planting on such blocks simply fails.
             if (cooldown(p, 4)) return;
             auto uuid = p.getUuid().asString();
             auto pos  = ev.blockPos();
             int  face = static_cast<int>(ev.face());
-            // Defer: block changes made during a cancelled interaction are rolled back.
+            // Deferred to the next tick, after the game finished handling the click.
             ll::coro::keepThis([uuid, pos, face]() -> ll::coro::CoroTask<> {
                 co_await ll::chrono::ticks(1);
                 auto level = ll::service::getLevel();

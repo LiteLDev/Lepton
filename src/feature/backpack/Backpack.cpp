@@ -12,6 +12,7 @@
 #include "ll/api/coro/CoroTask.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/MobDieEvent.h"
+#include "ll/api/event/player/PlayerDisconnectEvent.h"
 #include "ll/api/event/world/ServerLevelTickEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
@@ -50,6 +51,7 @@
 #include "game/Entities.h"
 #include "game/Inventory.h"
 #include "game/Items.h"
+#include "game/WorldDb.h"
 #include "mod/Config.h"
 #include "mod/I18n.h"
 #include "mod/Log.h"
@@ -182,16 +184,14 @@ Player* playerByUuid(std::string const& uuid) {
     return level ? level->getPlayer(mce::UUID::fromString(uuid)) : nullptr;
 }
 
-/// Writes the helper's contents into the worn backpack (or drops them when it is gone).
+/// Writes the helper's contents into the worn backpack. When the backpack is no longer worn
+/// (death, /clear, ...) the item it became already holds the contents (written on every change),
+/// so the helper's copy is discarded instead of being duplicated.
 void writeBack(Player& p, std::vector<ItemStack> const& items) {
     ItemStack worn = p.getArmor(ArmorSlot::Torso);
-    if (isItem(worn, kBackpack)) {
-        setBackpackItems(worn, items);
-        p.setArmor(ArmorSlot::Torso, worn);
-        return;
-    }
-    for (auto const& s : items) spawnStack(p, s, p.getPosition());
-    log().warn("backpack: {} lost the backpack while it was open; contents dropped", p.getRealName());
+    if (!isItem(worn, kBackpack)) return;
+    setBackpackItems(worn, items);
+    p.setArmor(ArmorSlot::Torso, worn);
 }
 
 void finish(std::string const& uuid, bool closeScreen) {
@@ -213,9 +213,9 @@ void finish(std::string const& uuid, bool closeScreen) {
         writeBack(*p, s.last);
         net::sendToClient(*p, BackpackScreenMsg{false});
         log().info("backpack: closed by {}", p->getRealName());
-    } else if (helper) {
-        // The player left: the items stay in the item (written on every change); nothing to do.
     }
+    // Without the player (gone already) the item keeps what was written on the last change;
+    // disconnects are finished earlier, while the player still exists (PlayerDisconnectEvent).
 }
 
 /// Pushes items the backpack can't hold back to the player (or drops them).
@@ -338,6 +338,7 @@ void tickContents(Player& p, ItemStack& backpack) {
     auto items   = backpackItems(backpack);
     bool changed = false;
     auto level   = ll::service::getLevel();
+    if (!level) return;
     for (size_t i = 0; i < items.size(); ++i) {
         auto& s = items[i];
         if (game::isEmpty(s)) continue;
@@ -553,7 +554,11 @@ int lootingOf(ActorDamageSource const& source) {
 
 class BackpackModule {
 public:
-    void load() { RecipeLoadHook::hook(); }
+    // Recipes load with the world (BDS: before mods are enabled), so the toggle hook goes in at load.
+    void load() {
+        RecipeLoadHook::hook();
+        mRecipeHooked = true;
+    }
 
     void install() {
         auto& bus = ll::event::EventBus::getInstance();
@@ -579,9 +584,21 @@ public:
             spawnStack(mob, stack, mob.getPosition());
             log().info("backpack: a ravager dropped {} ravager hide", amount);
         }));
+        mListeners.push_back(bus.emplaceListener<ll::event::PlayerDisconnectEvent>([](ll::event::PlayerDisconnectEvent& ev) {
+            // While the player still exists: the screen's last moves go back into the worn item.
+            if (!ev.self().isClientSide()) flushBackpack(ev.self());
+        }));
         OpenInventoryHook::hook();
         ItemActorTickHook::hook();
         PlayerInteractHook::hook();
+        if (!mRecipeHooked) {
+            RecipeLoadHook::hook();
+            mRecipeHooked = true;
+        }
+        game::db::onWorldClosed([] {
+            sessions().clear(); // helpers of a closed world are gone with it
+            wornFull().clear();
+        });
 
         mSwitch = net::onServer<BackpackSwitchMsg>([](Player& p, BackpackSwitchMsg const& m) {
             auto uuid = p.getUuid().asString();
@@ -620,9 +637,11 @@ public:
         ItemActorTickHook::unhook();
         PlayerInteractHook::unhook();
         RecipeLoadHook::unhook();
+        mRecipeHooked = false;
     }
 
 private:
+    bool                                mRecipeHooked = false;
     std::vector<ll::event::ListenerPtr> mListeners;
     net::HandlerId                      mSwitch = 0;
     int                                 mTick   = 0;

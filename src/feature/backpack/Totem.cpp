@@ -5,7 +5,9 @@
 #include "feature/backpack/Backpack.h"
 
 #include <map>
+#include <optional>
 #include <random>
+#include <set>
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerAttackEvent.h"
@@ -185,9 +187,23 @@ void dropEverythingAndDie(Actor& totem) {
     game::entities::despawn(totem);
 }
 
+std::set<int64_t>& known() { ///< loaded totems (rescanned every second, added on spawn)
+    static std::set<int64_t> s;
+    return s;
+}
+int gTotemTick = 0;
+
 void tickTotems() {
-    for (auto* totem : game::entities::ofType(kTotem)) {
-        auto id = game::entities::idOf(*totem);
+    if (++gTotemTick % 20 == 0)
+        for (auto* t : game::entities::ofType(kTotem)) known().insert(game::entities::idOf(*t));
+    std::vector<int64_t> ids(known().begin(), known().end());
+    for (auto tid : ids) {
+        auto* totem = game::entities::find(tid);
+        if (!totem) {
+            known().erase(tid); // unloaded or removed; the rescan finds it again when loaded
+            continue;
+        }
+        auto id = tid;
         if (cfg().darkSoulsMode) {
             auto owner = totemOwner(id);
             if (auto* p = onlinePlayer(owner); p && lastTotemOf(owner) != id) {
@@ -219,6 +235,7 @@ void tickTotems() {
 /// Before the game drops anything: Quark's onPlayerDrops (lowest priority, so after other mods'
 /// changes) moves the drops into the totem. keepInventory: no drops, "no totem" is recorded.
 LL_TYPE_INSTANCE_HOOK(PlayerDieHook, ll::memory::HookPriority::Normal, ServerPlayer, &ServerPlayer::$die, void, ActorDamageSource const& source) {
+    if (!isDead()) flushBackpack(*this); // an open backpack screen: its contents go back to the item first
     if (cfg().enableTotemOfHolding && !isDead()) {
         try {
             if (keepInventory()) {
@@ -296,6 +313,7 @@ int64_t spawnTotemNow(Player& player) {
     game::inv::sync(player);
 
     auto id   = game::entities::idOf(*totem);
+    known().insert(id);
     auto uuid = player.getUuid().asString();
     owners()[id] = uuid;
     game::db::save(totemKey(id), {{"owner", uuid}});
@@ -363,6 +381,7 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
         c->setItem(1, game::makeItem("minecraft:iron_helmet"));
         c->setItem(2, game::makeItem("minecraft:bread", 5));
         totem->setNameTag(p->getRealName());
+        known().insert(game::entities::idOf(*totem));
         log().info("totem: debug totem {} spawned", game::entities::idOf(*totem));
         output.success("Totem spawned.");
     });
@@ -384,6 +403,7 @@ public:
         PlayerDieHook::hook();
         game::db::onWorldClosed([] {
             lastTotems().clear();
+            known().clear();
             owners().clear();
             dying().clear();
         });
