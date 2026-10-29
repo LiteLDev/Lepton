@@ -305,9 +305,9 @@ bool interrupted(Level& level, std::int64_t player) {
     auto* actor = level.fetchEntity(uid, false);
     if (!actor || !actor->isPlayer()) return false;
     auto& mob = static_cast<Mob&>(*actor);
-    if (*mob.mAttackAnim > 0.f || *mob.mSwinging) return true;
-    auto* hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
-    return hurt && *hurt->mValue > 0;
+    if (static_cast<float>(mob.mAttackAnim) > 0.f || static_cast<bool>(mob.mSwinging)) return true;
+    auto hurt = actor->getEntityContext().tryGetComponent<MobHurtTimeComponent>();
+    return hurt && static_cast<int>(hurt->mValue) > 0;
 }
 
 void updateActive() {

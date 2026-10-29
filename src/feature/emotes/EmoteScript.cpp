@@ -445,7 +445,7 @@ CompileResult compile(std::string_view text) {
     CompileResult r;
     Parser        p;
     int           lineNo = 0;
-    if (text.starts_with("ï»¿")) text.remove_prefix(3); // a UTF-8 BOM (Notepad, PowerShell 5)
+    if (text.starts_with("\xEF\xBB\xBF")) text.remove_prefix(3); // a UTF-8 BOM (Notepad, PowerShell 5)
     try {
         size_t pos = 0;
         while (pos <= text.size() && !p.compiled) {
@@ -529,6 +529,7 @@ void Sampler::visit(State& s, float local, bool mirrored) {
             kTo = 0;
         }
         for (int k = kFrom; k <= kTo; ++k) {
+            if (n.yoyo && k % 2 == 1) continue; // a backward iteration (the tween engine's BACK_START)
             float edge = n.delay + static_cast<float>(k) * period;
             if (prev < edge && edge <= local) {
                 if (n.endAllOnStart) mEvents.push_back({SoundEvent::What::StopAll, -1});
