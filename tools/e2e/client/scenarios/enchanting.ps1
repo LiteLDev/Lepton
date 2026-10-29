@@ -97,9 +97,10 @@ if ($vanilla) {
 }
 
 # ---- anvil: ancient tome -------------------------------------------------------------------------
-Open-Station 'anvil'
+# Chat closes screens: arm the fill first, it happens when the station opens.
 $m = Get-LogMark
 Invoke-Chat '/quark enchanting demo fill'
+Open-Station 'anvil'
 Wait-LogLine 'enchanting: demo station filled' 10 -Since $m | Out-Null
 if ($vanilla) {
     Wait-LogLine 'enchanting: .* sent the tome form' 15 -Since $m | Out-Null
@@ -119,9 +120,10 @@ if ($vanilla) {
 Start-Sleep -Milliseconds 800
 
 # ---- smithing table: color rune ------------------------------------------------------------------
-Open-Station 'smithing'
+# Chat closes screens: arm the fill first, it happens when the station opens.
 $m = Get-LogMark
 Invoke-Chat '/quark enchanting demo fill'
+Open-Station 'smithing'
 Wait-LogLine 'enchanting: demo station filled' 10 -Since $m | Out-Null
 if ($vanilla) {
     Wait-LogLine 'enchanting: .* sent the rune form' 15 -Since $m | Out-Null

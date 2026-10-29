@@ -357,13 +357,45 @@ void offerForm(Player& p, Offer const& o) {
     log().info("enchanting: {} was sent the {} form", p.getRealName(), o.craft.kind == "rune" ? "rune" : "tome");
 }
 
-void tickStations() {
-    auto level = ll::service::getLevel();
+std::set<std::string>& armedFills() {
+    static std::set<std::string> s;
+    return s;
+}
+
+/// `/quark enchanting demo fill`: puts a tome (anvil) or rune (smithing) combination into the
+/// player's open station.
+bool fillStation(Player& p) {
+    auto const& cm = p.mContainerManager;
+    if (!cm) return false;
+    auto  type  = cm->getContainerType();
+    auto& ui    = uiContainer(p);
+    auto const* sd = defById("minecraft:sharpness");
+    int   sharp = sd ? sd->type : 0;
+    auto  sword = game::makeItem("minecraft:diamond_sword");
+    if (type == SharedTypes::Legacy::ContainerType::Anvil) {
+        setEnchants(sword, {{sharp, 5}});
+        ui.setItem(static_cast<int>(PlayerUISlot::AnvilInput), sword);
+        ui.setItem(static_cast<int>(PlayerUISlot::AnvilMaterial), makeTome(sharp));
+        addLevels(p, 40);
+    } else if (type == SharedTypes::Legacy::ContainerType::SmithingTable) {
+        setEnchants(sword, {{sharp, 1}});
+        ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableTemplate), game::makeItem(kRuneId));
+        ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableInput), sword);
+        ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial), game::makeItem("minecraft:lime_dye"));
+    } else {
+        return false;
+    }
+    log().info("enchanting: demo station filled");
+    return true;
+}
+
+void tickStations() {    auto level = ll::service::getLevel();
     if (!level) return;
     std::vector<std::string> seen;
     level->forEachPlayer([&](Player& p) {
         auto uuid = uuidOf(p);
         seen.push_back(uuid);
+        if (armedFills().contains(uuid) && fillStation(p)) armedFills().erase(uuid);
         auto offer = currentOffer(p);
         auto sig   = offer ? offer->signature + "|" + std::to_string(creative(p) || playerLevel(p) >= offer->craft.cost) : std::string{};
         auto& last = lastSignature()[uuid];
@@ -489,6 +521,7 @@ public:
                 pendingForms().clear();
                 forcedStations().clear();
                 exchangedVillagers().clear();
+                armedFills().clear();
             });
         }
     }
@@ -537,29 +570,10 @@ LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload().text("enchanting").text("demo").text("fill").execute([](CommandOrigin const& origin, CommandOutput& output) {
         auto* p = commands::playerOf(origin);
         if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
-        auto const& cm = p->mContainerManager;
-        if (!cm) return output.error("Open an anvil or a smithing table first.");
-        auto  type  = cm->getContainerType();
-        auto& ui    = uiContainer(*p);
-        int   sharp = defById("minecraft:sharpness") ? defById("minecraft:sharpness")->type : 0;
-        auto  sword = game::makeItem("minecraft:diamond_sword");
-        if (type == SharedTypes::Legacy::ContainerType::Anvil) {
-            setEnchants(sword, {{sharp, 5}});
-            ui.setItem(static_cast<int>(PlayerUISlot::AnvilInput), sword);
-            ui.setItem(static_cast<int>(PlayerUISlot::AnvilMaterial), makeTome(sharp));
-            addLevels(*p, 40);
-        } else if (type == SharedTypes::Legacy::ContainerType::SmithingTable) {
-            setEnchants(sword, {{sharp, 1}});
-            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableTemplate), game::makeItem(kRuneId));
-            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableInput), sword);
-            ui.setItem(static_cast<int>(PlayerUISlot::SmithingTableMaterial), game::makeItem("minecraft:lime_dye"));
-        } else {
-            return output.error("Open an anvil or a smithing table first.");
-        }
-        log().info("enchanting: demo station filled");
-        output.success("Filled the station.");
-    });
-});
+        // Chat closes screens: the next anvil / smithing table the player opens gets filled.
+        armedFills().insert(uuidOf(*p));
+        output.success("The next anvil or smithing table you open gets a tome / rune combination.");
+    });});
 
 LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
     cmd.overload<TomeCommandParams>().text("enchanting").text("tome").required("enchant").execute(
