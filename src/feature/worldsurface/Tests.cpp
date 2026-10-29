@@ -459,6 +459,10 @@ LP_REGISTER_SELFTEST("worldsurface.gallery", [](Context& ctx) -> ll::coro::CoroT
     BlockPos base = bp(g);
     fill(ctx, r, {base.x - 1, base.y - 1, base.z - 2}, {base.x + 28, base.y - 1, base.z + 3}, "minecraft:deepslate");
     cleanup(ctx, {base.x - 1, base.y, base.z - 2}, {base.x + 28, base.y + 8, base.z + 3});
+    // the simulated test player would wake the monster box (and stand in the pictures): move it
+    // behind the cameras
+    ctx.player().teleport(Vec3{base.x + 14.5f, base.y + 1.62f, base.z + 16.5f}, DimensionType(0));
+    co_await ctx.ticks(2);
     auto put = [&](int dx, int dy, int dz, std::string const& id, bs::Changes const& st = {}) {
         BlockPos p{base.x + dx, base.y + dy, base.z + dz};
         auto const* b = bs::of(id, st);
@@ -507,6 +511,9 @@ LP_REGISTER_SELFTEST("worldsurface.gallery", [](Context& ctx) -> ll::coro::CoroT
     co_await ctx.ticks(120);
     ctx.info("WSGALLERY view close");
     view(4.f, 0.6f, 3.6f, 15.f, 180.f);
+    co_await ctx.ticks(120);
+    ctx.info("WSGALLERY view shroom");
+    view(25.5f, 0.f, 5.5f, -20.f, 180.f);
     co_await ctx.ticks(120);
     ctx.info("WSGALLERY done");
     if (peaceful) runCommand("difficulty peaceful");
