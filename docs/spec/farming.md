@@ -55,8 +55,8 @@ Right-clicking an adult chicken with an empty main hand (not sneaking) picks it 
 rides the player. Right-clicking any entity with an empty hand while carrying chickens puts them
 down. While a chicken is carried the player gets Slow Falling (and Slowness `slownessLevel`, 1 =
 Slowness I) every tick (5-tick ambient effects without particles); a helmet (when `needsNoHelmet`)
-or being under water makes the player drop the chicken. Mod clients draw the carried chicken on
-the player's head, `0.25 - chickenOffset` blocks down, with its legs hidden (§7).
+or being under water makes the player drop the chicken. Quark's render tweaks (chicken drawn on
+the head, legs hidden, `chickenOffset`) are not ported (§7).
 
 ### HorsesSwim
 A ridden horse (any AbstractHorse: horse, donkey, mule, skeleton/zombie horse, llama, trader llama,
@@ -206,7 +206,7 @@ Section `farming` (`config/farming.json`), version 1.
 | `enableGrabChickens` | bool | true | GrabChickens module |
 | `needsNoHelmet` | bool | true | |
 | `slownessLevel` | int | 1 | Set to 0 to disable |
-| `chickenOffset` | double | 0.0 | -1..1; Negative numbers moves the chicken down, positive up (client render, §7) |
+| `chickenOffset` | double | 0.0 | -1..1; Negative numbers moves the chicken down, positive up (no effect, §7) |
 | `enableHorsesSwim` | bool | true | HorsesSwim module |
 | `enableVillagersFollowEmeralds` | bool | true | VillagersFollowEmeralds module |
 
@@ -226,13 +226,18 @@ Block name (RP `texts.d/*/farming.lang`): `tile.lepton:water_pink_petals.name` =
   APIs, not ported (SPEC §8).
 - GrabChickens: the vanilla Bedrock player only accepts tame parrots as passengers (its rideable
   seats are the shoulder seats), so the server lets a chicken through `Player::canAddPassenger`
-  only while GrabChickens seats it. Bedrock positions passengers on each client from the vanilla
-  player definition, so the chicken's real position is the shoulder seat. The client mod
-  (`src/client/farming/ChickenRender.cpp`) reproduces Quark's render tweaks: a chicken carried by a
-  player is drawn on the player's head (the top of the 1.8 high player box) pushed down by
-  `0.25 - chickenOffset` blocks (Quark's `LivingEntityRendererMixin`), with its `leg0`/`leg1`
-  model parts hidden (Quark's `ChickenModel` tweak). Vanilla clients see the chicken on the
-  shoulder with its legs.
+  only while GrabChickens seats it. Passenger positions are computed by each client from the
+  vanilla player definition, so the chicken sits on the shoulder seat. Quark's two client render
+  tweaks are not ported: drawing the carried chicken on the head pushed down by
+  `0.25 - chickenOffset` (`LivingEntityRendererMixin`) and hiding its legs (`ChickenModel`).
+  Investigated in the client build: in 1.26.51 world actors are drawn in a batch by
+  `DataDrivenRendererV2::generateFrame` from ECS-extracted render data; the per-actor paths
+  (`ActorRenderDispatcher::render`, `DataDrivenRenderer::$render`,
+  `DataDrivenGeometry::copyBoneMatricesToActor` / `copyTransformMatricesToModelParts`) are never
+  called for in-world actors (render probes in the client e2e never fired), and the extracted data
+  has no exposed per-actor layout to edit. A resource-pack route needs the vanilla chicken client
+  entity file, which U18 (VariantAnimalTextures) owns. `chickenOffset` is kept in the config for
+  parity and has no effect.
 - PoisonPotatoUsage: the advancement trigger (`poison_baby`) is not ported (no custom advancements).
 - PigLitters: the "animals bred" statistic/advancement for extra piglets is not ported.
 - HorsesSwim: a horse ridden by a real client is moved by that client (Bedrock vehicle movement is

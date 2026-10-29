@@ -720,14 +720,21 @@ LP_REGISTER_SELFTEST("farming.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
                 );
         };
         ctx.info("FARMING view farm");
-        view(6.5f, 3.5f, 8.5f, 35.f, 180.f); // south of the scene, looking north and down
-        co_await ctx.ticks(150);
+        // the viewer is put back every tick (it would fall from the camera spot)
+        for (int t = 0; t < 150; ++t) {
+            view(6.5f, 3.5f, 8.5f, 35.f, 180.f); // south of the scene, looking north and down
+            co_await ctx.ticks(1);
+        }
         ctx.info("FARMING view petals");
-        view(6.5f, 4.5f, 2.5f, 85.f, 180.f); // straight above the pond
-        co_await ctx.ticks(150);
+        for (int t = 0; t < 150; ++t) {
+            view(6.5f, 4.5f, 2.5f, 85.f, 180.f); // straight above the pond
+            co_await ctx.ticks(1);
+        }
         ctx.info("FARMING view chicken");
-        view(2.5f, 2.0f, 7.5f, 15.f, 180.f);
-        co_await ctx.ticks(150);
+        for (int t = 0; t < 150; ++t) {
+            view(2.5f, 1.0f, 7.0f, 10.f, 180.f); // behind the test player and its chicken
+            co_await ctx.ticks(1);
+        }
         ctx.info("FARMING done");
     }
     if (auto* c = ent::find(chId)) {
