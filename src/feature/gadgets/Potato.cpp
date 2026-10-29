@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <map>
 #include <random>
@@ -21,7 +22,18 @@
 #include "ll/api/event/world/BlockChangedEvent.h"
 #include "ll/api/service/Bedrock.h"
 
+#include "ll/api/memory/Hook.h"
+
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
+#include "mc/deps/core/string/HashedString.h"
+#include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
+#include "mc/entity/components/ActorRotationComponent.h"
+#include "mc/world/actor/Actor.h"
+#include "mc/world/actor/BuiltInActorComponents.h"
+#include "mc/world/actor/state/ActorPropertyUtils.h"
+#include "mc/world/actor/state/PropertyComponent.h"
+#include "mc/world/level/dimension/Dimension.h"
 #include "mc/safety/RedactableString.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
@@ -30,12 +42,14 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/Spawner.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/phys/AABB.h"
 #include "mc/world/phys/HitResult.h"
 
 #include "core/GlobalPos.h"
 #include "feature/gadgets/Gadgets.h"
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
+#include "game/Entities.h"
 #include "game/Inventory.h"
 #include "game/Items.h"
 #include "game/WorldDb.h"
@@ -229,6 +243,7 @@ std::map<GlobalPos, Tater> gTaters; ///< every known potato of the world
 std::set<GlobalPos>        gDirty;
 std::set<GlobalPos>        gCreativeBreaks; ///< broken by a creative player this tick
 std::set<GlobalPos>        gPendingBreaks;  ///< removed, drops not spawned yet
+uint64_t                   gDisplaysFrom = 0; ///< no display sync before (saved displays load after their chunk)
 std::unordered_map<int64_t, uint64_t> gLastUse;
 struct Looking {
     std::string name;
@@ -248,6 +263,7 @@ nlohmann::json toJson(Tater const& t) {
     j["angry"] = t.angry;
     j["items"] = nlohmann::json::array();
     for (auto const& i : t.items) j["items"].push_back(i);
+    j["displays"] = t.displays;
     return j;
 }
 
@@ -258,6 +274,9 @@ Tater fromJson(nlohmann::json const& j) {
     if (j.contains("items") && j["items"].is_array())
         for (size_t i = 0; i < 6 && i < j["items"].size(); ++i)
             if (j["items"][i].is_string()) t.items[i] = j["items"][i].get<std::string>();
+    if (j.contains("displays") && j["displays"].is_array())
+        for (size_t i = 0; i < 6 && i < j["displays"].size(); ++i)
+            if (j["displays"][i].is_number_integer()) t.displays[i] = j["displays"][i].get<int64_t>();
     return t;
 }
 
@@ -308,12 +327,112 @@ void spawnItem(BlockSource& region, GlobalPos const& pos, ItemStack const& item)
     level->getSpawner().spawnItem(region, item, nullptr, at, 10);
 }
 
+// ---- held item displays ----------------------------------------------------------------------------------
+// Custom blocks can't render item stacks: every held item is shown by a `lepton:tiny_potato_item`
+// display entity holding it (Quark's TinyPotatoRenderer#renderItems poses), posed by its properties.
+
+constexpr char const* kItemDisplay = "lepton:tiny_potato_item";
+
+/// Java horizontal direction of the potato's face (2 north, 3 south, 4 west, 5 east).
+int facingOf(Block const& b) {
+    auto d = bs::getString(b, "minecraft:cardinal_direction").value_or("south");
+    return d == "north" ? 2 : d == "west" ? 4 : d == "east" ? 5 : 3;
+}
+
+void setIntProperty(Actor& actor, std::string_view name, int value) {
+    if (auto p = actor.getEntityContext().tryGetComponent<PropertyComponent>())
+        ActorPropertyUtils::tryQueueIntValue(*p, actor, HashedString(name).getHash(), value);
+}
+
+void orient(Actor& actor, float yaw) {
+    actor.mBuiltInComponents->mActorRotationComponent->mRot     = Vec2{0.f, yaw};
+    actor.mBuiltInComponents->mActorRotationComponent->mRotPrev = Vec2{0.f, yaw};
+}
+
+int kindOf(ItemStack const& s) {
+    if (game::itemId(s) == kPotato) return 2;
+    return s.mBlock ? 1 : 0;
+}
+
+void despawnDisplays(Tater& t) {
+    for (auto& id : t.displays) {
+        if (id)
+            if (auto* a = game::entities::find(id)) game::entities::despawn(*a);
+        id = 0;
+    }
+}
+
+void syncDisplays(BlockSource& region, GlobalPos const& pos, Tater& t) {
+    t.displaysDirty = false;
+    {   // displays of this potato we lost track of (e.g. saved ids not loaded yet when respawned)
+        std::set<int64_t> owned(t.displays.begin(), t.displays.end());
+        AABB box{Vec3{static_cast<float>(pos.x), static_cast<float>(pos.y), static_cast<float>(pos.z)}, Vec3{pos.x + 1.f, pos.y + 1.f, pos.z + 1.f}};
+        for (auto* a : game::entities::inBox(region, box, kItemDisplay))
+            if (!owned.contains(game::entities::idOf(*a))) game::entities::despawn(*a);
+    }
+    auto const& block  = region.getBlock(game::blockPos(pos));
+    int         facing = facingOf(block);
+    Vec3        at{pos.x + 0.5f, static_cast<float>(pos.y), pos.z + 0.5f};
+    bool        changed = false;
+    for (int i = 0; i < 6; ++i) {
+        auto  item = itemAt(t, i);
+        auto& id   = t.displays[static_cast<size_t>(i)];
+        if (game::isEmpty(item)) {
+            if (id) {
+                if (auto* a = game::entities::find(id)) game::entities::despawn(*a);
+                id      = 0;
+                changed = true;
+            }
+            continue;
+        }
+        Actor* a = id ? game::entities::find(id) : nullptr;
+        if (!a) {
+            a = game::entities::spawn(region, kItemDisplay, at);
+            if (!a) continue;
+            id      = game::entities::idOf(*a);
+            changed = true;
+        }
+        a->teleportTo(at, false, 0, 1, false);
+        orient(*a, 0.f); // the pose turns itself (animation): see tools/pack/gadgets.ps1
+        setIntProperty(*a, "lepton:yaw", facing == 3 ? 0 : facing == 4 ? 1 : facing == 2 ? 2 : 3); // x 90 degrees, as the side yaws
+        a->setCarriedItem(item);
+        setIntProperty(*a, "lepton:face", i);
+        setIntProperty(*a, "lepton:kind", kindOf(item));
+    }
+    if (changed) markDirty(pos);
+}
+
+/// Display entities nobody owns (potato broken while unloaded, edited worlds).
+void sweepDisplays() {
+    std::set<int64_t> owned;
+    for (auto const& [pos, t] : gTaters)
+        for (auto id : t.displays)
+            if (id) owned.insert(id);
+    for (auto* a : game::entities::ofType(kItemDisplay))
+        if (!owned.contains(game::entities::idOf(*a))) game::entities::despawn(*a);
+}
+
+/// Wakes the comparators next to `pos` after the potato's items changed.
+void updateComparators(BlockSource& region, GlobalPos const& pos) {
+    auto bp = game::blockPos(pos);
+    region.updateNeighborsAt(bp);
+    // comparators re-read their input in their queued tick (as when a container changes)
+    for (auto [dx, dz] : {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
+        for (int dist = 1; dist <= 2; ++dist) { // directly, or through one (solid) block
+            if (dist == 2 && region.getBlock(BlockPos{bp.x + dx, bp.y, bp.z + dz}).isAir()) break;
+            BlockPos    at{bp.x + dx * dist, bp.y, bp.z + dz * dist};
+            auto const& b = region.getBlock(at);
+            if (b.getTypeName().find("comparator") != std::string::npos) region.addToTickingQueue(at, b, 2);
+        }
+    }
+}
 void onBroken(int dim, GlobalPos pos) {
     auto it = gTaters.find(pos);
     bool creative = gCreativeBreaks.erase(pos) > 0;
     auto* region  = game::regionOf(dim);
     if (!region) return;
     Tater t = it != gTaters.end() ? it->second : Tater{};
+    despawnDisplays(t);
     for (int i = 0; i < 6; ++i) spawnItem(*region, pos, itemAt(t, i));
     if (!creative && cfg().enableTinyPotato) spawnItem(*region, pos, makePotatoItem(t.name, t.angry, nullptr));
     if (it != gTaters.end()) gTaters.erase(it);
@@ -478,6 +597,18 @@ void tickWrongNeighbourhood() {
 
 } // namespace
 
+int comparatorSignal(Tater const& t) {
+    int n = 0;
+    for (auto const& i : t.items)
+        if (!i.empty()) ++n;
+    return n == 0 ? 0 : static_cast<int>(std::floor(static_cast<float>(n) / 6.0f * 14.0f)) + 1;
+}
+
+int64_t displayAt(GlobalPos const& pos, int slot) {
+    auto it = gTaters.find(pos);
+    return it == gTaters.end() || slot < 0 || slot > 5 ? 0 : it->second.displays[static_cast<size_t>(slot)];
+}
+
 std::optional<Tater> dataAt(GlobalPos const& pos) {
     auto it = gTaters.find(pos);
     if (it == gTaters.end()) return std::nullopt;
@@ -541,6 +672,9 @@ void interact(Player& player, GlobalPos const& pos, int face) {
             setItemAt(t, face, copy);
         }
         game::inv::sync(player);
+        t.displaysDirty = true;
+        syncDisplays(*region, pos, t);
+        updateComparators(*region, pos);
     }
     markDirty(pos);
 
@@ -593,10 +727,12 @@ void uninstall() {
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : gListeners) bus.removeListener(l);
     gListeners.clear();
+    uninstallComparator();
     flush();
 }
 
 void tick() {
+    if (now() % 200 == 0 && cfg().enableTinyPotato) sweepDisplays();
     if (gTaters.empty() && now() % 30 != 0) return;
     if (cfg().enableTinyPotato) {
         std::vector<GlobalPos> gone;
@@ -621,8 +757,13 @@ void tick() {
                 changed     = true;
             }
             if (changed) applyStates(*r, pos, t);
+            if (!t.displaysDirty && now() % 100 == 0)
+                for (int i = 0; i < 6 && !t.displaysDirty; ++i)
+                    if (!t.items[static_cast<size_t>(i)].empty() && !game::entities::find(t.displays[static_cast<size_t>(i)])) t.displaysDirty = true;
+            if (t.displaysDirty && now() >= gDisplaysFrom) syncDisplays(*r, pos, t);
         }
         for (auto const& pos : gone) {
+            despawnDisplays(gTaters[pos]);
             gTaters.erase(pos);
             markDirty(pos);
         }
@@ -632,13 +773,15 @@ void tick() {
 }
 
 void onWorldReady() {
+    installComparator();
+    gDisplaysFrom = now() + 100;
     gTaters.clear();
     gDirty.clear();
     std::vector<std::string> keys;
     game::db::forEachKey(kDbPrefix, [&](std::string_view suffix) { keys.emplace_back(suffix); });
     for (auto const& k : keys) {
         GlobalPos p;
-        if (std::sscanf(k.c_str(), "%d:%d:%d:%d", &p.dim, &p.x, &p.y, &p.z) != 4) continue;
+        if (sscanf_s(k.c_str(), "%d:%d:%d:%d", &p.dim, &p.x, &p.y, &p.z) != 4) continue;
         if (auto j = game::db::load(kDbPrefix + k)) gTaters[p] = fromJson(*j);
     }
     if (!gTaters.empty()) log().info("gadgets: {} tiny potato(es) known", gTaters.size());
@@ -647,6 +790,7 @@ void onWorldReady() {
 void onWorldSave() { flush(); }
 
 void onWorldClosed() {
+    uninstallComparator(); // the block types belong to this world
     gTaters.clear();
     gDirty.clear();
     gCreativeBreaks.clear();

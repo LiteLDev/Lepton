@@ -9,6 +9,9 @@
     },
     "components": {
       "minecraft:icon": "lepton_gadgets_lepton_gadgets_pathfinders_quill",
+      "minecraft:display_name": {
+        "value": "item.lepton:pathfinders_quill.name"
+      },
       "minecraft:max_stack_size": 1
     }
   }

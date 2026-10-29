@@ -15,6 +15,7 @@
 #include "mc/world/Container.h"
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/block/actor/ChestBlockActor.h"
+#include "mc/world/level/block/actor/ComparatorBlockActor.h"
 #include "mc/world/actor/ActorDamageByActorSource.h"
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/item/ItemActor.h"
@@ -470,10 +471,15 @@ LP_REGISTER_SELFTEST("gadgets.potato_slots", [](Context& ctx) -> ll::coro::CoroT
     auto d = g::potato::dataAt(pos);
     ctx.check(d && !d->items[1].empty(), "one item goes into the top slot");
     ctx.check(p.getSelectedItem().mCount == 1, "the hand keeps the rest");
+    {
+        auto* shown = lp::game::entities::find(g::potato::displayAt(pos, 1));
+        ctx.check(shown && lp::game::itemId(shown->getCarriedItem()) == "minecraft:diamond", "a display entity shows the held item");
+    }
     hold(ctx, ItemStack{});
     g::potato::interact(p, pos, 1);
     ctx.check(lp::game::itemId(p.getSelectedItem()) == "minecraft:diamond", "an empty hand takes it back");
     ctx.check(g::potato::dataAt(pos)->items[1].empty(), "the slot is empty again");
+    ctx.check(g::potato::displayAt(pos, 1) == 0, "its display entity is gone");
 
     // the real use event: a stick into the north side
     co_await ctx.ticks(10);
@@ -540,16 +546,39 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
     auto base = ctx.testPos(2360);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     auto& region = regionOf(ctx);
-    std::vector<GlobalPos> placed;
+    std::vector<GlobalPos>                             placed;
+    std::vector<std::pair<GlobalPos, Block const*>> floors; // restored afterwards (not to air)
     for (int v = 0; v < 25; ++v) {
         auto p = off(base, (v % 5) * 2, 0, (v / 5) * 2);
-        ctx.require(ctx.setBlock(off(p, 0, -1, 0), "minecraft:smooth_stone"), "floor");
+        floors.emplace_back(off(p, 0, -1, 0), &region.getBlock(lp::game::blockPos(off(p, 0, -1, 0))));
+        if (auto const* stone = bs::of("minecraft:smooth_stone")) lp::game::setBlock(region, lp::game::blockPos(off(p, 0, -1, 0)), *stone);
         auto const* b = bs::of(g::kPotato, {{"minecraft:cardinal_direction", "south"}});
         ctx.require(b && lp::game::setBlock(region, lp::game::blockPos(p), *b), "potato placed");
         g::potato::registerAt(p, kNames[v], v == 1);
         placed.push_back(p);
     }
+    // held items on the default potato (dx 0, dz 0): one per side, as Quark draws them
+    {
+        auto& sp = ctx.player();
+        teleport(ctx, Vec3{base.x + 3.5f, static_cast<float>(base.y), base.z + 0.5f}, base.dim);
+        std::pair<int, ItemStack> held[] = {
+            {1, lp::game::makeItem("minecraft:diamond")},
+            {2, lp::game::makeItem("minecraft:apple")},
+            {3, lp::game::makeItem("minecraft:stick")},
+            {4, lp::game::makeItem("minecraft:stone")},
+            {5, g::potato::makePotatoItem("", false, nullptr)},
+        };
+        for (auto& [face, item] : held) {
+            hold(ctx, item);
+            g::potato::interact(sp, placed[0], face);
+        }
+        hold(ctx, ItemStack{});
+    }
     co_await ctx.ticks(2);
+    int shown = 0;
+    for (int face = 1; face <= 5; ++face)
+        if (lp::game::entities::find(g::potato::displayAt(placed[0], face))) ++shown;
+    ctx.check(shown == 5, "5 held items are shown (" + std::to_string(shown) + ")");
     int ok = 0;
     for (int v = 0; v < 25; ++v)
         if (g::potato::variantOf(region.getBlock(lp::game::blockPos(placed[v]))) == v || v == 2) ++ok; // 2: also the date
@@ -574,8 +603,14 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         view(4.5f, 3.0f, 12.5f, 35.f, 180.f); // south of the grid, looking north
         co_await ctx.ticks(120);
         ctx.info("GALLERY view closeup");
-        view(4.5f, 0.6f, 1.6f, 40.f, 180.f); // right above dinnerbone (dx 0, dz 2) looking at it
+        view(0.5f, 0.0f, 5.9f, 45.f, 180.f); // south of "Dinnerbone" (dx 0, dz 4), looking at it
         co_await ctx.ticks(120);
+        ctx.info("GALLERY view items");
+        view(0.5f, 0.0f, 2.1f, 45.f, 180.f); // in front of the default potato (it faces south)
+        co_await ctx.ticks(100);
+        ctx.info("GALLERY view items_back");
+        view(-0.7f, 0.0f, -0.7f, 45.f, -45.f); // north-west of it, looking south-east
+        co_await ctx.ticks(100);
         if (auto* v = viewerRef()) {
             auto abacus = lp::game::makeItem(g::kAbacus);
             g::putInt(abacus, "boundPosX", bound.x);
@@ -584,6 +619,7 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
             lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), abacus);
             lp::game::inv::sync(*v);
         }
+
         ctx.info("GALLERY view abacus");
         view(14.5f, 1.0f, 10.5f, 25.f, 160.f); // looking at the diamond block
         co_await ctx.ticks(120);
@@ -607,9 +643,73 @@ LP_REGISTER_SELFTEST("gadgets.gallery", [](Context& ctx) -> ll::coro::CoroTask<>
         }
         c.multiThreaded         = savedMt;
         c.pathfindersQuillSpeed = savedSpeed;
+        // compasses in the End point at the exit portal (0, 0): stand south-east of it, look north
+        if (auto* v = viewerRef()) {
+            auto compass = lp::game::makeItem("minecraft:compass");
+            // in the hand and in the next hotbar slot
+            lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), compass);
+            lp::game::inv::playerInventory(*v).setItem((v->getSelectedItemSlot() + 1) % 9, compass);
+            lp::game::inv::sync(*v);
+            v->teleport(Vec3{40.5f, 70.f, 40.5f}, DimensionType(2), Vec2{0.f, 180.f});
+        }
+        co_await ctx.ticks(60);
+        if (auto* end = lp::game::regionOf(2))
+            for (int dx = -1; dx <= 1; ++dx)
+                for (int dz = -1; dz <= 1; ++dz)
+                    if (auto const* ob = bs::of("minecraft:obsidian")) lp::game::setBlock(*end, BlockPos(40 + dx, 69, 40 + dz), *ob);
+        if (auto* v = viewerRef()) v->teleport(Vec3{40.5f, 70.f, 40.5f}, DimensionType(2), Vec2{20.f, 180.f});
+        co_await ctx.ticks(60);
+        ctx.info("GALLERY view compass");
+        co_await ctx.ticks(100);
+        if (auto* v = viewerRef()) {
+            lp::game::inv::playerInventory(*v).setItem(v->getSelectedItemSlot(), ItemStack{});
+            lp::game::inv::playerInventory(*v).setItem((v->getSelectedItemSlot() + 1) % 9, ItemStack{});
+            lp::game::inv::sync(*v);
+            v->teleport(Vec3{base.x + 4.5f, static_cast<float>(base.y), base.z + 12.5f}, DimensionType(base.dim), Vec2{0.f, 180.f});
+        }
+        co_await ctx.ticks(40);
         ctx.info("GALLERY done");
     }
     for (auto const& p : placed) lp::game::clearBlock(region, lp::game::blockPos(p));
     co_await ctx.ticks(3);
     for (auto const& p : placed) clearItemsNear(ctx, p);
+    for (auto const& [p, b] : floors) lp::game::setBlock(region, lp::game::blockPos(p), *b);
+});
+
+LP_REGISTER_SELFTEST("gadgets.potato_comparator", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto pos = ctx.testPos(2350);
+    ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
+    auto& region = regionOf(ctx);
+    for (int dz = 0; dz <= 1; ++dz) ctx.require(ctx.setBlock(off(pos, 0, -1, dz), "minecraft:stone"), "floor");
+    ctx.require(ctx.setBlock(pos, std::string(g::kPotato)), "potato placed");
+    g::potato::registerAt(pos, "", false);
+    auto& p = ctx.player();
+    teleport(ctx, Vec3{pos.x + 2.5f, static_cast<float>(pos.y), pos.z + 0.5f}, pos.dim);
+    auto fill = [&](int face) {
+        hold(ctx, lp::game::makeItem("minecraft:stick"));
+        g::potato::interact(p, pos, face);
+        hold(ctx, ItemStack{});
+    };
+    for (int face : {1, 2, 4}) fill(face);
+    auto signal = g::potato::comparatorSignal(*g::potato::dataAt(pos));
+    ctx.check(signal == 8, "3 of 6 slots: signal 8 (" + std::to_string(signal) + ")");
+    auto cpos   = off(pos, 0, 0, 1);
+    auto output = [&] {
+        auto* be = static_cast<ComparatorBlockActor*>(region.getBlockEntity(lp::game::blockPos(cpos)));
+        return be ? static_cast<int>(be->mOutput) : -1;
+    };
+    ctx.cleanupBlock(cpos);
+    // the comparator south of the potato, reading it (its cardinal_direction is then "north")
+    auto const* comp = bs::of("minecraft:unpowered_comparator", {{"minecraft:cardinal_direction", "north"}});
+    ctx.require(comp && lp::game::setBlock(region, lp::game::blockPos(cpos), *comp), "comparator placed");
+    co_await ctx.ticks(8);
+    ctx.info("comparator " + lp::game::blockIdAt(region, lp::game::blockPos(cpos)) + ", output " + std::to_string(output()));
+    ctx.check(output() == 8, "a comparator placed next to it reads 8 (" + std::to_string(output()) + ")");
+    fill(5);
+    co_await ctx.ticks(8);
+    ctx.check(output() == 10, "a 4th item: the comparator updates to 10 (" + std::to_string(output()) + ")");
+    lp::game::clearBlock(region, lp::game::blockPos(pos));
+    co_await ctx.ticks(8);
+    ctx.check(output() == 0, "no potato, no signal (" + std::to_string(output()) + ")");
+    clearItemsNear(ctx, pos);
 });
