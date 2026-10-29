@@ -177,7 +177,7 @@ Parrot feed (`quark:parrot_feed`): beetroot seeds.
   (its full NBT) in a Bucket of Slime and removes it; a stack of buckets loses one and the bucket of
   slime goes to the inventory or is dropped.
 - Using a Bucket of Slime on a block releases the slime at the block centre + the clicked face,
-  restoring the stored data (name, health, ...); without data a tiny slime with 1 health and
+  restoring its custom name (see §7); without data a tiny slime with 1 health and
   speed 0.3 spawns. Sound `bucket.empty_water`. The bucket stays empty (`minecraft:bucket`) unless
   in creative.
 - Every 10 ticks, a Bucket of Slime in a player's inventory becomes the excited form when the
@@ -252,9 +252,13 @@ Torch Arrow, Parrot Egg).
 - **Death message**: Bedrock has no custom damage types; a pickarang kill shows the vanilla
   "killed by" message of the thrower (the key `death.attack.quark.pickarang` is shipped for
   completeness).
-- **Held pickarang mining speed**: Quark makes the held item useless for mining (speed 0); on
-  Bedrock it mines at hand speed. Pickarang durability in the item tooltip comes from the pack
+- **Held pickarang**: as in Quark it is no mining tool (destroy progress 0 for every block that
+  takes time to break; hooked natively, so a vanilla client on BDS sees the crack animation but the
+  server never breaks the block). Pickarang durability in the item tooltip comes from the pack
   (800 / 1040); a different `durability` config is enforced natively.
+- **Slime data**: the slime's full NBT is stored in the bucket; on release the custom name is
+  restored onto a fresh tiny slime (Bedrock has no safe "load actor from NBT" entry point; a tiny
+  slime's other state, e.g. its 1 health, is the default anyway).
 - **Flamerang trigger advancement** and the other advancements: not ported (SPEC §8).
 - **Dispensed parrot eggs**: not dispensable, as in Quark (its dispenser behaviour is commented
   out).
@@ -264,11 +268,12 @@ Torch Arrow, Parrot Egg).
 Selftests (dx 2200..2299): `throwables.config` (defaults), `throwables.items` (items, recipes),
 `throwables.pickarang_mine` (2200: throw at stone, block mined, drops and pickarang return),
 `throwables.pickarang_immune` (2210: obsidian / reinforced deepslate clank), `throwables.pickarang_entity`
-(2215: damage to a mob), `throwables.torch_arrow` (2220: arrow onto a wall/floor places torches),
-`throwables.parrot_egg` (2230: feeding, laying, hatching), `throwables.skull_pike` (2240: pike
-creation, removal, a zombie flees), `throwables.cloud` (2250: bottling, placing, replacing,
-expiry), `throwables.slime_bucket` (2260: pick up / release / slime chunk), `throwables.slime_chunk`
-(pure algorithm check).
+(2220: damage to a mob, 2 durability), `throwables.pickarang_held` (2280: a held pickarang does not
+mine, a melee hit costs 2 durability), `throwables.torch_arrow` (2230: arrow onto a wall/floor
+places torches), `throwables.parrot_egg` (2240: feeding, laying, hatching), `throwables.skull_pike`
+(2250: pike creation, removal, a husk flees), `throwables.cloud` (2260: bottling, placing,
+replacing, expiry), `throwables.slime_bucket` (2270: pick up / release / slime chunk),
+`throwables.slime_chunk` (pure algorithm check).
 E2E: `tools/e2e/server/scenarios/throwables.ps1` (all selftests); `tools/e2e/client/scenarios/throwables.ps1`
 (gives the items, places a cloud, spawns the entities and a skull pike, screenshots the hotbar,
 the cloud, a thrown pickarang and a torch arrow).

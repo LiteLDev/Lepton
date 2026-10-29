@@ -112,6 +112,7 @@ bool onUse(Player& player, ItemStack& item); ///< true = consumed (event cancell
 [[nodiscard]] bool isRang(std::string_view itemId);
 /// Pickarangs in flight (tests).
 [[nodiscard]] int inFlight();
+bool              showDisplay(int dim, Vec3 const& pos, bool flame, int ticks);
 } // namespace pickarang
 
 namespace torcharrow {
@@ -134,6 +135,7 @@ void onEggHit(std::string const& type, Vec3 const& pos, int dim);
 [[nodiscard]] int eggTimer(int64_t parrotId);
 void              setEggTimer(int64_t parrotId, int ticks);
 [[nodiscard]] bool isBaby(int64_t parrotId);
+void               forceKotobirb(int64_t parrotId);
 } // namespace parroteggs
 
 namespace skullpikes {
@@ -173,6 +175,10 @@ void purgeDisabled();
 namespace testing {
 [[nodiscard]] bool recipeOn(std::string_view id);
 [[nodiscard]] bool itemOn(std::string_view id);
+/// Spawns a pickarang entity that hangs still at `pos` for `ticks` (screenshots), then vanishes.
+bool showRang(int dim, Vec3 const& pos, bool flame, int ticks);
+/// Draws the parrot as the kotobirb regardless of its id (screenshots).
+void forceKotobirb(int64_t parrotId);
 } // namespace testing
 
 } // namespace lp::feature::throwables

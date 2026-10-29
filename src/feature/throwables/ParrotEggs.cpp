@@ -4,6 +4,7 @@
 #include "feature/throwables/Throwables.h"
 
 #include <map>
+#include <set>
 #include <string>
 
 #include "ll/api/service/Bedrock.h"
@@ -46,6 +47,12 @@ State& st() {
     return s;
 }
 
+/// Parrots drawn as the kotobirb whatever their id (testing::forceKotobirb).
+std::set<int64_t>& forced() {
+    static std::set<int64_t> s;
+    return s;
+}
+
 bool isFeed(ItemStack const& s) { return game::itemId(s) == "minecraft:beetroot_seeds"; }
 
 void spawnEggItem(Actor& parrot, int variant) {
@@ -68,6 +75,10 @@ void setEggTimer(int64_t id, int ticks) {
     st().dirty = true;
 }
 bool isBaby(int64_t id) { return st().babies.contains(id); }
+void forceKotobirb(int64_t id) {
+    forced().insert(id);
+    if (auto* p = ent::find(id)) setActorInt(*p, kDataMarkVariant, cfg().enableParrotEggs && cfg().enableKotobirb ? 1 : 0);
+}
 
 bool onInteract(Player& player, Actor& target) {
     if (!cfg().enableParrotEggs || target.getTypeName() != "minecraft:parrot") return false;
@@ -163,7 +174,8 @@ void tick() {
         bool on = cfg().enableParrotEggs && cfg().enableKotobirb;
         for (auto* p : ent::ofType("minecraft:parrot")) {
             if (!p) continue;
-            bool koto = on && p->getVariant() == 4 && ent::idOf(*p) % 20 == 0;
+            auto pid  = ent::idOf(*p);
+            bool koto = on && p->getVariant() == 4 && (pid % 20 == 0 || forced().contains(pid));
             setActorInt(*p, kDataMarkVariant, koto ? 1 : 0);
         }
     }
@@ -190,7 +202,10 @@ void onWorldSave() {
     st().dirty = false;
 }
 
-void onWorldClosed() { st() = State{}; }
+void onWorldClosed() {
+    st() = State{};
+    forced().clear();
+}
 
 void install() {}
 void uninstall() { onWorldSave(); }

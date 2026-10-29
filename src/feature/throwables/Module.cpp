@@ -317,6 +317,8 @@ void purgeDisabled() {
 namespace testing {
 bool recipeOn(std::string_view id) { return recipeEnabled(id); }
 bool itemOn(std::string_view id) { return itemEnabled(id); }
+bool showRang(int dim, Vec3 const& pos, bool flame, int ticks) { return pickarang::showDisplay(dim, pos, flame, ticks); }
+void forceKotobirb(int64_t parrotId) { parroteggs::forceKotobirb(parrotId); }
 } // namespace testing
 
 } // namespace lp::feature::throwables

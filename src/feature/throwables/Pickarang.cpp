@@ -18,6 +18,7 @@
 #include "mc/world/actor/ActorCategory.h"
 #include "mc/world/actor/item/ExperienceOrb.h"
 #include "mc/world/actor/item/ItemActor.h"
+#include "mc/world/actor/Mob.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/effect/MobEffectInstance.h"
 #include "mc/world/gamemode/GameMode.h"
@@ -70,6 +71,7 @@ struct Rang {
     Vec3                        motion{0, 0, 0};
     std::vector<int64_t>        carried;
     bool                        alive = true;
+    int                         display = 0; ///< > 0: a still display model (testing::showRang), ticks left
 };
 
 std::vector<Rang>& rangs() {
@@ -79,6 +81,12 @@ std::vector<Rang>& rangs() {
 std::unordered_set<int64_t>& fireproof() {
     static std::unordered_set<int64_t> s;
     return s;
+}
+
+/// True while a thrown pickarang hits an entity in its owner's name (the held-item hook skips it).
+bool& thrownHit() {
+    static bool b = false;
+    return b;
 }
 
 PickarangType const& typeOf(bool flame) { return flame ? cfg().flamerangType : cfg().pickarangType; }
@@ -278,7 +286,9 @@ void hitEntity(Rang& r, Actor& self, Actor& target) {
     ItemStack prev   = owner->getSelectedItem();
     short     dmg0   = r.stack.getDamageValue();
     owner->setSelectedItem(r.stack);
+    thrownHit() = true;
     owner->attack(target, SharedTypes::Legacy::ActorDamageCause::EntityAttack);
+    thrownHit() = false;
     owner->setSelectedItem(prev);
     r.stack.setDamageValue(dmg0); // Quark's hurtEnemy costs exactly 2
     if (!isCreative(*owner)) damageRang(r.stack, 2, typeOf(r.flame));
@@ -366,6 +376,13 @@ void giveCarried(Rang& r, Player& player) {
 void tickRang(Rang& r) {
     auto* self = ent::find(r.id);
     if (!self) return; // chunk unloaded: wait
+    if (r.display > 0) {
+        if (--r.display == 0) {
+            r.alive = false;
+            ent::despawn(*self);
+        }
+        return;
+    }
     auto* owner = playerById(r.owner);
     if (!owner || !owner->isAlive() || static_cast<int>(owner->getDimensionId()) != static_cast<int>(self->getDimensionId())) {
         dropAt(r, *self);
@@ -449,7 +466,7 @@ void save() {
     if (!game::db::available()) return;
     auto arr = nlohmann::json::array();
     for (auto const& r : rangs()) {
-        if (!r.alive) continue;
+        if (!r.alive || r.display > 0) continue;
         arr.push_back({
             {"id", r.id}, {"flame", r.flame}, {"stack", game::itemToSnbt(r.stack)}, {"owner", r.owner},
             {"slot", r.slot}, {"dim", r.dim}, {"liveTime", r.liveTime}, {"returning", r.returning},
@@ -489,7 +506,21 @@ bool isStray(Actor& a) { return !rangOf(ent::idOf(a)); }
 
 bool isRang(std::string_view id) { return id == kPickarang || id == kFlamerang; }
 int  inFlight() {
-    return static_cast<int>(std::count_if(rangs().begin(), rangs().end(), [](Rang const& r) { return r.alive; }));
+    return static_cast<int>(
+        std::count_if(rangs().begin(), rangs().end(), [](Rang const& r) { return r.alive && r.display == 0; })
+    );
+}
+
+bool showDisplay(int dim, Vec3 const& pos, bool flame, int ticks) {
+    auto* self = ent::spawn(dim, flame ? "lepton:flamerang" : "lepton:pickarang", pos);
+    if (!self) return false;
+    Rang r;
+    r.id      = ent::idOf(*self);
+    r.flame   = flame;
+    r.dim     = dim;
+    r.display = std::max(1, ticks);
+    rangs().push_back(std::move(r));
+    return true;
 }
 
 bool onUse(Player& player, ItemStack& item) {
@@ -579,11 +610,52 @@ LL_STATIC_HOOK(
     return origin(item, enchantInst, allowNonVanilla);
 }
 
+// A held pickarang is no mining tool (Quark: destroy speed 0): blocks that take time to break
+// never break; instant blocks still do.
+LL_TYPE_INSTANCE_HOOK(
+    RangDestroyProgressHook,
+    ll::memory::HookPriority::Normal,
+    Player,
+    &Player::getDestroyProgress,
+    float,
+    Block const& block
+) {
+    if (isRang(game::itemId(this->getSelectedItem())) && block.getBlockType().getDestroySpeed() > 0) return 0.0f;
+    return origin(block);
+}
+
+// Melee hits with a held pickarang cost exactly 2 durability (Quark: hurtEnemy); Unbreaking applies.
+LL_TYPE_INSTANCE_HOOK(
+    RangHurtActorHook,
+    ll::memory::HookPriority::Normal,
+    Item,
+    &Item::$hurtActor,
+    void,
+    ItemStack& item,
+    Actor&     actor,
+    Mob&       attacker
+) {
+    auto id = game::itemId(item);
+    if (!isRang(id) || thrownHit()) return origin(item, actor, attacker);
+    short before = item.getDamageValue();
+    origin(item, actor, attacker);
+    if (game::isEmpty(item)) return;
+    item.setDamageValue(before);
+    auto* player = attacker.isPlayer() ? static_cast<Player*>(&attacker) : nullptr;
+    if (player && player->isCreative()) return;
+    ItemStack after = item;
+    if (!damageRang(after, 2, typeOf(id == kFlamerang))) playSound("random.break", attacker.getPosition(), 1.0f, 1.0f);
+    item = after;
+    if (player && isRang(game::itemId(player->getSelectedItem()))) setSelected(*player, after);
+}
+
 } // namespace
 
 void install() {
     RangFireproofHook::hook();
     RangPiercingHook::hook();
+    RangDestroyProgressHook::hook();
+    RangHurtActorHook::hook();
     static bool registered = false;
     if (!registered) {
         registered = true;
@@ -597,6 +669,8 @@ void uninstall() {
     save();
     RangFireproofHook::unhook();
     RangPiercingHook::unhook();
+    RangDestroyProgressHook::unhook();
+    RangHurtActorHook::unhook();
     rangs().clear();
     fireproof().clear();
 }

@@ -20,6 +20,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockSupportType.h"
 #include "mc/world/phys/HitResult.h"
 
 #include "game/BlockStates.h"
@@ -39,16 +40,22 @@ bool isTorchArrowItem(ItemStackBase const& s) { return game::itemId(s) == kTorch
 
 /// Places the torch for an arrow that hit `block` on `face`. True when a torch was placed.
 bool placeTorch(Actor& arrow, BlockPos const& block, int face) {
-    if (face == 0) return false; // FacingID::Down
+    if (face <= 0 || face > 5) return false; // never on bottom faces (FacingID::Down = 0)
     static int const dx[6] = {0, 0, 0, 0, -1, 1}, dy[6] = {-1, 1, 0, 0, 0, 0}, dz[6] = {0, 0, -1, 1, 0, 0};
-    if (face < 0 || face > 5) return false;
     auto&    region = arrow.getDimensionBlockSource();
     BlockPos at{block.x + dx[face], block.y + dy[face], block.z + dz[face]};
     auto const& here = region.getBlock(at);
     if (!here.isAir() && !game::replaceable(region, at)) return false;
-    static char const* dirs[6] = {"unknown", "top", "north", "south", "west", "east"};
+    // Support (Java: a sturdy side face for wall torches, a centre support for standing ones);
+    // Block::canSurvive of torches only checks the floor, whatever the state.
+    auto const& support = region.getBlock(block);
+    bool ok = face == 1 ? support.canProvideSupport(static_cast<uchar>(face), BlockSupportType::Center)
+                        : support.canProvideFullSupport(static_cast<uchar>(face));
+    if (!ok) return false;
+    // Bedrock names a wall torch after the side of the torch block its support is on.
+    static char const* dirs[6] = {"unknown", "top", "south", "north", "east", "west"};
     auto const* torch = game::blockstates::of("minecraft:torch", {{"torch_facing_direction", std::string(dirs[face])}});
-    if (!torch || !torch->canSurvive(region, at)) return false;
+    if (!torch) return false;
     if (!game::setBlock(region, at, *torch)) return false;
     auto level = ll::service::getLevel();
     if (level) {

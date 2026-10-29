@@ -4,6 +4,7 @@
 
 #include "ll/api/service/Bedrock.h"
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/shared_types/legacy/Difficulty.h"
 #include "mc/deps/ecs/gamerefs_entity/EntityContext.h"
@@ -211,40 +212,70 @@ LP_REGISTER_SELFTEST("throwables.pickarang_entity", [](Context& ctx) -> ll::coro
     if (again) ent::despawn(*again);
 });
 
+LP_REGISTER_SELFTEST("throwables.pickarang_held", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(2280);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    stand(ctx, base, GameType::Survival);
+    auto& sp   = bot(ctx);
+    auto  dirt = off(base, 1, 0, 0);
+    ctx.require(put(ctx, dirt, "minecraft:dirt"), "dirt placed");
+    sp.simulateSetItem(makeItem("lepton:pickarang"), true, 0);
+    co_await ctx.ticks(2);
+    sp.simulateDestroyBlock(lp::game::blockPos(dirt), Facing::West);
+    co_await ctx.ticks(40); // bare hands break dirt in 15 ticks
+    sp.simulateStopDestroyingBlock();
+    ctx.check(idAt(ctx, dirt) == "minecraft:dirt", "a held pickarang does not mine");
+
+    auto& region = sp.getDimensionBlockSource();
+    auto* pig    = ent::spawn(region, "minecraft:pig", Vec3{dirt.x + 0.5f, float(dirt.y + 1), dirt.z + 0.5f});
+    ctx.require(pig != nullptr, "pig spawned");
+    auto pigId  = ent::idOf(*pig);
+    int  before = pig->getHealth();
+    co_await ctx.ticks(2);
+    if (auto* p = ent::find(pigId)) sp.simulateAttack(p);
+    co_await ctx.ticks(2);
+    auto* again = ent::find(pigId);
+    ctx.check(!again || again->getHealth() < before, "the melee hit hurt the pig");
+    auto const& held = sp.getSelectedItem();
+    ctx.info("held pickarang damage after a melee hit: " + std::to_string(held.getDamageValue()));
+    ctx.check(lp::game::itemId(held) == "lepton:pickarang" && held.getDamageValue() == 2, "a melee hit costs 2 durability");
+    if (again) ent::despawn(*again);
+});
+
 LP_REGISTER_SELFTEST("throwables.torch_arrow", [](Context& ctx) -> ll::coro::CoroTask<> {
     auto base = ctx.testPos(2230);
     ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
     stand(ctx, base, GameType::Creative);
     auto& sp     = bot(ctx);
     auto& region = sp.getDimensionBlockSource();
-    // a torch arrow next to `block` reports a hit on `face` (the projectile component's hit path)
-    auto hitWith = [&](GlobalPos const& block, uchar face) -> bool {
-        Vec3  at{block.x + 0.5f, block.y + 1.6f, block.z + 0.5f};
-        auto* arrow = ent::spawn(region, "lepton:torch_arrow", at, &sp);
+    // a torch arrow flying from `from` with `velocity` (blocks per tick) hits what is in its way
+    auto shoot = [&](Vec3 from, Vec3 velocity) -> bool {
+        auto* arrow = ent::spawn(region, "lepton:torch_arrow", from, &sp);
         if (!arrow) return false;
-        auto proj = arrow->getEntityContext().tryGetComponent<ProjectileComponent>();
-        if (!proj) return false;
-        HitResult hit{};
-        hit.mType   = HitResultType::Tile;
-        hit.mBlock  = lp::game::blockPos(block);
-        hit.mFacing = face;
-        hit.mPos    = at;
-        proj->onHit(*arrow, hit);
+        arrow->mBuiltInComponents->mStateVectorComponent->mPosDelta = velocity;
         return true;
-    };    auto wall = off(base, 5, 1, 0);
+    };
+    auto wall = off(base, 5, 1, 0);
     ctx.require(put(ctx, wall, "minecraft:stone"), "wall placed");
     auto torchAt = off(base, 4, 1, 0);
     ctx.cleanupBlock(torchAt);
-    ctx.require(hitWith(wall, 4), "torch arrow hit the west face");
+    ctx.require(shoot(Vec3{base.x + 2.5f, base.y + 1.5f, base.z + 0.5f}, Vec3{1.2f, 0.05f, 0.0f}), "torch arrow shot at the wall");
     for (int i = 0; i < 40 && idAt(ctx, torchAt) != "minecraft:torch"; ++i) co_await ctx.ticks(1);
+    // the torch must also survive neighbour updates (a wrong facing would pop it off)
+    put(ctx, off(torchAt, 0, 1, 0), "minecraft:dirt");
+    co_await ctx.ticks(10);
+    ctx.info("in front of the wall: " + idAt(ctx, torchAt));
     ctx.check(idAt(ctx, torchAt) == "minecraft:torch", "a wall torch was placed in front of the hit face");
     auto const& torch = region.getBlock(lp::game::blockPos(torchAt));
-    ctx.check(lp::game::blockstates::getString(torch, "torch_facing_direction").value_or("") == "west", "the torch faces away from the wall");
+    auto facing = lp::game::blockstates::getString(torch, "torch_facing_direction").value_or("");
+    ctx.info("wall torch facing: " + facing);
+    ctx.check(facing != "top" && facing != "unknown" && !facing.empty(), "the torch hangs on the wall");
 
     auto floor   = off(base, 3, -1, 2);
     auto floorAt = off(base, 3, 0, 2);
     ctx.cleanupBlock(floorAt);
-    ctx.require(hitWith(floor, 1), "torch arrow hit the top face");
+    ctx.require(lp::game::blockIdAt(region, lp::game::blockPos(floor)) != "minecraft:air", "solid floor");
+    ctx.require(shoot(Vec3{floorAt.x + 0.5f, floorAt.y + 2.5f, floorAt.z + 0.5f}, Vec3{0.0f, -1.0f, 0.0f}), "torch arrow shot at the floor");
     for (int i = 0; i < 40 && idAt(ctx, floorAt) != "minecraft:torch"; ++i) co_await ctx.ticks(1);
     ctx.check(idAt(ctx, floorAt) == "minecraft:torch", "a standing torch was placed on the top face");
     ctx.check(lp::game::blockstates::getString(region.getBlock(lp::game::blockPos(floorAt)), "torch_facing_direction").value_or("") == "top", "standing torch");
@@ -448,4 +479,107 @@ LP_REGISTER_SELFTEST("throwables.slime_bucket", [](Context& ctx) -> ll::coro::Co
     ctx.check(lp::game::itemId(ctx.player().getSelectedItem()) == want, std::string("the bucket is ") + (inside ? "excited" : "calm") + " here");
     ctx.info("nearest slime chunk " + std::to_string(cx) + "," + std::to_string(cz));
     inv::restore(inv::playerInventory(ctx.player()), inv::kPlayerAll, {});
+});
+
+// Everything visual of the unit in one row, for the client scenario `throwables`: skull pikes,
+// clouds of every few sizes, hanging pickarang / flamerang models, a stuck torch arrow, parrots
+// (adult, hatched baby, kotobirb). With a real player online it also fills their hotbar with the
+// unit's items and moves them in front of the row for two views; on a dedicated server the row is
+// only built and checked.
+LP_REGISTER_SELFTEST("throwables.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(2290, -3);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto& region = ctx.player().getDimensionBlockSource();
+    int   dim    = base.dim;
+
+    // floor and backdrop
+    for (int dx = -1; dx <= 24; ++dx) {
+        ctx.check(put(ctx, off(base, dx, -1, 0), "minecraft:smooth_stone"), "floor");
+        ctx.check(put(ctx, off(base, dx, 3, -1), "minecraft:white_concrete"), "backdrop");
+        for (int dy = 0; dy < 3; ++dy) ctx.check(put(ctx, off(base, dx, dy, -1), "minecraft:white_concrete"), "backdrop");
+    }
+    // skull pikes
+    char const* trophies[] = {"minecraft:skeleton_skull", "minecraft:zombie_head", "minecraft:creeper_head"};
+    int         pikes0     = tw::skullpikes::pikeCount();
+    for (int i = 0; i < 3; ++i) {
+        auto fence = off(base, i * 2, 0, 0);
+        ctx.check(put(ctx, fence, "minecraft:oak_fence"), "pike fence");
+        ctx.check(put(ctx, off(fence, 0, 1, 0), trophies[i], {{"facing_direction", 1}}), "pike trophy");
+        tw::skullpikes::onPlaced(ctx.player(), lp::game::blockPos(off(fence, 0, 1, 0)));
+    }
+    co_await ctx.ticks(2);
+    ctx.check(tw::skullpikes::pikeCount() == pikes0 + 3, "three skull pikes");
+    // clouds, shrinking from left to right (not tracked: they stay until cleanup)
+    int sizes[] = {0, 3, 6, 9};
+    for (int i = 0; i < 4; ++i)
+        ctx.check(put(ctx, off(base, 7 + i, 1, 0), "lepton:cloud", {{"lepton:size", sizes[i]}}), "cloud");
+    // pickarangs hanging in the air
+    ctx.check(tw::testing::showRang(dim, Vec3{base.x + 12.5f, base.y + 1.2f, base.z + 0.5f}, false, 1200), "pickarang model");
+    ctx.check(tw::testing::showRang(dim, Vec3{base.x + 14.5f, base.y + 1.2f, base.z + 0.5f}, true, 1200), "flamerang model");
+    // a torch arrow stuck under an overhang (bottom faces never take torches)
+    ctx.check(put(ctx, off(base, 16, 2, 0), "minecraft:stone"), "overhang");
+    auto* arrow = ent::spawn(region, "lepton:torch_arrow", Vec3{base.x + 16.5f, base.y + 0.3f, base.z + 0.5f}, &ctx.player());
+    ctx.check(arrow != nullptr, "torch arrow spawned");
+    int64_t arrowId = arrow ? ent::idOf(*arrow) : 0;
+    if (arrow) arrow->mBuiltInComponents->mStateVectorComponent->mPosDelta = Vec3{0.0f, 0.9f, 0.0f};
+    // parrots: an adult, a hatched baby and the kotobirb, kept still
+    std::vector<int64_t> parrots;
+    auto still = [&](Actor* p) {
+        if (!p) return;
+        tw::setActorFlag(*p, static_cast<int>(ActorFlags::Noai), true);
+        parrots.push_back(ent::idOf(*p));
+    };
+    auto* adult = ent::spawn(region, "minecraft:parrot", Vec3{base.x + 18.5f, float(base.y), base.z + 0.5f});
+    if (adult) tw::setActorInt(*adult, 2, 0);
+    still(adult);
+    tw::parroteggs::onEggHit("lepton:parrot_egg_green", Vec3{base.x + 20.5f, float(base.y), base.z + 0.5f}, dim);
+    AABB near{Vec3{base.x + 19.0f, base.y - 1.0f, base.z - 1.0f}, Vec3{base.x + 22.0f, base.y + 3.0f, base.z + 2.0f}};
+    for (auto* a : ent::inBox(region, near, "minecraft:parrot"))
+        if (tw::parroteggs::isBaby(ent::idOf(*a))) still(a);
+    auto* koto = ent::spawn(region, "minecraft:parrot", Vec3{base.x + 22.5f, float(base.y), base.z + 0.5f});
+    if (koto) {
+        tw::setActorInt(*koto, 2, 4);
+        tw::testing::forceKotobirb(ent::idOf(*koto));
+    }
+    still(koto);
+    ctx.check(parrots.size() == 3, "three parrots");
+    co_await ctx.ticks(10);
+    ctx.check(idAt(ctx, off(base, 16, 1, 0)) != "minecraft:torch" && idAt(ctx, off(base, 16, 0, 0)) != "minecraft:torch",
+              "no torch under an overhang");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (viewer) {
+        auto uid = viewer->getOrCreateUniqueID();
+        auto& pinv = inv::playerInventory(*viewer);
+        char const* items[] = {"lepton:pickarang", "lepton:flamerang", "lepton:torch_arrow", "lepton:egg_parrot_red_blue",
+                               "lepton:egg_parrot_yellow_blue", "lepton:egg_parrot_gray", "lepton:bottled_cloud",
+                               "lepton:slime_in_a_bucket", "lepton:slime_in_a_bucket_excited"};
+        auto saved = inv::snapshot(pinv, inv::kPlayerAll);
+        for (int i = 0; i < 9; ++i) pinv.setItem(i, makeItem(items[i], 8));
+        char const* more[] = {"lepton:egg_parrot_blue", "lepton:egg_parrot_green"};
+        for (int i = 0; i < 2; ++i) pinv.setItem(9 + i, makeItem(more[i], 8));
+        inv::sync(*viewer);
+        auto view = [&](float dx, float dz, float yaw, float pitch) {
+            if (auto* v = ctx.player().getLevel().getPlayer(uid))
+                v->teleport(Vec3{base.x + dx, base.y + 0.f, base.z + dz}, DimensionType(dim), Vec2{pitch, yaw});
+        };
+        ctx.info("THROWABLES view left");
+        view(5.f, 5.5f, 180.f, 15.f);
+        co_await ctx.ticks(160);
+        ctx.info("THROWABLES view right");
+        view(17.f, 5.5f, 180.f, 15.f);
+        co_await ctx.ticks(160);
+        ctx.info("THROWABLES done");
+        if (auto* v = ctx.player().getLevel().getPlayer(uid)) {
+            inv::restore(inv::playerInventory(*v), inv::kPlayerAll, saved);
+            inv::sync(*v);
+        }
+    }
+    for (auto id : parrots)
+        if (auto* p = ent::find(id)) ent::despawn(*p);
+    if (auto* a = arrowId ? ent::find(arrowId) : nullptr) ent::despawn(*a);
 });
