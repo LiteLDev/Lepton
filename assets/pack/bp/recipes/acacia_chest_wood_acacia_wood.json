@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:acacia_chest_wood_acacia_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:acacia_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:acacia_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:acacia_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

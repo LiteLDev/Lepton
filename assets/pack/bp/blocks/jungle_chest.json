@@ -1,0 +1,242 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:jungle_chest",
+      "menu_category": {
+        "category": "items"
+      },
+      "states": {
+        "lepton:type": [
+          "single",
+          "left",
+          "right"
+        ],
+        "lepton:lid": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "traits": {
+        "minecraft:placement_direction": {
+          "enabled_states": [
+            "minecraft:cardinal_direction"
+          ],
+          "y_rotation_offset": 0
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 2.5
+      },
+      "minecraft:map_color": "#976d4d",
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.variantcontainers.chest_single",
+        "bone_visibility": {
+          "lid_0": "q.block_state('lepton:lid') == 0",
+          "lid_1": "q.block_state('lepton:lid') == 1",
+          "lid_2": "q.block_state('lepton:lid') == 2",
+          "lid_3": "q.block_state('lepton:lid') == 3",
+          "lid_4": "q.block_state('lepton:lid') == 4",
+          "body": true
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_variantcontainers_variantcontainers_jungle_chest",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:movable": {
+        "movement_type": "immovable"
+      },
+      "minecraft:redstone_conductivity": {
+        "redstone_conductor": false,
+        "allows_wire_to_step_down": true
+      },
+      "minecraft:loot": "loot_tables/blocks/jungle_chest.json",
+      "tag:lepton:variant_chest": {},
+      "tag:lepton:wooden_chest": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              -90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'single'",
+        "components": {
+          "minecraft:geometry": {
+            "identifier": "geometry.lepton.variantcontainers.chest_single",
+            "bone_visibility": {
+              "lid_0": "q.block_state('lepton:lid') == 0",
+              "lid_1": "q.block_state('lepton:lid') == 1",
+              "lid_2": "q.block_state('lepton:lid') == 2",
+              "lid_3": "q.block_state('lepton:lid') == 3",
+              "lid_4": "q.block_state('lepton:lid') == 4",
+              "body": true
+            }
+          },
+          "minecraft:collision_box": {
+            "origin": [
+              -7,
+              0,
+              -7
+            ],
+            "size": [
+              14,
+              14,
+              14
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -7,
+              0,
+              -7
+            ],
+            "size": [
+              14,
+              14,
+              14
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'left'",
+        "components": {
+          "minecraft:geometry": {
+            "identifier": "geometry.lepton.variantcontainers.chest_east",
+            "bone_visibility": {
+              "lid_0": "q.block_state('lepton:lid') == 0",
+              "lid_1": "q.block_state('lepton:lid') == 1",
+              "lid_2": "q.block_state('lepton:lid') == 2",
+              "lid_3": "q.block_state('lepton:lid') == 3",
+              "lid_4": "q.block_state('lepton:lid') == 4",
+              "body": true
+            }
+          },
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -7
+            ],
+            "size": [
+              15,
+              14,
+              14
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -7
+            ],
+            "size": [
+              15,
+              14,
+              14
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'right'",
+        "components": {
+          "minecraft:geometry": {
+            "identifier": "geometry.lepton.variantcontainers.chest_west",
+            "bone_visibility": {
+              "lid_0": "q.block_state('lepton:lid') == 0",
+              "lid_1": "q.block_state('lepton:lid') == 1",
+              "lid_2": "q.block_state('lepton:lid') == 2",
+              "lid_3": "q.block_state('lepton:lid') == 3",
+              "lid_4": "q.block_state('lepton:lid') == 4",
+              "body": true
+            }
+          },
+          "minecraft:collision_box": {
+            "origin": [
+              -7,
+              0,
+              -7
+            ],
+            "size": [
+              15,
+              14,
+              14
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -7,
+              0,
+              -7
+            ],
+            "size": [
+              15,
+              14,
+              14
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

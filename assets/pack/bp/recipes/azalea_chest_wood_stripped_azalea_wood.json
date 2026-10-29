@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_chest_wood_stripped_azalea_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:stripped_azalea_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:stripped_azalea_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}
