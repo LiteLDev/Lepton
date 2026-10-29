@@ -213,4 +213,6 @@ void onWorldClosed() { st() = State{}; }
 
 namespace lp::feature::throwables::skullpikes {
 int fleeingCount() { return static_cast<int>(st().fleeing.size()); }
+
+bool isFleeing(int64_t mobId) { return st().fleeing.contains(mobId); }
 } // namespace lp::feature::throwables::skullpikes

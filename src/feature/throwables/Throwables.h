@@ -149,6 +149,8 @@ void onPlaced(Player& player, BlockPos const& pos);
 void scareNow();
 /// Mobs currently running from a pike (tests).
 [[nodiscard]] int fleeingCount();
+/// Whether the mob with this unique id is running from a pike (tests).
+[[nodiscard]] bool isFleeing(int64_t mobId);
 } // namespace skullpikes
 
 namespace cloud {

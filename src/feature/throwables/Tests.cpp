@@ -358,8 +358,9 @@ LP_REGISTER_SELFTEST("throwables.skull_pike", [](Context& ctx) -> ll::coro::Coro
     ctx.require(zombie != nullptr, "husk spawned");
     auto zid = ent::idOf(*zombie);
     co_await ctx.ticks(2);
-    int fleeing = tw::skullpikes::fleeingCount();
-    for (int i = 0; i < 10 && tw::skullpikes::fleeingCount() <= fleeing; ++i) {
+    // check the husk itself: other mobs fleeing other pikes (the gallery's) change fleeingCount()
+    auto huskId = static_cast<int64_t>(zid);
+    for (int i = 0; i < 10 && !tw::skullpikes::isFleeing(huskId); ++i) {
         // A husk busy attacking does not flee: in the full suite it may target other units' mobs.
         if (auto* z = ent::find(zid); z && z->mTargetId->rawID != -1 && z->mTargetId->rawID != 0) {
             ctx.info("the husk had a target: cleared");
@@ -368,7 +369,7 @@ LP_REGISTER_SELFTEST("throwables.skull_pike", [](Context& ctx) -> ll::coro::Coro
         tw::skullpikes::scareNow(); // the escape position is random: a few tries
         co_await ctx.ticks(1);
     }
-    ctx.check(tw::skullpikes::fleeingCount() > fleeing, "the husk runs from the pike");
+    ctx.check(tw::skullpikes::isFleeing(huskId), "the husk runs from the pike");
     if (auto* z = ent::find(zid)) ent::despawn(*z);
 
     lp::game::clearBlock(region, lp::game::blockPos(skull));
