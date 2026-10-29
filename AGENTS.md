@@ -235,8 +235,10 @@ Deploying by hand: copy `bin/server/Lepton` to `<BDS>/plugins/`, or `bin/client/
 - `NetherGenerator` and `TheEndGenerator` share `$decorateWorldGenPostProcess`: a hook on it must check
   the dimension itself.
 - Calling `getOffers()` inside a `_generateTrades` hook recurses into the hook.
-- Vanilla flower pots holding a custom plant (`minecraft:flower_pottable`) crash the client while it
-  builds the pot's mesh: swap the pot for a custom potted block (U7 `Potted.cpp`, U8, U28).
+- A vanilla flower pot holding a custom plant that has `minecraft:flower_pottable` but no
+  `minecraft:embedded_visual` crashes the client while it builds the pot's mesh (U7's saplings). With
+  an `embedded_visual` (U29's chorus weeds / twist) the potted plant renders fine. Otherwise swap the
+  pot for a custom potted block (U7 `Potted.cpp`, U8, U28).
 - The dedicated server builds some texts with its own I18n, which only knows the vanilla strings
   (e.g. the `/give` feedback): `PackDeployer` appends the pack's `texts/<lang>.lang` to it at install.
   Pass translation keys to clients wherever possible instead of server-translated names.

@@ -105,7 +105,7 @@ Settings live in `config/*.json` inside the mod folder (`plugins/Lepton/` or `mo
 | `frames.json` | GlassItemFrame, DyeableItemFrames, MoreBannerLayers, MapWashing |
 | `farming.json` | SimpleHarvest, HoeHarvesting, PigLitters, PoisonPotatoUsage, CoralOnCactus, RenewableSporeBlossoms, PetalsOnWater, GrabChickens, HorsesSwim, VillagersFollowEmeralds |
 | `mobtweaks.json` | SaferCreatures, SlimesToMagmaCubes, SnowGolemPlayerHeads, VexesDieWithTheirMasters, ZombieVillagersOnNormal, DragonScales, GoldToolsHaveFortune, DiamondRepair, NoDurabilityOnCosmetics, ShulkerPacking, MagmaKeepsConcretePowder, ImprovedSponges, DoubleDoorOpening |
-| `misctweaks.json` | BetterElytraRocket, CampfiresBoostElytra, MoreNoteBlockSounds, AutomaticRecipeUnlock, ArmedArmorStands, GameNerfs, SpawnerReplacer, VillagerRerollingRework, AdjustableChat, NarratorReadout, ClimateControlRemover |
+| `misctweaks.json` | BetterElytraRocket, CampfiresBoostElytra, MoreNoteBlockSounds, AutomaticRecipeUnlock, ArmedArmorStands, GameNerfs, SpawnerReplacer, VillagerRerollingRework, AdjustableChat, NarratorReadout, ClimateControlRemover (the OverlayShader and MicrocraftingHelper keys are kept but do nothing on Bedrock) |
 | `worldsurface.json` | FairyRings, FallenLogs, MonsterBox, GlimmeringWeald, CherryGroveWaterPetals |
 | `worldbeyond.json` | NetherObsidianSpikes, NoMoreLavaPockets, ChorusVegetation, SpiralSpires |
 

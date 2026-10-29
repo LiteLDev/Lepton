@@ -14,14 +14,17 @@
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "nlohmann/json.hpp"
 
 #include "ll/api/service/Bedrock.h"
 
 #include "mc/locale/I18n.h"
+#include "mc/locale/Localization.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/storage/LevelData.h"
 
@@ -88,7 +91,15 @@ void registerServerNames() {
         log().warn("no names found in {}", file.string());
         return;
     }
-    getI18n().appendAdditionalTranslations(names, "");
+    // Straight into the loaded language tables: the server looks names up in its current language
+    // (`I18n::appendAdditionalTranslations` only applies to languages loaded later).
+    auto& i18n = getI18n();
+    std::vector<std::shared_ptr<Localization const>> locales{i18n.getCurrentLanguage().get()};
+    if (auto en = i18n.getLocaleFor("en_US"); en && en != locales.front()) locales.push_back(en);
+    for (auto const& locale : locales) {
+        auto& strings = const_cast<Localization&>(*locale).mStrings.get();
+        for (auto const& [k, v] : names) strings.insert_or_assign(k, v);
+    }
     log().info("registered {} names with the server ({})", names.size(), file.filename().string());
 }
 } // namespace

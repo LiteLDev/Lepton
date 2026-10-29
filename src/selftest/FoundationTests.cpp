@@ -1,8 +1,8 @@
 // Selftests of the foundation: world storage, translations, configs, blocks and simulated players.
 
+#include "mc/locale/I18n.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/world/actor/player/Player.h"
-
 #include "mc/world/item/ItemStack.h"
 
 #include "game/Blocks.h"
@@ -42,23 +42,29 @@ LP_REGISTER_SELFTEST("foundation.i18n", [](Context& ctx) {
 });
 
 // The server builds some texts with item names itself (`/give` feedback): they must not be raw keys
-// (PackDeployer appends the pack's names to the server's I18n on BDS; the client has them).
+// (PackDeployer adds the pack's names to the server's I18n on BDS; the client has them).
 LP_REGISTER_SELFTEST("foundation.item_names", [](Context& ctx) {
+    struct Case {
+        char const* id;
+        char const* key;
+        char const* name;
+    };
     int checked = 0;
-    for (auto [id, name] : {std::pair{"lepton:ancient_tome", "Ancient Tome"}, {"lepton:apple_crate", "Apple Crate"}}) {
-        auto item = lp::game::makeItem(id, 1, 0);
+    for (auto const& c : {Case{"lepton:ancient_tome", "item.lepton:ancient_tome.name", "Ancient Tome"},
+                          Case{"lepton:apple_crate", "tile.lepton:apple_crate.name", "Apple Crate"}}) {
+        std::string const id = c.id;
+        auto              item = lp::game::makeItem(id, 1, 0);
         if (lp::game::isEmpty(item)) {
-            ctx.info(std::string(id) + " is not registered, skipped");
+            ctx.info(id + " is not registered, skipped");
             continue;
         }
-        auto shown = item.getName();
         ++checked;
-        ctx.check(shown.find("lepton:") == std::string::npos, std::string(id) + " has a translated name: " + shown);
+        auto shown = item.getName();
+        ctx.info(id + ": name '" + shown + "', I18n '" + getI18n().get(c.key, nullptr) + "'");
+        ctx.check(shown.find("lepton:") == std::string::npos, id + " has a translated name: " + shown);
 #ifdef LP_SERVER // the client uses the game's language
         if (lp::config::get<lp::ModConfig>().language == "en_US")
-            ctx.check(shown == name, std::string(id) + " is named " + name + ": " + shown);
-#else
-        (void)name;
+            ctx.check(shown == c.name, id + " is named " + c.name + ": " + shown);
 #endif
     }
     ctx.info("checked " + std::to_string(checked) + " names");
