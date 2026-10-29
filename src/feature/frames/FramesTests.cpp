@@ -367,6 +367,48 @@ LP_REGISTER_SELFTEST("frames.glass_sign", [](Context& ctx) -> ll::coro::CoroTask
     clearItems(ctx, s);
 });
 
+LP_REGISTER_SELFTEST("frames.glass_comparator", [](Context& ctx) -> ll::coro::CoroTask<> {
+    ConfigGuard cfg;
+    auto s = ctx.testPos(2436); // ground level: the comparator stands on the ground
+    ctx.require(co_await ctx.ensureLoaded(s), "test area loaded");
+    auto& sp = ctx.player();
+    stepAside(ctx, off(s, 0, 0, 4));
+    ctx.require(put(ctx, s, "minecraft:stone"), "support placed");
+    auto f = off(s, 0, 0, 1);
+    ctx.require(put(ctx, f, fr::kGlassFrame, {{"minecraft:block_face", std::string("south")}}), "frame placed");
+    co_await ctx.ticks(2);
+    auto direct = [&] {
+        auto const& b = at(ctx, f);
+        return b.getBlockType().getComparatorSignal(regionOf(ctx), lp::game::blockPos(f), b, 2);
+    };
+    ctx.require(at(ctx, f).getBlockType().hasComparatorSignal(), "glass frames have a comparator signal");
+    ctx.check(direct() == 0, "an empty frame gives 0");
+    hold(ctx, lp::game::makeItem("minecraft:apple"));
+    ctx.require(fr::testing::useGlass(sp, f), "an apple goes in");
+    ctx.check(direct() == 1, "a filled frame gives rotation + 1 (1)");
+    fr::testing::useGlass(sp, f);
+    fr::testing::useGlass(sp, f);
+    ctx.check(direct() == 3, "rotation 2 gives 3 (got " + std::to_string(direct()) + ")");
+
+    // a real comparator behind the support reads it (output into a wire)
+    auto c = off(s, 0, 0, -1), w = off(s, 0, 0, -2);
+    int  best = 0;
+    for (std::string dir : {"north", "south", "east", "west"}) {
+        put(ctx, c, "minecraft:air");
+        put(ctx, w, "minecraft:redstone_wire");
+        put(ctx, c, "minecraft:unpowered_comparator", {{"minecraft:cardinal_direction", dir}});
+        co_await ctx.ticks(8);
+        best = std::max(best, bs::getInt(at(ctx, w), "redstone_signal").value_or(0));
+    }
+    ctx.check(best == 3, "a comparator reads 3 through the support (wire got " + std::to_string(best) + ")");
+    fr::testing::emptyGlass(f);
+    put(ctx, c, "minecraft:air");
+    put(ctx, w, "minecraft:air");
+    lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(f));
+    co_await ctx.ticks(2);
+    clearItems(ctx, s);
+});
+
 LP_REGISTER_SELFTEST("frames.glass_maps", [](Context& ctx) -> ll::coro::CoroTask<> {
     ConfigGuard cfg;
     auto s = off(ctx.testPos(2440), 0, 1, 0);
