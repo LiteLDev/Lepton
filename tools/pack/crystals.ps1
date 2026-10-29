@@ -308,9 +308,9 @@ Write-PackJson (Join-Path $script:RP 'animations/lepton_beacon_beam.animation.js
                 bones = [ordered]@{
                     # beam axis = +y from the block centre; FacingID 0 down 1 up 2 north 3 south 4 west 5 east
                     root = [ordered]@{ rotation = @(
-                            "q.property('lepton:dir') == 0 ? 180 : (q.property('lepton:dir') == 2 ? -90 : (q.property('lepton:dir') == 3 ? 90 : 0))",
+                            "q.property('lepton:dir') == 0 ? 180 : (q.property('lepton:dir') == 2 ? 90 : (q.property('lepton:dir') == 3 ? -90 : 0))",
                             '0',
-                            "q.property('lepton:dir') == 4 ? 90 : (q.property('lepton:dir') == 5 ? -90 : 0)") }
+                            "q.property('lepton:dir') == 4 ? -90 : (q.property('lepton:dir') == 5 ? 90 : 0)") }
                     beam = [ordered]@{ scale = @(1, "q.property('lepton:len')", 1) }
                     core = [ordered]@{ rotation = @(0, 'q.life_time * 45 - 45', 0) }
                 }
