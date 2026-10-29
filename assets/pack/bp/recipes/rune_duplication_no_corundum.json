@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:rune_duplication_no_corundum"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#S#",
+      "#C#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:amethyst_block"
+      },
+      "S": {
+        "tag": "minecraft:stone_tool_materials"
+      },
+      "C": {
+        "item": "lepton:smithing_template_rune"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:smithing_template_rune"
+      }
+    ],
+    "result": {
+      "item": "lepton:smithing_template_rune",
+      "count": 2
+    }
+  }
+}
