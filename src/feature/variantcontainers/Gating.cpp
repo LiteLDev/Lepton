@@ -22,6 +22,7 @@
 #include "mc/world/item/crafting/Recipes.h"
 
 #include "feature/variantcontainers/VariantContainers.h"
+#include "game/BlockStates.h"
 #include "game/Items.h"
 #include "game/WorldDb.h"
 #include "mod/Config.h"
@@ -89,6 +90,8 @@ bool itemAllowed(std::string_view id) {
         if (c == id) return cfg().enableVariantChests;
     for (auto const& f : furnaceIds())
         if (f == id) return cfg().enableVariantFurnaces;
+    // chests other units add (Quark makeChestBlocksExternal: only while VariantChests is on)
+    if (auto const* b = game::blockstates::of(id); b && isVariantChest(*b)) return cfg().enableVariantChests;
     return true;
 }
 

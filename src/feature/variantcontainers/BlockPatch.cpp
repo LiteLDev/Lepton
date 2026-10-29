@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 
 #include "ll/api/memory/Hook.h"
@@ -157,22 +158,27 @@ void patchOne(BlockType& type, Kind kind, std::string const& id) {
     }
 }
 
-void patchById(std::string const& id) {
-    auto* type = const_cast<BlockType*>(BlockTypeRegistry::get().lookupByName(HashedString(id), false));
-    if (!type) return;
-    bool furnace = false;
-    for (auto const& f : furnaceIds()) furnace |= f == id;
-    std::lock_guard lock(mutex());
-    patchOne(*type, furnace ? Kind::Furnace : Kind::Chest, id);
-    if (furnace) gFurnacesPatched = true;
+/// What a block type is to this module: by id (ours, known before the tags are applied) or by tag
+/// (chests other units add with lepton:variant_chest / lepton:variant_trapped_chest).
+std::optional<Kind> kindOf(BlockType const& type, std::string const& id) {
+    for (auto const& f : furnaceIds())
+        if (f == id) return Kind::Furnace;
+    for (auto const& c : chestIds())
+        if (c == id) return Kind::Chest;
+    if (type.hasTag(HashedString("lepton:variant_chest")) || type.hasTag(HashedString("lepton:variant_trapped_chest"))) return Kind::Chest;
+    return std::nullopt;
 }
 
-bool isOurs(std::string const& id) {
-    for (auto const& c : chestIds())
-        if (c == id) return true;
-    for (auto const& f : furnaceIds())
-        if (f == id) return true;
-    return false;
+void patchType(BlockType& type, std::string const& id) {
+    auto kind = kindOf(type, id);
+    if (!kind) return;
+    std::lock_guard lock(mutex());
+    patchOne(type, *kind, id);
+    if (*kind == Kind::Furnace) gFurnacesPatched = true;
+}
+
+void patchById(std::string const& id) {
+    if (auto* type = const_cast<BlockType*>(BlockTypeRegistry::get().lookupByName(HashedString(id), false))) patchType(*type, id);
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -186,8 +192,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     origin(definition, assertIfAlreadyExists);
     try {
-        std::string const& id = definition.mDescription->mIdentifier;
-        if (isOurs(id)) patchById(id);
+        patchById(definition.mDescription->mIdentifier);
     } catch (...) {
     }
 }
@@ -199,8 +204,11 @@ void patchBlockTypes() {
         log().error("variantcontainers: could not read the block vtable layout; chests and furnaces lose comparators");
         return;
     }
-    for (auto const& id : chestIds()) patchById(id);
     for (auto const& id : furnaceIds()) patchById(id);
+    BlockTypeRegistry::get().forEachBlockType([](BlockType const& t) {
+        patchType(const_cast<BlockType&>(t), t.getTypeName());
+        return true;
+    });
 }
 
 bool furnacesPatched() { return gFurnacesPatched; }
@@ -222,14 +230,11 @@ public:
     // Our replacement functions live in this DLL: give every block type its own vtable back.
     void uninstall() {
         std::lock_guard lock(mutex());
-        auto restore = [](std::string const& id) {
-            auto* type = const_cast<BlockType*>(BlockTypeRegistry::get().lookupByName(HashedString(id), false));
-            if (!type) return;
-            auto it = clones().find(vtableOf(*type));
-            if (it != clones().end()) *reinterpret_cast<void***>(type) = it->second.original;
-        };
-        for (auto const& id : chestIds()) restore(id);
-        for (auto const& id : furnaceIds()) restore(id);
+        BlockTypeRegistry::get().forEachBlockType([](BlockType const& t) {
+            auto it = clones().find(vtableOf(t));
+            if (it != clones().end()) *reinterpret_cast<void***>(const_cast<BlockType*>(&t)) = it->second.original;
+            return true;
+        });
     }
 
 private:
