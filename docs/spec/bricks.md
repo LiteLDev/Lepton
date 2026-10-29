@@ -108,7 +108,7 @@ Creative: building blocks (`construction`), shapes in the vanilla stairs / slab 
     `enableSpiralSpires`) and the item `lepton:dusky_myalite`, `duskbound_block_without_myalite` the opposite.
   - creative entries of disabled items are not added (`CreativeItemInitializer::_addCreativeItemServer` /
     `_addLooseCreativeItem`).
-  - vertical slabs also follow U1's VerticalSlabs module (`vslabs.json` `enableVerticalSlabs`, true when the
+  - vertical slabs (and their vertical slab -> slab recipes) also follow U1's VerticalSlabs module (`vslabs.json` `enableVerticalSlabs`, true when the
     file is absent), as Quark only registers them with that module.
   - group rules: blue nether = MoreBrickTypes && enableBlueNetherBricks; (red) sandstone bricks =
     MoreBrickTypes && enableSandstoneBricks; soul sandstone bricks = that && SoulSandstone; (mossy)
@@ -116,7 +116,9 @@ Creative: building blocks (`construction`), shapes in the vanilla stairs / slab 
     bricks && their option; the other modules by their enable key.
   - The log line `bricks: <n> recipes and <m> creative entries disabled by config` follows each world load.
 - **requiresCorrectToolForDrops**: `Block::playerDestroy` is skipped for `lepton:requires_tool` blocks when the
-  held item lacks the tool tag: no drops, as Java skips `playerDestroy` when the player cannot harvest.
+  held item lacks the tool tag: no drops, as Java skips `playerDestroy` when the player cannot harvest. The
+  verdict is taken when `SurvivalMode::destroyBlock` starts, before the tool is damaged, so a tool that breaks
+  on its last durability point still harvests.
 - **Soul fire** (`FireBlock::_trySpawnSoulFire`, `SoulFireBlock::canSurvive`): fire placed above a
   `lepton:soul_fire_base` block turns into soul fire and survives there (SoulSandstone enabled).
 - **Soul Speed** (`Mob::normalTick`): a mob with Soul Speed boots (level L) on the ground above a
@@ -186,8 +188,8 @@ creative entries disabled by config", log only).
 Selftests (dx 400..499): `bricks.content` (71 blocks + moss paste registered, shape tags, behaviour tags),
 `bricks.gate` (option dependencies and recipe flags, pure logic), `bricks.recipes` (every recipe loaded or
 skipped as the gate says), `bricks.soul_fire` (dx 400), `bricks.soul_speed` (dx 410), `bricks.dragon_immune`
-(dx 420, spawns a dragon and runs its wall check), `bricks.tool_drops` (dx 430: pickaxe / stick on cobblestone
-bricks, shovel / pickaxe on dirt bricks), `bricks.infiniburn`, `bricks.gallery` (dx 440: every full block and
+(dx 420, spawns a dragon and runs its wall check), `bricks.tool_drops` (dx 430: real survival breaks through the game mode: pickaxe, a last-durability pickaxe and a stick on cobblestone
+bricks, shovel / pickaxe on dirt bricks), `bricks.infiniburn` (block property), `bricks.infiniburn_fire` (dx 480: fire on netherrack bricks burns 30 s), `bricks.gallery` (dx 440: every full block and
 some shapes, for screenshots).
 
 E2E: `tools/e2e/server/scenarios/bricks.ps1` (all `bricks.*` pass, gate log line);

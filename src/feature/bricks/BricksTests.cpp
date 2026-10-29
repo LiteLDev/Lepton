@@ -15,6 +15,8 @@
 #include "mc/world/attribute/AttributeModifier.h"
 #include "mc/world/attribute/MutableAttributeWithContext.h"
 #include "mc/world/attribute/SharedAttributes.h"
+#include "mc/world/gamemode/GameMode.h"
+#include "mc/world/item/Item.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/crafting/Recipes.h"
 #include "mc/world/item/enchanting/Enchant.h"
@@ -145,6 +147,8 @@ LP_REGISTER_SELFTEST("bricks.gate", [](Context& ctx) {
     e.verticalSlabs = false;
     ctx.check(!bricks::itemEnabled(c, e, "midori_block_vertical_slab") && !bricks::recipeEnabled(c, e, "midori_block_vertical_slab"), "vertical slabs follow U1's module");
     ctx.check(bricks::itemEnabled(c, e, "midori_block_slab"), "normal slabs stay");
+    ctx.check(!bricks::recipeEnabled(c, e, "dirt_bricks_vertical_slab_revert"), "vertical slab revert recipes follow U1's module");
+    ctx.check(bricks::recipeEnabled(c, e, "midori_block_slab"), "slab recipes stay");
     ctx.check(bricks::recipeEnabled(c, e, "not_ours"), "foreign recipes untouched");
 });
 
@@ -191,6 +195,27 @@ LP_REGISTER_SELFTEST("bricks.infiniburn", [](Context& ctx) {
     }
     auto const* other = bs::of("lepton:blackstone_bricks");
     ctx.check(other && !infiniburn(*other), "other bricks are not");
+});
+
+// The fire itself: on netherrack bricks it keeps burning (a fire on other bricks burns out after a
+// few fire ticks of 30-40 game ticks each, once its age passes 3).
+LP_REGISTER_SELFTEST("bricks.infiniburn_fire", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto p = ctx.testPos(480);
+    ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
+    auto fireOn = off(p, 0, 1, 0), control = off(p, 3, 1, 0);
+    ctx.require(put(ctx, p, "lepton:netherrack_bricks"), "placed netherrack bricks");
+    ctx.require(put(ctx, off(p, 3, 0, 0), "lepton:blackstone_bricks"), "placed blackstone bricks");
+    ctx.cleanupBlock(fireOn);
+    ctx.cleanupBlock(control);
+    ctx.require(put(ctx, fireOn, "minecraft:fire") && put(ctx, control, "minecraft:fire"), "lit both fires");
+    bool controlOut = false;
+    for (int i = 0; i < 30; ++i) {
+        co_await ctx.ticks(20);
+        ctx.require(idAt(ctx, fireOn) == "minecraft:fire", "the fire on netherrack bricks still burns after " + std::to_string(i + 1) + " s");
+        controlOut = controlOut || idAt(ctx, control) != "minecraft:fire";
+    }
+    ctx.info(controlOut ? "the fire on blackstone bricks burned out" : "the fire on blackstone bricks still burns (doFireTick off?)");
+    for (auto const& at : {fireOn, control}) lp::game::setBlock(regionOf(ctx), lp::game::blockPos(at), *bs::of("minecraft:air"));
 });
 
 // Soul Speed boots speed the wearer up on soul sandstone, and stop doing so off it.
@@ -302,21 +327,26 @@ LP_REGISTER_SELFTEST("bricks.tool_drops", [](Context& ctx) -> ll::coro::CoroTask
         char const* block;
         char const* tool;
         bool        drops;
+        bool        lastDurability = false;
     };
     for (auto const& c : std::vector<Case>{
              {0, "lepton:cobblestone_bricks", "minecraft:iron_pickaxe", true },
              {3, "lepton:cobblestone_bricks", "minecraft:stick",        false},
              {6, "lepton:dirt_bricks",        "minecraft:iron_shovel",  true },
              {9, "lepton:dirt_bricks",        "minecraft:iron_pickaxe", false},
+             {12, "lepton:cobblestone_bricks", "minecraft:wooden_pickaxe", true, true},
          }) {
         auto at = off(p, c.dx, 0, 0);
         ctx.require(put(ctx, at, c.block), std::string("placed ") + c.block);
-        pl.setSelectedItem(lp::game::makeItem(c.tool));
+        auto tool = lp::game::makeItem(c.tool);
+        if (c.lastDurability) tool.setDamageValue(static_cast<short>(tool.mItem->getMaxDamage() - 1));
+        pl.setSelectedItem(tool);
         pl.teleport(Vec3{at.x + 0.5f, at.y + 1.f, at.z + 1.5f}, DimensionType(at.dim));
-        // what a survival break does with the drops: the block's loot with the player's tool
-        regionOf(ctx).getBlock(lp::game::blockPos(at)).playerDestroy(pl, lp::game::blockPos(at));
-        lp::game::clearBlock(regionOf(ctx), lp::game::blockPos(at));
+        // the end of a survival break: the game mode damages the tool and destroys the block
+        pl.mGameMode.get()->destroyBlock(lp::game::blockPos(at), 1);
         co_await ctx.ticks(3);
+        if (c.lastDurability)
+            ctx.info(pl.getSelectedItem().isNull() ? "the last-durability pickaxe broke" : "the pickaxe survived the break");
         auto items = drops(at);
         ctx.check(idAt(ctx, at) == "minecraft:air", std::string(c.block) + " broken");
         ctx.check(items.empty() != c.drops, std::string(c.block) + " with " + c.tool + (c.drops ? " drops" : " drops nothing"));

@@ -60,7 +60,7 @@ struct GateStats {
 };
 [[nodiscard]] GateStats const& gateStats();
 
-/// The soul-speed modifier currently applied to a mob by this unit (0 when none).
+/// Name of the soul-speed attribute modifier this unit adds to mobs.
 inline constexpr char const* kSoulSpeedModifier = "lepton:bricks_soul_speed";
 
 } // namespace lp::feature::bricks

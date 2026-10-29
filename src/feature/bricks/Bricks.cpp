@@ -21,6 +21,8 @@
 #include "mc/world/actor/Mob.h"
 #include "mc/world/actor/monster/EnderDragon.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/gamemode/GameMode.h"
+#include "mc/world/gamemode/SurvivalMode.h"
 #include "mc/world/item/ItemTag.h"
 #include "mc/world/attribute/AttributeInstance.h"
 #include "mc/world/attribute/AttributeInstanceRef.h"
@@ -267,8 +269,9 @@ LL_TYPE_INSTANCE_HOOK(SoulSpeedHook, ll::memory::HookPriority::Normal, Mob, &Mob
     auto const& boots = getArmor(SharedTypes::Legacy::ArmorSlot::Feet);
     int  level        = boots.isNull() ? 0 : EnchantUtils::getEnchantLevel(Enchant::Type::SoulSpeed, boots);
     auto& tracked     = soulSpeedMobs();
-    auto  uid         = getOrCreateUniqueID().rawID;
-    if (level <= 0 && !tracked.contains(uid)) return; // the common case: nothing to do
+    if (level <= 0 && tracked.empty()) return; // the common case: nothing to do
+    auto uid = getOrCreateUniqueID().rawID;
+    if (level <= 0 && !tracked.contains(uid)) return;
     auto attr = getMutableAttribute(SharedAttributes::MOVEMENT_SPEED());
     auto* inst = attr.mInstance->mPtr;
     if (!inst) return;
@@ -316,6 +319,33 @@ ItemTag const* requiredToolTag(Block const& b) {
     return &t.pickaxe;
 }
 
+/// Whether the player that is breaking a block right now may harvest it, decided before the break
+/// damages the tool (a tool that breaks on its last durability point still harvests, as in Java).
+thread_local std::optional<bool> gHarvestVerdict;
+
+bool canHarvest(Player& player, ItemTag const& tag) {
+    auto const& held = player.getSelectedItem();
+    return !held.isNull() && held.hasTag(tag);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    SurvivalBreakHook,
+    ll::memory::HookPriority::Normal,
+    SurvivalMode,
+    &SurvivalMode::$destroyBlock,
+    bool,
+    BlockPos const& pos,
+    uchar           face
+) {
+    Player& player = mPlayer;
+    auto const* tag = requiredToolTag(player.getDimensionBlockSource().getBlock(pos));
+    auto saved = gHarvestVerdict;
+    gHarvestVerdict = tag ? std::optional<bool>{canHarvest(player, *tag)} : std::nullopt;
+    bool r = origin(pos, face);
+    gHarvestVerdict = saved;
+    return r;
+}
+
 LL_TYPE_INSTANCE_HOOK(
     ToolDropsHook,
     ll::memory::HookPriority::Normal,
@@ -326,9 +356,9 @@ LL_TYPE_INSTANCE_HOOK(
     BlockPos const& pos
 ) {
     if (auto const* tag = requiredToolTag(*this)) {
-        auto const& held = player.getSelectedItem();
         // Java: ServerPlayerGameMode only calls playerDestroy when the player can harvest the block
-        if (held.isNull() || !held.hasTag(*tag)) return;
+        bool ok = gHarvestVerdict ? *gHarvestVerdict : canHarvest(player, *tag);
+        if (!ok) return;
     }
     origin(player, pos);
 }
@@ -413,6 +443,8 @@ bool recipeEnabled(Config const& c, Externals const& e, std::string_view name) {
     auto result = find(kRecipes, name);
     if (result.empty()) return true;
     if (!itemEnabled(c, e, result)) return false;
+    // the vertical slab -> slab recipes need the vertical slab (U1's VerticalSlabs) as well
+    if (name.find("_vertical_slab") != std::string_view::npos && !e.verticalSlabs) return false;
     // Quark's recipe conditions that go beyond "the result exists":
     bool sandstoneBricksFlag = c.enableMoreBrickTypes && c.enableSandstoneBricks;
     if (name == "soul_sandstone_wall" || name == "soul_sandstone_stairs_from_soul_sandstone_stonecutting")
@@ -478,6 +510,7 @@ struct BricksModule {
         SoulSpeedHook::hook();
         DragonWallsHook::hook();
         ToolDropsHook::hook();
+        SurvivalBreakHook::hook();
     }
     void uninstall() {
         RecipeGateHook::unhook();
@@ -488,6 +521,7 @@ struct BricksModule {
         SoulSpeedHook::unhook();
         DragonWallsHook::unhook();
         ToolDropsHook::unhook();
+        SurvivalBreakHook::unhook();
     }
 };
 
