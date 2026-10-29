@@ -1,0 +1,9 @@
+entity.lepton:gravisand.name=悬浮的重力沙子
+item.lepton:redstone_randomizer.name=红石随机器
+tile.lepton:ender_watcher.name=末影观察者
+tile.lepton:gold_button.name=金按钮
+tile.lepton:gravisand.name=重力沙子
+tile.lepton:iron_button.name=铁按钮
+tile.lepton:iron_rod.name=铁杆
+tile.lepton:obsidian_pressure_plate.name=黑曜石压力板
+tile.lepton:redstone_randomizer.name=红石随机器

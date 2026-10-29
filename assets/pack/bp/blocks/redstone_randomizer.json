@@ -1,0 +1,713 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:redstone_randomizer",
+      "menu_category": {
+        "category": "none"
+      },
+      "states": {
+        "lepton:powered": [
+          "off",
+          "left",
+          "right"
+        ]
+      },
+      "traits": {
+        "minecraft:placement_direction": {
+          "enabled_states": [
+            "minecraft:cardinal_direction"
+          ],
+          "y_rotation_offset": 0
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.redstone_redstone_randomizer",
+        "bone_visibility": {
+          "back_lit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && (q.block_state('lepton:powered') == 'left' || q.block_state('lepton:powered') == 'right'))",
+          "back_unlit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'off')",
+          "left_lit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'left')",
+          "left_unlit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'right'))",
+          "right_lit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'right')",
+          "right_unlit_north": "(q.block_state('minecraft:cardinal_direction') == 'north' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'left'))",
+          "back_lit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && (q.block_state('lepton:powered') == 'left' || q.block_state('lepton:powered') == 'right'))",
+          "back_unlit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'off')",
+          "left_lit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'left')",
+          "left_unlit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'right'))",
+          "right_lit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'right')",
+          "right_unlit_south": "(q.block_state('minecraft:cardinal_direction') == 'south' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'left'))",
+          "back_lit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && (q.block_state('lepton:powered') == 'left' || q.block_state('lepton:powered') == 'right'))",
+          "back_unlit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'off')",
+          "left_lit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'left')",
+          "left_unlit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'right'))",
+          "right_lit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'right')",
+          "right_unlit_east": "(q.block_state('minecraft:cardinal_direction') == 'east' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'left'))",
+          "back_lit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && (q.block_state('lepton:powered') == 'left' || q.block_state('lepton:powered') == 'right'))",
+          "back_unlit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'off')",
+          "left_lit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'left')",
+          "left_unlit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'right'))",
+          "right_lit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'right')",
+          "right_unlit_west": "(q.block_state('minecraft:cardinal_direction') == 'west' && (q.block_state('lepton:powered') == 'off' || q.block_state('lepton:powered') == 'left'))"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "north": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "south": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "east": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "west": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "down": {
+          "texture": "lepton_redstone_stone_slab_top",
+          "render_method": "alpha_test"
+        },
+        "up": {
+          "texture": "lepton_redstone_redstone_randomizer_off_south",
+          "render_method": "alpha_test"
+        },
+        "torch_on": {
+          "texture": "lepton_redstone_redstone_torch_on",
+          "render_method": "alpha_test"
+        },
+        "torch_off": {
+          "texture": "lepton_redstone_redstone_torch_off",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          2,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          2,
+          16
+        ]
+      },
+      "minecraft:movable": {
+        "movement_type": "popped"
+      },
+      "minecraft:tick": {
+        "interval_range": [
+          1,
+          1
+        ],
+        "looping": true
+      },
+      "minecraft:loot": "loot_tables/blocks/redstone_randomizer.json",
+      "tag:lepton:redstone_randomizer": {},
+      "tag:stone": {}
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'off')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_off_south",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'left')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_left_south",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "west",
+            "connected_faces": [
+              "west"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('lepton:powered') == 'right')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_right_south",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "east",
+            "connected_faces": [
+              "east"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'off')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_off_north",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'left')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_left_north",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "east",
+            "connected_faces": [
+              "east"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('lepton:powered') == 'right')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_right_north",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "west",
+            "connected_faces": [
+              "west"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'off')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_off_west",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'left')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_left_west",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "north",
+            "connected_faces": [
+              "north"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('lepton:powered') == 'right')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_right_west",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "south",
+            "connected_faces": [
+              "south"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'off')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_off_east",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'left')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_left_east",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "south",
+            "connected_faces": [
+              "south"
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('lepton:powered') == 'right')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "north": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "south": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "east": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "west": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "down": {
+              "texture": "lepton_redstone_stone_slab_top",
+              "render_method": "alpha_test"
+            },
+            "up": {
+              "texture": "lepton_redstone_redstone_randomizer_right_east",
+              "render_method": "alpha_test"
+            },
+            "torch_on": {
+              "texture": "lepton_redstone_redstone_torch_on",
+              "render_method": "alpha_test"
+            },
+            "torch_off": {
+              "texture": "lepton_redstone_redstone_torch_off",
+              "render_method": "alpha_test"
+            }
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "north",
+            "connected_faces": [
+              "north"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:gold_button_from_wooden"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:wooden_button"
+      },
+      {
+        "item": "minecraft:gold_ingot"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:gold_ingot"
+      },
+      {
+        "item": "minecraft:wooden_button"
+      }
+    ],
+    "result": {
+      "item": "lepton:gold_button",
+      "count": 1
+    }
+  }
+}

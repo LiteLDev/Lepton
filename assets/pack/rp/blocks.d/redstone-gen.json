@@ -1,0 +1,23 @@
+{
+  "lepton:ender_watcher": {
+    "sound": "metal"
+  },
+  "lepton:gold_button": {
+    "sound": "metal"
+  },
+  "lepton:gravisand": {
+    "sound": "sand"
+  },
+  "lepton:iron_button": {
+    "sound": "metal"
+  },
+  "lepton:iron_rod": {
+    "sound": "metal"
+  },
+  "lepton:obsidian_pressure_plate": {
+    "sound": "stone"
+  },
+  "lepton:redstone_randomizer": {
+    "sound": "stone"
+  }
+}

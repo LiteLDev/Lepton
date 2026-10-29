@@ -1,0 +1,11 @@
+{
+    "quark.jei.hint.ender_watcher": "Emits a redstone signal based on how close to the center of the eye a player is looking.",
+    "quark.jei.hint.gold_button": "Emits a very short, 2 redstone tick, pulse.",
+    "quark.jei.hint.gravisand": "Only falls when given a redstone signal, taking adjacent ones along with it. If it can't fall, it'll float upwards. Emits a comparator signal of 15.",
+    "quark.jei.hint.iron_button": "Emits a very long, 5 second, pulse.",
+    "quark.jei.hint.iron_rod": "Will break any blocks in front of it when pushed with a piston.",
+    "quark.jei.hint.redstone_randomizer": "Randomly repeats the given signal either left or right.",
+    "quark.jei.hint.piston_te": "Can now push complex blocks (aka Tile Entities), except Monster Spawners.",
+    "quark.jei.hint.piston_max_blocks": "The max amount of blocks that can be moved has also been changed to {}.",
+    "quark.jei.hint.minecraft.chain": "When connected to a block, if that block is moved by a piston, so will the Chain and anything else on the other end."
+}

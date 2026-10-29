@@ -1,0 +1,9 @@
+entity.lepton:gravisand.name=Floating Gravisand
+item.lepton:redstone_randomizer.name=Redstone Randomizer
+tile.lepton:ender_watcher.name=Ender Watcher
+tile.lepton:gold_button.name=Gold Button
+tile.lepton:gravisand.name=Gravisand
+tile.lepton:iron_button.name=Iron Button
+tile.lepton:iron_rod.name=Iron Rod
+tile.lepton:obsidian_pressure_plate.name=Obsidian Pressure Plate
+tile.lepton:redstone_randomizer.name=Redstone Randomizer
