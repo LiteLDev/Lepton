@@ -1,14 +1,15 @@
 # U17 placement on a real client. Builds a ledge high above the flat world and checks, with
 # screenshots:
-#   - ReacharoundPlacing: the horizontal and vertical crosshair indicators, and a right click in the
-#     air placing the block (also for vanilla clients: the server does it).
+#   - ReacharoundPlacing: the game's own lenient edge placement, then the crosshair indicator and a
+#     right click in the air that the server's reacharound turns into a placement (server log line,
+#     also for vanilla clients).
 #   - LockRotation: the K keybind (mod clients) / `/quark lockrotation` (vanilla clients) and the
 #     HUD indicator.
 #   - VariantSelector (local mode, enabled by placement.prelaunch.ps1): the radial menu on R, the
 #     HUD, placing the chosen variant.
 #   - LongRangePickBlock: middle click on a block 40 blocks away.
 #   - The trowel and hammer icons in the inventory.
-# Screenshots: out/placement/{reacharound-horizontal,reacharound-placed,reacharound-vertical,
+# Screenshots: out/placement/{edge-lenient,edge-lenient-placed,reacharound-horizontal,reacharound-placed,
 #   lock-hud,lock-placed,variant-radial,variant-hud,variant-placed,long-pick,items}.png
 $vanilla = $script:Mode -eq 'remote-vanilla'
 $local   = $script:Mode -eq 'local'
@@ -30,48 +31,56 @@ Invoke-Chat '/gamemode creative'
 Invoke-Chat '/tp @s 0.5 101 0.5'
 Invoke-Chat '/tp @s 0.5 101 0.5'   # the first chat line after joining is sometimes lost
 Start-Sleep -Seconds 3
-Invoke-Chat '/fill -4 96 -4 4 104 4 air'
+Invoke-Chat '/fill -4 96 -4 4 104 8 air'
 Invoke-Chat '/setblock 0 100 0 stone'
-Invoke-Chat '/setblock 0 100 -3 stone'
 Invoke-Chat '/setblock 0 100 2 stone'
+Invoke-Chat '/setblock 0 100 6 stone'
 Invoke-Chat '/clear @s'
 Invoke-Chat '/give @s cobblestone 32'
 Press-Key 1
 Save-Screenshot 'setup' | Out-Null
 
 # ---- ReacharoundPlacing ------------------------------------------------------------------------
+# Close to the ledge's edge, Bedrock's own (lenient) hit detection already targets the ledge's
+# side: the crosshair shows no reacharound indicator (Quark hides it while the game targets a block)
+# and a click is the game's normal placement against that face.
 $m = Get-LogMark
 Invoke-Chat '/tp @s 0.7 101 0.5 -90 70'
 Start-Sleep -Seconds 1
-if (-not $vanilla) { Wait-LogLine 'placement: reacharound indicator horizontal' 15 -Since $m | Out-Null }
-Save-Screenshot 'reacharound-horizontal' | Out-Null
-# Bedrock clients bridge forward on their own here (they send a click on the ledge's east face), so
-# the block may come from the game's own placement: either way the target gets filled.
-$m = Get-LogMark
+Save-Screenshot 'edge-lenient' | Out-Null
 Use-Right
-if (-not $vanilla) { Wait-LogLine 'placement: reacharound indicator none' 15 -Since $m | Out-Null }
 Start-Sleep -Milliseconds 800
 Assert-BlockAt 1 100 0 'cobblestone'
-Save-Screenshot 'reacharound-placed' | Out-Null
+Save-Screenshot 'edge-lenient-placed' | Out-Null
 
-# Vertical: under the second ledge. The client may click the ledge's bottom face itself, or send
-# a use-in-air that the server's reacharound turns into the placement; either way the block appears.
-$m = Get-LogMark
-Invoke-Chat '/tp @s 1.2 101 -2.5 90 84'
-Start-Sleep -Seconds 1
-if (-not $vanilla) {
-    Wait-LogLine 'placement: reacharound indicator vertical' 15 -Since $m | Out-Null
+# Reacharound proper: on the third ledge's east edge, looking down past it, far enough out that
+# the game targets nothing (the click is a "use item" in the air) while the ray moved back by
+# `leniency` hits the ledge: the server places the block east of the ledge. The client's eye is a
+# little higher than the server's, so a few poses are tried; the indicator (mod clients) shows
+# which ones have a target.
+$served = $null
+foreach ($pose in @(@(1.06, 80), @(1.08, 80), @(1.04, 80), @(1.06, 84), @(1.08, 84), @(1.10, 84), @(1.06, 76), @(1.10, 80))) {
+    Invoke-Chat '/setblock 1 100 6 air'
+    $m = Get-LogMark
+    Invoke-Chat "/tp @s $($pose[0]) 101 6.5 -90 $($pose[1])"
+    Start-Sleep -Seconds 1
+    if (-not $vanilla) {
+        try { Wait-LogLine 'placement: reacharound indicator horizontal' 4 -Since $m | Out-Null } catch { Write-Step "pose $($pose -join ' '): no indicator"; continue }
+        Save-Screenshot 'reacharound-horizontal' | Out-Null
+    }
+    $m = Get-LogMark
+    Use-Right
+    try {
+        Wait-LogLine 'placement: reacharound placed minecraft:cobblestone at 1 100 6 \(horizontal\)' 5 -Since $m | Out-Null
+        $served = $pose
+        break
+    } catch { Write-Step "pose $($pose -join ' '): not placed by the server" }
 }
-Save-Screenshot 'reacharound-vertical' | Out-Null
-$m = Get-LogMark
-Use-Right
+if (-not $served) { throw 'no pose made the server place a reacharound block' }
+Write-Step "server reacharound placed the block from pose $($served -join ' ')"
+Assert-BlockAt 1 100 6 'cobblestone'
 Start-Sleep -Milliseconds 800
-$under = Test-BlockAt 0 99 -3 'cobblestone'
-$beside = if ($under) { $false } else { Test-BlockAt 1 100 -3 'cobblestone' }
-if (-not ($under -or $beside)) { throw 'the vertical reacharound placed nothing' }
-Write-Step ("vertical case: block placed " + $(if ($under) { 'under the ledge (reacharound)' } else { 'beside the ledge (the client''s own bridging)' }))
-Start-Sleep -Milliseconds 800
-Save-Screenshot 'reacharound-vertical-placed' | Out-Null
+Save-Screenshot 'reacharound-placed' | Out-Null
 
 # ---- LockRotation --------------------------------------------------------------------------------
 Invoke-Chat '/give @s oak_log 8'

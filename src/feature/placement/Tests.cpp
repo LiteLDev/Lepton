@@ -483,6 +483,11 @@ LP_REGISTER_SELFTEST("placement.scaffolding", [](Context& ctx) -> ll::coro::Coro
     ctx.require(co_await ctx.ensureLoaded(p), "test area loaded");
     auto& player = ctx.player();
     setSurvival(ctx);
+    // Scaffolding without a block under the tower collapses once a neighbour update reaches it (the
+    // replacement does): testPos is the surface of the spawn column, which may be a structure in
+    // the air (the client e2e builds one at the spawn), so the tower gets its own floor.
+    if (idAt(ctx, off(p, 0, -1, 0)) == "minecraft:air")
+        ctx.require(put(ctx, off(p, 0, -1, 0), "minecraft:stone"), "floor under the tower");
     for (int i = 0; i < 4; ++i) ctx.require(put(ctx, off(p, 0, i, 0), "minecraft:scaffolding"), "scaffolding tower");
     stand(ctx, Vec3{static_cast<float>(p.x) + 0.5f, static_cast<float>(p.y), static_cast<float>(p.z) + 3.5f}, 180.0f, 10.0f);
     hold(ctx, "minecraft:cobblestone", 4);
@@ -493,6 +498,14 @@ LP_REGISTER_SELFTEST("placement.scaffolding", [](Context& ctx) -> ll::coro::Coro
     ctx.check(idAt(ctx, off(p, 0, 0, 1)) == "minecraft:air", "nothing placed next to the clicked piece");
     ctx.check(countOf(player, "minecraft:cobblestone") == 3, "one block used");
     ctx.check(countOf(player, "minecraft:scaffolding") == 1, "the scaffolding is given back");
+    // the three pieces left: the next replacement goes to the new top
+    auto next   = pl::scaffoldingTarget(region(ctx), bp(p), pl::South);
+    auto column = [&] {
+        std::string s;
+        for (int i = -1; i <= 4; ++i) s += " " + std::to_string(i) + "=" + idAt(ctx, off(p, 0, i, 0));
+        return s;
+    };
+    ctx.check(next == bp(off(p, 0, 2, 0)), std::format("the tower is shorter now: target y{:+} column{}", next.y - p.y, column()));
 });
 
 LP_REGISTER_SELFTEST("placement.scaffolding_bounce", [](Context& ctx) -> ll::coro::CoroTask<> {
