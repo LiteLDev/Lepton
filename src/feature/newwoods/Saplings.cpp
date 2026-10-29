@@ -74,7 +74,7 @@ bool growTree(BlockSource& region, BlockPos const& pos, Block const& sapling, Ja
     // Java TreeGrower#growTree: the sapling makes room, the tree is placed, or the sapling comes back
     game::setBlock(region, pos, *air);
     if (placeTree(region, pos, *tree, random, false)) {
-        log().info("newwoods: grew a {} tree at {} {} {}", tree->name, pos.x, pos.y, pos.z);
+        log().info("newwoods: {} tree grown at {} {} {}", tree->name, pos.x, pos.y, pos.z);
         return true;
     }
     game::setBlock(region, pos, sapling);
