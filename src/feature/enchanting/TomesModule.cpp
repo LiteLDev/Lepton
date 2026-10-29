@@ -13,6 +13,9 @@
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/deps/shared_types/legacy/ContainerType.h"
 #include "mc/deps/shared_types/legacy/LevelSoundEvent.h"
+#include "mc/network/MinecraftPacketIds.h"
+#include "mc/network/MinecraftPackets.h"
+#include "mc/network/packet/ContainerClosePacket.h"
 #include "mc/server/ServerPlayer.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
@@ -295,6 +298,22 @@ void damageAnvil(core::GlobalPos const& pos) {
     }
 }
 
+/// Closes the open anvil / smithing screen on the client too (the inputs go back to the inventory).
+void closeStationScreen(Player& p) {
+    if (!p.mContainerManager) return;
+    if (!p.isSimulated()) {
+        auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::ContainerClose);
+        if (pkt) {
+            auto& close                  = static_cast<ContainerClosePacket&>(*pkt);
+            close.mContainerId           = p.mContainerManager->getContainerId();
+            close.mContainerType         = p.mContainerManager->getContainerType();
+            close.mServerInitiatedClose  = true;
+            close.sendTo(p);
+        }
+    }
+    static_cast<ServerPlayer&>(p).initiateContainerClose();
+}
+
 bool applyOffer(Player& p, Offer const& o) {
     bool cr = creative(p);
     if (!cr && playerLevel(p) < o.craft.cost) {
@@ -327,7 +346,7 @@ bool applyOffer(Player& p, Offer const& o) {
                   static_cast<int>(SharedTypes::Legacy::LevelSoundEvent::SmithingTableUse));
     }
     log().info("enchanting: {} applied {} -> {}", p.getRealName(), o.craft.kind, game::itemId(result));
-    if (p.mContainerManager) static_cast<ServerPlayer&>(p).initiateContainerClose();
+    closeStationScreen(p);
     forcedStations().erase(uuidOf(p));
     return true;
 }
@@ -412,7 +431,7 @@ void tickStations() {    auto level = ll::service::getLevel();
             net::sendToClient(p, m);
         } else if (offer && !p.isSimulated()) {
             // Vanilla clients can't show the result in the vanilla screen: ask with a form.
-            static_cast<ServerPlayer&>(p).initiateContainerClose();
+            closeStationScreen(p);
             auto o = *offer;
             later(10, [uuid, o] {
                 if (auto* pl = playerByUuid(uuid)) offerForm(*pl, o);
