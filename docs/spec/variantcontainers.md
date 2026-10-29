@@ -66,30 +66,42 @@ chests never burn (Quark overrides their flammability to 0).
 chest), `lepton:variant_trapped_chest` (every trapped one), `lepton:wooden_chest` (wooden ones, both
 kinds: donk chests and reverting). A chest's partner must be the same block id.
 
+**Block contract for chests of other units** (U7: azalea, blossom, ancient): a block with the tag
+`lepton:variant_chest` or `lepton:variant_trapped_chest`, the states above (`lepton:type`,
+`lepton:lid`; trapped: `lepton:power` with a `minecraft:redstone_producer` permutation for every value
+0..15, `strongly_powered_face: down`), the `minecraft:placement_direction` trait on
+`minecraft:cardinal_direction`, the geometries `geometry.lepton.variantcontainers.chest_{single,east,west}`
+(type single / left / right) with the bone visibility `lid_<n>` = `lepton:lid == n` and `body`, a
+64 x 128 texture in the atlas layout `$ChestAtlas` of `tools/textures/variantcontainers.ps1`, and
+`minecraft:movable` immovable (`Write-ChestBlock` in `tools/pack/variantcontainers.ps1` writes one).
+Pairing, screens, lids, hoppers, comparators, donk chests and creative gating then work for it; the
+unit gates its own chest recipes on `enableVariantChests` (`config/variantcontainers.json`).
+
 **Recipes** (crafting table):
 
 | Recipe id | Pattern / ingredients | Result |
 |---|---|---|
-| `lepton:<mat>_chest` | `###` `# #` `###`, `#` = the material's planks / base block | 1 `<mat>_chest` (priority over the vanilla chest recipe) |
+| `lepton:<mat>_chest` | `###` `# #` `###`, `#` = the material's planks / base block | 1 `<mat>_chest` (priority -2: wins over the vanilla chest recipe, priority 0; Bedrock takes the lowest value) |
 | `lepton:<wood>_chest_wood_<log>` | `###` `# #` `###`, `#` = one log / wood / stripped log / stripped wood (stems, hyphae, bamboo blocks) of the wood | 4 `<wood>_chest` (only while U8's `logsToChests` is on, Quark flag `wood_to_chest_recipes`) |
 | `lepton:trapped_<mat>_chest` | shapeless `<mat>_chest` + `minecraft:tripwire_hook` | 1 `trapped_<mat>_chest` |
 | `lepton:<wood>_chest_revert` | shapeless `<wood>_chest` | 1 `minecraft:chest` (`enableRevertingWoodenChests`, wooden chests only = Quark tag `quark:revertable_chests`) |
 | `lepton:trapped_<wood>_chest_revert` | shapeless `trapped_<wood>_chest` | 1 `minecraft:trapped_chest` (same) |
 
 Vanilla's `chest + tripwire hook -> trapped chest` already exists on Bedrock. Mixed planks keep
-making the vanilla chest (vanilla Bedrock recipe on the `minecraft:planks` tag).
+making the vanilla chest (vanilla Bedrock recipe on the `minecraft:planks` tag). While the module is
+on, the vanilla recipes `minecraft:chest_from_{crimson,mangrove,warped}_planks` (one kind of planks ->
+vanilla chest) are left out, as Quark replaces the vanilla chest recipe with its mixed-planks one.
 
 **Drops:** the chest itself (any tool; explosions drop it too, like vanilla), plus its contents.
 
-**Creative inventory:** category Items, after the vanilla chests (regular chests first, then the
-trapped ones).
+**Creative inventory:** category Items (regular chests first, then the trapped ones, as listed).
 
 ### 2.2 VariantFurnaces
 
 | Id | English name | Base | Sound | Hardness / resistance | Tool | Light |
 |---|---|---|---|---|---|---|
-| `lepton:deepslate_furnace` | Deepslate Furnace | `minecraft:cobbled_deepslate` | deepslate | 3.5 / 6 (vanilla deepslate 3 / 6 copied; Bedrock furnace mining time 3.5 kept) | pickaxe | 13 when lit |
-| `lepton:blackstone_furnace` | Blackstone Furnace | `minecraft:blackstone` | stone | 3.5 / 6 | pickaxe | 13 when lit |
+| `lepton:deepslate_furnace` | Deepslate Furnace | `minecraft:cobbled_deepslate` | deepslate | 3 / 6 (Quark copies deepslate) | pickaxe | 13 when lit |
+| `lepton:blackstone_furnace` | Blackstone Furnace | `minecraft:blackstone` | stone | 1.5 / 6 (Quark copies blackstone) | pickaxe | 13 when lit |
 
 States: `minecraft:cardinal_direction` (trait), `lepton:lit` (bool), `lepton:soul` (bool, blackstone
 only: the block below is a soul fire base). Tag `lepton:variant_furnace` (both), `lepton:soul_furnace`
@@ -99,7 +111,7 @@ Textures: side, top, front, lit front; the blackstone furnace also has a soul-fi
 
 | Recipe id | Pattern | Result |
 |---|---|---|
-| `lepton:deepslate_furnace` | `###` `# #` `###`, `#` = cobbled deepslate | 1 (priority over the vanilla furnace recipe, which still takes mixed stones) |
+| `lepton:deepslate_furnace` | `###` `# #` `###`, `#` = cobbled deepslate | 1 (priority -2 over the vanilla furnace recipe, -1, which still takes mixed stones; `minecraft:furnace_from_{blackstone,cobbled_deepslate}` are left out while the module is on) |
 | `lepton:blackstone_furnace` | `#` = blackstone | 1 |
 | `lepton:<kind>_blast_furnace` | `III` `IXI` `###`, I = iron ingot, X = the furnace, # = smooth stone | `minecraft:blast_furnace` |
 | `lepton:<kind>_smoker` | ` # ` `#X#` ` # `, # = any log (`minecraft:logs` tag) | `minecraft:smoker` |
@@ -134,8 +146,9 @@ Drops itself, its items and its stored experience.
   `AbstractContainerMenu#getRedstoneSignalFromContainer`), also through a solid block.
 - **Hoppers, hopper minecarts and droppers** insert into and pull from the chest like a vanilla
   chest (54 slots for a double chest). Pistons cannot move chests (vanilla Java).
-- **Piglins** within 16 blocks that see the player get angry when a chest opens (Java
-  `PiglinAi.angerNearbyPiglins(player, true)`).
+- **Piglins** (Java `PiglinAi.angerNearbyPiglins`): Bedrock's piglin AI turns on players that have a
+  container screen open (the `has_container_open` filter); the variant chest screen is a container
+  screen like the vanilla one, so piglins react the way they react to a vanilla chest.
 - **Donk chest:** using a wooden variant chest (`lepton:wooden_chest`, regular or trapped) on a
   tamed adult donkey, mule or llama without a chest (player not sneaking) equips a chest (the
   vanilla `minecraft:on_chest` event, sound `armor.equip_generic`), consumes one item and remembers
@@ -168,8 +181,9 @@ Drops itself, its items and its stored experience.
 
 ### 3.2 Furnaces
 
-- The block is a real vanilla furnace on the server: the block actor is the vanilla
-  `FurnaceBlockActor` (smelting recipes, fuel times, XP, recipe book, hopper faces: top = input,
+- The block is a real vanilla furnace on the server: the block type gets the vanilla furnace block
+  actor (`BlockType::mBlockEntityType`, set when the block registers, on the server and in the
+  client mod), so the block actor is the vanilla `FurnaceBlockActor` (smelting recipes, fuel times, XP, recipe book, hopper faces: top = input,
   sides = fuel, bottom pulls the result, comparator output = fill level of its 3 slots).
 - Lit state: `lepton:lit` follows the furnace, light 13; the front texture shows the fire. Lit
   furnaces emit smoke + flame particles at the front (blackstone with soul state: soul fire flame)
@@ -184,9 +198,10 @@ Drops itself, its items and its stored experience.
 - Chests: the vanilla chest screen through `game/VirtualContainer` (every client, mod or vanilla);
   title "Chest" / "Large Chest" or the custom name.
 - Furnaces: the vanilla furnace screen (recipe book, progress arrow, flame) for every client. The
-  client needs a furnace block actor at the position to show the screen: mod clients patch their
-  block registry like the server; vanilla clients are sent a vanilla furnace block at that position
-  while the screen is open (it renders as a vanilla furnace for them until they close it).
+  client needs a furnace block actor at the position to show the screen: the client mod patches its
+  block registry like the server and tells the server (message `variantcontainers:furnaces`); every
+  other client is sent a vanilla furnace block at that position while the screen is open (it renders
+  as a vanilla furnace for that player until the screen closes; lit changes re-send it).
 
 ## 5. Config
 
@@ -214,6 +229,12 @@ Block names are in §2 (RP `texts.d/*/variantcontainers-gen.lang`).
 
 ## 7. Bedrock differences / not ported
 
+- Comparators: data-driven blocks cannot declare a comparator signal. Each chest / furnace block type
+  gets its own copy of the block vtable with `hasComparatorSignal` / `getComparatorSignal` (and, for
+  furnaces, `onRemove`, `isContainerBlock`, `isCraftingBlock`) replaced; other blocks are untouched.
+- Players without the client mod see a vanilla furnace in place of a variant furnace while they have
+  its screen open (see §4).
+
 - Custom blocks cannot have block-entity renderers, so the chest is block geometry: the lid opens
   in 4 visible steps (22.5 degree multiples, the finest rotation Bedrock block geometry allows)
   instead of a smooth per-frame animation.
@@ -229,15 +250,26 @@ Block names are in §2 (RP `texts.d/*/variantcontainers-gen.lang`).
 Selftests (`variantcontainers.*`, dx 900..999), run on BDS by
 `tools/e2e/server/scenarios/variantcontainers.ps1` and in the `full` scenario:
 
-- `variantcontainers.registry`: every block, item and recipe exists; config defaults.
-- `variantcontainers.pairing`: placement rules, pairing, unpairing keeps / drops the right slots.
-- `variantcontainers.open`: chest screen 27 / 54 slots, blocked by a solid block above, lid frames
-  and sounds, trapped chest power.
-- `variantcontainers.hopper`: a hopper fills a chest; a hopper below empties a double chest.
-- `variantcontainers.comparator`: comparator output from a variant chest and a furnace.
-- `variantcontainers.furnace`: smelting with fuel through hoppers, lit state, soul state, drops.
-- `variantcontainers.donk`: a donkey takes a variant chest and drops it on death.
-- `variantcontainers.worldgen`: a generated loot chest is replaced and its loot rolls on open.
+- `variantcontainers.registry`: every block, item and recipe exists; the block types are patched.
+- `variantcontainers.recipes`: a crafter makes the variants from equal planks / stones and the
+  vanilla chest / furnace from mixed ones. `variantcontainers.gating`: the config switches remove
+  recipes and creative entries.
+- `variantcontainers.pairing`: pairing by neighbour update, merged and split inventories, other
+  kinds do not pair. `variantcontainers.placement`: a player places chests (facing, pairing,
+  sneaking; a vanilla chest placed the same way faces the same way).
+- `variantcontainers.open`, `variantcontainers.double_screen`: 27 / 54 slot screens, lid frames, a
+  solid block on top blocks the chest. `variantcontainers.trapped_redstone`: an open trapped chest
+  powers a lamp, closing turns it off. `variantcontainers.name`: a named chest's screen title.
+  `variantcontainers.piglins`: the player has a container open while the screen shows.
+- `variantcontainers.hopper`: hoppers push into and pull out of a chest.
+- `variantcontainers.comparator`: comparator output of a variant chest (Java formula).
+- `variantcontainers.furnace`: smelting, lit state, the block stays ours, comparator, the furnace
+  screen, hoppers feed input and fuel, drops when broken. `variantcontainers.soul`: soul state.
+- `variantcontainers.donk`: a donkey takes a birch chest and drops it on death.
+- `variantcontainers.worldgen`: a desert pyramid loot chest becomes a birch chest with its facing
+  and rolls its loot when opened.
+- `variantcontainers.gallery`: builds the screenshot gallery (client scenario).
 
-Client scenario `tools/e2e/client/scenarios/variantcontainers.ps1`: screenshots of every chest
-(single, double, open lid frames, trapped), the furnaces (unlit, lit, soul) and both screens.
+Client scenario `tools/e2e/client/scenarios/variantcontainers.ps1`: screenshots of every chest and
+trapped chest from the front, the lid frames 0..4, double chests from the front and the back, the
+furnaces (unlit, lit, soul) and the chest, double chest and furnace screens.

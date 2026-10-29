@@ -265,8 +265,8 @@ foreach ($mat in $Stones.Keys) {
 # ---- furnaces -------------------------------------------------------------------------------------
 
 $Furnaces = [ordered]@{
-    deepslate  = @{ En = 'Deepslate Furnace'; Zh = '深板岩熔炉'; Base = 'minecraft:cobbled_deepslate'; Sound = 'deepslate'; Map = '#646464'; Soul = $false }
-    blackstone = @{ En = 'Blackstone Furnace'; Zh = '黑石熔炉'; Base = 'minecraft:blackstone'; Sound = 'stone'; Map = '#191919'; Soul = $true }
+    deepslate  = @{ En = 'Deepslate Furnace'; Zh = '深板岩熔炉'; Base = 'minecraft:cobbled_deepslate'; Sound = 'deepslate'; Map = '#646464'; Soul = $false; Hardness = 3.0 }
+    blackstone = @{ En = 'Blackstone Furnace'; Zh = '黑石熔炉'; Base = 'minecraft:blackstone'; Sound = 'stone'; Map = '#191919'; Soul = $true; Hardness = 1.5 }
 }
 
 foreach ($kind in $Furnaces.Keys) {
@@ -277,8 +277,9 @@ foreach ($kind in $Furnaces.Keys) {
     $frontSoul = if ($F.Soul) { & $t 'front_on_soul' } else { $null }
     $mi = { param($f) [ordered]@{ texture = $f; render_method = 'opaque' } }
     $c = [ordered]@{
-        'minecraft:destructible_by_mining'    = [ordered]@{ seconds_to_destroy = 3.5 }
-        'minecraft:destructible_by_explosion' = [ordered]@{ explosion_resistance = 3.5 }
+        # Quark copies the base block's properties (deepslate 3 / 6, blackstone 1.5 / 6)
+        'minecraft:destructible_by_mining'    = [ordered]@{ seconds_to_destroy = $F.Hardness }
+        'minecraft:destructible_by_explosion' = [ordered]@{ explosion_resistance = 6 }
         'minecraft:map_color'                 = $F.Map
         'minecraft:geometry'                  = 'minecraft:geometry.full_block'
         'minecraft:material_instances'        = [ordered]@{

@@ -23,10 +23,10 @@
     },
     "components": {
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 3.5
+        "seconds_to_destroy": 3.0
       },
       "minecraft:destructible_by_explosion": {
-        "explosion_resistance": 3.5
+        "explosion_resistance": 6
       },
       "minecraft:map_color": "#646464",
       "minecraft:geometry": "minecraft:geometry.full_block",
