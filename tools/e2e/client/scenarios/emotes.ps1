@@ -4,7 +4,8 @@
 #                             icon, the chat screen gets the "Emotes" button and the emote grid.
 #   -Mode remote-vanilla:     no client mod: `/quark emote <name>` still plays the animation (from
 #                             the resource pack) and `/quark emote` opens the form fallback.
-# Screenshots: out/emotes/{wave,cheer,tpose,chat-menu,chat-hover,form}.png
+# Screenshots: out/emotes/{salute,cheer,tpose,custom,chat-menu,chat-hover,form}.png (the log line arrives
+# about a second after the emote starts, so the shots use emotes of 2.4 s and more).
 $vanilla = $script:Mode -eq 'remote-vanilla'
 $local   = $script:Mode -eq 'local'
 
@@ -29,11 +30,11 @@ Invoke-Chat '/camera @s set minecraft:third_person_front'
 Start-Sleep -Milliseconds 800
 
 try {
-    Play-Emote 'wave' 500     # right arm raised, waving
-    Play-Emote 'cheer' 600    # both arms up
+    Play-Emote 'salute' 300   # right hand at the forehead
+    Play-Emote 'cheer' 300    # both arms up
     if ($local) {
-        Play-Emote 'tpose' 900   # patreon emote, unlocked by emotes.prelaunch.ps1 (defaultEmoteTier 2)
-        Play-Emote 'custom:e2e_spin' 450 'custom'   # custom emote from config/quark_emotes
+        Play-Emote 'tpose' 600   # patreon emote, unlocked by emotes.prelaunch.ps1 (defaultEmoteTier 2)
+        Play-Emote 'custom:e2e_spin' 300 'custom'   # custom emote from config/quark_emotes
     }
 } finally {
     Invoke-Chat '/camera @s clear'   # back to the player's own view

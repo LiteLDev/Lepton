@@ -26,8 +26,8 @@ use head
 use right_arm
 use left_arm
 animation parallel
-    move head_y 1000 6.28
-    move right_arm_z 500 1.57 yoyo 1 0
-    move left_arm_z 500 -1.57 yoyo 1 0
+    move head_y 4000 6.28
+    move right_arm_z 500 2.5 yoyo 7 0
+    move left_arm_z 500 -2.5 yoyo 7 0
 end
 '@ | Set-Content -Path (Join-Path $cfgDir 'quark_emotes/e2e_spin.emote') -Encoding UTF8
