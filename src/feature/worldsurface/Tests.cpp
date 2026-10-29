@@ -402,6 +402,11 @@ LP_REGISTER_SELFTEST("worldsurface.composter", [](Context& ctx) -> ll::coro::Cor
     ctx.check(!glimmer::compost(r, bp(g), 0.65, 0.99), "a failed roll keeps the level");
     ctx.check(glimmer::compost(r, bp(g), 0.65, 0.10), "a good roll raises it");
     ctx.check(bs::getInt(r.getBlock(bp(g)), "composter_fill_level") == 2, "level 2");
+    ctx.require(ctx.setBlock(g, "minecraft:composter", {{"composter_fill_level", 6}}), "composter at level 6");
+    ctx.check(glimmer::compost(r, bp(g), 0.65, 0.10), "level 6 -> 7");
+    ctx.check(!glimmer::compost(r, bp(g), 0.65, 0.10), "a full composter takes nothing");
+    co_await ctx.ticks(25);
+    ctx.check(bs::getInt(r.getBlock(bp(g)), "composter_fill_level") == 8, "a full composter becomes ready");
 });
 
 LP_REGISTER_SELFTEST("worldsurface.pot", [](Context& ctx) -> ll::coro::CoroTask<> {

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -82,26 +83,27 @@ struct Index {
 std::atomic<OverworldGeneratorMultinoise const*> gGen{nullptr};
 std::atomic<void*>                               gVtable{nullptr};
 std::mutex                                       gIndexMutex;
-Index                                            gIndex;
+/// Shared so a generation thread keeps its copy alive while the server thread resets it.
+std::shared_ptr<Index const>                     gIndex;
 
 void* vtableOf(void const* obj) { return *static_cast<void* const*>(obj); }
 
 /// The vanilla climate points per biome (built once per generator; thread-safe).
-Index const& indexFor(OverworldGeneratorMultinoise const& gen) {
+std::shared_ptr<Index const> indexFor(OverworldGeneratorMultinoise const& gen) {
     std::lock_guard lock(gIndexMutex);
-    if (gIndex.gen == &gen) return gIndex;
-    gIndex        = Index{};
-    gIndex.gen    = &gen;
-    if (!gen.mBiomeSource) return gIndex;
-    BiomeSource const& src = *gen.mBiomeSource;
-    if (src.getType() != BiomeSourceType::BiomeSource3d) return gIndex;
-    auto const& src3d   = static_cast<BiomeSource3d const&>(src);
-    auto const& targets = *src3d.mBiomeProvider->mParameterList->mNoiseTargets;
-    for (auto const& t : targets) {
-        Biome const* b = t.data;
-        if (b) gIndex.points[b].push_back(&*t.climateParameters);
+    if (gIndex && gIndex->gen == &gen) return gIndex;
+    auto idx = std::make_shared<Index>();
+    idx->gen = &gen;
+    if (gen.mBiomeSource && gen.mBiomeSource->getType() == BiomeSourceType::BiomeSource3d) {
+        auto const& src3d   = static_cast<BiomeSource3d const&>(*gen.mBiomeSource);
+        auto const& targets = *src3d.mBiomeProvider->mParameterList->mNoiseTargets;
+        for (auto const& t : targets) {
+            Biome const* b = t.data;
+            if (b) idx->points[b].push_back(&*t.climateParameters);
+        }
     }
-    gIndex.usable = !gIndex.points.empty();
+    idx->usable = !idx->points.empty();
+    gIndex      = idx;
     return gIndex;
 }
 
@@ -157,7 +159,7 @@ OverworldGeneratorMultinoise const* generator() {
 void reset() {
     gGen.store(nullptr);
     std::lock_guard lock(gIndexMutex);
-    gIndex = Index{};
+    gIndex.reset();
 }
 
 std::optional<Target> sample(OverworldGeneratorMultinoise const& gen, BlockPos const& pos) {
@@ -184,13 +186,13 @@ bool isGlimmeringWeald(OverworldGeneratorMultinoise const& gen, BlockSource* reg
     int64_t dgw = glimmeringDistance(*t);
     if (dgw == 0) return true;
     if (region) {
-        auto const& idx = indexFor(gen);
-        if (idx.usable) {
+        auto idx = indexFor(gen);
+        if (idx->usable) {
             // Java's rule: the nearest climate point wins. Bedrock already chose the nearest
             // vanilla biome for this cell; Glimmering Weald wins when it is nearer than that one.
             Biome const& vanilla = region->getBiome(pos);
-            auto         it      = idx.points.find(&vanilla);
-            if (it != idx.points.end()) {
+            auto         it      = idx->points.find(&vanilla);
+            if (it != idx->points.end()) {
                 int64_t best = std::numeric_limits<int64_t>::max();
                 for (auto const* p : it->second) best = std::min(best, distanceTo(*t, *p));
                 return dgw < best;
@@ -223,19 +225,25 @@ locate(OverworldGeneratorMultinoise const& gen, BlockPos const& from, int radius
         std::optional<BlockPos> best;
         int64_t                 bestD = std::numeric_limits<int64_t>::max();
         auto                    test  = [&](int x, int z) {
-            for (int y = minY; y <= maxY; y += 8) {
-                BlockPos p{x, y, z};
-                auto     t = sample(gen, p);
-                if (t && (*t)[4] >= q(1.0) && inRangesBelow(*t)) {
-                    int64_t dx = x - from.x, dz = z - from.z;
-                    int64_t d  = dx * dx + dz * dz;
-                    if (d < bestD) {
-                        bestD = d;
-                        best  = p;
-                    }
-                    return;
+            // continentalness and erosion do not depend on y and the depth only grows downwards
+            // (1/128 per block, checked in game), so the lowest cell decides the column
+            BlockPos p{x, minY, z};
+            auto     t = sample(gen, p);
+            if (!t || !inRangesBelow(*t)) return;
+            int64_t dx = x - from.x, dz = z - from.z;
+            int64_t d  = dx * dx + dz * dz;
+            if (d >= bestD) return;
+            // report the top of the layer: about (depth - 1.03) * 128 blocks above the bottom
+            int top = std::min(maxY, minY + static_cast<int>(((*t)[4] - glimmeringRanges()[4][0]) * 128 / 10000));
+            for (int y = top & ~3; y > minY; y -= 4) {
+                auto u = sample(gen, BlockPos{x, y, z});
+                if (u && inRangesBelow(*u)) {
+                    p.y = y;
+                    break;
                 }
             }
+            bestD = d;
+            best  = p;
         };
         if (r == 0) test(from.x, from.z);
         else {

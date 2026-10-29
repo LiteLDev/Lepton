@@ -149,6 +149,8 @@ struct GenState {
 [[nodiscard]] std::shared_ptr<GenState const> genState();
 /// Rebuilds the generation state from the config (server thread: world ready, config reload).
 void rebuildGenState();
+/// Rebuilds it from a config snapshot (any thread); `quiet` skips the missing-block warnings.
+void rebuildGenState(Config const& config, bool quiet);
 
 /// Java 2D facing index (0 S, 1 W, 2 N, 3 E) -> (dx, dz).
 [[nodiscard]] std::pair<int, int> facingStep(int facing);

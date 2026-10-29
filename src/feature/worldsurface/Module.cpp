@@ -1,6 +1,7 @@
 // U28 worldsurface module: config, the chunk decoration hooks that run the generators, the server
 // tick (scheduler, monster boxes, Glimmering Weald), world lifecycle and the /quark sub-commands.
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <format>
 #include <mutex>
@@ -91,10 +92,15 @@ std::mutex gResolveMutex;
 std::shared_ptr<GenState const> stateForGen() {
     auto st = genState();
     if (st->monsterBox || !st->config.enableMonsterBox) return st;
+    // at most one retry per 5 seconds (a missing behaviour pack must not rebuild per chunk)
+    static std::atomic<int64_t> lastTry{0};
+    int64_t now  = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    int64_t last = lastTry.load();
+    if (now - last < 5000 || !lastTry.compare_exchange_strong(last, now)) return st;
     std::lock_guard lock(gResolveMutex);
     st = genState();
     if (!st->monsterBox) {
-        rebuildGenState();
+        rebuildGenState(st->config, /*quiet=*/true);
         st = genState();
     }
     return st;

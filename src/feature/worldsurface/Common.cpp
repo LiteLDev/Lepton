@@ -389,10 +389,12 @@ std::shared_ptr<GenState const> genState() {
     return gState;
 }
 
-void rebuildGenState() {
+void rebuildGenState() { rebuildGenState(cfg(), false); }
+
+void rebuildGenState(Config const& config, bool quiet) {
     auto  st = std::make_shared<GenState>();
     auto& c  = st->config;
-    c        = cfg();
+    c        = config;
     st->air  = bs::of("minecraft:air");
 
     // FairyRings
@@ -400,7 +402,7 @@ void rebuildGenState() {
     st->plainsBiomes = bedrockBiomeSet(c.fairyRingsPlainsBiomes);
     for (auto const& id : c.oresRaw) {
         if (auto const* b = bs::of(id)) st->ores.push_back(b);
-        else log().warn("worldsurface: fairy ring ore {} does not exist", id);
+        else if (!quiet) log().warn("worldsurface: fairy ring ore {} does not exist", id);
     }
     for (auto const* f :
          {"minecraft:dandelion",
@@ -423,7 +425,7 @@ void rebuildGenState() {
     for (auto const& entry : c.biomeTags) {
         auto eq = entry.find('=');
         if (eq == std::string::npos) {
-            log().warn("worldsurface: bad fallen log entry '{}' (expected tag=block)", entry);
+            if (!quiet) log().warn("worldsurface: bad fallen log entry '{}' (expected tag=block)", entry);
             continue;
         }
         std::string tag = entry.substr(0, eq), logId = entry.substr(eq + 1);
@@ -439,7 +441,7 @@ void rebuildGenState() {
             firstOf({{logId, {{"pillar_axis", std::string("z")}}}, {logId, {{"minecraft:block_face", std::string("south")}}}})
         };
         if (!e.axis[0]) {
-            log().warn("worldsurface: fallen log block {} does not exist", logId);
+            if (!quiet) log().warn("worldsurface: fallen log block {} does not exist", logId);
             continue;
         }
         // U6's hollow logs: lepton:hollow_<wood>_log (lepton:pillar -> minecraft:block_face)

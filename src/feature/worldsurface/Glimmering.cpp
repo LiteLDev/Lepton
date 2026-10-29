@@ -62,7 +62,9 @@ constexpr char const* kFogUserId   = "lepton_glimmering_weald";
 std::vector<ll::event::ListenerPtr>          gListeners;
 std::map<std::pair<int64_t, core::GlobalPos>, uint64_t> gDebounce;
 std::unordered_set<int64_t>                  gInFog;
-bool                                         gStonelingMissing = false;
+std::unordered_set<int64_t>                  gKnown; ///< players seen by updateFog since they joined
+bool                                         gStonelingMissing  = false;
+int                                          gStonelingFailures = 0;
 
 Rng& rng() {
     static Rng r(static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count()) ^ 0x6c6c);
@@ -231,7 +233,7 @@ void onPlaced(ll::event::PlayerPlacedBlockEvent& ev) {
 
 void onDestroy(ll::event::PlayerDestroyBlockEvent& ev) {
     auto& player = ev.self();
-    if (player.isClientSide() || player.isCreative()) return;
+    if (player.isClientSide() || player.isCreative() || !cfg().enableGlimmeringWeald) return;
     auto&       region = player.getDimensionBlockSource();
     auto        pos    = ev.pos();
     auto const& name   = nameOf(region.getBlock(pos));
@@ -270,12 +272,16 @@ void updateFog() {
     bool enabled = cfg().enableGlimmeringWeald;
     std::unordered_set<int64_t> seen;
     level->forEachPlayer([&](Player& p) {
+        if (p.isSimulated()) return true;
         int64_t id = p.getOrCreateUniqueID().rawID;
         seen.insert(id);
         bool in  = enabled && playerInGlimmering(p);
         bool had = gInFog.contains(id);
-        if (in == had) return true;
         std::string name = p.getRealName();
+        // the fog stack is saved with the player: a player who left (or whose world closed) in
+        // the Glimmering Weald may come back with our fog still pushed, so clear it on first sight
+        if (gKnown.insert(id).second && !in) runCommand(std::format("fog \"{}\" remove {}", name, kFogUserId));
+        if (in == had) return true;
         if (in) {
             runCommand(std::format("fog \"{}\" push {} {}", name, kFogId, kFogUserId));
             gInFog.insert(id);
@@ -287,6 +293,7 @@ void updateFog() {
         return true;
     });
     std::erase_if(gInFog, [&](int64_t id) { return !seen.contains(id); });
+    std::erase_if(gKnown, [&](int64_t id) { return !seen.contains(id); });
 }
 
 /// The biome's creature spawn entry: stonelings (weight 200, groups 1-4), when U21's mob exists.
@@ -328,9 +335,12 @@ void spawnStonelings() {
                 Vec3   at{static_cast<float>(x) + 0.5f, static_cast<float>(p.y), static_cast<float>(z) + 0.5f};
                 Actor* a = game::entities::spawn(*region, "lepton:stoneling", at);
                 if (!a) {
-                    gStonelingMissing = true; // U21 not present: the biome has no stonelings to spawn
+                    // U21 not present (or a spot the game refused): after a few failures in a row
+                    // the biome has no stonelings to spawn
+                    if (++gStonelingFailures >= 5) gStonelingMissing = true;
                     return;
                 }
+                gStonelingFailures = 0;
             }
             log().info("worldsurface: {} stonelings spawned in the Glimmering Weald", group);
             break;
@@ -496,7 +506,20 @@ bool compost(BlockSource& region, BlockPos const& pos, double chance, double rol
     // ComposterBlock.addItem: an empty composter always takes the first layer
     if (!((level == 0 && chance > 0) || roll < chance)) return false;
     auto const* next = bs::with(b, {{"composter_fill_level", level + 1}});
-    return next && liveSet(region, pos, *next);
+    if (!next || !liveSet(region, pos, *next)) return false;
+    if (level + 1 == 7) {
+        // ComposterBlock: a full composter becomes ready (level 8) 20 ticks later
+        int dim = static_cast<int>(region.getDimensionId());
+        later(20, [dim, pos] {
+            auto* r = game::regionOf(dim);
+            if (!r || !r->hasChunksAt(pos, 0, false)) return;
+            auto const& cur = r->getBlock(pos);
+            if (nameOf(cur) != "minecraft:composter" || bs::getInt(cur, "composter_fill_level") != 7) return;
+            if (auto const* ready = bs::with(cur, {{"composter_fill_level", 8}}); ready && liveSet(*r, pos, *ready))
+                runCommand(std::format("playsound block.composter.ready @a {} {} {}", pos.x, pos.y, pos.z), dim);
+        });
+    }
+    return true;
 }
 
 std::string pottedOf(std::string const& plant) {
@@ -530,8 +553,10 @@ void tick() {
 
 void onWorldClosed() {
     gInFog.clear();
+    gKnown.clear();
     gDebounce.clear();
-    gStonelingMissing = false;
+    gStonelingMissing  = false;
+    gStonelingFailures = 0;
 }
 
 void install() {
@@ -545,6 +570,16 @@ void uninstall() {
     auto& bus = ll::event::EventBus::getInstance();
     for (auto& l : gListeners) bus.removeListener(l);
     gListeners.clear();
+    // take our fog off the players that still have it
+    if (auto level = ll::service::getLevel()) {
+        level->forEachPlayer([&](Player& p) {
+            if (gInFog.contains(p.getOrCreateUniqueID().rawID))
+                runCommand(std::format("fog \"{}\" remove {}", p.getRealName(), kFogUserId));
+            return true;
+        });
+    }
+    gInFog.clear();
+    gKnown.clear();
 }
 
 } // namespace lp::feature::worldsurface::glimmer
