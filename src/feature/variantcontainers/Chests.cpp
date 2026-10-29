@@ -572,7 +572,23 @@ bool openChest(Player& player, BlockPos const& pos) {
         if (auto* r = game::regionOf(key.dim)) notifyChestChanged(*r, game::blockPos(key));
     };
     if (!vc::open(player, st->key, spec)) return false;
-    anims().try_emplace(st->key);
+    auto it = anims().try_emplace(st->key).first;
+    if (st->second && !it->second.open) {
+        // A double chest's screen shows the client a vanilla chest pair at the chest (game/
+        // VirtualContainer); any later update of these blocks would replace it and close the
+        // screen, so the lid opens at once, before the screen does.
+        it->second.open     = true;
+        it->second.openness = 10;
+        soundAtChest(region, *st, true);
+        int power = std::min(std::max(vc::viewers(st->key), 1), 15);
+        for (auto const& h : {game::blockPos(st->key), *st->second}) {
+            auto const& b = region.getBlock(h);
+            auto        s = chestState(b);
+            if (!s) continue;
+            setChestBlock(region, h, withChest(b, std::nullopt, std::nullopt, 4, s->trapped ? std::optional<int>(power) : std::nullopt));
+            if (s->trapped) setTrappedPower(region, h, power);
+        }
+    }
     log().info("variantcontainers: {} opened {} at {}", player.getRealName(), region.getBlock(pos).getTypeName(), st->key.key());
     return true;
 }

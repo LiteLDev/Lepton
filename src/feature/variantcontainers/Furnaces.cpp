@@ -27,6 +27,7 @@
 #include "mc/legacy/ActorUniqueID.h"
 #include "mc/network/MinecraftPacketIds.h"
 #include "mc/network/MinecraftPackets.h"
+#include "mc/deps/nbt/CompoundTag.h"
 #include "mc/network/packet/BlockActorDataPacket.h"
 #include "mc/network/packet/ContainerOpenPacket.h"
 #include "mc/network/packet/UpdateBlockPacket.h"
@@ -102,8 +103,13 @@ bool isSoulBase(Block const& b) {
     return n == "minecraft:soul_sand" || n == "minecraft:soul_soil";
 }
 
-/// Changes our furnace's state without the furnace block actor dropping its items.
+bool standInAt(BlockSource& region, BlockPos const& pos);
+
+/// Changes our furnace's state without the furnace block actor dropping its items. Not while a
+/// player looks at the furnace screen through a stand-in block: the block update would replace
+/// the stand-in and close that screen (the tick hook applies the state once the screen closed).
 void setFurnaceState(BlockSource& region, BlockPos const& pos, bs::Changes const& changes) {
+    if (standInAt(region, pos)) return;
     auto const& b    = region.getBlock(pos);
     auto const* next = bs::with(b, changes);
     if (!next || *next == b) return;
@@ -204,6 +210,22 @@ void sendBlock(Player& player, BlockPos const& pos, Block const& block) {
     player.sendNetworkPacket(p);
 }
 
+/// Block entity data of a furnace at `pos`, so the client creates the stand-in's block actor.
+void sendStandInData(Player& player, BlockPos const& pos) {
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::BlockActorData);
+    if (!pkt) return;
+    auto&       data = static_cast<BlockActorDataPacket&>(*pkt);
+    CompoundTag tag;
+    tag["id"]        = std::string("Furnace");
+    tag["x"]         = pos.x;
+    tag["y"]         = pos.y;
+    tag["z"]         = pos.z;
+    tag["isMovable"] = static_cast<uchar>(1);
+    data.mPos        = pos;
+    data.mData       = std::move(tag);
+    player.sendNetworkPacket(data);
+}
+
 Block const* vanillaFurnaceFor(Block const& ours) {
     bool lit  = bs::getBool(ours, "lepton:lit").value_or(false);
     auto look = bs::getString(ours, "minecraft:cardinal_direction").value_or("north");
@@ -247,6 +269,13 @@ void tickFakes() {
         }
         it = fakes().erase(it);
     }
+}
+
+bool standInAt(BlockSource& region, BlockPos const& pos) {
+    int dim = static_cast<int>(region.getDimensionId());
+    for (auto const& [id, f] : fakes())
+        if (f.dim == dim && f.pos == pos) return true;
+    return false;
 }
 
 std::unordered_map<std::string, uint64_t>& recentOpen() {
@@ -318,9 +347,7 @@ bool openFurnace(Player& player, BlockPos const& pos) {
             }
             sendBlock(player, pos, *v);
             // and the furnace's block actor data, so the client has a furnace block actor there
-            if (auto* f = furnaceAt(region, pos)) {
-                if (auto data = f->_getUpdatePacket(region)) player.sendNetworkPacket(*data);
-            }
+            sendStandInData(player, pos);
             fakes()[player.getOrCreateUniqueID().rawID] = Fake{static_cast<int>(region.getDimensionId()), pos, gTick, &b, 0};
             // the client creates the furnace block actor when the stand-in arrives: open a few ticks later
             pendingOpens().push_back({player.getOrCreateUniqueID().rawID, static_cast<int>(region.getDimensionId()), pos, gTick + 4, true});
@@ -400,8 +427,7 @@ public:
                 if (o.show) {
                     // the block actor data again: the first copy may have reached the client before
                     // the stand-in block existed there
-                    if (auto* f = furnaceAt(*r, o.pos))
-                        if (auto data = f->_getUpdatePacket(*r)) p->sendNetworkPacket(*data);
+                    sendStandInData(*p, o.pos);
                     showFurnaceScreen(*p, o.pos);
                 }
                 else openFurnace(*p, o.pos);
