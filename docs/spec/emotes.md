@@ -89,7 +89,7 @@ None. Resource-pack content:
   100 ms). Sounds are played at the player's position by each mod client that runs the emote.
 - **Custom emotes** (client mod): every name in `customEmotes` is read from
   `config/quark_emotes/<name>.emote` (the folder is created) at game start, compiled, and baked
-  into the client's resource pack (`lepton_custom_emotes.animation.json`). Their buttons use the
+  into the client's `Lepton_Custom_Emotes` resource pack (one animation file each). Their buttons use the
   `custom` icon and their `name` line (or the file name). As in Quark only clients that have the
   file see a custom emote; a custom emote whose `tier` is above the local tier is hidden.
   `customEmoteDebug`: the file is read again every time the emote is triggered (timing, sounds,

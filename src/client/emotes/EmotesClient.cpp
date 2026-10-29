@@ -451,13 +451,13 @@ void chatOverlay(ui::Overlay& o, ui::ScreenInfo const& s) {
             dc.text(e->name, bubble.x + 4, bubble.y + 3);
         }
     }
-    if (!gReported) {
+    if (!gReported && s.settled) {
         gReported = true;
         log().info("emotes: chat buttons drawn ({} emotes) toggle at {:.4f},{:.4f}", entries.size(),
                    (toggle.x + toggle.w / 2) / s.size.x, (toggle.y + toggle.h / 2) / s.size.y);
     }
     static bool reportedGrid = false;
-    if (gVisible && !reportedGrid && !placed.empty()) {
+    if (gVisible && !reportedGrid && !placed.empty() && s.settled) {
         reportedGrid = true;
         for (auto const& [e, r] : placed)
             log().info("emotes: button {} at {:.4f},{:.4f}", e->id, (r.x + r.w / 2) / s.size.x, (r.y + r.h / 2) / s.size.y);
