@@ -1,0 +1,68 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton.beacon_beam_core": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.core"
+        }
+      ],
+      "textures": [
+        "Texture.core"
+      ],
+      "part_visibility": [
+        {
+          "*": true
+        },
+        {
+          "glow": false
+        }
+      ],
+      "overlay_color": {
+        "r": "q.property('lepton:r')",
+        "g": "q.property('lepton:g')",
+        "b": "q.property('lepton:b')",
+        "a": "1.0"
+      },
+      "ignore_lighting": true
+    },
+    "controller.render.lepton.beacon_beam_glow": {
+      "arrays": {
+        "textures": {
+          "Array.glow": [
+            "Texture.glow0",
+            "Texture.glow1",
+            "Texture.glow2",
+            "Texture.glow3",
+            "Texture.glow4"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.glow"
+        }
+      ],
+      "textures": [
+        "Array.glow[q.property('lepton:glow')]"
+      ],
+      "part_visibility": [
+        {
+          "*": true
+        },
+        {
+          "core": false
+        }
+      ],
+      "overlay_color": {
+        "r": "q.property('lepton:r')",
+        "g": "q.property('lepton:g')",
+        "b": "q.property('lepton:b')",
+        "a": "1.0"
+      },
+      "ignore_lighting": true
+    }
+  }
+}

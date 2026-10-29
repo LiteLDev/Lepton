@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:white_corundum_pane"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:white_corundum"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:white_corundum"
+      }
+    ],
+    "result": {
+      "item": "lepton:white_corundum_pane",
+      "count": 16
+    }
+  }
+}

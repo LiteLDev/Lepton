@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:yellow_corundum_lamp"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " R ",
+      "RCR",
+      " R "
+    ],
+    "key": {
+      "C": {
+        "item": "lepton:yellow_corundum"
+      },
+      "R": {
+        "item": "minecraft:redstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:yellow_corundum"
+      },
+      {
+        "item": "minecraft:redstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:yellow_crystal_lamp",
+      "count": 1
+    }
+  }
+}

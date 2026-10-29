@@ -1,0 +1,192 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:magnet",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.redstone"
+      },
+      "states": {
+        "lepton:facing": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "lepton:powered": [
+          false,
+          true
+        ],
+        "lepton:waxed": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6
+      },
+      "minecraft:map_color": "#a7a7a7",
+      "minecraft:redstone_conductivity": {
+        "redstone_conductor": true,
+        "allows_wire_to_step_down": false
+      },
+      "minecraft:redstone_consumer": {
+        "min_power": 1,
+        "propagates_power": false
+      },
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_crystals_magnet_side_off",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_crystals_magnet_front_off",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_crystals_magnet_back_off",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_crystals_magnet_side_off",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_crystals_magnet_side_off",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_crystals_magnet_side_off",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_crystals_magnet_side_off",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/magnet.json",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:metal": {},
+      "tag:lepton:magnet": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:facing') == 0",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              -90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 4",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:facing') == 5",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              -90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:powered') == true",
+        "components": {
+          "minecraft:light_emission": 3,
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_crystals_magnet_side_on",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_crystals_magnet_front_on",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_crystals_magnet_back_on",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_crystals_magnet_side_on",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_crystals_magnet_side_on",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_crystals_magnet_side_on",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_crystals_magnet_side_on",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

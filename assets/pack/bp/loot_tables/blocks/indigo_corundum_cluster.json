@@ -1,0 +1,24 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item_tags": {
+            "any_of": [
+              "minecraft:is_pickaxe"
+            ]
+          }
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:indigo_corundum_cluster",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

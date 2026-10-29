@@ -1,0 +1,131 @@
+{
+  "lepton_crystals_black_corundum": {
+    "textures": "textures/blocks/black_corundum"
+  },
+  "lepton_crystals_black_corundum_cluster": {
+    "textures": "textures/blocks/black_corundum_cluster"
+  },
+  "lepton_crystals_black_crystal_lamp": {
+    "textures": "textures/blocks/black_crystal_lamp"
+  },
+  "lepton_crystals_black_crystal_lamp_on": {
+    "textures": "textures/blocks/black_crystal_lamp_on"
+  },
+  "lepton_crystals_blue_corundum": {
+    "textures": "textures/blocks/blue_corundum"
+  },
+  "lepton_crystals_blue_corundum_cluster": {
+    "textures": "textures/blocks/blue_corundum_cluster"
+  },
+  "lepton_crystals_blue_crystal_lamp": {
+    "textures": "textures/blocks/blue_crystal_lamp"
+  },
+  "lepton_crystals_blue_crystal_lamp_on": {
+    "textures": "textures/blocks/blue_crystal_lamp_on"
+  },
+  "lepton_crystals_green_corundum": {
+    "textures": "textures/blocks/green_corundum"
+  },
+  "lepton_crystals_green_corundum_cluster": {
+    "textures": "textures/blocks/green_corundum_cluster"
+  },
+  "lepton_crystals_green_crystal_lamp": {
+    "textures": "textures/blocks/green_crystal_lamp"
+  },
+  "lepton_crystals_green_crystal_lamp_on": {
+    "textures": "textures/blocks/green_crystal_lamp_on"
+  },
+  "lepton_crystals_indigo_corundum": {
+    "textures": "textures/blocks/indigo_corundum"
+  },
+  "lepton_crystals_indigo_corundum_cluster": {
+    "textures": "textures/blocks/indigo_corundum_cluster"
+  },
+  "lepton_crystals_indigo_crystal_lamp": {
+    "textures": "textures/blocks/indigo_crystal_lamp"
+  },
+  "lepton_crystals_indigo_crystal_lamp_on": {
+    "textures": "textures/blocks/indigo_crystal_lamp_on"
+  },
+  "lepton_crystals_magnet_back_off": {
+    "textures": "textures/blocks/magnet_back_off"
+  },
+  "lepton_crystals_magnet_back_on": {
+    "textures": "textures/blocks/magnet_back_on"
+  },
+  "lepton_crystals_magnet_front_off": {
+    "textures": "textures/blocks/magnet_front_off"
+  },
+  "lepton_crystals_magnet_front_on": {
+    "textures": "textures/blocks/magnet_front_on"
+  },
+  "lepton_crystals_magnet_side_off": {
+    "textures": "textures/blocks/magnet_side_off"
+  },
+  "lepton_crystals_magnet_side_on": {
+    "textures": "textures/blocks/magnet_side_on"
+  },
+  "lepton_crystals_magnetized_block": {
+    "textures": "textures/blocks/magnetized_block"
+  },
+  "lepton_crystals_orange_corundum": {
+    "textures": "textures/blocks/orange_corundum"
+  },
+  "lepton_crystals_orange_corundum_cluster": {
+    "textures": "textures/blocks/orange_corundum_cluster"
+  },
+  "lepton_crystals_orange_crystal_lamp": {
+    "textures": "textures/blocks/orange_crystal_lamp"
+  },
+  "lepton_crystals_orange_crystal_lamp_on": {
+    "textures": "textures/blocks/orange_crystal_lamp_on"
+  },
+  "lepton_crystals_red_corundum": {
+    "textures": "textures/blocks/red_corundum"
+  },
+  "lepton_crystals_red_corundum_cluster": {
+    "textures": "textures/blocks/red_corundum_cluster"
+  },
+  "lepton_crystals_red_crystal_lamp": {
+    "textures": "textures/blocks/red_crystal_lamp"
+  },
+  "lepton_crystals_red_crystal_lamp_on": {
+    "textures": "textures/blocks/red_crystal_lamp_on"
+  },
+  "lepton_crystals_violet_corundum": {
+    "textures": "textures/blocks/violet_corundum"
+  },
+  "lepton_crystals_violet_corundum_cluster": {
+    "textures": "textures/blocks/violet_corundum_cluster"
+  },
+  "lepton_crystals_violet_crystal_lamp": {
+    "textures": "textures/blocks/violet_crystal_lamp"
+  },
+  "lepton_crystals_violet_crystal_lamp_on": {
+    "textures": "textures/blocks/violet_crystal_lamp_on"
+  },
+  "lepton_crystals_white_corundum": {
+    "textures": "textures/blocks/white_corundum"
+  },
+  "lepton_crystals_white_corundum_cluster": {
+    "textures": "textures/blocks/white_corundum_cluster"
+  },
+  "lepton_crystals_white_crystal_lamp": {
+    "textures": "textures/blocks/white_crystal_lamp"
+  },
+  "lepton_crystals_white_crystal_lamp_on": {
+    "textures": "textures/blocks/white_crystal_lamp_on"
+  },
+  "lepton_crystals_yellow_corundum": {
+    "textures": "textures/blocks/yellow_corundum"
+  },
+  "lepton_crystals_yellow_corundum_cluster": {
+    "textures": "textures/blocks/yellow_corundum_cluster"
+  },
+  "lepton_crystals_yellow_crystal_lamp": {
+    "textures": "textures/blocks/yellow_crystal_lamp"
+  },
+  "lepton_crystals_yellow_crystal_lamp_on": {
+    "textures": "textures/blocks/yellow_crystal_lamp_on"
+  }
+}

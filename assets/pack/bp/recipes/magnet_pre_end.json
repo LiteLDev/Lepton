@@ -1,0 +1,45 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:magnet_pre_end"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "CIC",
+      "BPR",
+      "CIC"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:blue_dye"
+      },
+      "C": {
+        "tag": "minecraft:stone_crafting_materials"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "P": {
+        "item": "minecraft:copper_ingot"
+      },
+      "R": {
+        "item": "minecraft:redstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "minecraft:copper_ingot"
+      }
+    ],
+    "result": {
+      "item": "lepton:magnet",
+      "count": 1
+    }
+  }
+}

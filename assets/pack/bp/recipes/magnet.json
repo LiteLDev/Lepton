@@ -1,0 +1,45 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:magnet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "CIC",
+      "BFR",
+      "CIC"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:blue_dye"
+      },
+      "C": {
+        "tag": "minecraft:stone_crafting_materials"
+      },
+      "F": {
+        "item": "minecraft:chorus_fruit"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "R": {
+        "item": "minecraft:redstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "minecraft:chorus_fruit"
+      }
+    ],
+    "result": {
+      "item": "lepton:magnet",
+      "count": 1
+    }
+  }
+}
