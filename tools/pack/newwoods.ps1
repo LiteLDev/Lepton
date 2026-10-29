@@ -102,6 +102,26 @@ function New-NwSapling {
         })
 }
 
+# The item of a block, replacing the block's own item so it can carry item tags (Java puts the planks,
+# logs and slabs of Quark's woods into #planks / #logs / #wooden_slabs, which vanilla recipes such as
+# sticks or the crafting table take). Without an icon the item shows the block.
+function Write-NwBlockItem([string]$Id, [hashtable]$Name, [string[]]$Tags, [string]$Category, [string]$Group) {
+    $menu = [ordered]@{ category = $Category }
+    if ($Group) { $menu.group = $Group }
+    Add-PackText "item.$Id.name" $Name
+    Write-PackJson (Join-Path $script:BP "items/$(Get-Path $Id).json") ([ordered]@{
+            format_version   = $script:ItemFormat
+            'minecraft:item' = [ordered]@{
+                description = [ordered]@{ identifier = $Id; menu_category = $menu }
+                components  = [ordered]@{
+                    'minecraft:block_placer'   = [ordered]@{ block = $Id; replace_block_item = $true }
+                    'minecraft:max_stack_size' = 64
+                    'minecraft:tags'           = [ordered]@{ tags = @($Tags) }
+                }
+            }
+        })
+}
+
 # Falling leaf particle of a trumpet colour (Java TerrainParticle of the leaves block, spawned with
 # velocity (wind x, -1, wind z); docs/spec/newwoods.md §3.9).
 function Write-NwLeafParticle([string]$Id, [string]$Texture) {
@@ -219,6 +239,15 @@ function Invoke-NewWoodsPack {
         $planks = "lepton:${w}_planks"
         $logs = @("lepton:${w}_log", "lepton:${w}_wood", "lepton:stripped_${w}_log", "lepton:stripped_${w}_wood")
         $common = @{ MapColor = $d.color }
+
+        # items with Java's item tags
+        foreach ($part in 'log', 'wood', 'stripped_log', 'stripped_wood') {
+            $group = if ($part -like '*wood') { 'minecraft:itemGroup.name.wood' } else { 'minecraft:itemGroup.name.log' }
+            Write-NwBlockItem $id[$part] $names[$part] @('minecraft:logs', 'minecraft:logs_that_burn') 'nature' $group
+        }
+        Write-NwBlockItem $planks $names.planks @('minecraft:planks') 'construction' 'minecraft:itemGroup.name.planks'
+        Write-NwBlockItem "lepton:${w}_planks_slab" @{ en = "$en Slab"; zh = "${zh}木台阶" } @('minecraft:wooden_slabs') 'construction' 'minecraft:itemGroup.name.slab'
+        Write-NwBlockItem "lepton:vertical_${w}_planks" @{ en = "Vertical $en Planks"; zh = "竖纹${zh}木板" } @('minecraft:planks') 'construction' 'minecraft:itemGroup.name.planks'
 
         # Quark wood set variants (U6 generators)
         New-WvVerticalPlanks -Id "lepton:vertical_${w}_planks" -Texture "${TB}vertical_${w}_planks" -Planks $planks @common `

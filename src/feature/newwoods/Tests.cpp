@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "mc/deps/core/math/Vec3.h"
+#include "mc/deps/core/string/HashedString.h"
+#include "mc/world/item/Item.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
 #include "mc/world/actor/player/Player.h"
@@ -130,11 +132,28 @@ LP_REGISTER_SELFTEST("newwoods.blocks", [](Context& ctx) {
     ctx.check(pal->log("lepton:ancient_log", 1) && pal->generatedLeaves("lepton:red_blossom_leaves") && pal->azaleaLog[0], "palette blocks");
 });
 
+// Java's item tags: the vanilla recipes taking any planks / logs / wooden slabs accept ours.
+LP_REGISTER_SELFTEST("newwoods.item_tags", [](Context& ctx) {
+    auto tagged = [](char const* id, char const* tag) {
+        auto s = lp::game::makeItem(id);
+        return !s.isNull() && s.mItem && s.mItem->hasTag(HashedString(tag));
+    };
+    for (auto w : {"azalea", "blossom", "ancient"}) {
+        std::string s(w);
+        ctx.check(tagged(("lepton:" + s + "_planks").c_str(), "minecraft:planks"), s + " planks are planks");
+        ctx.check(tagged(("lepton:vertical_" + s + "_planks").c_str(), "minecraft:planks"), "vertical " + s + " planks are planks");
+        ctx.check(tagged(("lepton:stripped_" + s + "_wood").c_str(), "minecraft:logs"), s + " stripped wood is a log");
+        ctx.check(tagged(("lepton:" + s + "_planks_slab").c_str(), "minecraft:wooden_slabs"), s + " slab is a wooden slab");
+    }
+});
+
 LP_REGISTER_SELFTEST("newwoods.recipes", [](Context& ctx) {
     auto& c     = lp::config::mut<nw::NewWoodsConfig>();
     auto  saved = c;
     ctx.check(!nw::recipeDisabled("lepton:azalea_planks_from_azalea_log", "lepton:azalea_planks"), "enabled module keeps recipes");
-    ctx.check(!nw::recipeDisabled("lepton:azalea_hedge_from_azalea_log", "lepton:azalea_hedge"), "azalea hedge from azalea logs");
+    bool hedges = bs::of("lepton:azalea_hedge") != nullptr; // U6's block
+    ctx.check(nw::recipeDisabled("lepton:azalea_hedge_from_azalea_log", "lepton:azalea_hedge") == !hedges,
+        "azalea hedge from azalea logs (when U6's hedge exists)");
     c.enableAzaleaWood = false;
     ctx.check(nw::recipeDisabled("lepton:azalea_planks_from_azalea_log", "lepton:azalea_planks"), "AzaleaWood off: no planks");
     ctx.check(nw::recipeDisabled("lepton:azalea_hedge_from_azalea_log", "lepton:azalea_hedge"), "AzaleaWood off: no azalea-log hedge");

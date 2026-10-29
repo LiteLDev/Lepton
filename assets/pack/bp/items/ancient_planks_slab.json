@@ -1,0 +1,24 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:ancient_planks_slab",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.slab"
+      }
+    },
+    "components": {
+      "minecraft:block_placer": {
+        "block": "lepton:ancient_planks_slab",
+        "replace_block_item": true
+      },
+      "minecraft:max_stack_size": 64,
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:wooden_slabs"
+        ]
+      }
+    }
+  }
+}

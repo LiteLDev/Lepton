@@ -9,6 +9,7 @@
 #include "mc/deps/core/string/HashedString.h"
 #include "mc/world/level/block/Block.h"
 
+#include "game/BlockStates.h"
 #include "mod/Config.h"
 
 LP_REGISTER_CONFIG("newwoods", lp::feature::newwoods::NewWoodsConfig);
@@ -175,7 +176,8 @@ bool recipeDisabled(std::string const& recipeId, std::string const& result) {
     std::string_view path(recipeId);
     path.remove_prefix(7);
     if (path.starts_with("azalea_hedge_from_") || path.starts_with("flowering_azalea_hedge_from_"))
-        return !config().enableAzaleaWood;
+        // the hedges are U6's blocks: without them there is nothing to craft
+        return !config().enableAzaleaWood || !game::blockstates::of(result);
     auto m = moduleOfId(result);
     return m != Module::None && !moduleEnabled(m);
 }
