@@ -38,7 +38,7 @@ Gives some animals random extra skins, chosen per entity from its id (stable for
   appears at random: Quark's `size() - 1` was meant to exclude `helen` but drops the last entry). A bee named (name tag) like a
   variant (`acebee`, `agenbee`, `arobee`, `beefluid`, `beesexual`, `beequeer`, `enbee`, `gaybee`,
   `interbee`, `lesbeean`, `panbee`, `polysexbee`, `transbee`, `helen`, `mlbeem`, `polyamorbee`,
-  `salmacibee`, case-insensitive) always uses that skin; `wirebeegal`/`wiresegal` → `enbee`. Each
+  `salmacibee`, case-insensitive) always uses that skin; `wirebeegal`/`wiresegal` (case-sensitive, as Quark's regex) → `enbee`. Each
   skin has the four bee states (normal, angry, nectar, angry + nectar).
 Variant rule (Quark, from the UUID's most significant bits `m`): shiny when `m % chance == 0`;
 otherwise skin `|m % (n + 1)|` where index n (the last) is vanilla; LGBT when
@@ -153,7 +153,9 @@ so component groups that reset synced data are corrected at once):
   *Born* (not Loaded/Transformed) gets tag `lepton:villager_beach` (beach biome, `beachVillager`) or
   `lepton:villager_ocean` (any ocean biome, `oceanVillager`), checked one tick later at its position.
   Tagged villagers get mark variant 7 (beach) / 8 (ocean) whenever MoreVillagers is enabled (tags
-  survive saving and the villager ↔ zombie villager conversions, which copy tags).
+  are saved with the entity). A villager or zombie villager created by a conversion (zombification,
+  curing; initialised as *Transformed*) takes the tag of the tagged villager that vanished within 2
+  blocks of it in the last 2 seconds, so the type survives conversions as in Java.
 - Trades: vanilla's trade tables choose biome items with `is_mark_variant` filters; a fisherman with
   a mark variant no choice matches overflows the stack (found in the selftest), so the fisherman and
   cartographer tables are overridden with 7/8 added (§2): the beach fisherman's Master trade is

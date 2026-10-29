@@ -20,8 +20,10 @@
 
 #include "client/cosmetics/Filter.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstring>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -125,7 +127,9 @@ std::optional<Params>    gParams;
 std::optional<Capture>   gCapture;
 std::atomic<bool>        gInstalled{false};
 std::atomic<bool>        gAvailable{false};
-std::atomic<bool>        gBroken{false};
+std::atomic<bool>        gBroken{false}; ///< no Direct3D 12 (hooks never installed)
+std::atomic<bool>        gHooked{false};
+std::atomic<bool>        gWarned{false};
 
 using PresentFn  = HRESULT(STDMETHODCALLTYPE*)(IDXGISwapChain*, UINT, UINT);
 using Present1Fn = HRESULT(STDMETHODCALLTYPE*)(IDXGISwapChain1*, UINT, UINT, DXGI_PRESENT_PARAMETERS const*);
@@ -336,11 +340,19 @@ bool setup(IDXGISwapChain3* sc, UINT count, UINT w, UINT h, DXGI_FORMAT format) 
         gR.allocatorFence.assign(count, 0);
         D3D12_DESCRIPTOR_HEAP_DESC hd{D3D12_DESCRIPTOR_HEAP_TYPE_RTV, count, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 0};
         if (FAILED(dev->CreateDescriptorHeap(&hd, IID_PPV_ARGS(&gR.rtvHeap)))) return false;
-        for (UINT i = 0; i < count; ++i)
-            if (FAILED(dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gR.allocators[i])))) return false;
-        if (!gR.list) {
-            if (FAILED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, gR.allocators[0], nullptr, IID_PPV_ARGS(&gR.list)))) return false;
-            gR.list->Close();
+        bool ok = true;
+        for (UINT i = 0; i < count && ok; ++i)
+            ok = SUCCEEDED(dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&gR.allocators[i])));
+        if (ok && !gR.list) {
+            ok = SUCCEEDED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, gR.allocators[0], nullptr, IID_PPV_ARGS(&gR.list)));
+            if (ok) gR.list->Close();
+        }
+        if (!ok) { // retried from scratch on the next frame
+            for (auto*& a : gR.allocators) release(a);
+            gR.allocators.clear();
+            gR.allocatorFence.clear();
+            release(gR.rtvHeap);
+            return false;
         }
     }
     if (!gR.srvHeap) {
@@ -422,11 +434,36 @@ bool savePng(std::filesystem::path const& path, std::vector<uint8_t> const& bgra
     return ok;
 }
 
+float halfToFloat(uint16_t h) {
+    uint32_t sign = (h & 0x8000u) << 16, exp = (h >> 10) & 0x1F, man = h & 0x3FF;
+    uint32_t bits;
+    if (exp == 0) {
+        if (man == 0) bits = sign;
+        else { // subnormal
+            exp = 127 - 15 + 1;
+            while (!(man & 0x400)) man <<= 1, --exp;
+            bits = sign | (exp << 23) | ((man & 0x3FF) << 13);
+        }
+    } else if (exp == 31) bits = sign | 0x7F800000u | (man << 13);
+    else bits = sign | ((exp - 15 + 127) << 23) | (man << 13);
+    float f;
+    memcpy(&f, &bits, 4);
+    return f;
+}
+
 /// Converts one read-back row to BGRA8.
 void toBgra(DXGI_FORMAT f, uint8_t const* src, uint8_t* dst, UINT w) {
     for (UINT x = 0; x < w; ++x) {
         uint8_t r, g, b;
         switch (f) {
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:
+        case DXGI_FORMAT_R16G16B16A16_TYPELESS: {
+            uint16_t c[3];
+            memcpy(c, src + x * 8, 6);
+            auto to8 = [](float v) { return static_cast<uint8_t>(std::clamp(v, 0.f, 1.f) * 255.f + 0.5f); };
+            r = to8(halfToFloat(c[0])), g = to8(halfToFloat(c[1])), b = to8(halfToFloat(c[2]));
+            break;
+        }
         case DXGI_FORMAT_B8G8R8A8_UNORM:
         case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
         case DXGI_FORMAT_B8G8R8A8_TYPELESS:
@@ -461,7 +498,7 @@ void process(IDXGISwapChain* raw) {
             auto done = capture->done;
             std::thread([done] { done(false, {}); }).detach();
         }
-        if (!gBroken.exchange(true)) log().warn("cosmetics: camera filter unavailable ({})", why);
+        if (!gWarned.exchange(true)) log().warn("cosmetics: camera filter skipped a frame ({})", why);
     };
     ID3D12CommandQueue* queue = gQueue.load();
     if (!queue) return fail("no direct queue seen");
@@ -627,7 +664,13 @@ bool findTargets() {
     using CreateFactory = HRESULT(WINAPI*)(REFIID, void**);
     auto createFactory = reinterpret_cast<CreateFactory>(GetProcAddress(dxgi, "CreateDXGIFactory1"));
     if (!createDevice || !createFactory) return false;
-    HWND hwnd = CreateWindowExW(0, L"STATIC", L"lepton-dx", WS_OVERLAPPEDWINDOW, 0, 0, 64, 64, nullptr, nullptr, nullptr, nullptr);
+    HMODULE user = LoadLibraryW(L"user32.dll");
+    using CreateWindowFn  = HWND(WINAPI*)(DWORD, LPCWSTR, LPCWSTR, DWORD, int, int, int, int, HWND, HMENU, HINSTANCE, LPVOID);
+    using DestroyWindowFn = BOOL(WINAPI*)(HWND);
+    auto createWindow     = user ? reinterpret_cast<CreateWindowFn>(GetProcAddress(user, "CreateWindowExW")) : nullptr;
+    auto destroyWindow    = user ? reinterpret_cast<DestroyWindowFn>(GetProcAddress(user, "DestroyWindow")) : nullptr;
+    if (!createWindow || !destroyWindow) return false;
+    HWND hwnd = createWindow(0, L"STATIC", L"lepton-dx", WS_OVERLAPPEDWINDOW, 0, 0, 64, 64, nullptr, nullptr, nullptr, nullptr);
     if (!hwnd) return false;
     ID3D12Device*       dev     = nullptr;
     ID3D12CommandQueue* queue   = nullptr;
@@ -656,7 +699,7 @@ bool findTargets() {
     release(factory);
     release(queue);
     release(dev);
-    DestroyWindow(hwnd);
+    destroyWindow(hwnd);
     return ok;
 }
 
@@ -687,11 +730,12 @@ void ensureInstalled() {
     ll::memory::hook(gExecTarget, reinterpret_cast<FuncPtr>(&execDetour), reinterpret_cast<FuncPtr*>(&gExecOrig), ll::memory::HookPriority::Normal);
     ll::memory::hook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour), reinterpret_cast<FuncPtr*>(&gPresentOrig), ll::memory::HookPriority::Normal);
     ll::memory::hook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour), reinterpret_cast<FuncPtr*>(&gPresent1Orig), ll::memory::HookPriority::Normal);
+    gHooked = true;
     log().info("cosmetics: camera filter hooks installed");
 }
 
 void shutdown() {
-    if (!gInstalled || gBroken) return;
+    if (!gHooked.exchange(false)) return;
     using ll::memory::FuncPtr;
     ll::memory::unhook(gPresent1Target, reinterpret_cast<FuncPtr>(&present1Detour));
     ll::memory::unhook(gPresentTarget, reinterpret_cast<FuncPtr>(&presentDetour));

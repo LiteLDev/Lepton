@@ -6,6 +6,8 @@
 #include <cmath>
 #include <fstream>
 #include <random>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -127,6 +129,25 @@ bool isVillager(Actor const& a) {
 std::vector<int64_t>& newVillagers() {
     static std::vector<int64_t> v;
     return v;
+}
+
+/// Villagers created by a transformation (zombification, curing), matched on the next tick with
+/// the tagged villager they replace.
+std::vector<int64_t>& transformedVillagers() {
+    static std::vector<int64_t> v;
+    return v;
+}
+
+/// Tagged villagers seen lately (unique id -> tag, position, dimension, last tick seen).
+struct Tracked {
+    std::string tag;
+    Vec3        pos;
+    int         dim  = 0;
+    uint64_t    seen = 0;
+};
+std::unordered_map<int64_t, Tracked>& tracked() {
+    static std::unordered_map<int64_t, Tracked> m;
+    return m;
 }
 
 void tagByBiome(Actor& villager) {
@@ -260,6 +281,12 @@ void pass(bool withSparkles) {
         if (!a) continue;
         try {
             applyTo(*a);
+            if (isVillager(*a)) {
+                std::string tag = a->hasTag(std::string(kBeachTag)) ? std::string(kBeachTag)
+                                : a->hasTag(std::string(kOceanTag)) ? std::string(kOceanTag)
+                                                                    : std::string();
+                if (!tag.empty()) tracked()[game::entities::idOf(*a)] = {tag, a->getPosition(), static_cast<int>(a->getDimensionId()), gTicks};
+            }
             if (withSparkles) {
                 auto t = a->getEntityTypeId();
                 if (t == ActorType::Bee || t == ActorType::Slime) continue;
@@ -285,7 +312,29 @@ void onTick(ll::event::ServerLevelTickEvent&) {
             }
         }
     }
-    if (gTicks % 10 == 0) pass(true);
+    if (!transformedVillagers().empty()) {
+        auto ids = std::move(transformedVillagers());
+        transformedVillagers().clear();
+        for (auto id : ids) {
+            Actor* v = game::entities::find(id);
+            if (!v || v->hasTag(std::string(kBeachTag)) || v->hasTag(std::string(kOceanTag))) continue;
+            auto const& p   = v->getPosition();
+            int         dim = static_cast<int>(v->getDimensionId());
+            for (auto it = tracked().begin(); it != tracked().end(); ++it) {
+                auto const& t = it->second;
+                float dx = t.pos.x - p.x, dy = t.pos.y - p.y, dz = t.pos.z - p.z;
+                if (t.dim != dim || dx * dx + dy * dy + dz * dz > 4.f || game::entities::find(it->first)) continue;
+                v->addTag(t.tag); // the villager it replaced is gone: the type carries over
+                tracked().erase(it);
+                applyTo(*v);
+                break;
+            }
+        }
+    }
+    if (gTicks % 10 == 0) {
+        pass(true);
+        std::erase_if(tracked(), [](auto const& kv) { return kv.second.seen + 40 < gTicks; });
+    }
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -302,6 +351,8 @@ LL_TYPE_INSTANCE_HOOK(
         if (!serverSide(*this)) return;
         if (isVillager(*this) && (method == ActorInitializationMethod::Spawned || method == ActorInitializationMethod::Born))
             newVillagers().push_back(game::entities::idOf(*this));
+        if (isVillager(*this) && method == ActorInitializationMethod::Transformed)
+            transformedVillagers().push_back(game::entities::idOf(*this));
         applyTo(*this);
     } catch (std::exception const& e) {
         log().error("cosmetics: init hook failed: {}", e.what());
@@ -316,6 +367,8 @@ public:
         game::db::onWorldReady([] { reloadFarming(); });
         game::db::onWorldClosed([] {
             newVillagers().clear();
+            transformedVillagers().clear();
+            tracked().clear();
             forcedSkins().clear();
         });
         MobInitHook::hook();

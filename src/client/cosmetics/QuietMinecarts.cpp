@@ -81,8 +81,9 @@ LL_TYPE_INSTANCE_HOOK(
             if (inner) inner(state);
             try {
                 if (cos::config().enableWoolShutsUpMinecarts && overWool(*cart)) {
-                    // The state starts with the emitter position: move it out of hearing range.
-                    reinterpret_cast<Vec3*>(&state)->y += 1.0e6f;
+                    // The state starts with the emitter position: put it far out of hearing range
+                    // (a fixed point, so a callback that keeps the old position cannot drift).
+                    *reinterpret_cast<Vec3*>(&state) = Vec3{0.f, 1.0e6f, 0.f};
                 }
             } catch (...) {}
         };

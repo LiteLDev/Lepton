@@ -13,6 +13,8 @@
 
 #include "ll/api/memory/Hook.h"
 
+#include "mc/client/game/ClientInstance.h"
+#include "mc/client/multiplayer/ClientLevel.h"
 #include "mc/client/renderer/BaseActorRenderContext.h"
 #include "mc/client/renderer/actor/ItemRenderer.h"
 #include "mc/client/renderer/texture/TextureUVCoordinateSet.h"
@@ -24,6 +26,7 @@
 #include "mc/deps/nbt/StringTag.h"
 #include "mc/world/item/ItemStack.h"
 
+#include "client/Client.h"
 #include "feature/cosmetics/Cosmetics.h"
 #include "game/Items.h"
 #include "mod/Log.h"
@@ -60,11 +63,24 @@ constexpr std::array<uint32_t, 16> kDye{
 
 /// Render-thread cache of the icon stacks.
 ItemStack const& icon(std::string const& key, std::optional<uint32_t> dye = std::nullopt) {
+    // Item stacks belong to the item registry of the world they were made in: the cache is
+    // dropped when the client joins another world. Missing items are not cached.
     static std::map<std::pair<std::string, uint32_t>, ItemStack> cache;
+    static void const*                                          cacheLevel = nullptr;
+    auto*                                                       c          = client::currentClient();
+    void const*                                                 level      = c ? static_cast<void const*>(c->getLevel()) : nullptr;
+    if (level != cacheLevel) {
+        cache.clear();
+        cacheLevel = level;
+    }
     auto k  = std::make_pair(key, dye.value_or(0xFFFFFFFFu));
     auto it = cache.find(k);
     if (it != cache.end()) return it->second;
     ItemStack stack = game::makeItem("lepton:bucket_icon_" + key);
+    if (stack.isNull()) {
+        static ItemStack const empty;
+        return empty;
+    }
     if (!stack.isNull() && dye) {
         auto tag = std::make_unique<CompoundTag>();
         tag->putInt("customColor", static_cast<int>(0xFF000000u | *dye));
