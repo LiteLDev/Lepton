@@ -134,6 +134,9 @@ pwsh -NoProfile -File tools/e2e/server/run.ps1 -Scenario smoke       # BDS (4 sl
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless client via LeviHeadlessInput
 ```
 
+- Builds are throttled machine-wide: `tools/build.ps1` waits for one of `$env:LP_BUILD_SLOTS` (default 2)
+  build slots and compiles with `-Jobs` (`$env:LP_BUILD_JOBS`, default half the logical processors).
+  Always build through `tools/build.ps1`, never with a bare `xmake build` (it would bypass the slots).
 - `git config --global core.longpaths true` is required (long LeviLamina header paths).
 - `clang-cl` must be on PATH (`C:\Program Files\LLVM\bin`).
 - `xmake-requires.lock` is committed; it holds entries for both target types.
