@@ -164,7 +164,7 @@ the Nether Fortress.
 - **Taming**: coal on a wild foxhound while the player is on Peaceful, invulnerable (creative) or has
   Fire Resistance: uses one coal (not in creative); with chance `tameChance` it is tamed (owner set,
   sits, 30 HP, hearts) else smoke. Without fire immunity coal does nothing.
-- Tame: wolf behaviour (sit on interact, follow owner (10/2 blocks), owner-hurt targets, heal and
+- Tame: wolf behaviour (sit on interact and stay while sitting, follow owner (10/2 blocks), owner-hurt targets, heal and
   breed with meat; babies of a tame parent are tame, of a blue parent blue).
 - **Resting**: a tame, not sitting foxhound looks for (in priority) a lit furnace, an unlit
   furnace, then any light-emitting (> 2) block without fluid, within 8 blocks with air above; on
@@ -172,7 +172,7 @@ the Nether Fortress.
   successful interaction wakes it; it can't rest again for 100 ticks.
 - **Furnaces** (`foxhoundsSpeedUpFurnaces`): a tame foxhound standing on a furnace / blast furnace /
   smoker that is cooking: every tick where the cooking progress is a positive multiple of 3, the
-  progress becomes 5 (if it was 3) or progress + 1 (capped at total - 1): +1/3 speed. Only one
+  progress becomes 5 (if it was 3) or progress + 1 (capped at total - 1): 3 progress every 2 ticks. Only one
   foxhound per furnace counts.
 - **Tiny potato** (U23 `lepton:tiny_potato`) fed to a tame foxhound: "eat", 600 ticks later it pops
   out (dropped item) with the potato hurt sound; meanwhile smoke and crackle sounds.
@@ -318,7 +318,7 @@ Selftests (`src/feature/mobsdeep/Tests.cpp`, dx 2100..2199):
 | `mobsdeep.stoneling.drops` | 2140 | killing drops the carried item and the heart |
 | `mobsdeep.forgotten.swap` | 2150 | bow without target, sword when the target is blind |
 | `mobsdeep.foxhound.tame` | 2160 | coal without fire resistance does nothing; with it (chance forced to 1) tames |
-| `mobsdeep.foxhound.furnace` | 2170 | tame foxhound on a cooking furnace speeds it up |
+| `mobsdeep.foxhound.furnace` | 2170 | a sitting tame foxhound stays on a cooking furnace and speeds it up (> 4/3 progress per tick) |
 | `mobsdeep.foxhound.ignite` | 2175 | a wild foxhound's bite ignites |
 | `mobsdeep.wraith.aggro` | 2180 | neutral until hit, slowness + leap after its hit, sound set stored |
 | `mobsdeep.soulbead` | 2190 | soul bead entity follows the trail formula and expires |

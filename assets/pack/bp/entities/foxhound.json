@@ -173,6 +173,9 @@
             "minecraft:rotten_flesh"
           ]
         },
+        "minecraft:behavior.stay_while_sitting": {
+          "priority": 2
+        },
         "minecraft:behavior.breed": {
           "priority": 5,
           "speed_multiplier": 1.0

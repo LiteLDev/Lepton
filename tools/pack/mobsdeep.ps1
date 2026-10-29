@@ -261,6 +261,7 @@ $foxGroups = O `
         'minecraft:healable' (O items $healItems) `
         'minecraft:breedable' (O require_tame $true inherit_tamed $true mutation_factor (O variant 0.0) breeds_with (O mate_type 'lepton:foxhound' baby_type 'lepton:foxhound' `
                 breed_event (O event 'minecraft:entity_born' target 'baby')) breed_items @($Meats)) `
+        'minecraft:behavior.stay_while_sitting' (O priority 2) `
         'minecraft:behavior.breed' (O priority 5 speed_multiplier 1.0) `
         'minecraft:behavior.follow_owner' (O priority 9 speed_multiplier 1.0 start_distance 10 stop_distance 2) `
         'minecraft:behavior.owner_hurt_by_target' (O priority 1) `

@@ -1,7 +1,9 @@
 // Selftests of U21 mobsdeep (dx 2100..2199). See docs/spec/mobsdeep.md §8.
 
 #include <cmath>
+#include <cstdint>
 
+#include "ll/api/service/Bedrock.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
@@ -18,8 +20,10 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/GameType.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/Tick.h"
 #include "mc/deps/shared_types/legacy/Difficulty.h"
 #include "mc/world/level/block/actor/BlockActor.h"
+#include "mc/world/level/block/actor/BlockActorType.h"
 #include "mc/world/level/block/actor/FurnaceBlockActor.h"
 #include "mc/world/phys/AABB.h"
 
@@ -285,26 +289,63 @@ LP_REGISTER_SELFTEST("mobsdeep.foxhound.furnace", [](Context& ctx) -> ll::coro::
     auto pos = ctx.testPos(2170, 3);
     ctx.require(co_await ctx.ensureLoaded(pos), "test area loaded");
     ctx.require(ctx.setBlock(pos, "minecraft:furnace"), "furnace placed");
-    auto& sp     = simOf(ctx);
+    auto& sp = simOf(ctx);
+    // ensureLoaded leaves the player on top of the furnace: step aside so it never pushes the foxhound
+    sp.teleport(Vec3{pos.x + 0.5f, pos.y + 1.0f, pos.z - 3.5f}, sp.getDimensionId());
     auto& region = sp.getDimensionBlockSource();
+    auto  bpos   = lp::game::blockPos(pos);
+    // looked up again on every read: lighting the furnace swaps its block
+    auto furnaceAt = [&region, bpos]() -> FurnaceBlockActor* {
+        auto* be = region.getBlockEntity(bpos);
+        return be && be->mType == BlockActorType::Furnace ? static_cast<FurnaceBlockActor*>(be) : nullptr;
+    };
+    auto now = [] {
+        auto level = ll::service::getLevel();
+        return level ? static_cast<int64_t>(level->getCurrentTick().tickID) : int64_t{0};
+    };
     co_await ctx.ticks(2);
-    auto* be = region.getBlockEntity(lp::game::blockPos(pos));
-    ctx.require(be != nullptr, "the furnace has a block entity");
-    auto& furnace = static_cast<FurnaceBlockActor&>(*be);
-    furnace.setItem(0, makeItem("minecraft:raw_iron", 4));
-    furnace.setItem(1, makeItem("minecraft:coal", 4));
+    ctx.require(furnaceAt() != nullptr, "the furnace has a block entity");
     auto* fox = ent::spawn(region, std::string(md::kFoxhound), center(pos, 1.0f));
     ctx.require(fox != nullptr, "foxhound spawned");
     auto id = ent::idOf(*fox);
     ent::triggerEvent(*fox, "lepton:on_tame");
     fox->setSitting(true);
+    co_await ctx.ticks(5);
+    ctx.require(furnaceAt() != nullptr, "the furnace is still there");
+    furnaceAt()->setItem(0, makeItem("minecraft:raw_iron", 4));
+    furnaceAt()->setItem(1, makeItem("minecraft:coal", 4));
+    // once it cooks, count the progress it makes over a measured number of game ticks
+    for (int i = 0; i < 40; ++i) {
+        if (auto* f = furnaceAt(); f && f->mCookingProgress > 0) break;
+        co_await ctx.ticks(1);
+    }
+    auto* f0 = furnaceAt();
+    ctx.require(f0 && f0->mCookingProgress > 0, "the furnace started cooking");
+    int  start = f0->mCookingProgress;
+    auto t0    = now();
     co_await ctx.ticks(60);
-    int progress = furnace.mCookingProgress;
-    auto* f2     = ent::find(id);
-    ctx.check(f2 && f2->isTame(), "the foxhound is tame");
-    // 60 ticks of plain cooking reach ~59; a foxhound adds one tick in three
-    ctx.check(progress >= 70 || !lp::game::isEmpty(furnace.getItem(2)), "the furnace cooks faster (progress " + std::to_string(progress) + ")");
-    if (f2) ent::despawn(*f2);
+    auto* f1 = furnaceAt();
+    ctx.require(f1 != nullptr, "the furnace is still there after cooking");
+    auto  ticks = now() - t0;
+    int   made  = f1->mCookingProgress - start;
+    auto* f2    = ent::find(id);
+    ctx.require(f2 != nullptr, "the foxhound is still there");
+    ctx.check(f2->isTame(), "the foxhound is tame");
+    auto at = f2->getPosition();
+    ctx.check(
+        std::abs(at.x - (pos.x + 0.5f)) < 0.5f && std::abs(at.z - (pos.z + 0.5f)) < 0.5f && std::abs(at.y - (pos.y + 1.0f)) < 0.5f,
+        "the sitting foxhound stays on the furnace (offset " + std::to_string(at.x - pos.x - 0.5f) + ", "
+            + std::to_string(at.y - pos.y - 1.0f) + ", " + std::to_string(at.z - pos.z - 0.5f) + "; sitting "
+            + (f2->isSitting() ? "yes" : "no") + ")"
+    );
+    // plain cooking makes 1 per tick; the foxhound bumps every multiple of 3 by one, so the furnace
+    // makes 3 progress in 2 ticks (90 in 60): ask for more than 4/3
+    ctx.check(
+        ticks > 0 && lp::game::isEmpty(f1->getItem(2)) && made * 3 > ticks * 4,
+        "the furnace cooks faster (" + std::to_string(made) + " progress in " + std::to_string(ticks) + " ticks)"
+    );
+    ctx.info("furnace progress " + std::to_string(made) + " in " + std::to_string(ticks) + " ticks");
+    ent::despawn(*f2);
 });
 
 LP_REGISTER_SELFTEST("mobsdeep.foxhound.ignite", [](Context& ctx) -> ll::coro::CoroTask<> {
