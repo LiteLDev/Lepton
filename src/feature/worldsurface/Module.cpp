@@ -178,6 +178,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&      random
 ) {
     origin(biome, lc, source, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(source.getDimensionId()) != 0) return;
     climate::setGenerator(this);
     runChunk(source, lc, static_cast<int>(source.getDimensionId()), this);
 }
@@ -194,6 +196,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&      random
 ) {
     origin(biome, lc, source, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(source.getDimensionId()) != 1) return;
     runChunk(source, lc, static_cast<int>(source.getDimensionId()), nullptr);
 }
 
@@ -209,6 +213,8 @@ LL_TYPE_INSTANCE_HOOK(
     Random&      random
 ) {
     origin(biome, lc, source, random);
+    // The Nether and End generators share this function: act only in this hook's dimension.
+    if (static_cast<int>(source.getDimensionId()) != 2) return;
     runChunk(source, lc, static_cast<int>(source.getDimensionId()), nullptr);
 }
 
