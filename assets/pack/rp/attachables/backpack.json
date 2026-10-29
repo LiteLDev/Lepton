@@ -3,6 +3,9 @@
   "minecraft:attachable": {
     "description": {
       "identifier": "lepton:backpack",
+      "item": {
+        "lepton:backpack": "c.item_slot == 'chest'"
+      },
       "materials": {
         "default": "armor_leather",
         "enchanted": "armor_leather_enchanted"

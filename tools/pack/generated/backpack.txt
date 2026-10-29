@@ -55,6 +55,7 @@ assets/pack/rp/texts.d/zh_CN/backpack-gen.lang
 assets/pack/rp/textures/blocks/bonded_ravager_hide.png
 assets/pack/rp/textures/entity/totem_of_holding.png
 assets/pack/rp/textures/items/backpack.png
+assets/pack/rp/textures/items/backpack_dyed.png
 assets/pack/rp/textures/items/ravager_hide.png
 assets/pack/rp/textures/items/seed_pouch.png
 assets/pack/rp/textures/models/armor/backpack.png

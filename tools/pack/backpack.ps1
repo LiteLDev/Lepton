@@ -24,7 +24,11 @@ function Write-Item([string]$Path, [hashtable]$Name, [string]$Category, $Compone
 
 # --- items -----------------------------------------------------------------------------------------
 Write-Item 'backpack' @{ en = 'Backpack'; zh = '背包' } 'equipment' ([ordered]@{
-        'minecraft:icon'           = (Add-ItemTexture 'textures/items/backpack')
+        # A dyeable item's icon is drawn from its "dyed" texture, tinted (without it: invisible).
+        'minecraft:icon'           = [ordered]@{ textures = [ordered]@{
+                default = (Add-ItemTexture 'textures/items/backpack')
+                dyed    = (Add-ItemTexture 'textures/items/backpack_dyed')
+            } }
         'minecraft:max_stack_size' = 1
         'minecraft:wearable'       = [ordered]@{ slot = 'slot.armor.chest'; protection = 0 }
         'minecraft:dyeable'        = [ordered]@{ default_color = '#A06540' }
@@ -209,7 +213,9 @@ Write-PackJson (Join-Path $script:RP 'attachables/backpack.json') ([ordered]@{
         'minecraft:attachable' = [ordered]@{
             description = [ordered]@{
                 identifier         = 'lepton:backpack'
-                materials          = [ordered]@{ default = 'armor_leather'; enchanted = 'armor_leather_enchanted' }
+                # Only worn: in a hand (and in UI slots) the item keeps its flat sprite.
+                item               = [ordered]@{ 'lepton:backpack' = "c.item_slot == 'chest'" }
+                materials         = [ordered]@{ default = 'armor_leather'; enchanted = 'armor_leather_enchanted' }
                 textures           = [ordered]@{ default = 'textures/models/armor/backpack'; enchanted = 'textures/misc/enchanted_actor_glint' }
                 geometry           = [ordered]@{ default = 'geometry.lepton.backpack_worn' }
                 render_controllers = @('controller.render.armor')

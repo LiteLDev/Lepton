@@ -469,20 +469,6 @@ void tickPlayer(Player& p) {
 // ---- hooks ----------------------------------------------------------------------------------------
 
 int gTick = 0;
-/// uuid -> last tick of the window in which the player's next inventory request opens the normal
-/// inventory (the mod client's "Inventory" button: the client asks for it itself).
-std::map<std::string, int>& inventoryBypass() {
-    static std::map<std::string, int> m;
-    return m;
-}
-
-bool takeBypass(Player const& p) {
-    auto it = inventoryBypass().find(p.getUuid().asString());
-    if (it == inventoryBypass().end()) return false;
-    bool active = it->second >= gTick;
-    inventoryBypass().erase(it);
-    return active;
-}
 
 LL_TYPE_INSTANCE_HOOK(
     OpenInventoryHook,
@@ -491,9 +477,7 @@ LL_TYPE_INSTANCE_HOOK(
     &ServerPlayer::$openInventory,
     void
 ) {
-    if (takeBypass(*this)) {
-        log().info("backpack: {} switched to the inventory", getRealName());
-    } else if (cfg().enableBackpack && wearsBackpack(*this) && !isCreative() && !isSpectator() && !isSneaking()) {
+    if (cfg().enableBackpack && wearsBackpack(*this) && !isCreative() && !isSpectator() && !isSneaking()) {
         if (openBackpack(*this)) return;
     }
     origin();
@@ -632,27 +616,15 @@ public:
         game::db::onWorldClosed([] {
             sessions().clear(); // helpers of a closed world are gone with it
             wornFull().clear();
-            inventoryBypass().clear();
         });
 
+        // The mod client's "Inventory" button: the backpack screen closes and the client opens its
+        // own inventory (the game shows no inventory the server opens by itself). Its "Backpack"
+        // button sends the vanilla inventory request, which the hook above answers.
         mSwitch = net::onServer<BackpackSwitchMsg>([](Player& p, BackpackSwitchMsg const& m) {
-            auto uuid = p.getUuid().asString();
-            if (m.target != "inventory" && m.target != "backpack") return;
-            log().info("backpack: {} asked for the {} screen", p.getRealName(), m.target);
-            if (m.target == "inventory") {
-                if (!backpackOpen(p)) return;
-                // The client opens its inventory itself once the backpack screen closed (the game
-                // shows no inventory the server opens on its own): let that request through.
-                inventoryBypass()[uuid] = gTick + 100;
-                closeBackpack(p);
-            } else if (m.target == "backpack") {
-                if (!wearsBackpack(p) || backpackOpen(p)) return;
-                if (p.mContainerManager.get()) static_cast<ServerPlayer&>(p).initiateContainerClose();
-                ll::coro::keepThis([uuid]() -> ll::coro::CoroTask<> {
-                    co_await ll::chrono::ticks(3);
-                    if (auto* pl = playerByUuid(uuid)) openBackpack(*pl);
-                }).launch(ll::thread::ServerThreadExecutor::getDefault());
-            }
+            if (m.target != "inventory" || !backpackOpen(p)) return;
+            log().info("backpack: {} switched to the inventory", p.getRealName());
+            closeBackpack(p);
         });
     }
 

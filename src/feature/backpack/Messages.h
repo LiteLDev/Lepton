@@ -13,8 +13,8 @@ struct BackpackScreenMsg {
     bool open = false;
 };
 
-/// Client -> server: switch between the backpack screen and the normal inventory.
-/// `target` = "inventory" or "backpack".
+/// Client -> server: leave the backpack screen for the normal inventory (`target` = "inventory"; the
+/// client opens its inventory itself once the screen closed). Other targets are ignored.
 struct BackpackSwitchMsg {
     static constexpr std::string_view kId = "backpack:switch";
     std::string target;

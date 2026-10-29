@@ -14,7 +14,10 @@ function Write-BackpackTextures {
 
     # --- backpack item: a brown leather bag with a carry handle, a flap and a metal buckle
     $bag = @{ o = '#3a2414'; d = '#6e4425'; m = '#8f5a32'; l = '#b57a46'; h = '#d39a5e'; b = '#d8d8d8'; k = '#7d7d7d' }
-    Save-PixelArt -Palette $bag -Path (& $Record (Join-Path $items 'backpack.png')) -Rows @(
+    # The same bag in grey levels: the icon of a dyeable item is drawn tinted with its colour (the
+    # default colour #A06540 gives back the browns above).
+    $bagDyed = @{ o = '#5c5c5c'; d = '#aeaeae'; m = '#e0e0e0'; l = '#f4f4f4'; h = '#ffffff'; b = '#ffffff'; k = '#a0a0a0' }
+    $bagRows = @(
         '................',
         '.....oooooo.....',
         '....oo....oo....',
@@ -31,6 +34,8 @@ function Write-BackpackTextures {
         '.ommmmmmmmmmmmo.',
         '.oddddddddddddo.',
         '..oooooooooooo..')
+    Save-PixelArt -Palette $bag -Path (& $Record (Join-Path $items 'backpack.png')) -Rows $bagRows
+    Save-PixelArt -Palette $bagDyed -Path (& $Record (Join-Path $items 'backpack_dyed.png')) -Rows $bagRows
 
     # --- ravager hide: a draped grey-brown pelt with lighter fur tufts and a ragged fringe
     $hide = @{ o = '#2b2421'; d = '#4a3d35'; m = '#63544a'; l = '#7d6c5f'; f = '#9c8b7a' }
