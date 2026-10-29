@@ -298,8 +298,14 @@ void Overlay::button(Rect const& r, std::string_view label, std::function<void()
     mImpl.dc.outline(r, hover ? colors::white : Color{0, 0, 0, 1});
     mImpl.dc.text(label, r.x + r.w / 2, r.y + (r.h - 8) / 2, hover ? colors::yellow : colors::white, 1, Align::Center);
     if (hover && !tooltip.empty()) {
-        float w = mImpl.dc.textWidth(tooltip) + 6;
+        // Like vanilla tooltips: right of the mouse, flipped to the left when it would leave the
+        // screen, kept inside the screen vertically.
+        float w      = mImpl.dc.textWidth(tooltip) + 6;
+        auto  screen = mImpl.dc.screenSize();
         Rect  t{mImpl.mouse.x + 8, mImpl.mouse.y - 14, w, 12};
+        if (t.x + t.w > screen.x) t.x = mImpl.mouse.x - 8 - t.w;
+        t.x = std::clamp(t.x, 0.f, std::max(0.f, screen.x - t.w));
+        t.y = std::clamp(t.y, 0.f, std::max(0.f, screen.y - t.h));
         mImpl.dc.fill(t, colors::panel);
         mImpl.dc.text(tooltip, t.x + 3, t.y + 2);
     }
