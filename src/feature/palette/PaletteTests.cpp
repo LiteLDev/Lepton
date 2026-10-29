@@ -486,6 +486,11 @@ LP_REGISTER_SELFTEST("palette.grate_animals", [](Context& ctx) -> ll::coro::Coro
         auto leashed = pal::grateCollision(region, pos, pig);
         ctx.check(leashed.max.y <= static_cast<float>(p.y) + 1.01f, "a leashed pig may walk on it");
         auto leashedEcs = ecsShape(region, pos, *pig);
+        if (leashedEcs.max.y > static_cast<float>(p.y) + 1.01f) {
+            bool found = false;
+            for (Actor* a : region.getEntities(pig->getAABB(), 0.25f)) found = found || a == pig;
+            ctx.info(std::string("pig found by its box: ") + (found ? "yes" : "no"));
+        }
         ctx.check(leashedEcs.max.y <= static_cast<float>(p.y) + 1.01f, "a leashed pig may walk on it (movement query)");
     } else {
         ctx.info("leash holder not accepted without a lead entity; leashed case skipped");

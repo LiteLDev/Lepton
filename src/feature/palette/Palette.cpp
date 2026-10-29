@@ -264,17 +264,17 @@ AABB grateBox(
     return plateBox(pos);
 }
 
+// The server thread (set by the server tick): the only thread that may look up actors.
+std::atomic<std::thread::id> gServerThread{};
+
 /// The actor whose AABB component is `box` (the same memory), looked up in the dimension's main
-/// region. Only on the thread that owns that region (the server thread); nullptr elsewhere.
+/// region. Only on the server thread (other threads, e.g. the client's, get nullptr).
 Actor const* actorWithBox(IConstBlockSource const& query, AABB const& box) {
+    if (gServerThread.load() != std::this_thread::get_id()) return nullptr;
     auto* region = game::regionOf(static_cast<int>(query.getDimensionId()));
-    if (!region || *region->mOwnerThreadID != std::this_thread::get_id()) return nullptr;
-    AABB search{
-        box.min - Vec3{0.25f, 0.25f, 0.25f},
-        box.max + Vec3{0.25f, 0.25f, 0.25f}
-    };
-    for (Actor* a : region->fetchEntities(nullptr, search, false, false)) {
-        if (&a->getAABB() == &box) return a;
+    if (!region) return nullptr;
+    for (Actor* a : region->getEntities(box, 0.25f)) {
+        if (a && &a->getAABB() == &box) return a;
     }
     return nullptr;
 }
@@ -669,7 +669,8 @@ void onSpawning(ll::event::SpawningMobEvent& ev) {
 }
 
 void onTick(ll::event::ServerLevelTickEvent&) {
-    auto& s = st();
+    gServerThread = std::this_thread::get_id();
+    auto& s       = st();
     ++s.tick;
     if (!s.tasks.empty()) {
         std::vector<Task> due;
