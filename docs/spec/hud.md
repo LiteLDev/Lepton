@@ -107,7 +107,7 @@ their enchantment line; the fuel row goes last.
 - **Attributes** (`attributeTooltips`): not while Shift is held. Bedrock items have no attribute
   modifier components; the values come from the item: attack damage (`Item::getAttackDamage`, main
   hand, shown as base 1 + bonus, like Java's `ADD_VALUE` display), armour (`getArmorValue`), armour
-  toughness (`getToughnessValue`), knockback resistance (netherite armour 10 %, shown "+10%"), in
+  toughness (`getToughnessValue`), knockback resistance (netherite armour, 0.1 per piece, shown "0.1" as Quark formats `ADD_VALUE`), in
   the item's equipment group (main hand for weapons/tools, head/chest/legs/feet for armour).
   Entries of the same attribute and group are merged. Each entry: 9x9 icon, value at +12 px, next
   entry 20 px after the text. With more than one group, each group gets its own line starting with
@@ -158,8 +158,7 @@ Default binding: mouse button 5 (`ActionX2`, Quark's mouse button value 4), plus
 keybind `key.lepton.back` (unbound by default, rebindable). When pressed while a screen (not the
 HUD) is on top: the screen receives the game's "back" input (an Escape press), which presses its
 Back / Done / Cancel button or closes it — exactly what Quark's search for those buttons does on
-Bedrock, where every screen maps Escape to its back action. In the game's key-binding screen the
-press is ignored (rebinding must not close the screen).
+Bedrock, where every screen maps Escape to its back action.
 
 ## 4. Screens
 
@@ -234,6 +233,9 @@ Keybinds (`config/keybinds.json`, Controls screen): `autorun` (unbound), `back` 
   while auto-walking; the saved option is never touched (same visible behaviour).
 - **Back button**: Bedrock screens are JSON-UI scenes without Java's button objects; the back action
   is the scene's Escape handling, which is what the Back/Done/Cancel buttons do there.
+- **Controls screen**: Quark ignores the key in Java's separate Controls screen. Bedrock's key
+  bindings are a section of the single `settings_screen` (no separate screen to exclude), so Back
+  acts there as Escape does, like on every other settings section.
 - **Side mouse buttons** cannot be stored in Bedrock key bindings, so the default mouse binding of
   Back is the config key `backMouseButton`; the keyboard binding is a normal rebindable keybind.
 - **ChestSearching darkening** in the shulker preview depends on U15's search filter; it is applied

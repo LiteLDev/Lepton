@@ -407,8 +407,8 @@ std::string formatNumber(double v) {
 
 std::pair<std::string, bool> formatAttribute(Attribute const& a) {
     switch (a.op) {
-    case AttrOp::AddValue: return {formatNumber(a.amount + a.base), false};
-    case AttrOp::AddMultipliedBase: return {(a.amount > 0 ? "+" : "") + formatNumber(a.amount * 100) + "%", false};
+    case AttrOp::AddValue: return {formatNumber(a.amount + a.base), a.amount < 0};
+    case AttrOp::AddMultipliedBase: return {(a.amount > 0 ? "+" : "") + formatNumber(a.amount * 100) + "%", a.amount < 0};
     case AttrOp::AddMultipliedTotal: return {formatNumber(a.amount) + "x", a.amount < 1};
     }
     return {formatNumber(a.amount), a.amount < 0};

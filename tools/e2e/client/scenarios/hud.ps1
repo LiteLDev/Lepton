@@ -13,6 +13,24 @@ function Hover-Slot($slots, [int]$i, [string]$shot) {
     Save-Screenshot $shot | Out-Null
 }
 
+# Modes: local and remote-mod run everything (remote-mod: map data and shulker contents come from
+# the BDS); remote-vanilla only checks that a vanilla client is unaffected (the modules are client
+# side, as in Quark) and runs the logic selftests on the server.
+$vanilla = $script:Mode -eq 'remote-vanilla'
+$remote = $script:Mode -ne 'local'
+if ($vanilla) {
+    $m = Get-LogMark
+    Invoke-Chat '/quark debug hud'
+    Wait-LogLine 'hud: debug kit given' 20 -Since $m | Out-Null
+    Start-Sleep -Seconds 1
+    Save-Screenshot 'vanilla' | Out-Null
+    if (Get-LeviLog | Select-String 'hud: (usage ticker|tooltip|auto-walk)') { throw 'a vanilla client must not run the hud client modules' }
+    $r = Invoke-SelfTest 'hud.*'
+    if ($r.Fail -gt 0) { throw "hud selftests failed: $(($r.Failed | ForEach-Object { "$($_.Name): $($_.Reason)" }) -join '; ')" }
+    if ($r.Pass -lt 11) { throw "expected at least 11 hud selftests, got $($r.Pass)" }
+    return
+}
+
 # ---- usage ticker -----------------------------------------------------------------------------------
 Invoke-Chat '/clear @s'
 Invoke-Chat '/give @s cobblestone 64'
@@ -96,4 +114,6 @@ if ($walked -notmatch 'auto-walked ([0-9.]+) blocks' -or [double]$Matches[1] -lt
 # ---- selftests (logic, in the local world) -------------------------------------------------------------
 $r = Invoke-SelfTest 'hud.*'
 if ($r.Fail -gt 0) { throw "hud selftests failed: $(($r.Failed | ForEach-Object { "$($_.Name): $($_.Reason)" }) -join '; ')" }
-if ($r.Pass -lt 11) { throw "expected at least 11 hud selftests, got $($r.Pass)" }
+# Local worlds also run the client-build tests (tooltip lines, keybinds).
+$min = if ($remote) { 11 } else { 13 }
+if ($r.Pass -lt $min) { throw "expected at least $min hud selftests, got $($r.Pass)" }

@@ -457,10 +457,21 @@ void drawMap(Painter& p, Component const& c, float x, float y) {
     auto* level  = client ? client->getLevel() : nullptr;
     if (!level) return;
     auto* data = level->getMapSavedData(c.mapId);
-    if (!data) return;
-    auto const& pixels = data->mPixels.get();
     p.image("textures/lepton/hud/map_background", x + 3 - 3.5f, y + 3 - 3.5f, 71, 71);
-    if (pixels.size() < 128 * 128) return;
+    if (!data || data->mPixels.get().size() < 128 * 128) {
+        // The client has no data for this map yet (remote servers send it only for held maps):
+        // ask the server with the vanilla MapInfoRequestPacket, at most once a second per map.
+        static std::map<int64, std::chrono::steady_clock::time_point> asked;
+        auto now = std::chrono::steady_clock::now();
+        auto& at = asked[c.mapId.rawID];
+        if (now - at > std::chrono::seconds(1)) {
+            at = now;
+            level->requestMapInfo(c.mapId, false);
+            log().info("hud: map {} requested from the server", c.mapId.rawID);
+        }
+        return;
+    }
+    auto const& pixels = data->mPixels.get();
     float const s = 0.5f;
     for (int row = 0; row < 128; ++row) {
         int col = 0;
