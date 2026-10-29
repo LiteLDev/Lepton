@@ -241,7 +241,8 @@ void DrawContext::text(std::string_view s, float x, float y, Color color, float 
     float         left = align == Align::Left ? x : align == Align::Center ? x - w / 2 : x - w;
     RectangleArea area{left, left + w, y, y + 10 * scale};
     auto          a  = align == Align::Left ? ::ui::TextAlignment::Left : align == Align::Center ? ::ui::TextAlignment::Center : ::ui::TextAlignment::Right;
-    TextMeasureData  tmd{scale, 0.f, shadow, true, false, a};
+    // showColorSymbol = false: the game's font renderer applies `§` codes instead of drawing them.
+    TextMeasureData  tmd{scale, 0.f, shadow, false, false, a};
     CaretMeasureData caret{-1, false};
     mImpl.rc.drawText(mImpl.font.getFont(), area, std::string(s), mce::Color(color.r, color.g, color.b, color.a), color.a, a, tmd, caret);
     mImpl.textQueued = true;
