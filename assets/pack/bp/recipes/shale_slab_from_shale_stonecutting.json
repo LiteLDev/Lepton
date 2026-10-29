@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:shale_slab_from_shale_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:shale"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:shale"
+      }
+    ],
+    "result": {
+      "item": "lepton:shale_slab",
+      "count": 2
+    }
+  }
+}

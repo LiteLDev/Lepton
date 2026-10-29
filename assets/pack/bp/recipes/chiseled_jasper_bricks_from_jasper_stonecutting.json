@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:chiseled_jasper_bricks_from_jasper_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:jasper"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:jasper"
+      }
+    ],
+    "result": {
+      "item": "lepton:chiseled_jasper_bricks",
+      "count": 1
+    }
+  }
+}

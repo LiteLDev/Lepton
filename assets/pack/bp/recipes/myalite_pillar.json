@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:myalite_pillar"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:polished_myalite_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:polished_myalite_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:myalite_pillar",
+      "count": 1
+    }
+  }
+}

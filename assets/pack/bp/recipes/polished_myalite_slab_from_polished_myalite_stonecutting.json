@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:polished_myalite_slab_from_polished_myalite_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:polished_myalite"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:polished_myalite"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_myalite_slab",
+      "count": 2
+    }
+  }
+}

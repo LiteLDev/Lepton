@@ -1,0 +1,55 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:shale_bricks",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.stoneBrick"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#a0a0ff",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_newstones_newstones_shale_bricks",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/shale_bricks.json"
+    }
+  }
+}

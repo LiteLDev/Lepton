@@ -1,0 +1,670 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:myalite_pillar",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.stoneBrick"
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      },
+      "states": {
+        "lepton:tint": [
+          8,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#7f3fb2",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t8",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t8",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/myalite_pillar.json",
+      "tag:lepton:pillar": {},
+      "tag:lepton:myalite_tinted": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              90
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 0",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t0",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t0",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t0",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t0",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t0",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t0",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t0",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t1",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t1",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t1",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t1",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t1",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t1",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t1",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 2",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t2",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t2",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t2",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t2",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t2",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t2",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t2",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 3",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t3",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t3",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t3",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t3",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t3",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t3",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t3",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 4",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t4",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t4",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t4",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t4",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t4",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t4",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t4",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 5",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t5",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t5",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t5",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t5",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t5",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t5",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t5",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 6",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t6",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t6",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t6",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t6",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t6",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t6",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t6",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 7",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t7",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t7",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t7",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t7",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t7",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t7",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t7",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 8",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t8",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t8",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t8",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 9",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t9",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t9",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t9",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t9",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t9",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t9",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t9",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 10",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t10",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t10",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t10",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t10",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t10",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t10",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t10",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 11",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t11",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t11",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t11",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t11",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t11",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t11",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t11",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 12",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t12",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t12",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t12",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t12",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t12",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t12",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t12",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 13",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t13",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t13",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t13",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t13",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t13",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t13",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t13",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 14",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t14",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t14",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t14",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t14",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t14",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t14",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t14",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:tint') == 15",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t15",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t15",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t15",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t15",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_t15",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t15",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "lepton_newstones_newstones_myalite_myalite_pillar_top_t15",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

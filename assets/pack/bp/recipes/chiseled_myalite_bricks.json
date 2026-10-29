@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:chiseled_myalite_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:myalite_bricks_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:myalite_bricks_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:chiseled_myalite_bricks",
+      "count": 1
+    }
+  }
+}

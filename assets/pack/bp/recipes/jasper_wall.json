@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:jasper_wall"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:jasper"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:jasper"
+      }
+    ],
+    "result": {
+      "item": "lepton:jasper_wall",
+      "count": 6
+    }
+  }
+}
