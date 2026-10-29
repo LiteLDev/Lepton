@@ -349,7 +349,6 @@ struct Planned {
 };
 
 void runPlan(Player& player, std::vector<Planned> const& plan, bool hoe) {
-    log().info("farming-debug: runPlan {} entries", plan.size());
     auto& region = player.getDimensionBlockSource();
     auto  tool   = player.getSelectedItem();
     bool  done   = false;
@@ -466,7 +465,6 @@ void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     auto& player = ev.self();
     if (player.isClientSide()) return;
     bool h = simpleHarvestClick(player, ev.blockPos());
-    log().info("farming-debug: harvest click {} {} {} -> {} hand={} block={}", ev.blockPos().x, ev.blockPos().y, ev.blockPos().z, h, player.getSelectedItem().getTypeName(), player.getDimensionBlockSource().getBlock(ev.blockPos()).getTypeName());
     if (h) ev.cancel();
 }
 

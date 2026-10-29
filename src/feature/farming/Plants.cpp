@@ -185,7 +185,6 @@ bool petalTarget(BlockSource& region, BlockPos pos, int face, bool fromBlockClic
 
 void onInteract(ll::event::PlayerInteractBlockEvent& ev) {
     auto& player = ev.self();
-    log().info("farming-debug: interact {} at {} {} {} cancelled={}", ev.item().isNull() ? "-" : ev.item().getTypeName(), ev.blockPos().x, ev.blockPos().y, ev.blockPos().z, ev.isCancelled());
     if (player.isClientSide() || ev.isCancelled()) return;
     auto const& item = ev.item();
     if (item.isNull()) return;
@@ -264,11 +263,9 @@ LL_TYPE_INSTANCE_HOOK(
     HandSlot      handSlot,
     Vec3 const&   clickPos
 ) {
-    log().info("farming-debug: fertilizer useOn {} at {} {} {}", instance.getTypeName(), pos.x, pos.y, pos.z);
     if (!entity.isClientSide() && instance.getTypeName() == "minecraft:bone_meal") {
         auto& region = entity.getDimensionBlockSource();
         bool ok = boneMealSporeBlossom(region, pos);
-        log().info("farming-debug: spore -> {} block={} chance={}", ok, region.getBlock(pos).getTypeName(), cfg().boneMealChance);
         if (ok) {
             if (!(entity.isPlayer() && isCreative(static_cast<Player&>(entity)))) instance.remove(1);
             InteractionResult r{};
