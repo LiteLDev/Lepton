@@ -226,9 +226,13 @@ When they form a tome / overlevel / rune combination:
 - mod clients get `enchanting:craft_preview` and draw (overlay on the anvil / smithing screen) the
   result item, the XP cost and a **Craft** button that sends `enchanting:craft`; the server
   re-validates, consumes the inputs, gives the result.
-- vanilla clients: the server closes the screen (inputs return to the inventory) and sends a
-  `ModalForm` "Apply Ancient Tome?" / "Apply Rune?" with result name and cost; **Yes** re-finds the
-  same stacks in the inventory and applies.
+- vanilla clients: the vanilla client keeps the anvil / smithing screen open against server close
+  packets and a form can't show over it, so the player is told in chat to close the screen
+  ("Close the anvil to apply the Ancient Tome."); once it is closed (inputs back in the inventory)
+  the server sends a `ModalForm` "Apply Ancient Tome?" / "Apply Rune?" with result name and cost;
+  **Apply** re-finds the same stacks in the inventory and applies.
+- mod clients: after **Apply** the server answers `enchanting:craft_preview` with kind `applied` and
+  the client leaves the screen itself (server close packets don't close it either).
 
 ## 5. Config
 
