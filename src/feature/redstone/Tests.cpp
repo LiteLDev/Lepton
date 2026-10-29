@@ -518,4 +518,71 @@ LP_REGISTER_SELFTEST("redstone.dispenser_blacklist", [](Context& ctx) -> ll::cor
         lp::game::entities::despawn(*a);
 });
 
+// ---- gallery (client e2e screenshots; on BDS it only builds and checks the row) ---------------------
+
+LP_REGISTER_SELFTEST("redstone.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    GP base = ctx.testPos(1090);
+    ctx.require(co_await ctx.ensureLoaded(base), "gallery area loaded");
+    clearBox(ctx, off(base, -1, 0, -2), 20, 6, 4);
+    for (int dx = -1; dx < 19; ++dx) put(ctx, off(base, dx, -1, 0), "minecraft:smooth_stone");
+    struct Item {
+        int          dx, dy;
+        char const*  id;
+        bs::Changes  states;
+    };
+    std::vector<Item> const items{
+        {0,  0, "lepton:iron_rod",                {{"minecraft:block_face", "up"}}                                            },
+        {1,  0, "lepton:iron_rod",                {{"minecraft:block_face", "east"}}                                          },
+        {2,  0, "lepton:iron_rod",                {{"minecraft:block_face", "north"}}                                         },
+        {4,  0, "lepton:gravisand",               {}                                                                          },
+        {6,  0, "lepton:ender_watcher",           {}                                                                          },
+        {7,  0, "lepton:ender_watcher",           {{"lepton:watched", true}, {"lepton:power", 15}}                            },
+        {9,  0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                                 },
+        {11, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "north"}}                                 },
+        {11, 0, "",                               {}                                                                          },
+        {13, 0, "lepton:iron_button",             {{"minecraft:block_face", "up"}}                                            },
+        {14, 0, "lepton:gold_button",             {{"minecraft:block_face", "up"}}                                            },
+        {16, 0, "lepton:obsidian_pressure_plate", {}                                                                          },
+        {17, 0, "lepton:redstone_randomizer",     {{"minecraft:cardinal_direction", "east"}, {"lepton:powered", "right"}}     },
+    };
+    for (auto const& it : items) {
+        if (!*it.id) continue;
+        ctx.check(put(ctx, off(base, it.dx, it.dy, 0), it.id, it.states), std::string("placed ") + it.id);
+    }
+    // the second randomizer is powered from behind (the south side)
+    put(ctx, off(base, 11, 0, 1), "minecraft:redstone_block");
+    co_await ctx.ticks(8);
+    ctx.check(bs::getString(regionOf(ctx).getBlock(bp(off(base, 11, 0, 0))), "lepton:powered").value_or("off") != "off",
+              "the powered randomizer is on");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& pl) {
+        if (!pl.isSimulated()) viewer = &pl;
+        return viewer == nullptr;
+    });
+    if (!viewer) co_return;
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](float dx, float dy, float dz, float pitch, float yaw) {
+        if (auto* v = ctx.player().getLevel().getPlayer(uid))
+            v->teleport(Vec3{base.x + dx, base.y + dy, base.z + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
+    };
+    // the real player looks at the second ender watcher (so it stays watched)
+    view(7.5f, 1.0f, 4.5f, 10.f, 180.f);
+    co_await ctx.ticks(40);
+    ctx.info("REDSTONE GALLERY watcher");
+    co_await ctx.ticks(100);
+    view(8.5f, 2.5f, 5.5f, 30.f, 180.f);
+    co_await ctx.ticks(40);
+    ctx.info("REDSTONE GALLERY row");
+    co_await ctx.ticks(100);
+    // gravisand floating up: blocked below, powered from the side
+    put(ctx, off(base, 4, 4, 0), "minecraft:stone");
+    put(ctx, off(base, 5, 0, 0), "minecraft:redstone_block");
+    co_await ctx.ticks(5);
+    ctx.info("REDSTONE GALLERY floating");
+    co_await ctx.ticks(60);
+    ctx.check(idAt(ctx, off(base, 4, 3, 0)) == "lepton:gravisand", "the gallery gravisand floated up to the stone");
+    ctx.info("REDSTONE GALLERY done");
+});
+
 } // namespace
