@@ -9,6 +9,9 @@
 #include <set>
 
 #include "ll/api/chrono/GameChrono.h"
+#include "ll/api/command/CommandHandle.h"
+#include "mc/server/commands/CommandOrigin.h"
+#include "mc/server/commands/CommandOutput.h"
 #include "ll/api/coro/CoroTask.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/MobDieEvent.h"
@@ -52,6 +55,7 @@
 #include "game/Inventory.h"
 #include "game/Items.h"
 #include "game/WorldDb.h"
+#include "mod/Commands.h"
 #include "mod/Config.h"
 #include "mod/I18n.h"
 #include "mod/Log.h"
@@ -338,6 +342,15 @@ bool openBackpack(Player& player) {
         helper->openContainerComponent(*pl);
         net::sendToClient(*pl, BackpackScreenMsg{true});
         log().info("backpack: opened by {}", pl->getRealName());
+        // The contents of an entity container reach the client only with changes: send them now
+        // and again once the client surely shows the screen.
+        for (int wait : {0, 4, 16}) {
+            if (wait > 0) co_await ll::chrono::ticks(wait);
+            auto* p = playerByUuid(uuid);
+            if (!p || !hasOpen(*p, helperId)) co_return;
+            if (auto const& manager = p->mContainerManager.get())
+                static_cast<ServerPlayer*>(p)->refreshContainer(*manager);
+        }
     }).launch(ll::thread::ServerThreadExecutor::getDefault());
     return true;
 }
@@ -589,6 +602,25 @@ int lootingOf(ActorDamageSource const& source) {
 }
 
 } // namespace
+
+// `/quark debug backpack` (operators, e2e): fills the worn backpack with a few stacks.
+LP_REGISTER_SUBCOMMAND([](ll::command::CommandHandle& cmd) {
+    cmd.overload().text("debug").text("backpack").execute([](CommandOrigin const& origin, CommandOutput& output) {
+        auto* p = commands::playerOf(origin);
+        if (!p || !commands::isAdmin(origin)) return output.error("Players with operator permission only.");
+        ItemStack worn = p->getArmor(ArmorSlot::Torso);
+        if (!isItem(worn, kBackpack)) return output.error("Not wearing a backpack.");
+        std::vector<ItemStack> items(kBackpackSlots);
+        items[0]  = game::makeItem("minecraft:diamond", 5);
+        items[4]  = game::makeItem("minecraft:bread", 12);
+        items[13] = game::makeItem("minecraft:iron_pickaxe");
+        items[26] = game::makeItem("minecraft:torch", 32);
+        setBackpackItems(worn, items);
+        p->setArmor(ArmorSlot::Torso, worn);
+        log().info("backpack: debug contents for {}", p->getRealName());
+        output.success("Backpack filled.");
+    });
+});
 
 class BackpackModule {
 public:

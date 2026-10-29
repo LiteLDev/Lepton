@@ -42,6 +42,7 @@ enum SwitchState : int { kIdle = 0, kAwaitClose = 1, kOpenInventory = 2, kAskBac
 std::atomic<int>                                   gSwitchState{kIdle};
 std::atomic<std::chrono::steady_clock::rep>        gSwitchDeadline{0};
 constexpr std::chrono::seconds                     kSwitchTimeout{5};
+constexpr std::chrono::milliseconds                kSettleTime{500};
 
 void startSwitch(SwitchState state) {
     gSwitchDeadline = (std::chrono::steady_clock::now() + kSwitchTimeout).time_since_epoch().count();
@@ -133,9 +134,8 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
     }
 });
 
-// Screen switches wait for the HUD to be on top. The game shows no inventory the server opens by
-// itself: once the backpack screen is gone the client opens its inventory (the server lets an
-// inventory request through right after the switch).
+// Screen switches wait until the HUD has been on top for a moment, then ask the server for the
+// next screen as the E key does (the game shows no screen the server opens unasked).
 LP_REGISTER_HUD([](DrawContext&) {
     int state = gSwitchState;
     if (state == kIdle) return;
@@ -146,25 +146,30 @@ LP_REGISTER_HUD([](DrawContext&) {
             log().warn("backpack client: could not switch screens (state {}, top screen {})", state, topScreen());
         return;
     }
-    if (state == kAwaitClose || !c || !p || topScreen() != "hud_screen") return;
-    if (!gSwitchState.compare_exchange_strong(state, kIdle)) return;
-    if (state == kAskBackpack) {
-        // The request the E key sends: the server answers it with the backpack screen. (A screen
-        // the server opens without a request from the client is not shown.) "backpack" first: it
-        // cancels the server's pass for the inventory request of a previous "Inventory" click.
-        net::sendToServer(bp::BackpackSwitchMsg{"backpack"});
-        if (auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::Interact)) {
-            auto& interact      = static_cast<InteractPacket&>(*pkt);
-            interact.mAction    = InteractPacketPayload::Action::OpenInventory;
-            interact.mTargetId  = p->getRuntimeID();
-            interact.mPos       = std::nullopt;
-            interact.sendToServer();
-            log().info("backpack client: asked for the backpack");
-        }
+    static std::chrono::steady_clock::time_point hudSince{};
+    auto                                         now = std::chrono::steady_clock::now();
+    if (state == kAwaitClose || !c || !p || topScreen() != "hud_screen") {
+        hudSince = {};
         return;
     }
-    p->openInventory();
-    log().info("backpack client: opened the inventory");
+    // The closed screen animates out after it left the stack, and the game drops a container
+    // screen that opens meanwhile: wait until the HUD has been on top for a moment.
+    if (hudSince == std::chrono::steady_clock::time_point{}) hudSince = now;
+    if (now - hudSince < kSettleTime) return;
+    hudSince = {};
+    if (!gSwitchState.compare_exchange_strong(state, kIdle)) return;
+    // The request the E key sends; the server answers it with the backpack screen, or (after the
+    // "Inventory" switch, which lets one request through) with the normal inventory. "backpack"
+    // first: it cancels that pass. Requests keep the screens server-side, so they close properly.
+    if (state == kAskBackpack) net::sendToServer(bp::BackpackSwitchMsg{"backpack"});
+    if (auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::Interact)) {
+        auto& interact     = static_cast<InteractPacket&>(*pkt);
+        interact.mAction   = InteractPacketPayload::Action::OpenInventory;
+        interact.mTargetId = p->getRuntimeID();
+        interact.mPos      = std::nullopt;
+        interact.sendToServer();
+        log().info("backpack client: asked for the {}", state == kAskBackpack ? "backpack" : "inventory");
+    }
 });
 
 LP_REGISTER_TOOLTIP([](ItemStackBase const& item, std::vector<std::string>& lines) {

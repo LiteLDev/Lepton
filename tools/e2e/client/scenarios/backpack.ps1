@@ -31,6 +31,7 @@ Close-Screen
 # Wear it (chest slot) with something inside, look at the player from the front.
 Invoke-Chat '/clear @s lepton:backpack'
 Invoke-Chat '/replaceitem entity @s slot.armor.chest 0 lepton:backpack'
+Invoke-Chat '/quark debug backpack'   # a few stacks inside (screen.png shows them)
 Start-Sleep -Seconds 1
 Press-Key F5
 Start-Sleep -Seconds 2
@@ -52,7 +53,7 @@ if (-not $vanilla) {
     $bx, $by = Get-Fraction $btn
     Click $bx $by -Relative
     Wait-LogLine 'backpack: closed by' 10 -Since $m | Out-Null
-    Wait-LogLine 'backpack client: opened the inventory' 10 -Since $m | Out-Null
+    Wait-LogLine 'backpack: .* opened the inventory' 10 -Since $m | Out-Null
     Start-Sleep -Milliseconds 1500
     Save-Screenshot 'inventory' | Out-Null
     # ... and its "Backpack" button opens the backpack screen again.
