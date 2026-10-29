@@ -4,6 +4,7 @@
 #   worn.png         front view of the player wearing the backpack (third person)
 #   screen.png       E while wearing it: the "Backpack" chest screen (+ the "Inventory" button for mod clients)
 #   inventory.png    (mod clients) after clicking "Inventory": the normal inventory with the "Backpack" button
+#   screen-again.png (mod clients) after clicking "Backpack": the backpack screen again
 #   totem.png        a Totem of Holding floating in front of the player
 #   pouch.png        a full seed pouch in the hotbar (lore tooltip in the inventory: pouch-tooltip.png)
 function Get-Fraction([string]$line) {
@@ -46,12 +47,22 @@ if (-not $vanilla) {
     $bx, $by = Get-Fraction $btn
     Click $bx $by -Relative
     Wait-LogLine 'backpack: closed by' 10 -Since $m | Out-Null
+    Wait-LogLine 'backpack client: opened the inventory' 10 -Since $m | Out-Null
     Wait-LogLine 'backpack: .* switched to the inventory' 10 -Since $m | Out-Null
     Start-Sleep -Milliseconds 1500
     Save-Screenshot 'inventory' | Out-Null
+    # ... and its "Backpack" button opens the backpack screen again.
+    $btn = Wait-LogLine 'backpack client: backpack button at' 10 -Since $m
+    $bx, $by = Get-Fraction $btn
+    $m = Get-LogMark
+    Click $bx $by -Relative
+    Wait-LogLine 'backpack: opened by' 15 -Since $m | Out-Null
+    Start-Sleep -Milliseconds 800
+    Save-Screenshot 'screen-again' | Out-Null
 }
 Close-Screen
 Wait-LogLine 'backpack: closed by' 10 -Since $m | Out-Null
+Start-Sleep -Milliseconds 500
 
 # A Totem of Holding.
 $m = Get-LogMark

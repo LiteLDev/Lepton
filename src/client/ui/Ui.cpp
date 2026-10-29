@@ -368,6 +368,9 @@ void onRender(ll::event::AfterUIRenderEvent& ev) {
     auto& view = ev.screenView();
     auto  name = screenNameOf(view);
     if (name.empty()) return;
+    // Passive layers (toasts, the coordinates / debug text) render after the open screen in every
+    // frame and take no input: they must not replace its widgets, or its buttons never get clicks.
+    if (name.starts_with("toast_screen") || name.starts_with("debug_screen")) return;
 
     std::deque<InputEvent> events;
     Vec                    mouse;
