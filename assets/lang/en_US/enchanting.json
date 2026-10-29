@@ -44,6 +44,8 @@
   "lp.enchanting.craft.cost": "Cost: {}",
   "lp.enchanting.craft.yes": "Apply",
   "lp.enchanting.craft.no": "Cancel",
+  "lp.enchanting.craft.close_tome": "§eClose the anvil to apply the Ancient Tome.",
+  "lp.enchanting.craft.close_rune": "§eClose the smithing table to apply the rune.",
   "lp.enchanting.craft.rune_title": "Apply Rune?",
   "lp.enchanting.craft.tome_title": "Apply Ancient Tome?",
   "lp.enchanting.craft.too_expensive": "§cYou need {} levels.",
