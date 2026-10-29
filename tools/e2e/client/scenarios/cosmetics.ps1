@@ -74,9 +74,11 @@ if (-not $vanilla) {
     $mark = Get-LogMark
     foreach ($t in @(@{ z = 3; under = 'white_wool' }, @{ z = 6; under = 'stone' })) {
         $z = $t.z
+        # The cart starts on a powered rail over the tested block (powered by a redstone block next
+        # to it, launched away from the stone stopper behind it).
         Invoke-Chat "/fill ~2 ~-1 ~$z ~16 ~-1 ~$z stone"
-        Invoke-Chat "/fill ~4 ~-1 ~$z ~8 ~-1 ~$z $($t.under)"
-        Invoke-Chat "/setblock ~3 ~-1 ~$z redstone_block"
+        Invoke-Chat "/fill ~3 ~-1 ~$z ~8 ~-1 ~$z $($t.under)"
+        Invoke-Chat "/setblock ~3 ~ ~$($z + 1) redstone_block"
         Invoke-Chat "/setblock ~2 ~ ~$z stone"
         Invoke-Chat "/fill ~4 ~ ~$z ~16 ~ ~$z rail"
         Invoke-Chat "/setblock ~3 ~ ~$z golden_rail"
@@ -84,6 +86,10 @@ if (-not $vanilla) {
     Invoke-Chat '/summon minecart ~3 ~ ~3'
     Invoke-Chat '/summon minecart ~3 ~ ~6'
     Wait-LogLine "cosmetics: minecart loop '.*' muted over wool" 30 -Since $mark | Out-Null
+    # The cart rolls on to the stone part; replacing the wool too makes sure it ends up off wool even
+    # if it stopped early.
+    Start-Sleep -Seconds 3
+    Invoke-Chat '/fill ~3 ~-1 ~3 ~8 ~-1 ~3 stone'
     Wait-LogLine "cosmetics: minecart loop '.*' audible" 30 -Since $mark | Out-Null
     Start-Sleep -Seconds 2
     $muted = @(Get-LeviLog -Since $mark | Select-String "minecart loop '.*' muted over wool at [-0-9.]+ [-0-9.]+ ([-0-9.]+)")

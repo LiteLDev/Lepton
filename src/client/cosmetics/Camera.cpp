@@ -127,7 +127,6 @@ void setCameraMode(bool on) {
         if (on) gState.savedHideGui = o->getHideHud();
         o->setHideGUI(on ? true : gState.savedHideGui);
     }
-    if (on) filter::ensureInstalled();
     applyFilter();
     log().info("cosmetics: camera mode {}", on ? "on" : "off");
 }
@@ -401,6 +400,10 @@ public:
     void install() {
         mListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>(onKey);
         mUiListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::BeforeUIRenderEvent>(onBeforeUi);
+        // The present hooks go in at game start, without suspending the other threads (patching
+        // them later with suspended threads stalled the game in the client e2e). They do no work
+        // until camera mode sets a filter or asks for a shot.
+        if (cos::config().enableCamera) filter::ensureInstalled();
     }
     void uninstall() {
         ll::event::EventBus::getInstance().removeListener(mUiListener);
