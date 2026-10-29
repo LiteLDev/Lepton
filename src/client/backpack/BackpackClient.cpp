@@ -95,12 +95,13 @@ LP_REGISTER_SCREEN_OVERLAY("inventory_screen", [](Overlay& o, ScreenInfo const& 
 LP_REGISTER_HUD([](DrawContext&) {
     int state = gSwitchState;
     if (state == 0) return;
-    if (--gSwitchFrames <= 0) {
-        gSwitchState = 0;
-        return;
-    }
     auto* c = currentClient();
     auto* p = currentPlayer();
+    if (--gSwitchFrames <= 0) {
+        gSwitchState = 0;
+        log().warn("backpack client: could not open the inventory (state {}, menu {})", state, c && c->isShowingMenu());
+        return;
+    }
     if (state != 2 || !c || !p || c->isShowingMenu()) return;
     gSwitchState = 0;
     p->openInventory();
