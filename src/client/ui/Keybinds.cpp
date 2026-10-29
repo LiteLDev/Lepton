@@ -3,6 +3,7 @@
 // default keys taken from config/keybinds.json (written with the registration defaults).
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -102,11 +103,19 @@ public:
         // Keybinds with `inScreens`: the game's mapping only fires in gameplay, so screens are
         // served from the raw key events.
         mListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::KeyInputEvent>([](ll::event::KeyInputEvent& ev) {
-            if (ev.isCancelled() || topScreen() == "hud_screen") return;
+            // A release fires onUp only after a press that fired onDown here (presses can be
+            // taken by a focused text field or a custom screen; releases always pass).
+            static std::set<std::string> held;
+            bool down = ev.isDown();
+            if (down && (ev.isCancelled() || topScreen() == "hud_screen")) return;
             for (auto const& k : KeybindRegistry::entries()) {
                 if (!k.inScreens) continue;
-                for (int code : keysOf(k.name))
-                    if (code == ev.keyCode()) fire(k, ev.isDown());
+                for (int code : keysOf(k.name)) {
+                    if (code != ev.keyCode()) continue;
+                    if (down) held.insert(k.name);
+                    else if (!held.erase(k.name)) continue;
+                    fire(k, down);
+                }
             }
         });
     }
