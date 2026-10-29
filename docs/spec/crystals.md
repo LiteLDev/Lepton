@@ -50,7 +50,7 @@ orange, yellow, green, light blue, blue, magenta, snow, black.
 | `lepton:<c>_corundum_pane` | `<C> Corundum Sheet` | pane connections (`lepton:pane` contract) | as corundum, light 11 | itself with Silk Touch only | Construction |
 | `lepton:<c>_corundum_cluster` | `<C> Corundum Cluster` | `minecraft:block_face` (the face it points to; default down) | hardness 0.3, light 11, cutout, amethyst cluster sounds, box 10x7 px, waterloggable | itself | Nature |
 | `lepton:<c>_crystal_lamp` | `<C> Corundum Lamp` (Quark name with `useCorundum`) | `lepton:lit` (bool) | hardness 0.3, blast 0, light 15 when lit (`lightLevel`), translucent, amethyst sounds | itself | Construction, redstone group |
-| `lepton:magnet` | `Magnet` | `minecraft:facing_direction` (the pushing face), `lepton:powered`, `lepton:waxed` | iron block copy: hardness 5, blast 6, pickaxe; light 3 when powered | itself | Construction (redstone) |
+| `lepton:magnet` | `Magnet` | `minecraft:facing_direction` (placement trait: the placer's look direction; the pushing face is its opposite), `lepton:powered`, `lepton:waxed` | iron block copy: hardness 5, blast 6, pickaxe; light 3 when powered | itself | Construction (redstone) |
 | `lepton:magnetized_block` | `Magnetized Block` | - | invisible placeholder while a block moves (no collision, unbreakable, no drop) | nothing | hidden |
 
 Recipes (crafting table):
@@ -94,7 +94,9 @@ back (axe takes 1 damage). Same for the magnet's `lepton:waxed` state.
 
 ### Clusters
 Placed facing the clicked face. A cluster survives only while the block behind it provides a full
-face (`Block::canProvideFullSupport`); otherwise it breaks with drops (checked on neighbour changes).
+face (`Block::canProvideFullSupport`); otherwise it breaks and drops itself (checked on neighbour
+changes; Java's `destroyBlock(pos, true)` drops without a tool, so Lepton spawns the drop because
+the pack's loot table needs a pickaxe for player harvests, like `requiresCorrectToolForDrops`).
 Waterlogged when placed in water. **Collateral movement**: when a piston moves corundum, clusters of
 the same colour attached to it (cluster at `corundum + facing`) are added to the piston's moved
 blocks (`enableCollateralMovement`).
@@ -153,10 +155,12 @@ A beam that ends with an upward segment reaching the heightmap succeeds.
   SKIP otherwise; collateral movers (U10's iron rod, tag `lepton:collateral_mover`) give PREVENT when
   the block beyond can't be pushed. A MOVE/BREAK registers a force P - d + 1 in the move direction;
   PREVENT stops the scan; non-air blocks with collision stop the flux.
-- At the end of the tick each block's forces are summed, the dominant direction is chosen and every
-  magnet whose force points that way moves the block one step (BREAK destroys the front block with
-  drops first). The block is replaced by `lepton:magnetized_block` at the destination for 2 ticks,
-  then placed (block-entity data, e.g. hopper contents, is kept) with its placing sound
+- At the end of the tick each block's forces are summed, the dominant direction is chosen
+  (`Direction.getNearest`) and every magnet whose force points that way queues a block event; the
+  events run at the start of the next tick and move the block one step (BREAK destroys the front
+  block with drops first). The destination holds `lepton:magnetized_block` (invisible, reserving it)
+  until the placeholder's third tick; then the block leaves its place and lands there (block-entity
+  data, e.g. hopper contents, is kept) with its placing sound
   (volume (v+1)*0.05, pitch p*0.8), then hoppers drop/plant one item and stonecutters cut the block
   above (hardness < `stoneCutterMaxHardness`, silk touch with `stoneCutterSilkTouch`).
 - Entities (`affectEntities`): magnetic items, iron golems, minecarts, falling magnetic blocks and
@@ -169,7 +173,8 @@ A beam that ends with an upward segment reaching the heightmap succeeds.
   always are (move actions). `#minecraft:cauldrons` = cauldron; hanging signs = every `*_hanging_sign`.
 
 ## 4. Screens
-None. (Quark's JEI hints are not ported, see SPEC §8.)
+None. Commands: `/quark crystals info` prints Quark's hints (its JEI information pages) for the
+unit's modules; `/quark crystals magnetic` tells whether the held item is magnetic.
 
 ## 5. Config
 Section `crystals` (`config/crystals.json`):
@@ -216,7 +221,9 @@ Biome tags map to Bedrock biome names (`minecraft:is_ocean` -> names containing 
 `is_deep_ocean`, `is_beach`, `is_river`, `is_mountain`, `is_badlands`, `is_jungle`, `is_taiga`,
 `is_forest`, `is_savanna`, `is_hill`); biome names are Bedrock ids with or without `minecraft:`.
 
-Disabled modules: their recipes are removed from the world's recipe list at world load; magnets,
+Disabled modules: their recipes are removed from the world's recipe list at world load (the list
+clients receive; the net-id lookup table is left as is because the game headers have no hash for
+it); magnets,
 lamps and corundum stop reacting; generation and growth stop.
 
 ## 6. Strings
@@ -238,9 +245,16 @@ Mod text (`assets/lang/<locale>/crystals.json`), Quark's hint wording (shown by 
 - **Random ticks**: data-driven blocks cannot random-tick natively; Lepton emulates them for tracked
   corundum at Java's rate (see 3).
 - **Particles** are sent by the server (custom particle effects) instead of client animate ticks.
-- **Magnetized block rendering**: Java renders the moving block sliding over 2 ticks; Lepton shows
-  nothing at the destination for those 2 ticks (invisible placeholder), then the block. Entities
-  standing on a moving block are carried by one block when it lands, not continuously.
+- **Magnetized block rendering**: Java renders the moving block sliding into place over its
+  ticks; Bedrock data-driven blocks can't draw another block, so the block stays visible where it
+  is while the invisible placeholder reserves the destination, then jumps there (same speed: one
+  block per three ticks). Entities standing on a moving block are not carried along.
+- **Magnetic entities**: falling blocks of vanilla Bedrock can't be queried for their block, so
+  only `lepton:gravisand` falling blocks are magnetic; items, iron golems, minecarts and mobs in
+  magnetic armour are as in Quark.
+- **Piston logic** uses Bedrock's piston rules (`BlockMovableComponent`): hoppers and other
+  blocks with block entities can be moved (Bedrock pistons move them), obsidian / bedrock /
+  beacons can't, popped blocks (torches, ...) break.
 - **Lamp names** follow the default config (`Corundum Lamp`); with `useCorundum: false` the recipes
   switch, the item names stay (names live in the resource pack).
 - **Beam rendering** uses helper entities (render distance of entities, not of block entities);
@@ -251,9 +265,11 @@ Mod text (`assets/lang/<locale>/crystals.json`), Quark's hint wording (shown by 
 
 ## 8. Tests
 Selftests (dx 1200..1299): `crystals.corundum_blocks`, `crystals.waxing`, `crystals.growth`,
-`crystals.cluster_support`, `crystals.collateral`, `crystals.worldgen_shape`, `crystals.lamp_power`,
-`crystals.beam_path`, `crystals.beam_entities`, `crystals.magnet_push`, `crystals.magnet_pull`,
-`crystals.magnet_conflict`, `crystals.magnetism_crawl`, `crystals.magnet_hopper`, `crystals.magnet_entity`.
+`crystals.cluster_support`, `crystals.collateral`, `crystals.worldgen_shape`, `crystals.worldgen_live`
+(generated worlds only), `crystals.lamp_power`, `crystals.beam_path`, `crystals.beam_entities`,
+`crystals.magnet_push`, `crystals.magnet_pull`, `crystals.magnet_conflict`, `crystals.magnetism_crawl`,
+`crystals.magnet_hopper`, `crystals.magnet_entity`, `crystals.magnet_stonecutter`, `crystals.gallery`.
 E2E: `tools/e2e/server/scenarios/crystals.ps1` (all selftests + log lines);
+`tools/e2e/server/scenarios/crystals-worldgen.ps1` (`-Property level-type=DEFAULT`: real corundum caves);
 `tools/e2e/client/scenarios/crystals.ps1` (a gallery of every block, lit/unlit lamps, clusters on all
 faces, a redirected coloured beacon beam, a magnet; screenshots `crystals-*.png`).

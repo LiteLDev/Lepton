@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "mc/deps/core/math/Vec2.h"
 #include "mc/deps/core/math/Vec3.h"
 #include "mc/scripting/modules/minecraft/ScriptFacing.h"
 #include "mc/server/SimulatedPlayer.h"
@@ -17,6 +18,7 @@
 #include "mc/world/level/GameType.h"
 #include "mc/world/level/storage/LevelData.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/dimension/DimensionType.h"
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/block/actor/component/IVanillaMainBlockActorComponent.h"
 #include "mc/world/phys/AABB.h"
@@ -510,4 +512,78 @@ LP_REGISTER_SELFTEST("crystals.worldgen_live", [](Context& ctx) -> ll::coro::Cor
     }
     ctx.info("generator: " + caveGenStats());
     ctx.check(found > 0, "corundum generated in a cave blob");
+});
+// A gallery of every block of the unit for screenshots (client scenario `crystals`): corundum,
+// waxed corundum, sheets, crystal lamps (off / lit), clusters on every face, magnets in every
+// orientation (off / powered) and a redirected, tinted beacon beam. With a real player online the
+// player is moved in front of each part ("GALLERY view <name>" lines); on a dedicated server the
+// gallery is only built and checked.
+LP_REGISTER_SELFTEST("crystals.gallery", [](Context& ctx) -> ll::coro::CoroTask<> {
+    auto base = ctx.testPos(1200, 0);
+    ctx.require(co_await ctx.ensureLoaded(base), "test area loaded");
+    auto put = [&](int dx, int dy, int dz, std::string const& id, bs::Changes const& st = {}) {
+        ctx.check(place(ctx, at(base, dx, dy, dz), id, st), "placed " + id);
+    };
+    for (int c = 0; c < 9; ++c) {
+        put(c, 0, 1, corundumId(c));
+        put(c, 1, 1, waxedCorundumId(c));
+        put(10 + c, 0, 1, paneId(c));
+        put(10 + c, 1, 1, paneId(c));
+        put(20 + c, 0, 1, lampId(c));
+        put(20 + c, 1, 1, lampId(c));
+        put(20 + c, 1, 0, "minecraft:redstone_block"); // lights the upper row
+        put(30 + c, 1, 1, "minecraft:polished_deepslate");
+        put(30 + c, 2, 1, clusterId(c), {{"minecraft:block_face", std::string("up")}});
+        put(30 + c, 0, 1, clusterId(c), {{"minecraft:block_face", std::string("down")}});
+        put(30 + c, 1, 2, clusterId(c), {{"minecraft:block_face", std::string("south")}});
+    }
+    put(41, 1, 1, "minecraft:polished_deepslate");
+    put(40, 1, 1, clusterId(4), {{"minecraft:block_face", std::string("west")}});
+    put(42, 1, 1, clusterId(0), {{"minecraft:block_face", std::string("east")}});
+    // magnets: push down, up, north, south, west, east (front texture = pushing face); upper row powered
+    for (int f = 0; f < 6; ++f) {
+        put(45 + 2 * f, 0, 2, "lepton:magnet", {{"minecraft:facing_direction", magnetLook(f)}});
+        put(45 + 2 * f, 2, 2, "lepton:magnet", {{"minecraft:facing_direction", magnetLook(f)}});
+        put(45 + 2 * f, 2, 1, "minecraft:redstone_block");
+    }
+    // beacon: up 3, east 4 through a red cluster, up through a blue cluster and yellow corundum
+    for (int x = -1; x <= 1; ++x)
+        for (int z = -1; z <= 1; ++z) put(62 + x, 0, 2 + z, "minecraft:iron_block");
+    put(62, 1, 2, "minecraft:beacon");
+    put(62, 4, 2, clusterId(0), {{"minecraft:block_face", std::string("east")}});
+    put(66, 4, 2, clusterId(4), {{"minecraft:block_face", std::string("up")}});
+    put(66, 7, 2, corundumId(2));
+    co_await ctx.ticks(10);
+    ctx.check(bs::getBool(blockAt(ctx, at(base, 20, 1, 1)), "lepton:lit").value_or(false), "the upper lamps are lit");
+    ctx.check(!bs::getBool(blockAt(ctx, at(base, 20, 0, 1)), "lepton:lit").value_or(true), "the lower lamps are off");
+    auto key = lp::game::globalPos(regionOf(ctx), lp::game::blockPos(at(base, 62, 1, 2)));
+    for (int i = 0; i < 60 && beamEntitiesOf(key).empty(); ++i) co_await ctx.ticks(1);
+    ctx.check(!beamEntitiesOf(key).empty(), "the redirected beam is drawn");
+
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) co_return;
+    auto uid  = viewer->getOrCreateUniqueID();
+    auto view = [&](std::string const& name, float dx, float dy, float dz, float pitch, float yaw) {
+        ctx.info("GALLERY view " + name);
+        if (auto* v = ctx.player().getLevel().getPlayer(uid))
+            v->teleport(Vec3{float(base.x) + dx, float(base.y) + dy, float(base.z) + dz}, DimensionType(base.dim), Vec2{pitch, yaw});
+    };
+    // south of the rows, looking north (east on the right)
+    view("corundum", 4.5f, 1.f, 7.5f, 15.f, 180.f);
+    co_await ctx.ticks(100);
+    view("sheets", 14.5f, 1.f, 7.5f, 15.f, 180.f);
+    co_await ctx.ticks(100);
+    view("lamps", 24.5f, 1.f, 7.5f, 15.f, 180.f);
+    co_await ctx.ticks(100);
+    view("clusters", 36.5f, 1.f, 7.5f, 15.f, 180.f);
+    co_await ctx.ticks(100);
+    view("magnets", 50.5f, 1.f, 8.5f, 15.f, 180.f);
+    co_await ctx.ticks(100);
+    view("beacon", 64.5f, 1.f, 16.5f, -25.f, 180.f);
+    co_await ctx.ticks(140);
+    ctx.info("GALLERY done");
 });

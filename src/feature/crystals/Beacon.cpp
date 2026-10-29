@@ -35,6 +35,7 @@
 #include "mod/Log.h"
 #include "mod/Module.h"
 #ifdef LP_CLIENT
+#include "mc/world/level/block/actor/BeaconBeamSection.h"
 #include "net/Net.h"
 #endif
 
