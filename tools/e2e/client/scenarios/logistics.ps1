@@ -13,6 +13,14 @@ function Use-Block {
     # a right click where the player looks (no mouse movement: that would turn the camera)
     [BsE2E.Native]::MouseButton(1, $false); Start-Sleep -Milliseconds 80; [BsE2E.Native]::MouseButton(1, $true)
 }
+# Uses the block in front of the player until the log shows `$pattern` (a headless click can be
+# lost while the game still settles the view after a teleport).
+function Use-BlockUntil([string]$pattern, [int]$since) {
+    for ($try = 1; $try -le 3; $try++) {
+        Use-Block
+        try { return Wait-LogLine $pattern 5 -Since $since } catch { if ($try -eq 3) { throw } }
+    }
+}
 $vanilla = $script:Mode -eq 'remote-vanilla'
 
 $mark = Get-LogMark
@@ -26,29 +34,34 @@ Save-Screenshot 'pipes' | Out-Null
 
 Wait-LogLine 'LOGISTICS aim trough' 30 -Since $mark | Out-Null
 Start-Sleep -Milliseconds 800
-Use-Block
-Wait-LogLine 'LOGISTICS screen trough' 15 -Since $mark | Out-Null
+Use-BlockUntil 'LOGISTICS screen trough' $mark | Out-Null
+$problems = @()
+$troughShown = $true
+if (-not $vanilla) {
+    # the client mod logs the dispenser screen it shows
+    try { Wait-LogLine 'logistics: dispenser screen shown' 10 -Since $mark | Out-Null }
+    catch { $troughShown = $false; $problems += 'the trough screen did not show on the client' }
+}
 Start-Sleep -Seconds 2
 Save-Screenshot 'trough' | Out-Null
-Close-Screen
+# without a screen, Esc would open the pause menu: the showcase closes the trough itself then
+if ($troughShown) { Close-Screen }
 
-Wait-LogLine 'LOGISTICS aim crate' 30 -Since $mark | Out-Null
+Wait-LogLine 'LOGISTICS aim crate' 60 -Since $mark | Out-Null
 Start-Sleep -Milliseconds 800
-Use-Block
 if ($vanilla) {
     # 64 stacks: the row picker comes first; dismiss it, then the crate (now 54 stacks) opens directly
-    Wait-LogLine 'LOGISTICS form crate' 15 -Since $mark | Out-Null
+    Use-BlockUntil 'LOGISTICS form crate' $mark | Out-Null
     Start-Sleep -Seconds 2
     Save-Screenshot 'crate-form' | Out-Null
     Press-Key ESC
     Wait-LogLine 'LOGISTICS aim crate again' 15 -Since $mark | Out-Null
-    Start-Sleep -Milliseconds 800
-    Use-Block
-    Wait-LogLine 'LOGISTICS screen crate' 15 -Since $mark | Out-Null
+    Start-Sleep -Milliseconds 1200
+    Use-BlockUntil 'LOGISTICS screen crate' $mark | Out-Null
     Start-Sleep -Seconds 2
     Save-Screenshot 'crate' | Out-Null
 } else {
-    Wait-LogLine 'LOGISTICS screen crate' 15 -Since $mark | Out-Null
+    Use-BlockUntil 'LOGISTICS screen crate' $mark | Out-Null
     $down = Wait-LogLine 'crate overlay: down button at' 20 -Since $mark
     Start-Sleep -Seconds 1
     Save-Screenshot 'crate' | Out-Null
@@ -61,3 +74,4 @@ if ($vanilla) {
 Close-Screen
 $line = Wait-LogLine 'SELFTEST (PASS|FAIL) logistics\.showcase' 60 -Since $mark
 if ($line -match 'FAIL') { throw "showcase selftest failed: $line" }
+if ($problems) { throw ($problems -join '; ') }
