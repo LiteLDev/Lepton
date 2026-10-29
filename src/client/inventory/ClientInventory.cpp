@@ -6,9 +6,12 @@
 #ifdef LP_CLIENT
 
 #include <algorithm>
+#include <atomic>
+#include <map>
 #include <chrono>
 #include <cmath>
 #include <deque>
+#include <format>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -53,11 +56,22 @@ using Clock = std::chrono::steady_clock;
 
 // ---- shared state (window thread <-> render thread) ---------------------------------------------
 
+/// What the input handlers (window thread) know about the slot under the mouse. Only the render
+/// thread reads items; the input side works from this snapshot of the last frame.
+struct Hovered {
+    std::optional<Slot> slot;
+    std::string         action;        ///< predicted interaction click ("" = none)
+    bool                filled = false; ///< the slot holds an item
+    int                 bundleId = -2;  ///< dynamic container id of a bundle (-2: not a bundle, -1: unknown)
+};
+
 struct Frame {
     std::string       screen;    ///< screen of the last overlay frame ("" = none)
     std::vector<Slot> slots;     ///< its item slots
     bool              container = false; ///< accepted container screen (container buttons)
     Rect              field;     ///< search field (w = 0: not shown)
+    bool              cursorEmpty = true;
+    Hovered           hovered;
 };
 
 std::mutex          gMutex;
@@ -66,12 +80,13 @@ Vec                 gMouse;
 bool                gShift = false;
 std::deque<std::function<void()>> gQueue; ///< work for the render (client) thread
 
+// Flags written by the input handlers and read by the render thread.
+std::atomic<bool> gSearchEnabled = false;
+std::atomic<bool> gSearchFocused = false;
+std::atomic<bool> gShiftLocked   = false;
+std::atomic<bool> gHotbarOpen    = false;
 // render-thread state
-bool        gSearchEnabled = false;
-bool        gSearchFocused = false;
 std::string gSearch;
-bool        gShiftLocked = false;
-bool        gHotbarOpen  = false;
 float       gHotbarHeight = 0; ///< 0..1
 Clock::time_point gLastHud{};
 Clock::time_point gLastShare{};
@@ -313,7 +328,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
     if (!inventoryScreen && !containerScreen) {
         gReportedFor.clear();
         std::lock_guard lock(gMutex);
-        gFrame = Frame{s.name, s.slots, false, {}};
+        gFrame = Frame{s.name, s.slots, false, {}, true, {}};
         return;
     }
 
@@ -363,7 +378,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
         if (c.enableChestSearching) {
             miniButton(o, at(containerTopRight, -6, -13), Icon::Filter, gSearchEnabled, ctr("quark.gui.button.filter", "Filter"), [] {
                 gSearchEnabled = !gSearchEnabled;
-                gSearchFocused = gSearchEnabled;
+                gSearchFocused = gSearchEnabled.load();
                 log().info("inventory: search bar {}", gSearchEnabled ? "shown" : "hidden");
             });
             if (gSearchEnabled) {
@@ -373,6 +388,28 @@ void overlay(Overlay& o, ScreenInfo const& s) {
                 dc.outline(bg, gSearchFocused ? colors::white : colors::gray);
                 drawIcon(dc, Rect{bg.x + 1.5f * sc, bg.y + 1.5f * sc, 10 * sc, 10 * sc}, Icon::Filter, colors::gray);
                 int matched = 0;
+                // Match results per slot, recomputed only when the search or the slot's item changes.
+                struct Cached {
+                    ItemStack item;
+                    bool      match = false;
+                };
+                static std::map<std::pair<std::string, int>, Cached> cache;
+                static std::string                                   cachedFor;
+                if (cachedFor != gSearch) {
+                    cache.clear();
+                    cachedFor = gSearch;
+                }
+                auto matches = [&](Slot const& slot) {
+                    auto  item = slotItem(slot.collection, slot.index);
+                    auto& e    = cache[{slot.collection, slot.index}];
+                    bool  same = game::isEmpty(item) ? game::isEmpty(e.item)
+                                                     : !game::isEmpty(e.item) && inv::sameItem(item, e.item) && item.mCount == e.item.mCount;
+                    if (!same) {
+                        e.item  = item;
+                        e.match = inv::namesMatch(item, gSearch);
+                    }
+                    return e.match;
+                };
                 if (!gSearch.empty()) {
                     auto col = c.overlayColor;
                     Color shade{static_cast<float>(col.r), static_cast<float>(col.g), static_cast<float>(col.b), static_cast<float>(col.a)};
@@ -380,7 +417,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
                         if (slot.collection == "cursor_items" || slot.collection.find("armor") != std::string::npos
                             || slot.collection.find("offhand") != std::string::npos)
                             continue;
-                        if (inv::namesMatch(slotItem(slot.collection, slot.index), gSearch)) ++matched;
+                        if (matches(slot)) ++matched;
                         else o.greyOut(slot.rect, shade);
                     }
                 }
@@ -392,13 +429,20 @@ void overlay(Overlay& o, ScreenInfo const& s) {
         }
     }
 
-    // Hints for the item interactions (Quark tooltips): next to the mouse while hovering a slot.
-    {
-        Frame f{s.name, s.slots, containerScreen, field};
-        if (auto slot = slotAt(f, mouse)) {
-            auto action = predictInteraction(*slot, inventoryScreen);
-            if (!action.empty() && !game::isEmpty(cursorItem())) tooltipBox(dc, mouse, {hintText(action)});
+    // The hovered slot (for the input handlers) and the item interaction hint next to the mouse
+    // (Quark tooltips) while the cursor holds an item.
+    Frame frame{s.name, s.slots, containerScreen, field, game::isEmpty(cursorItem()), {}};
+    if (auto slot = slotAt(frame, mouse)) {
+        auto item              = slotItem(slot->collection, slot->index);
+        frame.hovered.slot     = slot;
+        frame.hovered.filled   = !game::isEmpty(item);
+        frame.hovered.action   = predictInteraction(*slot, inventoryScreen);
+        if (game::itemId(item).find("bundle") != std::string::npos) {
+            frame.hovered.bundleId = -1;
+            if (auto name = StorageItemUtility::getStorageItemID(item); name && name->mDynamicId->has_value())
+                frame.hovered.bundleId = static_cast<int>(**name->mDynamicId);
         }
+        if (!frame.hovered.action.empty() && !frame.cursorEmpty) tooltipBox(dc, mouse, {hintText(frame.hovered.action)});
     }
 
     if (!gReported) {
@@ -412,7 +456,13 @@ void overlay(Overlay& o, ScreenInfo const& s) {
     if (inventoryScreen && playerTopRight && reportedFor != s.name) {
         reportedFor = s.name;
         auto r      = at(playerTopRight, 6, -13);
-        log().info("inventory: player buttons on {}: sort at {:.4f},{:.4f}", s.name, fx(r), fy(r));
+        std::string shulker;
+        for (auto const& slot : s.slots)
+            if (isPlayerCollection(slot.collection) && inv::isShulkerBox(slotItem(slot.collection, slot.index))) {
+                shulker = std::format(" shulker at {:.4f},{:.4f}", fx(slot.rect), fy(slot.rect));
+                break;
+            }
+        log().info("inventory: player buttons on {}: sort at {:.4f},{:.4f}{}", s.name, fx(r), fy(r), shulker);
     }
     if (containerScreen && reportedFor != s.name) {
         reportedFor = s.name;
@@ -428,7 +478,7 @@ void overlay(Overlay& o, ScreenInfo const& s) {
     }
 
     std::lock_guard lock(gMutex);
-    gFrame = Frame{s.name, s.slots, containerScreen, field};
+    gFrame = std::move(frame);
 }
 
 // ---- input -----------------------------------------------------------------------------------------------
@@ -525,18 +575,16 @@ void onMouse(ll::event::MouseInputEvent& ev) {
         }
     }
 
+    // Work only on the slot the last frame saw under the mouse (items are read on the render thread).
     auto slot = slotAt(f, pos);
-    if (!slot) return;
-    bool inventoryScreen = f.screen == "inventory_screen";
+    if (!slot || !f.hovered.slot || f.hovered.slot->collection != slot->collection || f.hovered.slot->index != slot->index)
+        return;
+    auto const& hovered = f.hovered;
 
     // Bundles: the mouse wheel rotates their contents.
     if (action == 4) {
-        if (!c.enableExpandedItemInteractions || !c.allowRotatingBundles) return;
-        auto item = slotItem(slot->collection, slot->index);
-        if (game::itemId(item).find("bundle") == std::string::npos) return;
-        int  id   = -1;
-        if (auto name = StorageItemUtility::getStorageItemID(item); name && name->mDynamicId->has_value())
-            id = static_cast<int>(**name->mDynamicId);
+        if (!c.enableExpandedItemInteractions || !c.allowRotatingBundles || hovered.bundleId == -2) return;
+        int    id    = hovered.bundleId;
         double delta = static_cast<schar>(ev.buttonData());
         post([s = *slot, delta, id] { net::sendToServer(inv::ScrollBundleRequest{s.collection, s.index, delta, id}); });
         ev.cancel();
@@ -545,7 +593,7 @@ void onMouse(ll::event::MouseInputEvent& ev) {
 
     int interactButton = c.invertClicks ? 1 : 2;
     if (action == interactButton) {
-        auto what = predictInteraction(*slot, inventoryScreen);
+        auto what = hovered.action;
         if (!what.empty()) {
             if (down) post([s = *slot, what] {
                 net::sendToServer(inv::SlotInteractRequest{s.collection, s.index});
@@ -556,8 +604,8 @@ void onMouse(ll::event::MouseInputEvent& ev) {
         }
     }
     // Shift lock: plain clicks act as shift-clicks (quick move on the server).
-    if (action == 1 && gShiftLocked && f.container && c.enableShiftLock && game::isEmpty(cursorItem())) {
-        if (down && !game::isEmpty(slotItem(slot->collection, slot->index)))
+    if (action == 1 && gShiftLocked && f.container && c.enableShiftLock && f.cursorEmpty) {
+        if (down && hovered.filled)
             post([s = *slot] { net::sendToServer(inv::QuickMoveRequest{s.collection, s.index}); });
         ev.cancel();
     }
@@ -588,7 +636,9 @@ void shareHovered() {
     }
     if (!shift || f.screen.empty() || f.screen != topScreen()) return;
     auto slot = slotAt(f, mouse);
-    if (!slot || game::isEmpty(slotItem(slot->collection, slot->index))) return;
+    if (!slot || !f.hovered.slot || f.hovered.slot->collection != slot->collection || f.hovered.slot->index != slot->index
+        || !f.hovered.filled)
+        return;
     auto now = Clock::now();
     if (now - gLastShare < std::chrono::milliseconds(50LL * std::max(0, c.cooldown))) return;
     gLastShare = now;
@@ -665,10 +715,10 @@ LP_REGISTER_KEYBIND("transfer_extract", Key::Unbound, [] {
     if (inContainerScreen()) post([] { transfer(true); });
 }, {}, true);
 LP_REGISTER_KEYBIND("shift_lock", Key::Unbound, [] {
-    if (inContainerScreen() && cfg().enableShiftLock) post([] { gShiftLocked = !gShiftLocked; });
+    if (inContainerScreen() && cfg().enableShiftLock) gShiftLocked = !gShiftLocked;
 }, {}, true);
 LP_REGISTER_KEYBIND("change_hotbar", Key::Z, [] {
-    if (!cfg().enableHotbarChanger || topScreen() != "hud_screen" || spectator()) return;
+    if (!cfg().enableHotbarChanger || topScreen() != "hud_screen") return; // spectators: closed by the HUD
     gHotbarOpen = !gHotbarOpen;
     log().info("inventory: hotbar changer {}", gHotbarOpen ? "opened" : "closed");
 });

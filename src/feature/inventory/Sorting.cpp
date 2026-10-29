@@ -146,7 +146,7 @@ int compareWithin(Category cat, ItemStack const& a, ItemStack const& b) {
                             [](auto& x, auto& y) { return static_cast<int>(y.getAuxValue()) - x.getAuxValue(); }});
     case Category::Food:
         return joint(a, b, {[](auto& x, auto& y) { return nutrition(y) - nutrition(x); },
-                            [](auto& x, auto& y) { return static_cast<int>(saturation(y) - saturation(x)); }});
+                            [](auto& x, auto& y) { float d = saturation(y) - saturation(x); return (d > 0) - (d < 0); }});
     case Category::EnchantedBook:
         return joint(a, b, {[](auto& x, auto& y) { return enchantedBookCompare(x, y, true); }});
     case Category::AncientTome:

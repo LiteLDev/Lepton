@@ -26,7 +26,8 @@ bool handleSort(Player& player, bool forcePlayer);
 
 /// Insert (restock = false) or extract (restock = true) between the player and `container`.
 /// Returns the number of items moved.
-int transferItems(Player& player, Container& container, bool restock, bool smart);
+/// `shulkerTarget`: the target is a shulker box (no boxes go in); default: from the open screen.
+int transferItems(Player& player, Container& container, bool restock, bool smart, std::optional<bool> shulkerTarget = {});
 /// Quark `InventoryTransferMessage` on the open container (-1 when not allowed).
 int handleTransfer(Player& player, bool restock, bool smart);
 /// Shift-lock quick move of one slot. Returns the number of items moved.
@@ -53,7 +54,7 @@ bool swapArmorWithStand(Player& player, Actor& stand);
 /// The interaction click on a slot (cursor contents against the slot). Returns the action done:
 /// "trash", "equip", "insert", "dump", "pick_into", "open" or "" for none.
 std::string slotInteract(Player& player, std::string const& collection, int slot);
-/// Rotates a bundle's contents (`dynamicId`: the bundle's dynamic container id sent by the client).
+/// Rotates a bundle's contents (`dynamicId`: the id the client saw, -1 = unknown; must match the server's).
 bool scrollBundle(Player& player, std::string const& collection, int slot, double delta, int dynamicId = -1);
 /// Opens the shulker box in player inventory slot `slot` (0..35) in a chest screen.
 bool openHeldShulker(Player& player, int slot);

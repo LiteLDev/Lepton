@@ -54,6 +54,25 @@ Start-Sleep -Milliseconds 800
 Save-Screenshot 'inventory-sorted' | Out-Null
 Close-Screen
 
+# ExpandedItemInteractions: right-click a shulker box in the inventory screen opens it (the
+# inventory screen is replaced by the box's chest screen); closing it puts the box back.
+Invoke-Chat '/replaceitem entity @s slot.inventory 26 red_shulker_box 1'
+Start-Sleep -Milliseconds 800
+$mark = Get-LogMark
+Open-Inventory
+$line = Wait-LogLine 'inventory: player buttons on inventory_screen: sort at .* shulker at' 20 -Since $mark
+$hx, $hy = Get-Fraction $line 'shulker'
+$m = Get-LogMark
+Click $hx $hy -Relative -Right
+Wait-LogLine "inventory: interaction 'open' requested" 10 -Since $m | Out-Null
+Wait-LogLine 'inventory: .* opened a held shulker box' 15 -Since $m | Out-Null
+Wait-LogLine 'virtual container .* opened by' 15 -Since $m | Out-Null
+Start-Sleep -Milliseconds 800
+Save-Screenshot 'held-shulker' | Out-Null
+$m = Get-LogMark
+Close-Screen
+Wait-LogLine 'inventory: .* closed a held shulker box' 15 -Since $m | Out-Null
+
 # A 27-slot container (a Lepton virtual container in the vanilla chest screen): every button.
 $m = Get-LogMark
 Invoke-Chat '/quark debug container'

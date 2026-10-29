@@ -1,6 +1,7 @@
 #include "feature/inventory/Search.h"
 
 #include <functional>
+#include <memory>
 #include <regex>
 
 #include "mc/deps/shared_types/item/CreativeItemCategory.h"
@@ -56,13 +57,13 @@ bool matchStack(ItemStack const& stack, std::string search, int depth) {
     }
     if (search.size() >= 3 && search.front() == '/' && search.back() == '/') {
         search  = search.substr(1, search.size() - 2);
-        matcher = [](std::string const& hay, std::string const& needle) {
-            try {
-                return std::regex_search(hay, std::regex(needle));
-            } catch (std::regex_error const&) {
-                return false;
-            }
-        };
+        std::shared_ptr<std::regex> re; // compiled once per search
+        try {
+            re = std::make_shared<std::regex>(search);
+        } catch (std::regex_error const&) {
+            return false; // a bad expression matches nothing
+        }
+        matcher = [re](std::string const& hay, std::string const&) { return std::regex_search(hay, *re); };
     }
     return matchWith(stack, search, matcher, depth);
 }
@@ -81,6 +82,7 @@ bool matchWith(ItemStack const& stack, std::string const& search, Matcher const&
     auto id = game::itemId(stack);
     if (isPotion(id)) {
         int aux = stack.getAuxValue();
+        if (id == "minecraft:arrow") --aux; // tipped arrows: aux = potion id + 1 (0 = plain arrow)
         if (aux >= 0 && aux < 64)
             if (auto const& potion = Potion::mPotionsById()[static_cast<size_t>(aux)])
                 for (auto const& e : *potion->mEffects)

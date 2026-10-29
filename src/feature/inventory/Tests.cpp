@@ -173,6 +173,12 @@ LP_REGISTER_SELFTEST("inventory.transfer", [](Context& ctx) -> ll::coro::CoroTas
     ctx.check(quickMove(p, "inventory_items", 3) == 2, "shift-lock quick move from the inventory into the container");
     ctx.check(countId(*live, "minecraft:diamond") == 2, "diamonds moved");
     ctx.check(quickMove(p, "container_items", 0) == 2, "and back");
+    // A shulker box target never takes shulker boxes (vanilla forbids nesting them).
+    inv::restore(pinv, inv::kPlayerAll, {});
+    pinv.setItem(13, makeItem("minecraft:red_shulker_box"));
+    pinv.setItem(14, makeItem("minecraft:apple", 3));
+    ctx.check(transferItems(p, *live, false, false, true) == 3 && isShulkerBox(pinv.getItem(13)),
+              "no shulker box goes into a shulker box");
     closeTestContainer(pos);
     clearPlayer(p);
 });
@@ -358,6 +364,19 @@ LP_REGISTER_SELFTEST("inventory.heldshulker", [](Context& ctx) -> ll::coro::Coro
     ctx.require(isShulkerBox(back), "the box is back in its slot");
     auto contents = shulkerContents(back);
     ctx.check(contents[0].mCount == 4 && itemId(contents[1]) == "minecraft:emerald", "edits were written into the box");
+    // While held, the box's screen counts as a shulker box: Insert never puts boxes into it.
+    pinv.setItem(13, makeItem("minecraft:red_shulker_box"));
+    ctx.require(openHeldShulker(p, 12), "opened again");
+    at = heldShulkerPos(p);
+    for (int i = 0; i < 20 && vc::viewers(*at) == 0; ++i) co_await ctx.ticks(1);
+    if (auto* again = vc::liveContainer(*at)) {
+        transferItems(p, *again, false, false);
+        ctx.check(isShulkerBox(pinv.getItem(13)), "a held box rejects boxes from Insert");
+    } else {
+        ctx.fail("the held box did not open again");
+    }
+    vc::closeAll(*at);
+    for (int i = 0; i < 10 && heldShulkerPos(p); ++i) co_await ctx.ticks(1);
     clearPlayer(p);
 });
 

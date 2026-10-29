@@ -22,6 +22,7 @@
 #include "mc/deps/shared_types/legacy/LevelSoundEvent.h"
 #include "mc/deps/shared_types/legacy/actor/ArmorSlot.h"
 #include "mc/platform/UUID.h"
+#include "mc/server/ServerPlayer.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Inventory.h"
@@ -35,6 +36,9 @@
 #include "mc/world/inventory/FillingContainer.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
+#include "mc/deps/nbt/CompoundTag.h"
+#include "mc/world/item/Item.h"
+#include "mc/world/item/components/StorageItemComponentTags.h"
 #include "mc/world/item/components/storage_item_utility/StorageItemUtility.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
@@ -91,7 +95,15 @@ std::map<std::string, HeldSession>& heldSessions() {
 std::string heldKey(std::string const& uuid) { return "lp:inventory:held:" + uuid; }
 
 void saveHeld(std::string const& uuid, HeldSession const& s) {
-    game::db::save(heldKey(uuid), {{"slot", s.slot}, {"item", game::itemToSnbt(s.box)}});
+    game::db::save(heldKey(uuid), {{"slot", s.slot},
+                                   {"item", game::itemToSnbt(s.box)},
+                                   {"pos", {s.pos.dim, s.pos.x, s.pos.y, s.pos.z}}});
+}
+
+bool heldPosInUse(core::GlobalPos const& pos) {
+    for (auto const& [uuid, s] : heldSessions())
+        if (s.pos == pos) return true;
+    return false;
 }
 
 /// Gives a box back to the player: its old slot, else any free slot, else dropped.
@@ -176,7 +188,9 @@ bool targetHas(Container const& target, inv::Range range, ItemStack const& stack
     return false;
 }
 
+/// The open screen shows a shulker box (a placed one, or a held one in its virtual chest screen).
 bool isShulkerContainer(Player& player) {
+    if (heldShulkerPos(player)) return true;
     auto const& manager = player.mContainerManager.get();
     if (!manager) return false;
     auto const* pos = std::get_if<BlockPos>(&manager->mScreenContext->mOwner.get());
@@ -185,9 +199,9 @@ bool isShulkerContainer(Player& player) {
 
 } // namespace
 
-int transferItems(Player& player, Container& container, bool restock, bool smart) {
+int transferItems(Player& player, Container& container, bool restock, bool smart, std::optional<bool> shulkerTarget) {
     auto& pinv    = player.getInventory();
-    bool  shulker = isShulkerContainer(player);
+    bool  shulker = shulkerTarget ? *shulkerTarget : isShulkerContainer(player);
     int   moved   = 0;
     if (!restock) {
         for (int i = 9; i < inv::kPlayerSlots; ++i) {
@@ -497,14 +511,24 @@ bool scrollBundle(Player& player, std::string const& collection, int slot, doubl
     if (!ref.valid()) return false;
     auto const& stack = ref.container->getItem(ref.slot);
     if (game::itemId(stack).find("bundle") == std::string::npos) return false;
-    FullContainerName name{};
-    name.mName = ContainerEnumName::DynamicContainer;
+    // The storage comes from the server's own copy of the item; the id the client saw only has to
+    // agree with it (a client may lie).
+    // (StorageItemUtility::getStorageItemID only exists in the client, bundleIDTag only in BDS.)
 #ifdef LL_PLAT_C
-    if (auto id = StorageItemUtility::getStorageItemID(stack)) name = *id;
-    else
+    auto storage = StorageItemUtility::getStorageItemID(stack);
+    if (!storage || !storage->mDynamicId->has_value()) return false;
+    auto bundleId = static_cast<int>(**storage->mDynamicId);
+#else
+    std::string_view idTag = StorageItemComponentTags::bundleIDTag();
+    if (!stack.mUserData || !stack.mUserData->contains(idTag)) return false;
+    auto const& idValue = (*stack.mUserData)[idTag];
+    if (!idValue.is_number_integer()) return false;
+    auto bundleId = static_cast<int>(idValue);
 #endif
-        if (dynamicId >= 0) name.mDynamicId = static_cast<uint>(dynamicId);
-    else return false;
+    if (dynamicId >= 0 && dynamicId != bundleId) return false;
+    FullContainerName name{};
+    name.mName      = ContainerEnumName::DynamicContainer;
+    name.mDynamicId = static_cast<uint>(bundleId);
     auto access  = player.getLevel().getContainerRegistryAccess();
     auto backing = access->getBackingContainer(name);
     if (!backing) return false;
@@ -535,13 +559,16 @@ bool openHeldShulker(Player& player, int slot) {
     auto head = player.getFeetBlockPos();
     head.y += 1;
     auto pos = game::globalPos(player.getDimensionBlockSource(), head);
-    while (game::vc::viewers(pos) > 0) ++pos.y;
+    while (game::vc::viewers(pos) > 0 || heldPosInUse(pos)) ++pos.y;
 
     HeldSession s;
     s.slot = slot;
     s.pos  = pos;
     s.box  = box;
     s.wait = 20;
+    // Right-clicked in the inventory screen: close it, the chest screen replaces it (tickHeld
+    // retries vc::open until the client has closed the inventory).
+    if (player.mContainerManager.get()) static_cast<ServerPlayer&>(player).initiateContainerClose();
     pinv.setItem(slot, ItemStack{});
     syncPlayer(player);
     saveHeld(uuid, s);
@@ -626,6 +653,9 @@ void restoreHeldOnJoin(Player& player) {
     if (!j || !j->is_object()) return;
     auto box = game::itemFromSnbt(j->value("item", std::string{}));
     game::db::erase(heldKey(uuid));
+    // The record holds the latest contents: drop what a crash left in the virtual container.
+    if (auto p = j->find("pos"); p != j->end() && p->is_array() && p->size() == 4)
+        game::vc::takeAll(core::GlobalPos{(*p)[0].get<int>(), (*p)[1].get<int>(), (*p)[2].get<int>(), (*p)[3].get<int>()});
     if (isEmpty(box)) return;
     returnBox(player, j->value("slot", -1), box);
     log().info("inventory: gave {} back the shulker box that was open", player.getRealName());
@@ -688,8 +718,11 @@ LL_TYPE_INSTANCE_HOOK(
     ::Actor* owner
 ) {
     if (!owner || isEmpty(static_cast<ItemStackBase const&>(*this)) || !cfg().enableAutomaticToolRestock || !isServerPlayer(*owner)) return origin(deltaDamage, owner);
-    auto const& self   = static_cast<ItemStackBase const&>(*this);
-    ItemStack   before = game::itemFromSnbt(game::itemToSnbt(self));
+    auto const& self = static_cast<ItemStackBase const&>(*this);
+    // Only a hit that can break the item needs a snapshot (armour takes damage on every hit).
+    if (deltaDamage <= 0 || !self.mItem || self.getDamageValue() + deltaDamage < self.mItem->getMaxDamage() - 1)
+        return origin(deltaDamage, owner);
+    ItemStack before = game::itemFromSnbt(game::itemToSnbt(self));
     bool      broke  = origin(deltaDamage, owner);
     if (broke || isEmpty(self)) {
         auto& p = static_cast<Player&>(*owner);
@@ -765,6 +798,17 @@ public:
         }));
         ToolBreakHook::hook();
         ArmorStandInteractHook::hook();
+        // The client loads many worlds in one process: nothing may leak into the next world. An
+        // open held box stays recorded in the closed world's DB and is given back on rejoin.
+        static bool worldHooks = false;
+        if (!worldHooks) {
+            worldHooks = true;
+            game::db::onWorldClosed([] {
+                heldSessions().clear();
+                pendingRestocks().clear();
+                lastShares().clear();
+            });
+        }
 
         mHandlers.push_back(net::onServer<SortRequest>([](Player& p, SortRequest const& m) { handleSort(p, m.forcePlayer); }));
         mHandlers.push_back(net::onServer<TransferRequest>([](Player& p, TransferRequest const& m) {

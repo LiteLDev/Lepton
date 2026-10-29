@@ -174,9 +174,11 @@ Message `bar` in 1..3: hotbar slot `i` (0..8) swaps with slot `i + 9 * bar`.
 The shulker box is taken out of its slot while open and kept in the world DB
 (`lp:inventory:held:<uuid>`) together with its contents, updated on every change; the box is shown
 in a virtual chest screen (`game/VirtualContainer`, 27 slots, title = the box's name, shulker boxes
-are rejected). On close the contents are written into the box, which goes back into its slot (or
-the first free slot, or is dropped). A crash leaves the DB record: the box is given back when the
-player joins again.
+are rejected, also by Insert / quick move). Opened from the inventory screen, the server closes the
+inventory and the chest screen replaces it. On close the contents are written into the box, which
+goes back into its slot (or the first free slot, or is dropped). A crash, a disconnect or leaving a
+local world leaves the DB record (with the virtual container position): the box is given back when
+the player joins again and the stale virtual container contents are dropped, so nothing is duplicated.
 
 ### 3.7 Item sharing
 Client: Shift + chat key (T by default, keybind `share_item`) over a non-empty slot in a container

@@ -34,11 +34,14 @@ struct HotbarParams {
     int bar = 0;
 };
 
-Container* lookedAtContainer(Player& player) {
+/// The container block the player looks at (within 6 blocks); `shulker` tells whether it is a shulker box.
+Container* lookedAtContainer(Player& player, bool* shulker = nullptr) {
     auto hit = player.traceRay(6.f, false, true);
     if (hit.mType != HitResultType::Tile) return nullptr;
     auto& region = player.getDimensionBlockSource();
-    if (region.getBlock(hit.mBlock).getTypeName() == "minecraft:ender_chest") {
+    auto  name   = region.getBlock(hit.mBlock).getTypeName();
+    if (shulker) *shulker = name.find("shulker_box") != std::string::npos;
+    if (name == "minecraft:ender_chest") {
         auto ender = player.getEnderChestContainer();
         return ender ? ender.as_ptr() : nullptr;
     }
@@ -84,9 +87,10 @@ void registerCommands(ll::command::CommandHandle& cmd) {
             if (!p) return out.error("Players only.");
             if (!cfg().enableEasyTransferring || p->isSpectator())
                 return out.error(trFor(*p, "lp.inventory.disabled", "This feature is disabled."));
-            auto* c = lookedAtContainer(*p);
+            bool  shulker = false;
+            auto* c       = lookedAtContainer(*p, &shulker);
             if (!c) return out.error(trFor(*p, "lp.inventory.no_container", "Look at a container within reach."));
-            int n = transferItems(*p, *c, restock, smart);
+            int n = transferItems(*p, *c, restock, smart, shulker);
             out.success(trFor(*p, "lp.inventory.transferred", "Moved {} items.", n));
         };
     };
