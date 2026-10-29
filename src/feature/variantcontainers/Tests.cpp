@@ -36,6 +36,7 @@
 #include "game/BlockStates.h"
 #include "game/Blocks.h"
 #include "game/Entities.h"
+#include "game/Inventory.h"
 #include "game/Items.h"
 #include "game/VirtualContainer.h"
 #include "game/WorldDb.h"
@@ -723,4 +724,20 @@ LP_REGISTER_SELFTEST("variantcontainers.gallery", [](Context& ctx) -> ll::coro::
     ctx.info("VCGALLERY done");
     for (int dx : {0, 2, 4, 6, 8})
         if (auto* c = containerAt(region, bp(at(dx, -9)))) c->removeAllItems();
+});
+
+// e2e aid: the (real) player's hotbar, so the client scenario can check what it crafted.
+LP_REGISTER_SELFTEST("variantcontainers.report", [](Context& ctx) {
+    Player* viewer = nullptr;
+    ctx.player().getLevel().forEachPlayer([&](Player& p) {
+        if (!p.isSimulated()) viewer = &p;
+        return viewer == nullptr;
+    });
+    if (!viewer) return;
+    auto& inv = lp::game::inv::playerInventory(*viewer);
+    for (int i = 0; i < 9; ++i) {
+        auto const& s = inv.getItem(i);
+        if (!lp::game::isEmpty(s)) ctx.info(std::format("VCINV {} {} {}", i, lp::game::itemId(s), static_cast<int>(s.mCount)));
+    }
+    ctx.info("VCINV done");
 });
