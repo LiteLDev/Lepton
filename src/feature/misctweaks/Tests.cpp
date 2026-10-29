@@ -527,7 +527,17 @@ LP_REGISTER_SELFTEST("misctweaks.villager_seed", [](Context& ctx) -> ll::coro::C
     ctx.require(!first.empty(), "trades generated (" + std::to_string(first.size()) + ")");
     comp->mOffers.reset();
     comp->_generateTrades();
-    ctx.check(snapshot() == first, "the same seed generates the same first trades");
+    auto second = snapshot();
+    if (second != first) {
+        auto join = [](std::vector<std::string> const& v) {
+            std::string s;
+            for (auto const& e : v) s += e + " | ";
+            return s;
+        };
+        ctx.info("table " + std::string(comp->mGeneratedTablePath.get()) + " first: " + join(first));
+        ctx.info("second: " + join(second));
+    }
+    ctx.check(second == first, "the same seed generates the same first trades");
     ctx.check(lp::game::db::load("lp:misctweaks:villager:" + std::to_string(id)).has_value(), "the seed is stored");
 
     // Rerolling: every trade out of stock, chance 1, at most 1 reroll per day.
