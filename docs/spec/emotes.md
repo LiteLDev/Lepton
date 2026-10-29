@@ -60,7 +60,7 @@ None. Resource-pack content:
   `pause <ms>`, `yoyo|repeat <n> <ms>` (on the current section), `sound ...` (below). Errors are
   reported like Quark (`[Custom Emotes] Error loading line N of emote X` + the message) and the
   emote falls back to an empty animation. Timing follows the Universal Tween Engine: default
-  easing Quad in-out, a tween captures its start value when it starts, yoyo iterations play back,
+  easing Quad in-out, a tween captures its start value when it starts, yoyo iterations play back (without firing start sound cues on the backward passes), a leading UTF-8 BOM in a file is ignored,
   repeat restarts from the first start value, repeat delays hold the iteration's end value,
   sequences chain full durations (delay + iterations), parallels take the longest. Every easing
   equation of the tween engine is available (`linear`/`none`, `in|out|in_out` + `quad`, `cubic`,
