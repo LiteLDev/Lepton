@@ -94,11 +94,12 @@
   "lp.gadgets.biome.deep_dark": "Deep Dark",
   "lp.gadgets.biome.pale_garden": "Pale Garden",
   "lp.gadgets.biome.glimmering_weald": "Glimmering Weald",
-  "lp.gadgets.now_playing": "Now playing: {}",
+  "lp.gadgets.now_playing": "Now Playing: {}",
   "lp.gadgets.wip": "[WIP]",
   "lp.gadgets.soon": "(soon)",
   "lp.gadgets.music_disc": "Music Disc",
   "lp.gadgets.cmd.quill": "Gave a Pathfinder's Quill for {}",
   "lp.gadgets.cmd.unknown_biome": "Unknown biome: {}",
-  "lp.gadgets.cmd.potato": "Gave an Angry Potato"
+  "lp.gadgets.cmd.potato": "Gave an Angry Potato",
+  "lp.gadgets.cmd.potato_named": "Gave a Tiny Potato named {}"
 }

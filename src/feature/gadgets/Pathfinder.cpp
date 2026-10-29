@@ -47,6 +47,7 @@
 #include "mc/world/level/saveddata/maps/MapItemTrackedActor.h"
 
 #include "feature/gadgets/Gadgets.h"
+#include "game/Blocks.h"
 #include "game/Inventory.h"
 #include "game/Items.h"
 #include "mod/I18n.h"
@@ -290,7 +291,7 @@ std::vector<int> searchHeights(int y, int minY, int maxY) {
 }
 
 std::string biomeAt(Dimension& dim, int x, int y, int z) {
-    auto* gen = dim.mWorldGenerator.get();
+    auto* gen = dim.mWorldGenerator;
     if (!gen) return {};
     BoundingBox box(BlockPos(x, y, z), BlockPos(x, y, z));
     auto        area = gen->getBiomeSource().getBiomeArea(box, 1);
@@ -660,7 +661,7 @@ bool hasQuillFor(MerchantRecipeList const& list, std::string const& biome) {
 void addTrades(EconomyTradeableComponent& comp) {
     auto const& c = cfg();
     if (!c.enablePathfinderMaps) return;
-    auto* offers = comp.mOffers->get();
+    auto* offers = comp.mOffers.get();
     if (!offers) return;
     std::string const& table = *comp.mGeneratedTablePath;
     auto               list  = tradeList();
@@ -683,7 +684,12 @@ void addTrades(EconomyTradeableComponent& comp) {
         if (c.addToWanderingTraderForced) {
             auto offer  = makeOffer(t, false);
             offer.mTier = 0;
-            recipes.insert(recipes.begin(), offer);
+            // at the front (ItemInstance has no exported assignment: rebuild instead of insert)
+            std::vector<MerchantRecipe> list;
+            list.reserve(recipes.size() + 1);
+            list.push_back(offer);
+            for (auto const& r : recipes) list.push_back(r);
+            recipes.swap(list);
             log().info("gadgets: added a pathfinder trade to a wandering trader");
             return;
         }

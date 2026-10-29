@@ -189,4 +189,7 @@ for ($x = 0; $x -lt 16; $x++) { $sus["$x,0"] = '#4a8ea0'; $sus["$x,4"] = '#4a8ea
 foreach ($k in '3,1', '4,1', '5,1', '4,2') { $sus[$k] = '#e8fbff' }
 Save-Canvas $sus (Join-Path $blocks 'tiny_potato_sus.png')
 
+# Abacus highlight line (particle): one white pixel, tinted with highlightColor by the particle.
+Save-Canvas @{ '0,0' = '#ffffff' } (Join-Path $Root 'assets/pack/rp/textures/particle/lepton_gadgets_line.png') 1 1
+
 $written | ForEach-Object { $_ }

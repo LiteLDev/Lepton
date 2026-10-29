@@ -100,5 +100,6 @@
   "lp.gadgets.music_disc": "音乐唱片",
   "lp.gadgets.cmd.quill": "已给予{}的寻路羽毛笔",
   "lp.gadgets.cmd.unknown_biome": "未知的生物群系：{}",
-  "lp.gadgets.cmd.potato": "已给予愤怒的土豆"
+  "lp.gadgets.cmd.potato": "已给予愤怒的土豆",
+  "lp.gadgets.cmd.potato_named": "已给予名为{}的小土豆"
 }

@@ -52,3 +52,4 @@ assets/pack/rp/textures/items/lepton_gadgets/music_disc_ocean.png
 assets/pack/rp/textures/items/lepton_gadgets/music_disc_rain.png
 assets/pack/rp/textures/items/lepton_gadgets/music_disc_wind.png
 assets/pack/rp/textures/items/lepton_gadgets/pathfinders_quill.png
+assets/pack/rp/textures/particle/lepton_gadgets_line.png

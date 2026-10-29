@@ -20,6 +20,8 @@
 #include "mc/deps/nbt/StringTag.h"
 #include "mc/network/packet/PlaySoundPacket.h"
 #include "mc/network/packet/SetTitlePacket.h"
+#include "mc/network/MinecraftPacketIds.h"
+#include "mc/network/MinecraftPackets.h"
 #include "mc/network/packet/StopSoundPacket.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemInstance.h"
@@ -116,13 +118,15 @@ Player* playerById(int64_t id) {
 // ---- packets -----------------------------------------------------------------------------------------
 
 void actionBar(Player& player, std::string const& text) {
-    SetTitlePacket pkt;
-    pkt.mType      = SetTitlePacketPayload::TitleType::Actionbar;
-    pkt.mTitleText = text;
-    pkt.mFadeInTime = 0;
-    pkt.mStayTime   = 40;
-    pkt.mFadeOutTime = 10;
-    pkt.sendTo(player);
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::SetTitle);
+    if (!pkt) return;
+    auto& title        = static_cast<SetTitlePacket&>(*pkt);
+    title.mType        = SetTitlePacketPayload::TitleType::Actionbar;
+    title.mTitleText   = text;
+    title.mFadeInTime  = 0;
+    title.mStayTime    = 40;
+    title.mFadeOutTime = 10;
+    title.sendTo(player);
 }
 
 void playSoundTo(Player& player, std::string const& name, Vec3 const& pos, float volume, float pitch) {
@@ -147,11 +151,13 @@ void playSoundNear(int dim, std::string const& name, Vec3 const& pos, float volu
 }
 
 void stopSoundTo(Player& player, std::string const& name) {
-    StopSoundPacket pkt;
-    pkt.mName           = name;
-    pkt.mStopAll        = false;
-    pkt.mStopMusicLegacy = false;
-    pkt.sendTo(player);
+    auto pkt = MinecraftPackets::createPacket(MinecraftPacketIds::StopSound);
+    if (!pkt) return;
+    auto& stop            = static_cast<StopSoundPacket&>(*pkt);
+    stop.mName            = name;
+    stop.mStopAll         = false;
+    stop.mStopMusicLegacy = false;
+    stop.sendTo(player);
 }
 
 void particle(int dim, std::string const& effect, Vec3 const& pos) {
@@ -223,17 +229,43 @@ int removeRecipes(std::vector<std::string> const& ids) {
             gRemovedRecipes.push_back(it->second);
             byId.erase(it);
             for (auto& [out, m] : *recipes.mRecipesByOutput) m.erase(id);
-            for (auto n = recipes.mRecipesByNetId->begin(); n != recipes.mRecipesByNetId->end();) {
-                if (n->second == raw) n = recipes.mRecipesByNetId->erase(n);
-                else ++n;
-            }
+            // mRecipesByNetId keeps its entry (RecipeNetId has no usable std::hash here): clients never
+            // learn the id, since the crafting data sent to them no longer lists the recipe.
             auto& unl = *recipes.mUnlockableRecipes;
             unl.erase(std::remove_if(unl.begin(), unl.end(), [&](auto const& r) { return r.get() == raw; }), unl.end());
             ++removed;
         }
     }
-    if (removed) recipes.notifyRecipeListeners();
+    if (removed) { // Recipes::notifyRecipeListeners (client-only symbol): the crafting data is rebuilt
+        for (auto const& [life, fn] : *recipes.mListeners)
+            if (!life.expired() && fn) fn();
+    }
     return removed;
+}
+
+bool hasRecipe(std::string const& id) {
+    auto level = ll::service::getLevel();
+    if (!level) return false;
+    for (auto const& [tag, byId] : *level->getRecipes().mRecipes)
+        if (byId.contains(id)) return true;
+    return false;
+}
+
+bool potatoUsesHeart() {
+    auto const& c = cfg();
+    if (!c.enableTinyPotato || c.neverUseHeartOfDiamond) return false;
+    // the heart recipe needs Stonelings' Heart of Diamond (U21, config/mobsdeep.json)
+    bool stonelings = true;
+    try {
+        auto path = config::configDir() / "mobsdeep.json";
+        if (std::filesystem::exists(path)) {
+            std::ifstream in(path);
+            auto          j = nlohmann::json::parse(in, nullptr, false);
+            if (j.is_object() && j.contains("enableStonelings") && j["enableStonelings"].is_boolean())
+                stonelings = j["enableStonelings"].get<bool>();
+        }
+    } catch (...) {}
+    return stonelings && !game::isEmpty(game::makeItem("lepton:diamond_heart"));
 }
 
 // ---- the unit module -------------------------------------------------------------------------------
@@ -246,22 +278,8 @@ void applyRecipeRules() {
     auto const&              c = cfg();
     std::vector<std::string> drop;
     if (!c.enableAbacus) drop.push_back("lepton:abacus");
-    // TinyPotato: the heart recipe needs Stonelings' Heart of Diamond (U21); otherwise the diamond /
-    // emerald recipes.
-    bool heart = c.enableTinyPotato && !c.neverUseHeartOfDiamond;
-    if (heart) {
-        bool stonelings = true;
-        try {
-            auto path = config::configDir() / "mobsdeep.json";
-            if (std::filesystem::exists(path)) {
-                std::ifstream in(path);
-                auto          j = nlohmann::json::parse(in, nullptr, false);
-                if (j.is_object() && j.contains("enableStonelings") && j["enableStonelings"].is_boolean())
-                    stonelings = j["enableStonelings"].get<bool>();
-            }
-        } catch (...) {}
-        heart = stonelings && !game::isEmpty(game::makeItem("lepton:diamond_heart"));
-    }
+    // TinyPotato: the heart recipe with Stonelings' Heart of Diamond, otherwise diamond / emerald.
+    bool heart = potatoUsesHeart();
     if (!c.enableTinyPotato || !heart) drop.push_back("lepton:tiny_potato_heart");
     if (!c.enableTinyPotato || heart) {
         drop.push_back("lepton:tiny_potato_no_heart");
@@ -303,6 +321,7 @@ struct GadgetsModule {
             game::db::onWorldClosed([] {
                 gTasks.clear();
                 pathfinder::onWorldClosed();
+                discs::onWorldClosed();
                 potato::onWorldClosed();
             });
         }

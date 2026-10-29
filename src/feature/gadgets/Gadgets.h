@@ -150,6 +150,10 @@ void                                     removeKey(ItemStackBase& stack, std::st
 
 /// Removes the world's recipes with these ids (Bedrock recipe identifiers, "lepton:abacus").
 int removeRecipes(std::vector<std::string> const& ids);
+/// The world has a recipe with this id.
+[[nodiscard]] bool hasRecipe(std::string const& id);
+/// The tiny potato uses the Heart of Diamond recipe (U21 Stonelings present and enabled).
+[[nodiscard]] bool potatoUsesHeart();
 
 // ---- module entry points (called by the unit module in Gadgets.cpp) -------------------------------
 
@@ -174,10 +178,20 @@ namespace discs {
 void install();
 void uninstall();
 void tick();
+void onWorldClosed();
 } // namespace discs
 
 namespace compasses {
+// item user data keys (Quark's data components)
+inline constexpr char const* kClockCalculated   = "quark:clock_calculated";
+inline constexpr char const* kCompassCalculated = "quark:compass_calculated";
+inline constexpr char const* kWasInNether       = "quark:was_in_nether";
+inline constexpr char const* kPosSet            = "quark:pos_set";
+inline constexpr char const* kNetherX           = "quark:nether_x";
+inline constexpr char const* kNetherZ           = "quark:nether_z";
 void tick();
+/// Quark's tickCompass / tickClock for one stack; true when the stack changed.
+bool tickStack(ItemStack& stack, bool nether, bool inPortal, BlockPos const& pos);
 } // namespace compasses
 
 namespace potato {

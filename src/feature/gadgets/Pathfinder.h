@@ -68,5 +68,7 @@ std::optional<BlockPos> searchSteps(
 
 /// Test seams.
 [[nodiscard]] std::vector<int> spiralForTest(int steps, int searchRadius);
+/// Runs the trade injection on a merchant's generated offers.
+void addTradesForTest(EconomyTradeableComponent& comp);
 
 } // namespace lp::feature::gadgets::pathfinder

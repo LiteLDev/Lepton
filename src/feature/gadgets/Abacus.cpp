@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <memory>
 #include <unordered_map>
 
 #include "ll/api/event/EventBus.h"
@@ -57,34 +58,54 @@ std::optional<BlockPos> boundPos(ItemStackBase const& s) {
 
 std::string label(int count) { return count < kAbacusMax ? std::to_string(count + 1) : std::to_string(kAbacusMax) + "+"; }
 
-/// One particle at `pos` for `player` only, in the configured highlight colour.
-void dot(Player& player, Vec3 const& pos) {
-    auto const&       c = cfg().highlightColor;
-    MolangVariableMap vars;
-    vars.setMolangVariable(HashedString("variable.color_r"), MolangScriptArg(static_cast<float>(c.r)));
-    vars.setMolangVariable(HashedString("variable.color_g"), MolangScriptArg(static_cast<float>(c.g)));
-    vars.setMolangVariable(HashedString("variable.color_b"), MolangScriptArg(static_cast<float>(c.b)));
-    vars.setMolangVariable(HashedString("variable.color_a"), MolangScriptArg(static_cast<float>(c.a)));
+/// A MolangVariableMap (its default constructor is not exported: the members are built in place).
+class VarMap {
+public:
+    VarMap() {
+        auto* m = map();
+        std::construct_at(&m->mMapFromVariableIndexToVariableArrayOffset);
+        std::construct_at(&m->mVariables);
+        m->mHasPublicVariables = false;
+    }
+    ~VarMap() { map()->~MolangVariableMap(); }
+    VarMap(VarMap const&)            = delete;
+    VarMap& operator=(VarMap const&) = delete;
+    MolangVariableMap* map() { return reinterpret_cast<MolangVariableMap*>(mRaw); }
+    void set(char const* name, float v) { map()->setMolangVariable(HashedString(name), MolangScriptArg(v)); }
+
+private:
+    alignas(MolangVariableMap) unsigned char mRaw[sizeof(MolangVariableMap)];
+};
+
+/// One edge from `p` to `q`: a thin `lepton:abacus_highlight` quad that only `player` sees, in the
+/// configured highlight colour.
+void segment(Player& player, Vec3 const& p, Vec3 const& q) {
+    auto const& c = cfg().highlightColor;
+    VarMap      vars;
+    vars.set("variable.color_r", static_cast<float>(c.r));
+    vars.set("variable.color_g", static_cast<float>(c.g));
+    vars.set("variable.color_b", static_cast<float>(c.b));
+    vars.set("variable.color_a", static_cast<float>(c.a));
+    vars.set("variable.len", p.distanceTo(q) / 2);
+    vars.set("variable.dir_x", q.x - p.x);
+    vars.set("variable.dir_y", q.y - p.y);
+    vars.set("variable.dir_z", q.z - p.z);
+    Vec3 mid{(p.x + q.x) / 2, (p.y + q.y) / 2, (p.z + q.z) / 2};
     SpawnParticleEffectPacket pkt(SpawnParticleEffectPacketPayload(
-        pos, "lepton:abacus_highlight", static_cast<uchar>(player.getDimensionId()), std::move(vars)
+        mid, "lepton:abacus_highlight", static_cast<uchar>(player.getDimensionId()), *vars.map()
     ));
     pkt.sendTo(player);
 }
 
-/// Draws the edges of the box [a, b] (world coordinates) with dots every `step` blocks.
+/// Draws the 12 edges of the box [a, b] (world coordinates).
 int box(Player& player, Vec3 a, Vec3 b, int budget) {
-    float const step = 0.25f;
-    Vec3        lo{std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z)};
-    Vec3        hi{std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)};
-    int         used = 0;
-    auto        line = [&](Vec3 p, Vec3 q) {
-        float len = p.distanceTo(q);
-        int   n   = std::max(1, static_cast<int>(len / step));
-        for (int i = 0; i <= n && used < budget; ++i) {
-            float t = static_cast<float>(i) / static_cast<float>(n);
-            dot(player, Vec3{p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, p.z + (q.z - p.z) * t});
-            ++used;
-        }
+    Vec3 lo{std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z)};
+    Vec3 hi{std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)};
+    int  used = 0;
+    auto line = [&](Vec3 p, Vec3 q) {
+        if (used >= budget) return;
+        segment(player, p, q);
+        ++used;
     };
     float xs[2] = {lo.x, hi.x}, ys[2] = {lo.y, hi.y}, zs[2] = {lo.z, hi.z};
     for (float y : ys)
@@ -99,7 +120,7 @@ int box(Player& player, Vec3 a, Vec3 b, int budget) {
 /// Quark's highlight: the bound block plus the x, then y, then z leg towards the looked-at block.
 void outline(Player& player, BlockPos const& bound, BlockPos const& target) {
     auto v      = [](BlockPos const& p) { return Vec3{static_cast<float>(p.x), static_cast<float>(p.y), static_cast<float>(p.z)}; };
-    int  budget = 600;
+    int  budget = 48;
     int  dx = target.x - bound.x, dy = target.y - bound.y, dz = target.z - bound.z;
     Vec3 b0 = v(bound);
     budget -= box(player, b0, b0 + Vec3{1, 1, 1}, budget);
