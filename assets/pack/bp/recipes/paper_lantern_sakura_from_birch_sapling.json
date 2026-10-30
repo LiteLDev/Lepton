@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:paper_lantern_sakura_from_birch_sapling"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:paper_lantern"
+      },
+      {
+        "item": "minecraft:birch_sapling"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:paper_lantern"
+      },
+      {
+        "item": "minecraft:birch_sapling"
+      }
+    ],
+    "result": {
+      "item": "lepton:paper_lantern_sakura",
+      "count": 1
+    }
+  }
+}

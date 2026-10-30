@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:oak_chest_wood_oak_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:oak_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:oak_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:oak_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:charcoal_block",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 5.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 10.0
+      },
+      "minecraft:map_color": "#191919",
+      "tag:lepton:infiniburn": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_storage_storage_charcoal_block",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/charcoal_block.json"
+    }
+  }
+}

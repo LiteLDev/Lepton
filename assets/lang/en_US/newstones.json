@@ -1,0 +1,13 @@
+{
+  "quark.jei.hint.limestone": "Can be found in big clusters in swamps and oceans.",
+  "quark.jei.hint.jasper": "Can be found in big clusters in mesas and deserts.",
+  "quark.jei.hint.shale": "Can be found in big clusters in cold biomes.",
+  "quark.jei.hint.myalite": "Can be found in big clusters in the outer end highlands. It reacts to an invisible field in the world, changing color depending on where it's placed with the field's intensity.",
+  "quark.jei.hint.permafrost": "Can be found towards the top of Frozen Peaks.",
+  "lp.newstones.info.header": "New stones ({}):",
+  "lp.newstones.info.disabled": "This module is disabled.",
+  "lp.newstones.sources.none": "No cluster sources within {} chunks.",
+  "lp.newstones.sources.line": "{} at {} {} {} ({})",
+  "lp.newstones.players_only": "Only players can use this command.",
+  "lp.newstones.admin_only": "You need operator permission for this command."
+}

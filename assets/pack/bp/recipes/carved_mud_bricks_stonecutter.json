@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:carved_mud_bricks_stonecutter"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:mud_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:mud_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:carved_mud_bricks",
+      "count": 1
+    }
+  }
+}

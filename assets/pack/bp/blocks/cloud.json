@@ -1,0 +1,64 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:cloud",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": false
+      },
+      "states": {
+        "lepton:size": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      }
+    },
+    "components": {
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": true,
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:map_color": "#a4a8b8",
+      "minecraft:movable": {
+        "movement_type": "immovable"
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.cloud",
+        "bone_visibility": {
+          "s0": "q.block_state('lepton:size') == 0",
+          "s1": "q.block_state('lepton:size') == 1",
+          "s2": "q.block_state('lepton:size') == 2",
+          "s3": "q.block_state('lepton:size') == 3",
+          "s4": "q.block_state('lepton:size') == 4",
+          "s5": "q.block_state('lepton:size') == 5",
+          "s6": "q.block_state('lepton:size') == 6",
+          "s7": "q.block_state('lepton:size') == 7",
+          "s8": "q.block_state('lepton:size') == 8",
+          "s9": "q.block_state('lepton:size') == 9"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_throwables_cloud",
+          "render_method": "alpha_test",
+          "ambient_occlusion": false
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/cloud.json"
+    }
+  }
+}

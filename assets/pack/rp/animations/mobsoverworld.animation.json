@@ -1,0 +1,67 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.crab.walk": {
+      "loop": true,
+      "bones": {
+        "left_leg0": { "rotation": [0, "math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] },
+        "left_leg1": { "rotation": [0, "-math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] },
+        "left_leg2": { "rotation": [0, "math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] },
+        "right_leg0": { "rotation": [0, "-math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] },
+        "right_leg1": { "rotation": [0, "math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] },
+        "right_leg2": { "rotation": [0, "-math.cos(q.modified_distance_moved * 60) * 25 * q.modified_move_speed", 0] }
+      }
+    },
+    "animation.lepton.crab.idle": {
+      "loop": true,
+      "bones": {
+        "left_claw": { "rotation": [0, 0, "math.sin(q.life_time * 90) * 4"] },
+        "right_claw": { "rotation": [0, 0, "-math.sin(q.life_time * 90) * 4"] },
+        "eyes": { "position": [0, "math.sin(q.life_time * 60) * 0.25", 0] }
+      }
+    },
+    "animation.lepton.crab.rave": {
+      "loop": true,
+      "bones": {
+        "body": { "position": [0, "math.abs(math.sin(q.life_time * 540)) * 1.5", 0], "rotation": [0, "math.sin(q.life_time * 270) * 15", 0] },
+        "left_claw": { "rotation": [0, 0, "-30 - math.sin(q.life_time * 540) * 30"] },
+        "right_claw": { "rotation": [0, 0, "30 + math.sin(q.life_time * 540) * 30"] }
+      }
+    },
+    "animation.lepton.shiba.walk": {
+      "loop": true,
+      "bones": {
+        "leg0": { "rotation": ["math.cos(q.modified_distance_moved * 38.17) * 80 * q.modified_move_speed", 0, 0] },
+        "leg1": { "rotation": ["-math.cos(q.modified_distance_moved * 38.17) * 80 * q.modified_move_speed", 0, 0] },
+        "leg2": { "rotation": ["-math.cos(q.modified_distance_moved * 38.17) * 80 * q.modified_move_speed", 0, 0] },
+        "leg3": { "rotation": ["math.cos(q.modified_distance_moved * 38.17) * 80 * q.modified_move_speed", 0, 0] }
+      }
+    },
+    "animation.lepton.shiba.sit": {
+      "loop": true,
+      "bones": {
+        "body": { "position": [0, -2, 0], "rotation": [-20, 0, 0] },
+        "leg0": { "position": [0, -1, 0] },
+        "leg1": { "position": [0, -1, 0] },
+        "leg2": { "position": [0, -3, -1], "rotation": [90, 0, 0] },
+        "leg3": { "position": [0, -3, -1], "rotation": [90, 0, 0] }
+      }
+    },
+    "animation.lepton.shiba.tail": {
+      "loop": true,
+      "bones": {
+        "tail": { "rotation": [0, "q.is_tamed ? math.sin(q.life_time * 900) * 25 : 0", 0] }
+      }
+    },
+    "animation.lepton.toretoise.walk": {
+      "loop": true,
+      "bones": {
+        "leg0": { "rotation": ["math.cos(q.modified_distance_moved * 30) * 30 * q.modified_move_speed", 0, 0] },
+        "leg1": { "rotation": ["-math.cos(q.modified_distance_moved * 30) * 30 * q.modified_move_speed", 0, 0] },
+        "leg2": { "rotation": ["-math.cos(q.modified_distance_moved * 30) * 30 * q.modified_move_speed", 0, 0] },
+        "leg3": { "rotation": ["math.cos(q.modified_distance_moved * 30) * 30 * q.modified_move_speed", 0, 0] },
+        "head": { "position": [0, 0, "math.sin(q.life_time * 40) * 0.3"] }
+      }
+    }
+  }
+}

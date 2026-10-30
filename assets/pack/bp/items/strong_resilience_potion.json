@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:strong_resilience_potion",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.potion"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_mobsoverworld_resilience_potion",
+      "minecraft:food": {
+        "nutrition": 0,
+        "saturation_modifier": 0,
+        "can_always_eat": true,
+        "using_converts_to": "minecraft:glass_bottle"
+      },
+      "minecraft:glint": true,
+      "minecraft:max_stack_size": 1,
+      "minecraft:use_animation": "drink",
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
+      }
+    }
+  }
+}

@@ -1,0 +1,380 @@
+{
+  "lepton:bamboo_mat": {
+    "sound": "bamboo"
+  },
+  "lepton:bamboo_mat_carpet": {
+    "sound": "bamboo"
+  },
+  "lepton:black_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:black_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:black_shingles": {
+    "sound": "stone"
+  },
+  "lepton:black_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:black_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:black_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:blue_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:blue_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:blue_shingles": {
+    "sound": "stone"
+  },
+  "lepton:blue_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:blue_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:blue_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:brown_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:brown_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:brown_shingles": {
+    "sound": "stone"
+  },
+  "lepton:brown_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:brown_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:brown_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:cyan_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:cyan_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:cyan_shingles": {
+    "sound": "stone"
+  },
+  "lepton:cyan_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:cyan_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:cyan_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:gold_bars": {
+    "sound": "metal"
+  },
+  "lepton:grate": {
+    "sound": "metal"
+  },
+  "lepton:gray_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:gray_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:gray_shingles": {
+    "sound": "stone"
+  },
+  "lepton:gray_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:gray_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:gray_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:green_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:green_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:green_shingles": {
+    "sound": "stone"
+  },
+  "lepton:green_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:green_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:green_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:iron_ladder": {
+    "sound": "metal"
+  },
+  "lepton:iron_pillar": {
+    "sound": "metal"
+  },
+  "lepton:iron_plate": {
+    "sound": "metal"
+  },
+  "lepton:iron_plate_slab": {
+    "sound": "metal"
+  },
+  "lepton:iron_plate_stairs": {
+    "sound": "metal"
+  },
+  "lepton:iron_plate_vertical_slab": {
+    "sound": "metal"
+  },
+  "lepton:light_blue_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:light_blue_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:light_blue_shingles": {
+    "sound": "stone"
+  },
+  "lepton:light_blue_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:light_blue_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:light_blue_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:light_gray_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:light_gray_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:light_gray_shingles": {
+    "sound": "stone"
+  },
+  "lepton:light_gray_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:light_gray_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:light_gray_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:lime_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:lime_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:lime_shingles": {
+    "sound": "stone"
+  },
+  "lepton:lime_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:lime_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:lime_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:magenta_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:magenta_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:magenta_shingles": {
+    "sound": "stone"
+  },
+  "lepton:magenta_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:magenta_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:magenta_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:nether_brick_fence_gate": {
+    "sound": "nether_brick"
+  },
+  "lepton:orange_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:orange_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:orange_shingles": {
+    "sound": "stone"
+  },
+  "lepton:orange_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:orange_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:orange_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:paper_lantern": {
+    "sound": "wood"
+  },
+  "lepton:paper_lantern_sakura": {
+    "sound": "wood"
+  },
+  "lepton:paper_wall": {
+    "sound": "wood"
+  },
+  "lepton:paper_wall_big": {
+    "sound": "wood"
+  },
+  "lepton:paper_wall_sakura": {
+    "sound": "wood"
+  },
+  "lepton:pink_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:pink_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:pink_shingles": {
+    "sound": "stone"
+  },
+  "lepton:pink_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:pink_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:pink_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:purple_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:purple_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:purple_shingles": {
+    "sound": "stone"
+  },
+  "lepton:purple_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:purple_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:purple_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:red_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:red_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:red_shingles": {
+    "sound": "stone"
+  },
+  "lepton:red_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:red_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:red_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:rusty_iron_plate": {
+    "sound": "metal"
+  },
+  "lepton:rusty_iron_plate_slab": {
+    "sound": "metal"
+  },
+  "lepton:rusty_iron_plate_stairs": {
+    "sound": "metal"
+  },
+  "lepton:rusty_iron_plate_vertical_slab": {
+    "sound": "metal"
+  },
+  "lepton:shingles": {
+    "sound": "stone"
+  },
+  "lepton:shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:thatch": {
+    "sound": "grass"
+  },
+  "lepton:thatch_slab": {
+    "sound": "grass"
+  },
+  "lepton:thatch_stairs": {
+    "sound": "grass"
+  },
+  "lepton:thatch_vertical_slab": {
+    "sound": "grass"
+  },
+  "lepton:white_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:white_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:white_shingles": {
+    "sound": "stone"
+  },
+  "lepton:white_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:white_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:white_shingles_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:yellow_framed_glass": {
+    "sound": "glass"
+  },
+  "lepton:yellow_framed_glass_pane": {
+    "sound": "glass"
+  },
+  "lepton:yellow_shingles": {
+    "sound": "stone"
+  },
+  "lepton:yellow_shingles_slab": {
+    "sound": "stone"
+  },
+  "lepton:yellow_shingles_stairs": {
+    "sound": "stone"
+  },
+  "lepton:yellow_shingles_vertical_slab": {
+    "sound": "stone"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.lepton.pipe_item",
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 1,
+        "visible_bounds_height": 1,
+        "visible_bounds_offset": [
+          0,
+          0.25,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "root",
+          "pivot": [
+            0,
+            -3,
+            0
+          ],
+          "rotation": [
+            -90,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "rightItem",
+          "parent": "rightArm",
+          "pivot": [
+            0,
+            -3,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

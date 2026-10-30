@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:brown_shingles_from_brown_terracotta_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:brown_terracotta"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:brown_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:brown_shingles",
+      "count": 1
+    }
+  }
+}

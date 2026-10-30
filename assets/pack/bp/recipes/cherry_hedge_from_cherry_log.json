@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:cherry_hedge_from_cherry_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:cherry_leaves"
+      },
+      "W": {
+        "item": "minecraft:cherry_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:cherry_leaves"
+      },
+      {
+        "item": "minecraft:cherry_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:cherry_hedge",
+      "count": 2
+    }
+  }
+}

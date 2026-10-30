@@ -1,0 +1,9 @@
+{
+  "item.quark.slime_in_a_bucket.named": "Bucket of {}",
+  "death.attack.quark.pickarang": "{0} was surprised by {1}'s pickarang coming back around",
+  "quark.subtitles.throw_pickarang": "Pickarang is flung",
+  "quark.subtitles.clank_pickarang": "Pickarang clanks",
+  "quark.subtitles.spark_pickarang": "Pickarang is reflected",
+  "quark.subtitles.pickup_pickarang": "Pickarang is taken",
+  "quark.subtitles.parrot_egg": "Parrot plops"
+}

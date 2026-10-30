@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:purple_shingles_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:purple_shingles"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:purple_shingles"
+      }
+    ],
+    "result": {
+      "item": "lepton:purple_shingles_slab",
+      "count": 6
+    }
+  }
+}

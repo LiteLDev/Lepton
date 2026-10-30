@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:raw_copper_bricks_vertical_slab_from_raw_copper_bricks_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:raw_copper_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:raw_copper_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:raw_copper_bricks_vertical_slab",
+      "count": 2
+    }
+  }
+}

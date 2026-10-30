@@ -1,0 +1,55 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:lime_shingles",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.25
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 4.2
+      },
+      "minecraft:map_color": "#687536",
+      "tag:lepton:shingles": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_lime_shingles",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/lime_shingles.json"
+    }
+  }
+}

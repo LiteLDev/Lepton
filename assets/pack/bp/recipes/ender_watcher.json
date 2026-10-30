@@ -1,0 +1,42 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:ender_watcher"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BRB",
+      "RER",
+      "BRB"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:obsidian"
+      },
+      "E": {
+        "item": "minecraft:ender_eye"
+      },
+      "R": {
+        "item": "minecraft:redstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:ender_eye"
+      },
+      {
+        "item": "minecraft:obsidian"
+      },
+      {
+        "item": "minecraft:redstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:ender_watcher",
+      "count": 1
+    }
+  }
+}

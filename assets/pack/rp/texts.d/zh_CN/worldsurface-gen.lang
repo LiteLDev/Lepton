@@ -1,0 +1,9 @@
+quark.subtitles.growl=怪物出现
+tile.lepton:glow_lichen_growth.name=发光地衣增长物
+tile.lepton:glow_shroom.name=发光菇
+tile.lepton:glow_shroom_block.name=发光菇方块
+tile.lepton:glow_shroom_ring.name=发光菇环
+tile.lepton:glow_shroom_stem.name=发光菇柄
+tile.lepton:monster_box.name=怪物盒子
+tile.lepton:potted_glow_lichen_growth.name=发光地衣盆栽
+tile.lepton:potted_glow_shroom.name=发光菇盆栽

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:lime_shingles_slab_from_lime_terracotta_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:lime_terracotta"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:lime_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:lime_shingles_slab",
+      "count": 2
+    }
+  }
+}

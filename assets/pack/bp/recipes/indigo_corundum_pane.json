@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:indigo_corundum_pane"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:indigo_corundum"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:indigo_corundum"
+      }
+    ],
+    "result": {
+      "item": "lepton:indigo_corundum_pane",
+      "count": 16
+    }
+  }
+}

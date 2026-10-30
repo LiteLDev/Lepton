@@ -145,18 +145,33 @@ bool gateAccepts(Block const& b, std::string_view dir) {
     return f && !sameAxis(*f, dir);
 }
 
+std::map<int, ConnectRule>& connectRules() {
+    static std::map<int, ConnectRule> rules;
+    return rules;
+}
+
+/// A unit's extra rule (addConnectRule) connects `self` to `other`'s face `dir`.
+bool extraConnects(Kind self, Block const& other, std::string_view dir) {
+    for (auto const& [id, rule] : connectRules()) {
+        if (rule && rule(self, other, dir)) return true;
+    }
+    return false;
+}
+
 bool fenceConnects(Block const& self, Block const& other, std::string_view dir) {
     if (isFenceLike(other)) return isWooden(self) == isWooden(other);
     if (isGate(other)) return gateAccepts(other, dir);
-    return isSolidFull(other);
+    return isSolidFull(other) || extraConnects(Kind::Fence, other, dir);
 }
 
-bool paneConnects(Block const& other) { return isPaneLike(other) || isWallLike(other) || isSolidFull(other); }
+bool paneConnects(Block const& other, std::string_view dir) {
+    return isPaneLike(other) || isWallLike(other) || isSolidFull(other) || extraConnects(Kind::Pane, other, dir);
+}
 
 bool wallConnects(Block const& other, std::string_view dir) {
     if (isWallLike(other) || isPaneLike(other)) return true;
     if (isGate(other)) return gateAccepts(other, dir);
-    return isSolidFull(other);
+    return isSolidFull(other) || extraConnects(Kind::Wall, other, dir);
 }
 
 /// Connection state of a wall above, in direction `dir` (none/short/tall), lepton or vanilla.
@@ -231,7 +246,7 @@ Vec3 relativeHit(Vec3 const& hit, BlockPos const& clicked) {
 }
 
 int pressTicksOf(Block const& b) {
-    for (int t : {10, 15, 20, 30, 40}) {
+    for (int t : {4, 10, 15, 20, 30, 40, 100}) {
         if (hasTag(b, ("lepton:press_ticks_" + std::to_string(t)).c_str())) return t;
     }
     return kindOf(b) == Kind::PressurePlate ? 20 : 30;
@@ -259,7 +274,7 @@ bool updateFenceOrPane(BlockSource& region, BlockPos const& pos, Block const& b,
     bs::Changes ch;
     for (auto d : kDir) {
         auto const& other = region.getBlock(neighbor(pos, d));
-        bool        c     = pane ? paneConnects(other) : fenceConnects(b, other, opposite(d));
+        bool        c     = pane ? paneConnects(other, opposite(d)) : fenceConnects(b, other, opposite(d));
         ch.emplace_back("lepton:" + std::string(d), c);
     }
     return setIfChanged(region, pos, b, bs::with(b, ch));
@@ -702,6 +717,7 @@ void scanPlates(Level& level) {
         auto const& b = region.getBlock(at);
         if (kindOf(b) != Kind::PressurePlate) continue;
         if (hasTag(b, "lepton:mobs_only") && !a->isPlayer() && !a->hasCategory(ActorCategory::Mob)) continue;
+        if (hasTag(b, "lepton:players_only") && (!a->isPlayer() || static_cast<Player*>(a)->isSpectator())) continue;
         auto key      = globalPos(region, at);
         s.plates[key] = s.tick;
         if (!bs::getBool(b, "lepton:pressed").value_or(false)) {
@@ -951,6 +967,14 @@ bool updateShape(BlockSource& region, BlockPos const& pos) {
         return false;
     }
 }
+
+int addConnectRule(ConnectRule rule) {
+    static int next = 0;
+    connectRules()[++next] = std::move(rule);
+    return next;
+}
+
+void removeConnectRule(int id) { connectRules().erase(id); }
 
 void queueUpdate(BlockSource& region, BlockPos const& pos) {
     int   dim = static_cast<int>(region.getDimensionId());

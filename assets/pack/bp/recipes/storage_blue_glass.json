@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_blue_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:blue_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:blue_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:blue_stained_glass",
+      "count": 1
+    }
+  }
+}

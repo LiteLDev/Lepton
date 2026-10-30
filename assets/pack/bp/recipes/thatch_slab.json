@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:thatch_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:thatch"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:thatch"
+      }
+    ],
+    "result": {
+      "item": "lepton:thatch_slab",
+      "count": 6
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:soul_bead",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/particle/lepton_dust"
+      },
+      "geometry": {
+        "default": "geometry.lepton.empty"
+      },
+      "scripts": {
+        "animate": [
+          "trail"
+        ]
+      },
+      "animations": {
+        "trail": "animation.lepton.soul_bead.trail"
+      },
+      "particle_effects": {
+        "dust": "lepton:soul_bead_dust",
+        "fall": "lepton:soul_bead_fall"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

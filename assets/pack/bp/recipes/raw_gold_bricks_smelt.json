@@ -1,0 +1,13 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "lepton:raw_gold_bricks_smelt"
+    },
+    "tags": [
+      "furnace"
+    ],
+    "input": "lepton:raw_gold_bricks",
+    "output": "minecraft:gold_block"
+  }
+}

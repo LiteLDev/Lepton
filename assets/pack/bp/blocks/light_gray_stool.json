@@ -1,0 +1,116 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:light_gray_stool",
+      "menu_category": {
+        "category": "none"
+      },
+      "states": {
+        "lepton:big": [
+          false,
+          true
+        ],
+        "lepton:sat_in": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.2
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.2
+      },
+      "minecraft:map_color": "#999999",
+      "tag:lepton:stool": {},
+      "tag:lepton:storage_wooden": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:liquid_detection": {
+        "detection_rules": [
+          {
+            "liquid_type": "water",
+            "can_contain_liquid": true,
+            "on_liquid_touches": "no_reaction"
+          }
+        ]
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.storage_stool",
+        "bone_visibility": {
+          "small": "q.block_state('lepton:big') == false",
+          "big": "q.block_state('lepton:big') == true"
+        }
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_storage_light_gray_stool",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/light_gray_stool.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:big') == false",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              9,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              9,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:big') == true",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

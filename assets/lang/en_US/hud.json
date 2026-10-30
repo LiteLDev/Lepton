@@ -1,0 +1,17 @@
+{
+  "quark.misc.autowalking": "Auto-Walking",
+  "quark.misc.saturation0": "Fulfilling Meal",
+  "quark.misc.saturation1": "Hearty Meal",
+  "quark.misc.saturation2": "Meal",
+  "quark.misc.saturation3": "Light Meal",
+  "quark.misc.saturation4": "Light Snack",
+  "quark.misc.saturation5": "Full-Course Meal",
+  "quark.misc.bad_saturation0": "Worryingly Fulfilling",
+  "quark.misc.bad_saturation1": "Disturbingly Hearty",
+  "quark.misc.bad_saturation2": "Ill-Advised Meal",
+  "quark.misc.bad_saturation3": "Questionable Rations",
+  "quark.misc.bad_saturation4": "Disgusting Snack",
+  "quark.misc.bad_saturation5": "Dangerously Tantalizing",
+  "quark.misc.shulker_box_shift": "Hold Shift to see contents",
+  "quark.misc.map_shift": "Hold Shift to see the map"
+}

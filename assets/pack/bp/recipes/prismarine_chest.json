@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:prismarine_chest"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:prismarine"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:prismarine"
+      }
+    ],
+    "result": {
+      "item": "lepton:prismarine_chest",
+      "count": 1
+    },
+    "priority": -2
+  }
+}

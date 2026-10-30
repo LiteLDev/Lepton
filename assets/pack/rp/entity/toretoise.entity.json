@@ -1,0 +1,25 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:toretoise",
+      "materials": { "default": "entity_alphatest", "ore": "entity_alphatest" },
+      "textures": {
+        "default": "textures/entity/lepton/toretoise",
+        "ore1": "textures/entity/lepton/toretoise_ore1",
+        "ore2": "textures/entity/lepton/toretoise_ore2",
+        "ore3": "textures/entity/lepton/toretoise_ore3",
+        "ore4": "textures/entity/lepton/toretoise_ore4",
+        "ore5": "textures/entity/lepton/toretoise_ore5"
+      },
+      "geometry": { "default": "geometry.lepton.toretoise", "ore": "geometry.lepton.toretoise.ore" },
+      "animations": {
+        "walk": "animation.lepton.toretoise.walk",
+        "look_at_target": "animation.common.look_at_target"
+      },
+      "scripts": { "animate": ["walk", "look_at_target"] },
+      "render_controllers": ["controller.render.lepton.toretoise", { "controller.render.lepton.toretoise_ore": "q.property('lepton:ore') > 0" }],
+      "spawn_egg": { "base_color": "#55413b", "overlay_color": "#383237" }
+    }
+  }
+}

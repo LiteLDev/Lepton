@@ -223,7 +223,8 @@ These modules are not named in the work plan (§9); U0 placed them by theme:
 Quark 4.1-488 has **no SignEditing module** (vanilla 1.20 made signs editable and Quark dropped it).
 "Sign editing" in U24 means: check that Bedrock's own sign editing matches Java's (it does: interact
 with a sign to edit it) and document any difference in `docs/spec/frames.md`. The only sign-related
-Quark code is the hanging-sign-on-post rule, which belongs to WoodenPosts (U6).
+Quark code is the hanging-sign-on-post rule, which belongs to WoodenPosts (U6). Result
+(`docs/spec/frames.md` §7.5): no difference, nothing to port.
 
 ### 2.3 Blocks and items: conventions
 
@@ -233,12 +234,21 @@ Rules shared by every unit:
 - **Ids** `lepton:<quark path>`. Block and item names come from the resource pack `texts.d`
   fragments (`tile.lepton:<id>.name`, `item.lepton:<id>.name`), English text as in Quark.
 - **Ownership of variants.** A shape or variant block of a material belongs to the unit that owns
-  the material: e.g. `lepton:limestone_vertical_slab` is U3's, `lepton:azalea_bookshelf` and
-  `lepton:azalea_chest` are U7's. U1 (VerticalSlabs) owns only the vertical slabs of **vanilla**
-  materials; U6 owns the variants of vanilla woods; U9 the chests/furnaces of vanilla materials.
+  the material: e.g. `lepton:limestone_vertical_slab` is U3's, `lepton:azalea_bookshelf` is U7's.
+  U1 (VerticalSlabs) owns only the vertical slabs of **vanilla** materials; U6 owns the variants of
+  vanilla woods; U9 owns every chest and furnace, including `lepton:azalea_chest` and the other chests
+  of U7's woods (azalea, blossom, ancient), whose recipes use U7's planks and logs.
   A unit whose behaviour applies to many materials (vertical slabs, bookshelves, ladders, posts,
   hollow logs, hedges, leaf carpets, chests, ...) implements the behaviour once, keyed by a block
   tag (`lepton:<feature>`, documented in its spec), and material owners add tagged blocks.
+- **Shared block tags.** Any unit may put these on its blocks and gets the behaviour from the owner's
+  native code: `lepton:requires_tool`, `lepton:soul_fire_base`, `lepton:soul_speed`,
+  `lepton:infiniburn`, `lepton:dragon_immune` (U4); `lepton:players_only` for pressure plates and
+  `lepton:press_ticks_<n>` with 4 and 100 for buttons (U10, in `game/Shapes`); `lepton:chest` (blocks
+  packed by ShulkerPacking) and `lepton:non_double_door` (U26); the item tag
+  `lepton:cosmetic_anvil_items` (U26, empty as in Quark). Wooden posts use the states
+  `lepton:side_0..3` (the four directions off the axis: y -> N, S, W, E; x -> down, up, N, S; z ->
+  down, up, W, E) instead of six `connect_<dir>` states (U6; `New-WvPost` sets them up).
 - **Generated shape and wood sets.** Shapes (block, stairs, slab, vertical slab, wall, fence, fence
   gate, pane) come from `New-ShapeSet` and wood sets (log, wood, stripped, planks, ..., door, trapdoor,
   button, pressure plate; signs and boats are not feasible, see `tools/pack/README.md`)
@@ -303,6 +313,12 @@ Rules shared by every unit:
   `quark.keybind.variant_selector` (R, VariantSelector), `quark.keybind.narrator_readout` /
   `narrator_full_readout` (unbound, NarratorReadout), `quark.emote.<name>` (unbound, one per emote,
   Emotes). ItemSharing reuses the chat key.
+  Lepton registers them as `key.lepton.<name>` with the same defaults, except where the key is taken
+  by vanilla Bedrock (Z = Mob Effects, B = Emote, C / X = copy coordinates, N = toasts, Q, E, T, F1,
+  F2, F4, F5, F11): `change_hotbar` defaults to **H**. `back` has no keyboard default; the side mouse
+  button is `backMouseButton` in `hud.json` (Bedrock key bindings cannot hold side mouse buttons).
+  `share_item` is Shift + T over a slot (the client mod can't read the game's chat key mapping).
+  Defaults are unique among Lepton's keybinds.
 - Config is global (not per world) and reloaded by `/quark reload`; units re-read values on use or
   through `lp::config::onReload`.
 
@@ -440,6 +456,10 @@ descriptions.
 | `red` | object | structured: `new BlossomTreeConfig(30, BiomeTags.IS_BADLANDS)` | BlossomTrees |
 | `dropLeafParticles` | bool | `true` | BlossomTrees |
 
+The blossom tree objects (`blue`, `lavender`, `orange`, `yellow`, `red`) have the shape
+`{ "dimensions": { "isBlacklist", "dimensions" }, "biomes": { "tags": { "isBlacklist", "tags" }, "biomes": { "isBlacklist", "biomes" } }, "rarity" }`
+(`docs/spec/newwoods.md` §5).
+
 #### U8 `config/storage.json`
 
 | Key | Type | Default | Quark option |
@@ -519,6 +539,7 @@ descriptions.
 | `movementBlacklist` | string[] | `["minecraft:spawner", "minecraft:trial_spawner", "minecraft:vault", "integrateddynamics:cable", "randomthings:blockbreaker", "minecraft:ender_chest", "minecraft:enchanting_table", "#minecraft:ceiling_hanging_signs", "#c:chests/trapped", "endergetic:bolloom_bud"]` | PistonsMoveTileEntities |
 | `namespaceMovementBlacklist` | string[] | `[]` | PistonsMoveTileEntities |
 | `delayedUpdateList` | string[] | `["minecraft:dispenser", "minecraft:dropper"]` | PistonsMoveTileEntities |
+| `pistonPushLimit` | int | `12` | Zeta's general option "Changes the piston push limit"; it takes effect through the piston structure resolver of PistonsMoveTileEntities |
 | `enableGravisand` | bool | true | Gravisand module |
 | `enableMetalButtons` | bool | true | MetalButtons module |
 | `enableIron` | bool | `true` | MetalButtons |
@@ -564,7 +585,7 @@ descriptions.
 | `crystalClusterOnSidesChance` | double | `0.6` | Corundum |
 | `doubleCrystalChance` | double | `0.2` | Corundum |
 | `caveCrystalGrowthChance` | int | `5` | Corundum: The chance that a crystal can grow, this is on average 1 in X world ticks, set to a higher value to make th... |
-| `crystalsCraftRunes` | bool | `true` | Corundum |
+| `crystalsCraftRunes` | bool | `true` | Corundum (with `enableCorundum` and U13 `enableColorRunes`: the corundum variant of the rune duplication recipe `lepton:rune_duplication`, `#S#` / `#C#` / `###` with `#` = item tag `lepton:corundum` (the nine plain corundum blocks), `S` = `minecraft:stone_tool_materials`, `C` = `lepton:smithing_template_rune` -> 2 templates; otherwise the amethyst variant. Quark declares the flag `cave_corundum_runes` but its recipe only checks the module; Lepton honours the option) |
 | `enableCollateralMovement` | bool | `true` | Corundum |
 | `enableRainbowLamps` | bool | true | RainbowLamps module |
 | `lightLevel` | int | `15` | RainbowLamps |
@@ -729,11 +750,13 @@ descriptions.
 | `fuelTimeDivisor` | int | `200` | ImprovedTooltips |
 | `showUpgradeStatus` | bool | `true` | ImprovedTooltips: Should item attributes be colored relative to your current equipped item?  |
 | `animateUpDownArrows` | bool | `true` | ImprovedTooltips |
+| `enchantingStacks` | string[] | Quark's list (diamond tools and armour, mace, shears, bow, fishing rod, crossbow, trident, elytra, shield, `lepton:pickarang`, ...) | ImprovedTooltips: items shown under each enchantment |
 | `enchantingAdditionalStacks` | string[] | `[]` | ImprovedTooltips: A list of additional stacks to display on each enchantment  |
 | `enableAutoWalkKeybind` | bool | true | AutoWalkKeybind module |
 | `drawHud` | bool | `true` | AutoWalkKeybind |
 | `hudHeight` | int | `10` | AutoWalkKeybind |
 | `enableBackButtonKeybind` | bool | true | BackButtonKeybind module |
+| `backMouseButton` | int | `5` | (Lepton) BackButtonKeybind: mouse button bound to Back (4 = X1, 5 = X2, 0 = none) |
 
 #### U17 `config/placement.json`
 
@@ -760,9 +783,11 @@ descriptions.
 | `hudOffsetY` | int | `0` | VariantSelector |
 | `variantSelectorRenderLikeCrossHair` | bool | `true` | VariantSelector: When true, selector arrow will render in same style as crosshair |
 | `smallerArrow` | bool | `false` | VariantSelector: Uses smaller arrow icon for variant selector overlay |
-| `variants` | object | structured: `new VariantsConfig()` | VariantSelector |
+| `variants` | object | structured: `new VariantsConfig()` (`testedMods` `["lepton"]`, `manualVariants` with the Bedrock oak fence gate; `docs/spec/placement.md`) | VariantSelector |
 | `enableTrowel` | bool | true | Trowel module |
 | `maxDamage` | int | `0` | Trowel: Trowel Max Durability |
+| `trowelBlacklist` | string[] | `["minecraft:air"]` | Trowel: Quark's `trowel_blacklist` item tag (Bedrock items have no data-pack tags) |
+| `trowelWhitelist` | string[] | `[]` | Trowel: Quark's `trowel_whitelist` item tag |
 | `enableReplaceScaffolding` | bool | true | ReplaceScaffolding module |
 | `maxBounces` | int | `1` | ReplaceScaffolding: How many times the algorithm for finding out where a block would be placed is allowed to turn. If you set t... |
 | `enableLongRangePickBlock` | bool | true | LongRangePickBlock module |
@@ -878,6 +903,7 @@ descriptions.
 | `lesserSpawnConfig` | object | structured: `new CostSensitiveEntitySpawnConfig(2, 1, 1, 0.7, 0.15, CompoundBiomeConfig.fromBiomeReslocs(false, "minecraft:soul_sand_valley"))` | Foxhound |
 | `enableWraith` | bool | true | Wraith module |
 | `wraithSpawnConfig` | object | structured: `new CostSensitiveEntitySpawnConfig(5, 1, 3, 0.7, 0.15, CompoundBiomeConfig.fromBiomeReslocs(false, "minecraft:soul_sand_valley"))` | Wraith |
+| `wraithSounds` | string[] | Quark's 20 entries (`docs/spec/mobsdeep.md`) | Wraith (a private `@Config` field in Quark) |
 
 #### U22 `config/throwables.json`
 
@@ -954,7 +980,7 @@ descriptions.
 | `itemRenderScale` | double | `1.5` | GlassItemFrame: The scale at which items render in the Glass Item Frame. To match the vanilla Item Frame size, set to 1.0 |
 | `enableDyeableItemFrames` | bool | true | DyeableItemFrames module |
 | `enableMoreBannerLayers` | bool | true | MoreBannerLayers module |
-| `layerLimit` | int | `16` | MoreBannerLayers |
+| `layerLimit` | int | `16` | MoreBannerLayers (effective limit `min(layerLimit, 6)` on Bedrock: the banner renderer draws 6 layers) |
 | `enableMapWashing` | bool | true | MapWashing module |
 
 #### U25 `config/farming.json`
@@ -988,7 +1014,7 @@ descriptions.
 | `enableGrabChickens` | bool | true | GrabChickens module |
 | `needsNoHelmet` | bool | `true` | GrabChickens |
 | `slownessLevel` | int | `1` | GrabChickens: Set to 0 to disable |
-| `chickenOffset` | double | `0.0` | GrabChickens: Negative numbers moves the chicken down, positive up |
+| `chickenOffset` | double | `0.0` | GrabChickens: Negative numbers moves the chicken down, positive up (the carried-chicken render is U18's resource pack, driven by the cosmetics server pass) |
 | `enableHorsesSwim` | bool | true | HorsesSwim module |
 | `enableVillagersFollowEmeralds` | bool | true | VillagersFollowEmeralds module |
 
@@ -997,7 +1023,7 @@ descriptions.
 | Key | Type | Default | Quark option |
 |---|---|---|---|
 | `version` | int | 1 | (Lepton) |
-| `enableSaferCreatures` | bool | true | SaferCreatures module |
+| `enableSaferCreatures` | bool | true | SaferCreatures module (Quark 4.1-488: rabbit fall height and slime fall damage; no creeper or knockback changes) |
 | `heightReduction` | double | `5.0` | SaferCreatures: How many blocks should be subtracted from the rabbit fall height when calculating fall damage. 5 is the sam... |
 | `enableSlimeFallDamageRemoval` | bool | `true` | SaferCreatures |
 | `enableSlimesToMagmaCubes` | bool | true | SlimesToMagmaCubes module |
@@ -1054,7 +1080,7 @@ descriptions.
 | `enableSelectiveMobGriefing` | bool | `true` | GameNerfs: Disables mob griefing for only specific entities |
 | `enableDimensionLockedElytra` | bool | `true` | GameNerfs: Force Elytra to only work in specific dimensions |
 | `disableFallingBlockDupe` | bool | `true` | GameNerfs: Makes falling blocks not able to be duped via dimension crossing |
-| `disablePistonPhysicsExploits` | bool | `true` | GameNerfs: Fixes several piston physics exploits, most notably including TNT duping |
+| `disablePistonPhysicsExploits` | bool | `true` | GameNerfs: Fixes several piston physics exploits, most notably including TNT duping (no effect on Bedrock: its pistons have none of the Java update-order paths Quark patches) |
 | `disableMushroomBlockRemoval` | bool | `true` | GameNerfs: Fixes mushroom growth being able to replace blocks |
 | `disableTripwireHookDupe` | bool | `true` | GameNerfs: Makes tripwire hooks unable to be duplicated |
 | `villageSpawnNerf` | bool | `false` | GameNerfs: Makes villages spawn less often when close to spawn |
@@ -1203,9 +1229,42 @@ documented Bedrock difference in the unit spec.
 | Recipe/loot condition flags (`flag = ...` in `@Config`) as data-pack conditions | Bedrock packs have no load conditions; the unit disables content natively from config instead. |
 | Advancements (`data/quark/advancement/`) | Bedrock has no custom advancements. |
 | Hints (`@Hint`, shown in JEI) | JEI is a Java mod; the information is in the unit specs instead. |
-| Java-only client modules: AdjustableChat, NarratorReadout, OverlayShader, ClimateControlRemover, MicrocraftingHelper | **U27 makes the final call** for each (port, partial port, or not ported with a reason) and records it in `docs/spec/misctweaks.md`. |
+| OverlayShader | Java loads a post-processing shader chain (`PostChain`) at runtime. Bedrock's RenderDragon only uses precompiled materials shipped in packs, and the client exposes no full-screen post-effect hook. The config keys are kept. (AdjustableChat, NarratorReadout and ClimateControlRemover are ported; `docs/spec/misctweaks.md`.) |
+| MicrocraftingHelper | It extends Java's recipe-book ghost recipe. Bedrock's recipe book has no ghost recipe (missing ingredients are only shown in red), so there is no ingredient to right-click; it already crafts from the book. The key is kept. |
+| Java mod APIs (`SimpleHarvestEvent`, `IUsageTickerOverride`, `UsageTickerEvent`, `IPistonCallback`, `ITransferManager`, `ICustomSorting`, Flan, Curios, Lootr, Cyclic recipes) | No other Java mods on Bedrock. |
+| Quark's own sounds, music and voice clips (stoneling, wraith, monster box, Glimmering Weald music, tiny potato voices, PatTheDogs contributor sounds) | Quark assets may not be copied: the same sound events play vanilla Bedrock sounds or original jingles. Bedrock sound definitions have no subtitles. |
+
+Bedrock limitations. Each unit spec's §7 has the full list; these are the ones a player notices:
+
+| What | Unit | Why |
+|---|---|---|
+| Signs, hanging signs, boats and chest boats of the azalea, trumpet and ashen woods (and their chest-boat recipes) | U7, U8 | Signs need a block entity, which custom blocks can't have; boats are a vanilla entity with a fixed set of woods. |
+| Furnace minecart recipes | U8, U9 | Bedrock has no furnace minecart. |
+| Coloured and rainbow enchantment glints (ColorRunes, overlevelled books) | U13 | The glint is drawn with a fixed texture and LeviLamina 26.51.7 exposes no glint colour; runes are applied, stored and listed in the tooltip, the glint stays purple. |
+| A banner or a map picture in a glass item frame | U24 | Bedrock draws banner patterns and map pictures only in vanilla frames, banner blocks and the hand; a glass frame shows the item model. |
+| More than 6 banner layers | U24 | The banner renderer draws 6 layers (`layerLimit` is capped at 6). |
+| Lava-logged grates | U5 | Custom blocks can only hold water. |
+| Comparator output of pipes, crates and feeding troughs | U11 | Not hooked (gravisand, variant chests, furnaces and glass frames do have one, through a per-block vtable copy). |
+| Animal-only collision of the feeding trough | U11 | Block collision can't depend on the entity. |
+| The Glimmering Weald as a real biome (`/locate biome`, its music) | U28 | Bedrock can't add a biome to the Overworld climate list; the area is computed from Quark's climate point (`/quark locate`), the chunk keeps its vanilla biome. No per-player music API. |
+| Smooth tints (myalite and myalite crystals) and per-stack item tints (pathfinder quills and maps) | U3, U23, U29 | Custom blocks have no per-position tint: 16 hue steps. Item icons have no per-stack tint. |
+| Item icons that depend on item data (abacus count, seed pouch / backpack fill, excited slime bucket animation, shiny slime buckets) | U14, U22, U23 | One icon per item: lore lines, tooltips or a separate item instead. |
+| Custom mob effects in the effect list (Resilience), tipped arrows of Stability, custom potion ids | U20 | The effect and potion lists are fixed enums shared with every client: HUD / action-bar text and custom potion items instead. |
+| Reach bonus of the Forgotten Hat | U21 | Bedrock has no reach attribute (the luck bonus is applied). |
+| Player heads with skins (SnowGolemPlayerHeads, UsesForCurses) | U18, U26 | Bedrock skulls have no player profile. |
+| Advancements, statistics and their triggers; JEI hints | all | Bedrock has neither; hints are tooltip lines or `/quark <unit> info`. |
+| Creative tab positions next to specific vanilla blocks | all | Custom blocks only pick a category and group. |
+| Disabled content in the creative inventory, the recipe book and the network recipe index | all | Bedrock sends them once per world; the server refuses crafting and placing disabled content. |
+| Client-predicted movement for vanilla clients (climbing variant ladders, rope, hollow logs, crawling, stool bounces, ladder sliding) | U5, U6, U8, U17 | Movement is client-authoritative on Bedrock: without the client mod the server corrects the player, so it stutters. |
+| HUDs, tooltips, keybinds, GreenerGrass, SoulCandles, BucketsShowInhabitants, Camera for vanilla clients; bucket icons in the hand | U16, U18 | Client features need the client mod (they are client modules in Quark too). Bedrock caches in-hand item meshes per item id. |
+| Anvil previews of DiamondRepair, ancient tomes and runes for vanilla clients on a server | U13, U26 | The vanilla client computes anvil and smithing previews itself; Lepton offers those results through a helper. |
+| GameNerfs `disablePistonPhysicsExploits` | U27 | No effect: Bedrock pistons have none of the Java update-order paths Quark patches. |
+| Server-built chat texts in the player's own language | U0 | On a dedicated server the server builds some texts itself (e.g. the `/give` feedback) with Lepton's names in `config/mod.json` `language`, like vanilla names in the server's language. |
 
 ## 9. Work plan
+
+**Status: complete.** Every unit below is merged and released in 0.1.0. The table stays as the map of
+which unit owns which modules, files and selftest range.
 
 U0 (this foundation: spec, net, forms, client UI, game helpers, pack and texture generators) comes
 first. The units below then run in parallel, each in its own branch, owning its files only (see
@@ -1215,7 +1274,7 @@ Every unit writes `docs/spec/<unit>.md` before its first feature.
 | Unit | Name | Quark modules | Selftest dx | Spec | Depends on (beyond the foundation) |
 |---|---|---|---|---|---|
 | U0 | foundation | (spec, net, forms, client UI, game helpers, generators) | 0..99 | this file | |
-| U1 | vslabs | VerticalSlabs, SlabsToBlocks | 100..199 | `docs/spec/vslabs.md` | New-ShapeSet; vertical slab placement in `game/Shapes` |
+| U1 | vslabs | VerticalSlabs, SlabsToBlocks (every vanilla slab, including the 1.26 slabs Quark 4.1-488 predates: pale oak, resin brick, poplar, cinnabar, sulfur, concrete, wool) | 100..199 | `docs/spec/vslabs.md` | New-ShapeSet; vertical slab placement in `game/Shapes` |
 | U2 | stones | MoreStoneVariants, RawMetalBricks, SturdyStone, CelebratoryLamps | 200..299 | `docs/spec/stones.md` | New-ShapeSet |
 | U3 | newstones | NewStoneTypes, Permafrost, BigStoneClusters, VanillaStoneClusters | 300..399 | `docs/spec/newstones.md` | New-ShapeSet; U2 variant set for the new stones |
 | U4 | bricks | MoreBrickTypes, SoulSandstone, MoreMudBlocks, Midori, DuskboundBlocks | 400..499 | `docs/spec/bricks.md` | New-ShapeSet |
@@ -1226,7 +1285,7 @@ Every unit writes `docs/spec/<unit>.md` before its first feature.
 | U9 | variantcontainers | VariantChests, VariantFurnaces | 900..999 | `docs/spec/variantcontainers.md` | `game/VirtualContainer` |
 | U10 | redstone | ChainsConnectBlocks, IronRod, PistonsMoveTileEntities, Gravisand, MetalButtons, ObsidianPlate, RedstoneRandomizer, EnderWatcher, DispensersPlaceBlocks | 1000..1099 | `docs/spec/redstone.md` | `game/Shapes` |
 | U11 | logistics | Chute, Pipes, FeedingTrough, Crate | 1100..1199 | `docs/spec/logistics.md` | `game/VirtualContainer`, `game/Inventory` |
-| U12 | crystals | Corundum, RainbowLamps, BeaconRedirection, Magnets | 1200..1299 | `docs/spec/crystals.md` | |
+| U12 | crystals | Corundum, RainbowLamps, BeaconRedirection, Magnets (+ the dirty glass beam tint for U8) | 1200..1299 | `docs/spec/crystals.md` | |
 | U13 | enchanting | MatrixEnchanting, AncientTomes, ColorRunes | 1300..1399 | `docs/spec/enchanting.md` | `client/ui` custom screen, `src/net`, `game/Forms` fallback |
 | U14 | backpack | Backpack, TotemOfHolding, SeedPouch | 1400..1499 | `docs/spec/backpack.md` | `game/VirtualContainer`, `game/Inventory`, `game/Entities` |
 | U15 | inventory | InventorySorting, EasyTransferring, ChestSearching, HotbarChanger, AutomaticToolRestock, QuickArmorSwapping, ExpandedItemInteractions, ItemSharing | 1500..1599 | `docs/spec/inventory.md` | `client/ui` overlays + keybinds, `src/net`, `game/Inventory` |

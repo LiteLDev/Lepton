@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:torch_arrow"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:torch"
+      },
+      {
+        "item": "minecraft:arrow"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:arrow"
+      }
+    ],
+    "result": {
+      "item": "lepton:torch_arrow",
+      "count": 1
+    }
+  }
+}

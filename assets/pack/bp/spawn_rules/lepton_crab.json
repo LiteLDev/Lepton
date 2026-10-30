@@ -1,0 +1,16 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": { "identifier": "lepton:crab", "population_control": "animal" },
+    "conditions": [
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": ["minecraft:sand", "minecraft:red_sand"],
+        "minecraft:brightness_filter": { "min": 9, "max": 15, "adjust_for_weather": false },
+        "minecraft:weight": { "default": 5 },
+        "minecraft:herd": { "min_size": 1, "max_size": 3 },
+        "minecraft:biome_filter": { "any_of": [{ "test": "has_biome_tag", "value": "beach" }] }
+      }
+    ]
+  }
+}

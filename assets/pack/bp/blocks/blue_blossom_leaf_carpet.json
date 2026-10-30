@@ -1,0 +1,56 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:blue_blossom_leaf_carpet",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.leaves"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "minecraft:map_color": "#6699d8",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 5,
+        "destroy_chance_modifier": 20
+      },
+      "tag:lepton:leaf_carpet": {},
+      "tag:lepton:wv_leaf_carpet": {},
+      "tag:minecraft:is_hoe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          1,
+          16
+        ]
+      },
+      "minecraft:replaceable": {},
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newwoods_newwoods_blue_blossom_leaves",
+          "render_method": "alpha_test"
+        },
+        "leaf": {
+          "texture": "lepton_newwoods_newwoods_blue_blossom_leaves",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:geometry": "geometry.lepton.wv_leaf_carpet",
+      "minecraft:loot": "loot_tables/blocks/blue_blossom_leaf_carpet.json"
+    }
+  }
+}

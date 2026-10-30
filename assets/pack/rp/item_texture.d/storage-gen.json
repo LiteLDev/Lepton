@@ -1,0 +1,59 @@
+{
+  "lepton_storage_storage_black_shard": {
+    "textures": "textures/items/storage/black_shard"
+  },
+  "lepton_storage_storage_blue_shard": {
+    "textures": "textures/items/storage/blue_shard"
+  },
+  "lepton_storage_storage_brown_shard": {
+    "textures": "textures/items/storage/brown_shard"
+  },
+  "lepton_storage_storage_clear_shard": {
+    "textures": "textures/items/storage/clear_shard"
+  },
+  "lepton_storage_storage_cyan_shard": {
+    "textures": "textures/items/storage/cyan_shard"
+  },
+  "lepton_storage_storage_dirty_shard": {
+    "textures": "textures/items/storage/dirty_shard"
+  },
+  "lepton_storage_storage_gray_shard": {
+    "textures": "textures/items/storage/gray_shard"
+  },
+  "lepton_storage_storage_green_shard": {
+    "textures": "textures/items/storage/green_shard"
+  },
+  "lepton_storage_storage_light_blue_shard": {
+    "textures": "textures/items/storage/light_blue_shard"
+  },
+  "lepton_storage_storage_light_gray_shard": {
+    "textures": "textures/items/storage/light_gray_shard"
+  },
+  "lepton_storage_storage_lime_shard": {
+    "textures": "textures/items/storage/lime_shard"
+  },
+  "lepton_storage_storage_magenta_shard": {
+    "textures": "textures/items/storage/magenta_shard"
+  },
+  "lepton_storage_storage_orange_shard": {
+    "textures": "textures/items/storage/orange_shard"
+  },
+  "lepton_storage_storage_pink_shard": {
+    "textures": "textures/items/storage/pink_shard"
+  },
+  "lepton_storage_storage_purple_shard": {
+    "textures": "textures/items/storage/purple_shard"
+  },
+  "lepton_storage_storage_red_shard": {
+    "textures": "textures/items/storage/red_shard"
+  },
+  "lepton_storage_storage_rope": {
+    "textures": "textures/items/storage/rope"
+  },
+  "lepton_storage_storage_white_shard": {
+    "textures": "textures/items/storage/white_shard"
+  },
+  "lepton_storage_storage_yellow_shard": {
+    "textures": "textures/items/storage/yellow_shard"
+  }
+}

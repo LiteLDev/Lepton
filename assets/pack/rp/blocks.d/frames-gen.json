@@ -1,0 +1,8 @@
+{
+  "lepton:glass_item_frame": {
+    "sound": "itemframe"
+  },
+  "lepton:glowing_glass_item_frame": {
+    "sound": "itemframe"
+  }
+}

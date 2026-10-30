@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:crimson_chest_wood_crimson_hyphae"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:crimson_hyphae"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:crimson_hyphae"
+      }
+    ],
+    "result": {
+      "item": "lepton:crimson_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "lepton_placement_hammer": {
+    "textures": "textures/items/hammer"
+  },
+  "lepton_placement_trowel": {
+    "textures": "textures/items/trowel"
+  }
+}

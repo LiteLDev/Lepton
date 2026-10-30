@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:red_shingles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:red_terracotta"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:red_terracotta"
+      }
+    ],
+    "result": {
+      "item": "lepton:red_shingles",
+      "count": 2
+    }
+  }
+}

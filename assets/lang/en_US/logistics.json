@@ -1,0 +1,9 @@
+{
+  "quark.container.feeding_trough": "Feeding Trough",
+  "block.quark.crate": "Storage Crate",
+  "lp.logistics.crate.form": "{}/{} items. Choose the rows to show:",
+  "lp.logistics.crate.rows": "Rows {}-{}",
+  "lp.logistics.crate.count": "{}/{}",
+  "lp.logistics.crate.scroll_up": "Scroll up",
+  "lp.logistics.crate.scroll_down": "Scroll down"
+}

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_carrot_crate_uncompress"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:carrot_crate"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:carrot_crate"
+      }
+    ],
+    "result": {
+      "item": "minecraft:carrot",
+      "count": 9
+    }
+  }
+}

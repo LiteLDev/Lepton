@@ -1,0 +1,26 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.lepton.foxhound.fx": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "animations": [
+            {
+              "flame": "!query.property('lepton:resting') && query.variant != 1"
+            },
+            {
+              "soul": "!query.property('lepton:resting') && query.variant == 1"
+            },
+            {
+              "smoke": "query.property('lepton:resting')"
+            },
+            {
+              "tater": "query.property('lepton:tatering')"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

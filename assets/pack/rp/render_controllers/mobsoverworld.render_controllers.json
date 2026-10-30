@@ -1,0 +1,53 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton.crab": {
+      "arrays": { "textures": { "Array.skins": ["Texture.red", "Texture.blue", "Texture.green"] } },
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "Material.default" }],
+      "textures": ["Array.skins[q.variant]"]
+    },
+    "controller.render.lepton.crab_mold": {
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "Material.default" }],
+      "textures": ["Texture.mold"]
+    },
+    "controller.render.lepton.shiba": {
+      "arrays": { "textures": { "Array.coats": ["Texture.coat0", "Texture.coat1", "Texture.coat2", "Texture.rare", "Texture.doge", "Texture.rad"] } },
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "Material.default" }],
+      "textures": ["Array.coats[(q.get_name == 'doge' || q.get_name == 'Doge' || q.get_name == 'DOGE') ? 4 : ((q.get_name == 'rad shiba' || q.get_name == 'Rad Shiba' || q.get_name == 'Rad shiba' || q.get_name == 'RAD SHIBA') ? 5 : q.variant)]"]
+    },
+    "controller.render.lepton.shiba_collar": {
+      "arrays": {
+        "textures": {
+          "Array.collars": [
+            "Texture.collar_white", "Texture.collar_orange", "Texture.collar_magenta", "Texture.collar_light_blue",
+            "Texture.collar_yellow", "Texture.collar_lime", "Texture.collar_pink", "Texture.collar_gray",
+            "Texture.collar_light_gray", "Texture.collar_cyan", "Texture.collar_purple", "Texture.collar_blue",
+            "Texture.collar_brown", "Texture.collar_green", "Texture.collar_red", "Texture.collar_black"
+          ]
+        }
+      },
+      "geometry": "Geometry.collar",
+      "materials": [{ "*": "Material.collar" }],
+      "textures": ["Array.collars[q.property('lepton:collar')]"]
+    },
+    "controller.render.lepton.shiba_armor": {
+      "geometry": "Geometry.armor",
+      "materials": [{ "*": "Material.armor" }],
+      "textures": ["Texture.armor"]
+    },
+    "controller.render.lepton.toretoise": {
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "Material.default" }],
+      "textures": ["Texture.default"]
+    },
+    "controller.render.lepton.toretoise_ore": {
+      "arrays": { "textures": { "Array.ores": ["Texture.ore1", "Texture.ore2", "Texture.ore3", "Texture.ore4", "Texture.ore5"] } },
+      "geometry": "Geometry.ore",
+      "materials": [{ "*": "Material.ore" }],
+      "textures": ["Array.ores[q.property('lepton:ore') - 1]"]
+    }
+  }
+}

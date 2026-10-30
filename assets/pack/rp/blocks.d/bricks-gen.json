@@ -1,0 +1,215 @@
+{
+  "lepton:blackstone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:blackstone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:blackstone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:blackstone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:blackstone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:blue_nether_bricks": {
+    "sound": "nether_brick"
+  },
+  "lepton:blue_nether_bricks_slab": {
+    "sound": "nether_brick"
+  },
+  "lepton:blue_nether_bricks_stairs": {
+    "sound": "nether_brick"
+  },
+  "lepton:blue_nether_bricks_vertical_slab": {
+    "sound": "nether_brick"
+  },
+  "lepton:blue_nether_bricks_wall": {
+    "sound": "nether_brick"
+  },
+  "lepton:carved_mud_bricks": {
+    "sound": "mud_bricks"
+  },
+  "lepton:chiseled_soul_sandstone": {
+    "sound": "stone"
+  },
+  "lepton:cobblestone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:cobblestone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:cobblestone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:cobblestone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:cobblestone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:cut_soul_sandstone": {
+    "sound": "stone"
+  },
+  "lepton:cut_soul_sandstone_slab": {
+    "sound": "stone"
+  },
+  "lepton:cut_soul_sandstone_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:dirt_bricks": {
+    "sound": "gravel"
+  },
+  "lepton:dirt_bricks_slab": {
+    "sound": "gravel"
+  },
+  "lepton:dirt_bricks_stairs": {
+    "sound": "gravel"
+  },
+  "lepton:dirt_bricks_vertical_slab": {
+    "sound": "gravel"
+  },
+  "lepton:dirt_bricks_wall": {
+    "sound": "gravel"
+  },
+  "lepton:duskbound_block": {
+    "sound": "stone"
+  },
+  "lepton:duskbound_block_slab": {
+    "sound": "stone"
+  },
+  "lepton:duskbound_block_stairs": {
+    "sound": "stone"
+  },
+  "lepton:duskbound_block_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:duskbound_lantern": {
+    "sound": "stone"
+  },
+  "lepton:midori_block": {
+    "sound": "stone"
+  },
+  "lepton:midori_block_slab": {
+    "sound": "stone"
+  },
+  "lepton:midori_block_stairs": {
+    "sound": "stone"
+  },
+  "lepton:midori_block_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:midori_pillar": {
+    "sound": "stone"
+  },
+  "lepton:mossy_cobblestone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:mossy_cobblestone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:mossy_cobblestone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:mossy_cobblestone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:mossy_cobblestone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:mud_brick_lattice": {
+    "sound": "mud_bricks"
+  },
+  "lepton:mud_pillar": {
+    "sound": "mud_bricks"
+  },
+  "lepton:netherrack_bricks": {
+    "sound": "netherrack"
+  },
+  "lepton:netherrack_bricks_slab": {
+    "sound": "netherrack"
+  },
+  "lepton:netherrack_bricks_stairs": {
+    "sound": "netherrack"
+  },
+  "lepton:netherrack_bricks_vertical_slab": {
+    "sound": "netherrack"
+  },
+  "lepton:netherrack_bricks_wall": {
+    "sound": "netherrack"
+  },
+  "lepton:red_sandstone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:red_sandstone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:red_sandstone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:red_sandstone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:red_sandstone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:sandstone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:sandstone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:sandstone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:sandstone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:sandstone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:smooth_soul_sandstone": {
+    "sound": "stone"
+  },
+  "lepton:smooth_soul_sandstone_slab": {
+    "sound": "stone"
+  },
+  "lepton:smooth_soul_sandstone_stairs": {
+    "sound": "stone"
+  },
+  "lepton:smooth_soul_sandstone_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_bricks": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_slab": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_stairs": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:soul_sandstone_wall": {
+    "sound": "stone"
+  }
+}

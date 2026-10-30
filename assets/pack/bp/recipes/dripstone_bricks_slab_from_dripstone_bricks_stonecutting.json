@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:dripstone_bricks_slab_from_dripstone_bricks_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:dripstone_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:dripstone_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:dripstone_bricks_slab",
+      "count": 2
+    }
+  }
+}

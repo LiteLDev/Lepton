@@ -1,0 +1,29 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:glass_frame",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/frames/dyed_item_frame"
+      },
+      "geometry": {
+        "default": "geometry.lepton.glass_frame"
+      },
+      "animations": {
+        "pose": "animation.lepton.glass_frame.pose"
+      },
+      "scripts": {
+        "animate": [
+          "pose"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "enable_attachables": true
+    }
+  }
+}

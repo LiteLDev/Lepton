@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_fence"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#S#",
+      "#S#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:azalea_planks"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:azalea_planks"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_fence",
+      "count": 3
+    }
+  }
+}

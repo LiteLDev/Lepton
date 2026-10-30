@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_chorus_fruit_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:chorus_fruit"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:chorus_fruit"
+      }
+    ],
+    "result": {
+      "item": "lepton:chorus_fruit_block",
+      "count": 1
+    }
+  }
+}

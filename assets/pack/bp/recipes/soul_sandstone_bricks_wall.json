@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:soul_sandstone_bricks_wall"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:soul_sandstone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:soul_sandstone_bricks"
+      }
+    ],
+    "result": {
+      "item": "lepton:soul_sandstone_bricks_wall",
+      "count": 6
+    }
+  }
+}

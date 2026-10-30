@@ -1,0 +1,68 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:potted_glow_shroom",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": false
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "minecraft:map_color": "#7c4536",
+      "tag:lepton:potted_plant": {},
+      "minecraft:geometry": "geometry.lepton.worldsurface_potted",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_worldsurface_flower_pot",
+          "render_method": "alpha_test"
+        },
+        "pot": {
+          "texture": "lepton_worldsurface_flower_pot",
+          "render_method": "alpha_test"
+        },
+        "dirt": {
+          "texture": "lepton_worldsurface_dirt",
+          "render_method": "alpha_test"
+        },
+        "plant": {
+          "texture": "lepton_worldsurface_glow_shroom",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:light_emission": 10,
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": {
+        "origin": [
+          -3.0,
+          0.0,
+          -3.0
+        ],
+        "size": [
+          6.0,
+          6.0,
+          6.0
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -3.0,
+          0.0,
+          -3.0
+        ],
+        "size": [
+          6.0,
+          6.0,
+          6.0
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/potted_glow_shroom.json"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:yellow_shard",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_storage_storage_yellow_shard",
+      "minecraft:display_name": {
+        "value": "item.lepton:yellow_shard.name"
+      },
+      "minecraft:tags": {
+        "tags": [
+          "lepton:shards"
+        ]
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

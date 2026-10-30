@@ -1,0 +1,62 @@
+{
+  "lepton_gadgets_lepton_gadgets_tiny_potato_ace": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_ace"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_agender": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_agender"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_angry": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_angry"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_aro": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_aro"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_aureylian": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_aureylian"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_bi": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_bi"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_bob": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_bob"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_bosnia": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_bosnia"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_default": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_default"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_enby": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_enby"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_genderfluid": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_genderfluid"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_gray": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_gray"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_halloween": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_halloween"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_lesbian": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_lesbian"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_pan": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_pan"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_pride": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_pride"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_robo": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_robo"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_sus": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_sus"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_tomato": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_tomato"
+  },
+  "lepton_gadgets_lepton_gadgets_tiny_potato_trans": {
+    "textures": "textures/blocks/lepton_gadgets/tiny_potato_trans"
+  }
+}

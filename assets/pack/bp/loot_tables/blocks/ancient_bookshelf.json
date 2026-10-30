@@ -1,0 +1,59 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:ancient_bookshelf",
+          "weight": 1,
+          "conditions": [
+            {
+              "condition": "match_tool",
+              "enchantments": [
+                {
+                  "enchantment": "silk_touch",
+                  "levels": {
+                    "range_min": 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "enchantments": [
+            {
+              "enchantment": "silk_touch",
+              "levels": {
+                "range_max": 0
+              }
+            }
+          ]
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "minecraft:book",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 3
+            },
+            {
+              "function": "explosion_decay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

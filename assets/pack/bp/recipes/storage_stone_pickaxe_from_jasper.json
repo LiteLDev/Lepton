@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_stone_pickaxe_from_jasper"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      " S ",
+      " S "
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:jasper"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:jasper"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "minecraft:stone_pickaxe",
+      "count": 1
+    }
+  }
+}

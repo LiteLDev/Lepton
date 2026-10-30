@@ -1,0 +1,92 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:stick_block",
+      "menu_category": {
+        "category": "none"
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.5
+      },
+      "minecraft:map_color": "#8f7748",
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:flammable": {
+        "catch_chance_modifier": 0,
+        "destroy_chance_modifier": 300
+      },
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_storage_stick_block",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_storage_storage_stick_block",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_storage_storage_stick_block",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_storage_storage_stick_block",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_storage_storage_stick_block",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_storage_storage_stick_block_top",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_storage_storage_stick_block_top",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/stick_block.json",
+      "tag:lepton:pillar": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              90
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

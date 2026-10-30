@@ -1,0 +1,45 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.lepton.dyed_item_frame": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.default"
+      ],
+      "overlay_color": {
+        "r": "math.mod(math.floor(q.property('lepton:color') / 65536), 256) / 255",
+        "g": "math.mod(math.floor(q.property('lepton:color') / 256), 256) / 255",
+        "b": "math.mod(q.property('lepton:color'), 256) / 255",
+        "a": "0.72"
+      },
+      "part_visibility": [
+        {
+          "*": false
+        },
+        {
+          "wall": "q.property('lepton:facing') > 1 && !q.property('lepton:map')"
+        },
+        {
+          "wall_map": "q.property('lepton:facing') > 1 && q.property('lepton:map')"
+        },
+        {
+          "floor": "q.property('lepton:facing') == 1 && !q.property('lepton:map')"
+        },
+        {
+          "floor_map": "q.property('lepton:facing') == 1 && q.property('lepton:map')"
+        },
+        {
+          "ceiling": "q.property('lepton:facing') == 0 && !q.property('lepton:map')"
+        },
+        {
+          "ceiling_map": "q.property('lepton:facing') == 0 && q.property('lepton:map')"
+        }
+      ]
+    }
+  }
+}

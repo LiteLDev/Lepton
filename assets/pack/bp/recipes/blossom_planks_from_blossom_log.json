@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:blossom_planks_from_blossom_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:blossom_log"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:blossom_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:blossom_planks",
+      "count": 4
+    }
+  }
+}

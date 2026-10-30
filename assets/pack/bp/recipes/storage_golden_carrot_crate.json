@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_golden_carrot_crate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:golden_carrot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:golden_carrot"
+      }
+    ],
+    "result": {
+      "item": "lepton:golden_carrot_crate",
+      "count": 1
+    }
+  }
+}

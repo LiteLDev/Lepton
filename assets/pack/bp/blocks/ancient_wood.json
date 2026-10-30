@@ -1,0 +1,96 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:ancient_wood",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.wood"
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 2.0
+      },
+      "minecraft:map_color": "#d1b1a1",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 5,
+        "destroy_chance_modifier": 20
+      },
+      "tag:lepton:nw_ancient_wood": {},
+      "tag:lepton:strippable": {},
+      "tag:log": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_newwoods_newwoods_ancient_log",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/ancient_wood.json",
+      "tag:lepton:pillar": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              90,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              90
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:iron_pillar"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:iron_plate_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:iron_plate_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:iron_pillar",
+      "count": 1
+    }
+  }
+}

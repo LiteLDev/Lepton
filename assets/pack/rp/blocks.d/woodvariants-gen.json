@@ -1,0 +1,251 @@
+{
+  "lepton:acacia_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:acacia_hedge": {
+    "sound": "wood"
+  },
+  "lepton:acacia_ladder": {
+    "sound": "wood"
+  },
+  "lepton:acacia_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:acacia_post": {
+    "sound": "wood"
+  },
+  "lepton:azalea_hedge": {
+    "sound": "wood"
+  },
+  "lepton:azalea_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:bamboo_bookshelf": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:bamboo_ladder": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:bamboo_post": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:birch_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:birch_hedge": {
+    "sound": "wood"
+  },
+  "lepton:birch_ladder": {
+    "sound": "wood"
+  },
+  "lepton:birch_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:birch_post": {
+    "sound": "wood"
+  },
+  "lepton:cherry_bookshelf": {
+    "sound": "cherry_wood"
+  },
+  "lepton:cherry_hedge": {
+    "sound": "cherry_wood"
+  },
+  "lepton:cherry_ladder": {
+    "sound": "cherry_wood"
+  },
+  "lepton:cherry_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:cherry_post": {
+    "sound": "cherry_wood"
+  },
+  "lepton:crimson_bookshelf": {
+    "sound": "nether_wood"
+  },
+  "lepton:crimson_ladder": {
+    "sound": "nether_wood"
+  },
+  "lepton:crimson_post": {
+    "sound": "stem"
+  },
+  "lepton:dark_oak_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:dark_oak_hedge": {
+    "sound": "wood"
+  },
+  "lepton:dark_oak_ladder": {
+    "sound": "wood"
+  },
+  "lepton:dark_oak_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:dark_oak_post": {
+    "sound": "wood"
+  },
+  "lepton:flowering_azalea_hedge": {
+    "sound": "wood"
+  },
+  "lepton:flowering_azalea_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:hollow_acacia_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_birch_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_cherry_log": {
+    "sound": "cherry_wood"
+  },
+  "lepton:hollow_crimson_stem": {
+    "sound": "stem"
+  },
+  "lepton:hollow_dark_oak_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_jungle_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_mangrove_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_oak_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_spruce_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_warped_stem": {
+    "sound": "stem"
+  },
+  "lepton:jungle_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:jungle_hedge": {
+    "sound": "wood"
+  },
+  "lepton:jungle_ladder": {
+    "sound": "wood"
+  },
+  "lepton:jungle_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:jungle_post": {
+    "sound": "wood"
+  },
+  "lepton:mangrove_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:mangrove_hedge": {
+    "sound": "wood"
+  },
+  "lepton:mangrove_ladder": {
+    "sound": "wood"
+  },
+  "lepton:mangrove_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:mangrove_post": {
+    "sound": "wood"
+  },
+  "lepton:oak_hedge": {
+    "sound": "wood"
+  },
+  "lepton:oak_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:oak_post": {
+    "sound": "wood"
+  },
+  "lepton:spruce_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:spruce_hedge": {
+    "sound": "wood"
+  },
+  "lepton:spruce_ladder": {
+    "sound": "wood"
+  },
+  "lepton:spruce_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:spruce_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_acacia_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_bamboo_post": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:stripped_birch_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_cherry_post": {
+    "sound": "cherry_wood"
+  },
+  "lepton:stripped_crimson_post": {
+    "sound": "stem"
+  },
+  "lepton:stripped_dark_oak_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_jungle_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_mangrove_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_oak_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_spruce_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_warped_post": {
+    "sound": "stem"
+  },
+  "lepton:vertical_acacia_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_bamboo_planks": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:vertical_birch_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_cherry_planks": {
+    "sound": "cherry_wood"
+  },
+  "lepton:vertical_crimson_planks": {
+    "sound": "nether_wood"
+  },
+  "lepton:vertical_dark_oak_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_jungle_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_mangrove_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_oak_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_spruce_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_warped_planks": {
+    "sound": "nether_wood"
+  },
+  "lepton:warped_bookshelf": {
+    "sound": "nether_wood"
+  },
+  "lepton:warped_ladder": {
+    "sound": "nether_wood"
+  },
+  "lepton:warped_post": {
+    "sound": "stem"
+  }
+}

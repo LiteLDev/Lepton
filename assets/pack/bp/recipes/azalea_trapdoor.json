@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:azalea_trapdoor"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:azalea_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:azalea_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:azalea_trapdoor",
+      "count": 2
+    }
+  }
+}

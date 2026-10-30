@@ -1,0 +1,168 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:stone_lamp",
+      "menu_category": {
+        "category": "construction"
+      },
+      "states": {
+        "lepton:light": [
+          15,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#707070",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_stones_stones_stone_lamp",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/stone_lamp.json",
+      "minecraft:light_emission": 15,
+      "tag:lepton:celebratory_lamp": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:light') == 0",
+        "components": {
+          "minecraft:light_emission": 0
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 1",
+        "components": {
+          "minecraft:light_emission": 1
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 2",
+        "components": {
+          "minecraft:light_emission": 2
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 3",
+        "components": {
+          "minecraft:light_emission": 3
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 4",
+        "components": {
+          "minecraft:light_emission": 4
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 5",
+        "components": {
+          "minecraft:light_emission": 5
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 6",
+        "components": {
+          "minecraft:light_emission": 6
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 7",
+        "components": {
+          "minecraft:light_emission": 7
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 8",
+        "components": {
+          "minecraft:light_emission": 8
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 9",
+        "components": {
+          "minecraft:light_emission": 9
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 10",
+        "components": {
+          "minecraft:light_emission": 10
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 11",
+        "components": {
+          "minecraft:light_emission": 11
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 12",
+        "components": {
+          "minecraft:light_emission": 12
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 13",
+        "components": {
+          "minecraft:light_emission": 13
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:light') == 14",
+        "components": {
+          "minecraft:light_emission": 14
+        }
+      }
+    ]
+  }
+}

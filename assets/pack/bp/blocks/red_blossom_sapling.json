@@ -1,0 +1,72 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:red_blossom_sapling",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.sapling"
+      },
+      "states": {
+        "lepton:stage": [
+          0,
+          1
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:map_color": "#993333",
+      "tag:lepton:nw_blossom_trees": {},
+      "tag:lepton:nw_sapling": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          12,
+          12
+        ]
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newwoods_newwoods_red_blossom_sapling",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:geometry": "geometry.lepton.nw_cross",
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "up"
+            ],
+            "block_filter": [
+              "minecraft:grass_block",
+              "minecraft:dirt",
+              "minecraft:coarse_dirt",
+              "minecraft:podzol",
+              "minecraft:dirt_with_roots",
+              "minecraft:moss_block",
+              "minecraft:mud",
+              "minecraft:muddy_mangrove_roots",
+              "minecraft:farmland",
+              "minecraft:mycelium"
+            ]
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/red_blossom_sapling.json"
+    }
+  }
+}

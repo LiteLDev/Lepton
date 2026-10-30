@@ -1,0 +1,14 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "lepton:smooth_soul_sandstone_stairs",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

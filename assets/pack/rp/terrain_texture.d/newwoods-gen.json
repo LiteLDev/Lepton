@@ -1,0 +1,146 @@
+{
+  "lepton_newwoods_dirt": {
+    "textures": "textures/blocks/dirt"
+  },
+  "lepton_newwoods_flower_pot": {
+    "textures": "textures/blocks/flower_pot"
+  },
+  "lepton_newwoods_newwoods_ancient_bookshelf": {
+    "textures": "textures/blocks/newwoods/ancient_bookshelf"
+  },
+  "lepton_newwoods_newwoods_ancient_door_bottom": {
+    "textures": "textures/blocks/newwoods/ancient_door_bottom"
+  },
+  "lepton_newwoods_newwoods_ancient_door_top": {
+    "textures": "textures/blocks/newwoods/ancient_door_top"
+  },
+  "lepton_newwoods_newwoods_ancient_ladder": {
+    "textures": "textures/blocks/newwoods/ancient_ladder"
+  },
+  "lepton_newwoods_newwoods_ancient_leaves": {
+    "textures": "textures/blocks/newwoods/ancient_leaves"
+  },
+  "lepton_newwoods_newwoods_ancient_log": {
+    "textures": "textures/blocks/newwoods/ancient_log"
+  },
+  "lepton_newwoods_newwoods_ancient_log_top": {
+    "textures": "textures/blocks/newwoods/ancient_log_top"
+  },
+  "lepton_newwoods_newwoods_ancient_planks": {
+    "textures": "textures/blocks/newwoods/ancient_planks"
+  },
+  "lepton_newwoods_newwoods_ancient_sapling": {
+    "textures": "textures/blocks/newwoods/ancient_sapling"
+  },
+  "lepton_newwoods_newwoods_ancient_trapdoor": {
+    "textures": "textures/blocks/newwoods/ancient_trapdoor"
+  },
+  "lepton_newwoods_newwoods_azalea_bookshelf": {
+    "textures": "textures/blocks/newwoods/azalea_bookshelf"
+  },
+  "lepton_newwoods_newwoods_azalea_door_bottom": {
+    "textures": "textures/blocks/newwoods/azalea_door_bottom"
+  },
+  "lepton_newwoods_newwoods_azalea_door_top": {
+    "textures": "textures/blocks/newwoods/azalea_door_top"
+  },
+  "lepton_newwoods_newwoods_azalea_ladder": {
+    "textures": "textures/blocks/newwoods/azalea_ladder"
+  },
+  "lepton_newwoods_newwoods_azalea_log": {
+    "textures": "textures/blocks/newwoods/azalea_log"
+  },
+  "lepton_newwoods_newwoods_azalea_log_top": {
+    "textures": "textures/blocks/newwoods/azalea_log_top"
+  },
+  "lepton_newwoods_newwoods_azalea_planks": {
+    "textures": "textures/blocks/newwoods/azalea_planks"
+  },
+  "lepton_newwoods_newwoods_azalea_trapdoor": {
+    "textures": "textures/blocks/newwoods/azalea_trapdoor"
+  },
+  "lepton_newwoods_newwoods_blossom_bookshelf": {
+    "textures": "textures/blocks/newwoods/blossom_bookshelf"
+  },
+  "lepton_newwoods_newwoods_blossom_door_bottom": {
+    "textures": "textures/blocks/newwoods/blossom_door_bottom"
+  },
+  "lepton_newwoods_newwoods_blossom_door_top": {
+    "textures": "textures/blocks/newwoods/blossom_door_top"
+  },
+  "lepton_newwoods_newwoods_blossom_ladder": {
+    "textures": "textures/blocks/newwoods/blossom_ladder"
+  },
+  "lepton_newwoods_newwoods_blossom_log": {
+    "textures": "textures/blocks/newwoods/blossom_log"
+  },
+  "lepton_newwoods_newwoods_blossom_log_top": {
+    "textures": "textures/blocks/newwoods/blossom_log_top"
+  },
+  "lepton_newwoods_newwoods_blossom_planks": {
+    "textures": "textures/blocks/newwoods/blossom_planks"
+  },
+  "lepton_newwoods_newwoods_blossom_trapdoor": {
+    "textures": "textures/blocks/newwoods/blossom_trapdoor"
+  },
+  "lepton_newwoods_newwoods_blue_blossom_leaves": {
+    "textures": "textures/blocks/newwoods/blue_blossom_leaves"
+  },
+  "lepton_newwoods_newwoods_blue_blossom_sapling": {
+    "textures": "textures/blocks/newwoods/blue_blossom_sapling"
+  },
+  "lepton_newwoods_newwoods_lavender_blossom_leaves": {
+    "textures": "textures/blocks/newwoods/lavender_blossom_leaves"
+  },
+  "lepton_newwoods_newwoods_lavender_blossom_sapling": {
+    "textures": "textures/blocks/newwoods/lavender_blossom_sapling"
+  },
+  "lepton_newwoods_newwoods_orange_blossom_leaves": {
+    "textures": "textures/blocks/newwoods/orange_blossom_leaves"
+  },
+  "lepton_newwoods_newwoods_orange_blossom_sapling": {
+    "textures": "textures/blocks/newwoods/orange_blossom_sapling"
+  },
+  "lepton_newwoods_newwoods_red_blossom_leaves": {
+    "textures": "textures/blocks/newwoods/red_blossom_leaves"
+  },
+  "lepton_newwoods_newwoods_red_blossom_sapling": {
+    "textures": "textures/blocks/newwoods/red_blossom_sapling"
+  },
+  "lepton_newwoods_newwoods_stripped_ancient_log": {
+    "textures": "textures/blocks/newwoods/stripped_ancient_log"
+  },
+  "lepton_newwoods_newwoods_stripped_ancient_log_top": {
+    "textures": "textures/blocks/newwoods/stripped_ancient_log_top"
+  },
+  "lepton_newwoods_newwoods_stripped_azalea_log": {
+    "textures": "textures/blocks/newwoods/stripped_azalea_log"
+  },
+  "lepton_newwoods_newwoods_stripped_azalea_log_top": {
+    "textures": "textures/blocks/newwoods/stripped_azalea_log_top"
+  },
+  "lepton_newwoods_newwoods_stripped_blossom_log": {
+    "textures": "textures/blocks/newwoods/stripped_blossom_log"
+  },
+  "lepton_newwoods_newwoods_stripped_blossom_log_top": {
+    "textures": "textures/blocks/newwoods/stripped_blossom_log_top"
+  },
+  "lepton_newwoods_newwoods_vertical_ancient_planks": {
+    "textures": "textures/blocks/newwoods/vertical_ancient_planks"
+  },
+  "lepton_newwoods_newwoods_vertical_azalea_planks": {
+    "textures": "textures/blocks/newwoods/vertical_azalea_planks"
+  },
+  "lepton_newwoods_newwoods_vertical_blossom_planks": {
+    "textures": "textures/blocks/newwoods/vertical_blossom_planks"
+  },
+  "lepton_newwoods_newwoods_yellow_blossom_leaves": {
+    "textures": "textures/blocks/newwoods/yellow_blossom_leaves"
+  },
+  "lepton_newwoods_newwoods_yellow_blossom_sapling": {
+    "textures": "textures/blocks/newwoods/yellow_blossom_sapling"
+  },
+  "lepton_newwoods_woodvariants_post_chain": {
+    "textures": "textures/blocks/woodvariants/post_chain"
+  }
+}

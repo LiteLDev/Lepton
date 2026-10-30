@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_mixed_dirty_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "tag": "lepton:shards"
+      }
+    },
+    "unlock": [
+      {
+        "tag": "lepton:shards"
+      }
+    ],
+    "result": {
+      "item": "lepton:dirty_glass",
+      "count": 1
+    },
+    "priority": 1
+  }
+}

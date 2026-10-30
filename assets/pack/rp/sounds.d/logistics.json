@@ -1,0 +1,20 @@
+{
+  "lepton.pipe.shoot": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "sounds/lepton/logistics/pipe_shoot",
+        "volume": 0.8
+      }
+    ]
+  },
+  "lepton.pipe.pickup": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "sounds/lepton/logistics/pipe_pickup",
+        "volume": 0.8
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:foxhound",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "red_idle": "textures/entity/mobsdeep/foxhound_red_idle",
+        "red_hostile": "textures/entity/mobsdeep/foxhound_red_hostile",
+        "red_sleeping": "textures/entity/mobsdeep/foxhound_red_sleeping",
+        "blue_idle": "textures/entity/mobsdeep/foxhound_blue_idle",
+        "blue_hostile": "textures/entity/mobsdeep/foxhound_blue_hostile",
+        "blue_sleeping": "textures/entity/mobsdeep/foxhound_blue_sleeping",
+        "black_idle": "textures/entity/mobsdeep/foxhound_black_idle",
+        "black_hostile": "textures/entity/mobsdeep/foxhound_black_hostile",
+        "black_sleeping": "textures/entity/mobsdeep/foxhound_black_sleeping"
+      },
+      "geometry": {
+        "default": "geometry.lepton.foxhound"
+      },
+      "scripts": {
+        "animate": [
+          "walk",
+          {
+            "sit": "query.is_sitting"
+          },
+          {
+            "rest": "query.property('lepton:resting')"
+          },
+          "tail",
+          "fx"
+        ]
+      },
+      "animations": {
+        "walk": "animation.lepton.foxhound.walk",
+        "sit": "animation.lepton.foxhound.sit",
+        "rest": "animation.lepton.foxhound.rest",
+        "tail": "animation.lepton.foxhound.tail",
+        "fx": "controller.animation.lepton.foxhound.fx",
+        "flame": "animation.lepton.foxhound.flame",
+        "soul": "animation.lepton.foxhound.soul",
+        "smoke": "animation.lepton.foxhound.smoke",
+        "tater": "animation.lepton.foxhound.tater"
+      },
+      "particle_effects": {
+        "flame": "lepton:foxhound_flame",
+        "soul": "lepton:foxhound_soul_flame",
+        "smoke": "lepton:foxhound_smoke",
+        "tater": "lepton:foxhound_large_smoke"
+      },
+      "render_controllers": [
+        "controller.render.lepton.foxhound"
+      ],
+      "spawn_egg": {
+        "base_color": "#890d0d",
+        "overlay_color": "#f2af4b"
+      }
+    }
+  }
+}

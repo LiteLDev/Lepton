@@ -1,0 +1,62 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:potted_red_blossom_sapling",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "tag:lepton:nw_blossom_trees": {},
+      "tag:lepton:nw_potted": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:geometry": "geometry.lepton.nw_potted",
+      "minecraft:material_instances": {
+        "pot": {
+          "texture": "lepton_newwoods_flower_pot",
+          "render_method": "alpha_test"
+        },
+        "dirt": {
+          "texture": "lepton_newwoods_dirt",
+          "render_method": "alpha_test"
+        },
+        "*": {
+          "texture": "lepton_newwoods_newwoods_red_blossom_sapling",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:collision_box": {
+        "origin": [
+          -3,
+          0,
+          -3
+        ],
+        "size": [
+          6,
+          6,
+          6
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -3,
+          0,
+          -3
+        ],
+        "size": [
+          6,
+          6,
+          6
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/potted_red_blossom_sapling.json"
+    }
+  }
+}

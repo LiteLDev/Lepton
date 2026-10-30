@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:crimson_chest"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:crimson_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:crimson_planks"
+      }
+    ],
+    "result": {
+      "item": "lepton:crimson_chest",
+      "count": 1
+    },
+    "priority": -2
+  }
+}

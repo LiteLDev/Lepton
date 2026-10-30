@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:mossy_cobblestone_vertical_slab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#",
+      "#",
+      "#"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:mossy_cobblestone_slab"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:mossy_cobblestone_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:mossy_cobblestone_vertical_slab",
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:crab",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "lepton:raving": { "type": "bool", "default": false, "client_sync": true },
+        "lepton:size": { "type": "int", "range": [0, 8], "default": 0, "client_sync": true },
+        "lepton:lightning_until": { "type": "int", "range": [0, 2147483647], "default": 0 },
+        "lepton:no_spike": { "type": "bool", "default": false },
+        "lepton:from_bucket": { "type": "bool", "default": false }
+      }
+    },
+    "component_groups": {
+      "lepton:frozen": { "minecraft:movement": { "value": 0 } },
+      "lepton:baby": {
+        "minecraft:is_baby": {},
+        "minecraft:scale": { "value": 0.5 },
+        "minecraft:ageable": {
+          "duration": 1200,
+          "feed_items": ["wheat", "chicken", "cod", "cooked_cod", "salmon", "cooked_salmon", "pufferfish", "tropical_fish"],
+          "grow_up": { "event": "minecraft:ageable_grow_up", "target": "self" }
+        },
+        "minecraft:behavior.follow_parent": { "priority": 5, "speed_multiplier": 1.1 }
+      },
+      "lepton:adult": {
+        "minecraft:experience_reward": {
+          "on_bred": "Math.Random(1,7)",
+          "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+        },
+        "minecraft:loot": { "table": "loot_tables/entities/lepton_crab.json" },
+        "minecraft:breedable": {
+          "require_tame": false,
+          "breed_items": ["wheat", "chicken", "cod", "cooked_cod", "salmon", "cooked_salmon", "pufferfish", "tropical_fish"],
+          "breeds_with": {
+            "mate_type": "lepton:crab",
+            "baby_type": "lepton:crab",
+            "breed_event": { "event": "minecraft:entity_born", "target": "baby" }
+          }
+        },
+        "minecraft:behavior.breed": { "priority": 3, "speed_multiplier": 1.0 }
+      },
+      "lepton:ai": {
+        "minecraft:behavior.tempt": {
+          "priority": 4,
+          "speed_multiplier": 1.2,
+          "items": ["wheat", "chicken", "cod", "cooked_cod", "salmon", "cooked_salmon", "pufferfish", "tropical_fish"]
+        },
+        "minecraft:behavior.random_stroll": { "priority": 6, "speed_multiplier": 1.0 },
+        "minecraft:behavior.look_at_player": { "priority": 7, "look_distance": 6, "probability": 0.02 },
+        "minecraft:behavior.random_look_around": { "priority": 8 }
+      },
+      "lepton:spiky": {
+        "minecraft:area_attack": {
+          "damage_range": 0.15,
+          "damage_per_tick": 1,
+          "cause": "contact",
+          "entity_filter": {
+            "all_of": [
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "lepton_crab" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "inanimate" },
+              { "test": "is_riding", "subject": "other", "operator": "!=", "value": true },
+              { "test": "is_difficulty", "subject": "self", "operator": "!=", "value": "peaceful" }
+            ]
+          }
+        }
+      },
+      "lepton:color_0": { "minecraft:variant": { "value": 0 } },
+      "lepton:color_1": { "minecraft:variant": { "value": 1 } },
+      "lepton:color_2": { "minecraft:variant": { "value": 2 } },
+      "lepton:mold": { "minecraft:mark_variant": { "value": 1 } },
+      "lepton:clean": { "minecraft:mark_variant": { "value": 0 } },
+      "lepton:persistent": { "minecraft:persistent": {} },
+      "lepton:size_1": {
+        "minecraft:scale": { "value": 3 },
+        "minecraft:health": { "value": 20.5, "max": 20.5 },
+        "minecraft:movement": { "value": 0.2375 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 1.125, 0] }] }
+      },
+      "lepton:size_2": {
+        "minecraft:scale": { "value": 5 },
+        "minecraft:health": { "value": 21, "max": 21 },
+        "minecraft:movement": { "value": 0.2256 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 1.875, 0] }] }
+      },
+      "lepton:size_3": {
+        "minecraft:scale": { "value": 7 },
+        "minecraft:health": { "value": 21.5, "max": 21.5 },
+        "minecraft:movement": { "value": 0.2143 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 2.625, 0] }] }
+      },
+      "lepton:size_4": {
+        "minecraft:scale": { "value": 9 },
+        "minecraft:health": { "value": 22, "max": 22 },
+        "minecraft:movement": { "value": 0.2036 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 3.375, 0] }] }
+      },
+      "lepton:size_5": {
+        "minecraft:scale": { "value": 11 },
+        "minecraft:health": { "value": 22.5, "max": 22.5 },
+        "minecraft:movement": { "value": 0.1934 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 4.125, 0] }] }
+      },
+      "lepton:size_6": {
+        "minecraft:scale": { "value": 13 },
+        "minecraft:health": { "value": 23, "max": 23 },
+        "minecraft:movement": { "value": 0.1838 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 4.875, 0] }] }
+      },
+      "lepton:size_7": {
+        "minecraft:scale": { "value": 15 },
+        "minecraft:health": { "value": 23.5, "max": 23.5 },
+        "minecraft:movement": { "value": 0.1746 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 5.625, 0] }] }
+      },
+      "lepton:size_8": {
+        "minecraft:scale": { "value": 17 },
+        "minecraft:health": { "value": 24, "max": 24 },
+        "minecraft:movement": { "value": 0.1659 },
+        "minecraft:fire_immune": true,
+        "minecraft:rideable": { "seat_count": 1, "family_types": ["player"], "crouching_skip_interact": true, "interact_text": "action.interact.ride.horse", "seats": [{ "position": [0, 6.375, 0] }] }
+      }
+    },
+    "components": {
+      "minecraft:type_family": { "family": ["lepton_crab", "crab", "mob"] },
+      "minecraft:collision_box": { "width": 0.9, "height": 0.5 },
+      "minecraft:health": { "value": 20, "max": 20 },
+      "minecraft:movement": { "value": 0.25 },
+      "minecraft:knockback_resistance": { "value": 0.5 },
+      "minecraft:breathable": { "total_supply": 15, "suffocate_time": 0, "breathes_water": true, "breathes_air": true, "generates_bubbles": false },
+      "minecraft:navigation.walk": { "can_path_over_water": true, "avoid_water": true, "avoid_damage_blocks": true },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:variable_max_auto_step": { "base_value": 0.5625, "jump_prevented_value": 0.5625 },
+      "minecraft:leashable": { "soft_distance": 4.0, "hard_distance": 6.0, "max_distance": 10.0 },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:behavior.float": { "priority": 0 },
+      "minecraft:behavior.panic": { "priority": 1, "speed_multiplier": 1.25 },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [{ "filters": { "test": "in_lava", "subject": "self", "value": true }, "cause": "lava", "damage_per_tick": 4 }]
+      }
+    },
+    "events": {
+      "lepton:freeze": { "add": { "component_groups": ["lepton:frozen"] } },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          { "add": { "component_groups": ["lepton:adult", "lepton:ai", "lepton:spiky"] } },
+          {
+            "randomize": [
+              { "weight": 2, "add": { "component_groups": ["lepton:color_0"] } },
+              { "weight": 1, "add": { "component_groups": ["lepton:color_1"] } },
+              { "weight": 1, "add": { "component_groups": ["lepton:color_2"] } }
+            ]
+          },
+          { "randomize": [{ "weight": 2, "add": { "component_groups": ["lepton:clean"] } }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
+        ]
+      },
+      "minecraft:entity_born": {
+        "sequence": [
+          { "add": { "component_groups": ["lepton:baby", "lepton:ai", "lepton:spiky"] } },
+          {
+            "randomize": [
+              { "weight": 2, "add": { "component_groups": ["lepton:color_0"] } },
+              { "weight": 1, "add": { "component_groups": ["lepton:color_1"] } },
+              { "weight": 1, "add": { "component_groups": ["lepton:color_2"] } }
+            ]
+          },
+          { "randomize": [{ "weight": 2, "add": { "component_groups": ["lepton:clean"] } }, { "weight": 1, "add": { "component_groups": ["lepton:mold"] } }] }
+        ]
+      },
+      "minecraft:ageable_grow_up": {
+        "remove": { "component_groups": ["lepton:baby"] },
+        "add": { "component_groups": ["lepton:adult"] }
+      },
+      "lepton:rave_start": { "remove": { "component_groups": ["lepton:ai"] }, "set_property": { "lepton:raving": true } },
+      "lepton:rave_stop": { "add": { "component_groups": ["lepton:ai"] }, "set_property": { "lepton:raving": false } },
+      "lepton:no_spike": { "remove": { "component_groups": ["lepton:spiky"] }, "set_property": { "lepton:no_spike": true } },
+      "lepton:spike": { "add": { "component_groups": ["lepton:spiky"] }, "set_property": { "lepton:no_spike": false } },
+      "lepton:from_bucket": { "add": { "component_groups": ["lepton:persistent"] }, "set_property": { "lepton:from_bucket": true } },
+      "lepton:color_0": { "remove": { "component_groups": ["lepton:color_1", "lepton:color_2"] }, "add": { "component_groups": ["lepton:color_0"] } },
+      "lepton:color_1": { "remove": { "component_groups": ["lepton:color_0", "lepton:color_2"] }, "add": { "component_groups": ["lepton:color_1"] } },
+      "lepton:color_2": { "remove": { "component_groups": ["lepton:color_0", "lepton:color_1"] }, "add": { "component_groups": ["lepton:color_2"] } },
+      "lepton:mold": { "remove": { "component_groups": ["lepton:clean"] }, "add": { "component_groups": ["lepton:mold"] } },
+      "lepton:no_mold": { "remove": { "component_groups": ["lepton:mold"] }, "add": { "component_groups": ["lepton:clean"] } },
+      "lepton:size_1": { "remove": { "component_groups": ["lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_1"] }, "set_property": { "lepton:size": 1 } },
+      "lepton:size_2": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_2"] }, "set_property": { "lepton:size": 2 } },
+      "lepton:size_3": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_3"] }, "set_property": { "lepton:size": 3 } },
+      "lepton:size_4": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_3", "lepton:size_5", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_4"] }, "set_property": { "lepton:size": 4 } },
+      "lepton:size_5": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_6", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_5"] }, "set_property": { "lepton:size": 5 } },
+      "lepton:size_6": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_7", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_6"] }, "set_property": { "lepton:size": 6 } },
+      "lepton:size_7": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_8"] }, "add": { "component_groups": ["lepton:size_7"] }, "set_property": { "lepton:size": 7 } },
+      "lepton:size_8": { "remove": { "component_groups": ["lepton:size_1", "lepton:size_2", "lepton:size_3", "lepton:size_4", "lepton:size_5", "lepton:size_6", "lepton:size_7"] }, "add": { "component_groups": ["lepton:size_8"] }, "set_property": { "lepton:size": 8 } }
+    }
+  }
+}

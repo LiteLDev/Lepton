@@ -1,0 +1,68 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.glass_frame.pose": {
+      "loop": true,
+      "bones": {
+        "face": {
+          "rotation": [
+            "(q.property('lepton:facing') == 1 ? -90 : (q.property('lepton:facing') == 0 ? 90 : 0))",
+            0,
+            0
+          ]
+        },
+        "sign": {
+          "position": [
+            0,
+            "((q.property('lepton:sign') > 0) ? (q.property('lepton:sign') == 3 ? 5.6 - 4.8 : (q.property('lepton:sign') == 4 ? 5.6 - 8.32 : 5.6)) : 0)",
+            "((q.property('lepton:sign') > 0) ? (q.property('lepton:sign') == 3 ? 15.68 + 7.04 : (q.property('lepton:sign') == 4 ? 15.68 - 0.32 : 15.68)) : 0)"
+          ]
+        },
+        "sign_turn": {
+          "rotation": [
+            0,
+            "((q.property('lepton:sign') > 0) ? (q.property('lepton:sign') == 3 || q.property('lepton:sign') == 4 ? 0 : -(q.property('lepton:sign_rotation') - (q.property('lepton:facing') == 2 ? 2 : (q.property('lepton:facing') == 3 ? 0 : (q.property('lepton:facing') == 4 ? 1 : 3))) * 4) * 22.5 + (q.property('lepton:sign') == 2 ? 180 : 0)) : 0)",
+            0
+          ],
+          "scale": "((q.property('lepton:sign') > 0) ? 0.32 : 1)"
+        },
+        "sign_offset": {
+          "position": [
+            0,
+            "((q.property('lepton:sign') > 0) ? (q.property('lepton:sign') == 5 || q.property('lepton:sign') == 6 ? -0.52 * 16 / 0.32 : 0) : 0)",
+            "((q.property('lepton:sign') > 0) ? (q.property('lepton:sign') == 5 ? -0.075 * 16 : (q.property('lepton:sign') == 6 ? 0.3 * 16 : 0)) - 0.585 * 16 : 0)"
+          ]
+        },
+        "spin": {
+          "rotation": [
+            0,
+            0,
+            "-((q.property('lepton:kind') == 5 ? math.mod(q.property('lepton:rotation'), 4) * 2 : q.property('lepton:rotation')) * 45)"
+          ]
+        },
+        "holder": {
+          "position": [
+            "(q.property('lepton:kind') == 2 ? 2 : 0)",
+            "(q.property('lepton:kind') == 2 ? -2 : 0)",
+            "(q.property('lepton:kind') == 4 ? 8.0 : (q.property('lepton:kind') == 3 ? 8.8 : 7.6))"
+          ],
+          "scale": "(q.property('lepton:kind') == 3 ? 0.5 : (q.property('lepton:kind') == 4 ? 0.5 * q.property('lepton:scale') * 0.6667 : 0.5 * q.property('lepton:scale')))"
+        },
+        "rightArm": {
+          "rotation": [
+            "(q.property('lepton:kind') == 1 || q.property('lepton:kind') == 4 ? 0 : -90)",
+            "(q.property('lepton:kind') == 1 ? 90 : (q.property('lepton:kind') == 4 ? -90 : (q.property('lepton:kind') == 3 ? -90 : 0)))",
+            "(q.property('lepton:kind') == 1 ? -45 : (q.property('lepton:kind') == 4 ? 90 : 0))"
+          ]
+        },
+        "rightItem": {
+          "rotation": [
+            0,
+            "(q.property('lepton:kind') == 2 ? 45 : 0)",
+            0
+          ]
+        }
+      }
+    }
+  }
+}

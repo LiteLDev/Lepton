@@ -1,0 +1,9 @@
+{
+  "quark.container.feeding_trough": "饲料槽",
+  "block.quark.crate": "板条箱",
+  "lp.logistics.crate.form": "{}/{} 个物品。选择要显示的行：",
+  "lp.logistics.crate.rows": "第 {}-{} 行",
+  "lp.logistics.crate.count": "{}/{}",
+  "lp.logistics.crate.scroll_up": "向上滚动",
+  "lp.logistics.crate.scroll_down": "向下滚动"
+}

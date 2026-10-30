@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:ancient_post"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "F",
+      "F"
+    ],
+    "key": {
+      "F": {
+        "item": "lepton:ancient_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ancient_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:ancient_post",
+      "count": 8
+    }
+  }
+}

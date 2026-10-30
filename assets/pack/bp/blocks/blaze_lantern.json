@@ -1,0 +1,54 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:blaze_lantern",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.3
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.3
+      },
+      "minecraft:map_color": "#e5e533",
+      "tag:lepton:infiniburn": {},
+      "minecraft:light_emission": 15,
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_storage_storage_blaze_lantern",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/blaze_lantern.json"
+    }
+  }
+}

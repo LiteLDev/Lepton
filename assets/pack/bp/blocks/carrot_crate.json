@@ -1,0 +1,59 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:carrot_crate",
+      "menu_category": {
+        "category": "none"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.5
+      },
+      "minecraft:map_color": "#9f5224",
+      "tag:lepton:storage_wooden": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:flammable": {
+        "catch_chance_modifier": 0,
+        "destroy_chance_modifier": 150
+      },
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_storage_storage_carrot_crate",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_storage_storage_carrot_crate",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_storage_storage_carrot_crate",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_storage_storage_carrot_crate",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_storage_storage_carrot_crate",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_storage_storage_carrot_crate_top",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_storage_storage_carrot_crate_bottom",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/carrot_crate.json"
+    }
+  }
+}

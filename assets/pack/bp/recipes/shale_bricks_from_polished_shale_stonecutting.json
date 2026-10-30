@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:shale_bricks_from_polished_shale_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:polished_shale"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:polished_shale"
+      }
+    ],
+    "result": {
+      "item": "lepton:shale_bricks",
+      "count": 1
+    }
+  }
+}

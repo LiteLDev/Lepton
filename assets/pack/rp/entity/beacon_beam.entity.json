@@ -1,0 +1,35 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "lepton:beacon_beam",
+      "materials": {
+        "core": "beacon_beam",
+        "glow": "beacon_beam_transparent"
+      },
+      "textures": {
+        "core": "textures/entity/beacon_beam_core",
+        "glow0": "textures/entity/beacon_beam_glow_0",
+        "glow1": "textures/entity/beacon_beam_glow_1",
+        "glow2": "textures/entity/beacon_beam_glow_2",
+        "glow3": "textures/entity/beacon_beam_glow_3",
+        "glow4": "textures/entity/beacon_beam_glow_4"
+      },
+      "geometry": {
+        "default": "geometry.lepton.beacon_beam"
+      },
+      "animations": {
+        "orient": "animation.lepton.beacon_beam.orient"
+      },
+      "scripts": {
+        "animate": [
+          "orient"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.lepton.beacon_beam_core",
+        "controller.render.lepton.beacon_beam_glow"
+      ]
+    }
+  }
+}

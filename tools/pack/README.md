@@ -78,7 +78,7 @@ block -> 1 stairs / 2 slabs / 2 vertical slabs / 1 wall.
 | `lepton:fence_gate` | `minecraft:cardinal_direction` (trait), `lepton:open`, `lepton:in_wall` |
 | `lepton:door` | `minecraft:cardinal_direction` (trait), `lepton:open`, `lepton:upper`, `lepton:hinge_right` |
 | `lepton:trapdoor` | `minecraft:cardinal_direction` (trait), `minecraft:vertical_half` (trait), `lepton:open` |
-| `lepton:button`, `lepton:pressure_plate` | `lepton:pressed` (+ `minecraft:block_face` trait for buttons); tags `lepton:press_ticks_<n>`, `lepton:mobs_only` |
+| `lepton:button`, `lepton:pressure_plate` | `lepton:pressed` (+ `minecraft:block_face` trait for buttons); tags `lepton:press_ticks_<n>` (n = 4, 10, 15, 20, 30, 40, 100), `lepton:mobs_only`, `lepton:players_only` |
 | `lepton:pillar` | `minecraft:block_face` (trait; the model is rotated along the clicked axis) |
 | `lepton:strippable` | an axe turns `lepton:<x>` into `lepton:stripped_<x>`, keeping the states |
 | `lepton:wooden`, `lepton:redstone_only` | wooden fences connect only to wooden fences; redstone-only doors ignore clicks |

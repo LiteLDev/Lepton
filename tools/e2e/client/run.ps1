@@ -34,6 +34,8 @@
     remote-vanilla  same BDS, but our client mod is moved aside: a vanilla client (plus
                     LeviLamina) that only gets the server's resource pack: what players without the
                     client mod see.
+  -WithoutMod (local mode only) runs the scenario without Lepton (LeviLamina, CrashLogger and the
+  headless input mod only): the vanilla baseline for a suspected game bug (-Scenario mapcrash).
   In remote modes the BDS console log is merged into the session log ("[host] " lines) and
   Send-HostConsole runs server console commands.
 
@@ -47,6 +49,7 @@ param(
     [switch]$Build,
     [switch]$KeepOpen,          # leave the game running; the harness waits until you close it, then cleans up
     [switch]$KeepOtherMods,     # do not move other mods (BEI, ...) aside
+    [switch]$WithoutMod,        # local mode without Lepton (only LeviLamina, CrashLogger, headless input): vanilla baselines
     [string]$ModDir,            # default: <repo>/bin/client/Lepton
     [ValidateSet('local', 'remote-mod', 'remote-vanilla')][string]$Mode = 'local',
     [int]$LockTimeoutMinutes = 120,  # give up (exit 2, "NOT RUN") if the game lock is not free by then; 0 = wait forever
@@ -76,6 +79,7 @@ if (-not $Foreground) {
 $slots = if ($Foreground) { @(1) } elseif ($Slot) { $Slot } elseif ($env:LEVI_E2E_SLOTS) {
     @($env:LEVI_E2E_SLOTS -split '[,; ]+' | Where-Object { $_ } | ForEach-Object { [int]$_ }) } else { @(1) }
 
+if ($WithoutMod -and $Mode -ne 'local') { throw '-WithoutMod is for -Mode local (remote-vanilla already runs without the client mod)' }
 $scenarioFile = Join-Path $PSScriptRoot "scenarios/$Scenario.ps1"
 if (-not (Test-Path $scenarioFile)) { throw "Unknown scenario: $scenarioFile" }
 if (-not $ModDir) { $ModDir = Join-Path $script:RepoRoot "bin/client/$script:ModName" }
@@ -175,7 +179,7 @@ try {
         if ($script:InstanceSlot -gt 1) { & (Join-Path $script:BeDDDir 'clone-instance.ps1') -Slot $script:InstanceSlot -Source $script:BaseVersion }
         if (Get-GameProcess) { Write-Step "closing a running game first"; Stop-Game }
         Restore-OtherMods
-        if ($Mode -eq 'remote-vanilla') {
+        if ($Mode -eq 'remote-vanilla' -or $WithoutMod) {
             Remove-DeployedMod # vanilla client: only LeviLamina (+ CrashLogger)
         } else {
             Deploy-Mod $ModDir
@@ -199,7 +203,7 @@ try {
             for ($launch = 1; ; $launch++) {
                 if ($remote) { Clear-OurServerEntries }
                 Start-Game | Out-Null
-                Wait-GameReady -WithoutMod:($Mode -eq 'remote-vanilla')
+                Wait-GameReady -WithoutMod:($Mode -eq 'remote-vanilla' -or $WithoutMod)
                 try {
                     if ($remote) { Enter-RemoteServer -Attempts 1 } else { Enter-TestWorld -Attempts 2 }
                     break

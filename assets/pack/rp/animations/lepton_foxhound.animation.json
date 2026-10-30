@@ -1,0 +1,166 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.lepton.foxhound.walk": {
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-(math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed)",
+            0,
+            0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "-(math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed)",
+            0,
+            0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.modified_distance_moved * 38.17) * 40.0 * query.modified_move_speed",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.foxhound.sit": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            -25,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            -2,
+            0
+          ]
+        },
+        "head": {
+          "rotation": [
+            25,
+            0,
+            0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            -90,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            -4,
+            2
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            -90,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            -4,
+            2
+          ]
+        },
+        "tail": {
+          "rotation": [
+            30,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.foxhound.rest": {
+      "loop": true,
+      "bones": {
+        "root": {
+          "rotation": [
+            0,
+            0,
+            90
+          ],
+          "position": [
+            4,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.foxhound.tail": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            0,
+            "math.sin(query.life_time * 400) * (query.is_tamed ? 20 : 6)",
+            0
+          ]
+        }
+      }
+    },
+    "animation.lepton.foxhound.flame": {
+      "loop": true,
+      "animation_length": 0.1,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "flame"
+          }
+        ]
+      }
+    },
+    "animation.lepton.foxhound.soul": {
+      "loop": true,
+      "animation_length": 0.1,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "soul"
+          }
+        ]
+      }
+    },
+    "animation.lepton.foxhound.smoke": {
+      "loop": true,
+      "animation_length": 0.1,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "smoke"
+          }
+        ]
+      }
+    },
+    "animation.lepton.foxhound.tater": {
+      "loop": true,
+      "animation_length": 0.5,
+      "particle_effects": {
+        "0.0": [
+          {
+            "effect": "tater"
+          }
+        ]
+      }
+    }
+  }
+}

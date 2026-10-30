@@ -1,0 +1,967 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:orange_framed_glass_pane",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.glassPane"
+      },
+      "states": {
+        "lepton:north": [
+          false,
+          true
+        ],
+        "lepton:south": [
+          false,
+          true
+        ],
+        "lepton:west": [
+          false,
+          true
+        ],
+        "lepton:east": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 3.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 10.0
+      },
+      "tag:lepton:framed_glass": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:pane": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "north": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "south": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "east": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "west": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "up": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        },
+        "down": {
+          "texture": "lepton_palette_palette_orange_framed_glass",
+          "render_method": "blend"
+        }
+      },
+      "minecraft:connection_rule": {
+        "accepts_connections_from": "all"
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.pane",
+        "bone_visibility": {
+          "post": "true",
+          "north": "q.block_state('lepton:north') == true",
+          "south": "q.block_state('lepton:south') == true",
+          "west": "q.block_state('lepton:west') == true",
+          "east": "q.block_state('lepton:east') == true"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/orange_framed_glass_pane.json"
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('lepton:north') == false && q.block_state('lepton:south') == false && q.block_state('lepton:west') == false && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -1,
+              0,
+              -1
+            ],
+            "size": [
+              2,
+              16,
+              2
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -1
+            ],
+            "size": [
+              2,
+              16,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && q.block_state('lepton:south') == false && q.block_state('lepton:west') == false && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -8
+            ],
+            "size": [
+              2,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && !(q.block_state('lepton:south') == false) && q.block_state('lepton:west') == false && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -1
+            ],
+            "size": [
+              2,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && !(q.block_state('lepton:south') == false) && q.block_state('lepton:west') == false && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -8
+            ],
+            "size": [
+              2,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && q.block_state('lepton:south') == false && !(q.block_state('lepton:west') == false) && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -1
+            ],
+            "size": [
+              9,
+              16,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && q.block_state('lepton:south') == false && !(q.block_state('lepton:west') == false) && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              9,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && !(q.block_state('lepton:south') == false) && !(q.block_state('lepton:west') == false) && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -1
+            ],
+            "size": [
+              9,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && !(q.block_state('lepton:south') == false) && !(q.block_state('lepton:west') == false) && q.block_state('lepton:east') == false)",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              9,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && q.block_state('lepton:south') == false && q.block_state('lepton:west') == false && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -1
+            ],
+            "size": [
+              9,
+              16,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && q.block_state('lepton:south') == false && q.block_state('lepton:west') == false && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -8
+            ],
+            "size": [
+              9,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && !(q.block_state('lepton:south') == false) && q.block_state('lepton:west') == false && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -1
+            ],
+            "size": [
+              9,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && !(q.block_state('lepton:south') == false) && q.block_state('lepton:west') == false && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -1,
+              0,
+              -8
+            ],
+            "size": [
+              9,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && q.block_state('lepton:south') == false && !(q.block_state('lepton:west') == false) && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -1
+            ],
+            "size": [
+              16,
+              16,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && q.block_state('lepton:south') == false && !(q.block_state('lepton:west') == false) && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('lepton:north') == false && !(q.block_state('lepton:south') == false) && !(q.block_state('lepton:west') == false) && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -1
+            ],
+            "size": [
+              16,
+              16,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(!(q.block_state('lepton:north') == false) && !(q.block_state('lepton:south') == false) && !(q.block_state('lepton:west') == false) && !(q.block_state('lepton:east') == false))",
+        "components": {
+          "minecraft:collision_box": [
+            {
+              "origin": [
+                -1,
+                0,
+                -1
+              ],
+              "size": [
+                2,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                -8
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                0,
+                1
+              ],
+              "size": [
+                2,
+                16,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            },
+            {
+              "origin": [
+                1,
+                0,
+                -1
+              ],
+              "size": [
+                7,
+                16,
+                2
+              ]
+            }
+          ],
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

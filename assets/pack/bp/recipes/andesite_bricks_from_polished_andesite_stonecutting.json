@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:andesite_bricks_from_polished_andesite_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:polished_andesite"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:polished_andesite"
+      }
+    ],
+    "result": {
+      "item": "lepton:andesite_bricks",
+      "count": 1
+    }
+  }
+}

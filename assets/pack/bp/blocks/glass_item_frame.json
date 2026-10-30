@@ -1,0 +1,266 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:glass_item_frame",
+      "menu_category": {
+        "category": "none",
+        "is_hidden_in_commands": true
+      },
+      "states": {
+        "lepton:filled": [
+          false,
+          true
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          1,
+          12
+        ]
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "north": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "south": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "east": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "west": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "up": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        },
+        "down": {
+          "texture": "lepton_frames_frames_glass_item_frame",
+          "render_method": "blend",
+          "ambient_occlusion": false,
+          "face_dimming": false
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.glass_item_frame",
+        "bone_visibility": {
+          "down": "q.block_state('minecraft:block_face') == 'down' && !q.block_state('lepton:filled')",
+          "up": "q.block_state('minecraft:block_face') == 'up' && !q.block_state('lepton:filled')",
+          "north": "q.block_state('minecraft:block_face') == 'north' && !q.block_state('lepton:filled')",
+          "south": "q.block_state('minecraft:block_face') == 'south' && !q.block_state('lepton:filled')",
+          "west": "q.block_state('minecraft:block_face') == 'west' && !q.block_state('lepton:filled')",
+          "east": "q.block_state('minecraft:block_face') == 'east' && !q.block_state('lepton:filled')"
+        }
+      },
+      "minecraft:item_visual": {
+        "geometry": {
+          "identifier": "geometry.lepton.glass_item_frame",
+          "bone_visibility": {
+            "down": false,
+            "up": false,
+            "north": false,
+            "south": true,
+            "west": false,
+            "east": false
+          }
+        },
+        "material_instances": {
+          "*": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "north": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "south": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "east": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "west": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "up": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          },
+          "down": {
+            "texture": "lepton_frames_frames_glass_item_frame",
+            "render_method": "blend",
+            "ambient_occlusion": false,
+            "face_dimming": false
+          }
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/glass_item_frame.json",
+      "minecraft:map_color": "#c8e4ec",
+      "tag:lepton:glass_item_frame": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'down'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -6,
+              15,
+              -6
+            ],
+            "size": [
+              12,
+              1,
+              12
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'up'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -6,
+              0,
+              -6
+            ],
+            "size": [
+              12,
+              1,
+              12
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'north'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -6,
+              2,
+              7
+            ],
+            "size": [
+              12,
+              12,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'south'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -6,
+              2,
+              -8
+            ],
+            "size": [
+              12,
+              12,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'west'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              7,
+              2,
+              -6
+            ],
+            "size": [
+              1,
+              12,
+              12
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:block_face') == 'east'",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              2,
+              -6
+            ],
+            "size": [
+              1,
+              12,
+              12
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

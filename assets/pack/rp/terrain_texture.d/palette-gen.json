@@ -1,0 +1,164 @@
+{
+  "lepton_palette_nether_brick": {
+    "textures": "textures/blocks/nether_brick"
+  },
+  "lepton_palette_palette_bamboo_mat_end": {
+    "textures": "textures/blocks/palette/bamboo_mat_end"
+  },
+  "lepton_palette_palette_bamboo_mat_u": {
+    "textures": "textures/blocks/palette/bamboo_mat_u"
+  },
+  "lepton_palette_palette_bamboo_mat_v": {
+    "textures": "textures/blocks/palette/bamboo_mat_v"
+  },
+  "lepton_palette_palette_black_framed_glass": {
+    "textures": "textures/blocks/palette/black_framed_glass"
+  },
+  "lepton_palette_palette_black_shingles": {
+    "textures": "textures/blocks/palette/black_shingles"
+  },
+  "lepton_palette_palette_blue_framed_glass": {
+    "textures": "textures/blocks/palette/blue_framed_glass"
+  },
+  "lepton_palette_palette_blue_shingles": {
+    "textures": "textures/blocks/palette/blue_shingles"
+  },
+  "lepton_palette_palette_brown_framed_glass": {
+    "textures": "textures/blocks/palette/brown_framed_glass"
+  },
+  "lepton_palette_palette_brown_shingles": {
+    "textures": "textures/blocks/palette/brown_shingles"
+  },
+  "lepton_palette_palette_cyan_framed_glass": {
+    "textures": "textures/blocks/palette/cyan_framed_glass"
+  },
+  "lepton_palette_palette_cyan_shingles": {
+    "textures": "textures/blocks/palette/cyan_shingles"
+  },
+  "lepton_palette_palette_framed_glass": {
+    "textures": "textures/blocks/palette/framed_glass"
+  },
+  "lepton_palette_palette_gold_bars": {
+    "textures": "textures/blocks/palette/gold_bars"
+  },
+  "lepton_palette_palette_grate": {
+    "textures": "textures/blocks/palette/grate"
+  },
+  "lepton_palette_palette_gray_framed_glass": {
+    "textures": "textures/blocks/palette/gray_framed_glass"
+  },
+  "lepton_palette_palette_gray_shingles": {
+    "textures": "textures/blocks/palette/gray_shingles"
+  },
+  "lepton_palette_palette_green_framed_glass": {
+    "textures": "textures/blocks/palette/green_framed_glass"
+  },
+  "lepton_palette_palette_green_shingles": {
+    "textures": "textures/blocks/palette/green_shingles"
+  },
+  "lepton_palette_palette_iron_ladder": {
+    "textures": "textures/blocks/palette/iron_ladder"
+  },
+  "lepton_palette_palette_iron_pillar": {
+    "textures": "textures/blocks/palette/iron_pillar"
+  },
+  "lepton_palette_palette_iron_pillar_top": {
+    "textures": "textures/blocks/palette/iron_pillar_top"
+  },
+  "lepton_palette_palette_iron_plate": {
+    "textures": "textures/blocks/palette/iron_plate"
+  },
+  "lepton_palette_palette_light_blue_framed_glass": {
+    "textures": "textures/blocks/palette/light_blue_framed_glass"
+  },
+  "lepton_palette_palette_light_blue_shingles": {
+    "textures": "textures/blocks/palette/light_blue_shingles"
+  },
+  "lepton_palette_palette_light_gray_framed_glass": {
+    "textures": "textures/blocks/palette/light_gray_framed_glass"
+  },
+  "lepton_palette_palette_light_gray_shingles": {
+    "textures": "textures/blocks/palette/light_gray_shingles"
+  },
+  "lepton_palette_palette_lime_framed_glass": {
+    "textures": "textures/blocks/palette/lime_framed_glass"
+  },
+  "lepton_palette_palette_lime_shingles": {
+    "textures": "textures/blocks/palette/lime_shingles"
+  },
+  "lepton_palette_palette_magenta_framed_glass": {
+    "textures": "textures/blocks/palette/magenta_framed_glass"
+  },
+  "lepton_palette_palette_magenta_shingles": {
+    "textures": "textures/blocks/palette/magenta_shingles"
+  },
+  "lepton_palette_palette_orange_framed_glass": {
+    "textures": "textures/blocks/palette/orange_framed_glass"
+  },
+  "lepton_palette_palette_orange_shingles": {
+    "textures": "textures/blocks/palette/orange_shingles"
+  },
+  "lepton_palette_palette_paper_lantern_inside": {
+    "textures": "textures/blocks/palette/paper_lantern_inside"
+  },
+  "lepton_palette_palette_paper_lantern_sakura_side": {
+    "textures": "textures/blocks/palette/paper_lantern_sakura_side"
+  },
+  "lepton_palette_palette_paper_lantern_side": {
+    "textures": "textures/blocks/palette/paper_lantern_side"
+  },
+  "lepton_palette_palette_paper_lantern_top": {
+    "textures": "textures/blocks/palette/paper_lantern_top"
+  },
+  "lepton_palette_palette_paper_wall": {
+    "textures": "textures/blocks/palette/paper_wall"
+  },
+  "lepton_palette_palette_paper_wall_big": {
+    "textures": "textures/blocks/palette/paper_wall_big"
+  },
+  "lepton_palette_palette_paper_wall_sakura": {
+    "textures": "textures/blocks/palette/paper_wall_sakura"
+  },
+  "lepton_palette_palette_pink_framed_glass": {
+    "textures": "textures/blocks/palette/pink_framed_glass"
+  },
+  "lepton_palette_palette_pink_shingles": {
+    "textures": "textures/blocks/palette/pink_shingles"
+  },
+  "lepton_palette_palette_purple_framed_glass": {
+    "textures": "textures/blocks/palette/purple_framed_glass"
+  },
+  "lepton_palette_palette_purple_shingles": {
+    "textures": "textures/blocks/palette/purple_shingles"
+  },
+  "lepton_palette_palette_red_framed_glass": {
+    "textures": "textures/blocks/palette/red_framed_glass"
+  },
+  "lepton_palette_palette_red_shingles": {
+    "textures": "textures/blocks/palette/red_shingles"
+  },
+  "lepton_palette_palette_rusty_iron_plate": {
+    "textures": "textures/blocks/palette/rusty_iron_plate"
+  },
+  "lepton_palette_palette_shingles": {
+    "textures": "textures/blocks/palette/shingles"
+  },
+  "lepton_palette_palette_thatch_side": {
+    "textures": "textures/blocks/palette/thatch_side"
+  },
+  "lepton_palette_palette_thatch_top": {
+    "textures": "textures/blocks/palette/thatch_top"
+  },
+  "lepton_palette_palette_white_framed_glass": {
+    "textures": "textures/blocks/palette/white_framed_glass"
+  },
+  "lepton_palette_palette_white_shingles": {
+    "textures": "textures/blocks/palette/white_shingles"
+  },
+  "lepton_palette_palette_yellow_framed_glass": {
+    "textures": "textures/blocks/palette/yellow_framed_glass"
+  },
+  "lepton_palette_palette_yellow_shingles": {
+    "textures": "textures/blocks/palette/yellow_shingles"
+  }
+}

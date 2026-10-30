@@ -1,0 +1,76 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:toretoise",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "lepton:ore": { "type": "int", "range": [0, 5], "default": 0, "client_sync": true },
+        "lepton:fed": { "type": "bool", "default": false },
+        "lepton:regrow_at": { "type": "int", "range": [0, 2147483647], "default": 0 }
+      }
+    },
+    "component_groups": {
+      "lepton:frozen": { "minecraft:movement": { "value": 0 } },
+      "lepton:wild": {
+        "minecraft:despawn": { "despawn_from_distance": {} }
+      },
+      "lepton:fed": {
+        "minecraft:persistent": {}
+      },
+      "lepton:bare": {
+        "minecraft:collision_box": { "width": 2, "height": 1 }
+      },
+      "lepton:ore_shell": {
+        "minecraft:collision_box": { "width": 2, "height": 1.4 }
+      }
+    },
+    "components": {
+      "minecraft:type_family": { "family": ["lepton_toretoise", "toretoise", "mob"] },
+      "minecraft:collision_box": { "width": 2, "height": 1 },
+      "minecraft:health": { "value": 60, "max": 60 },
+      "minecraft:movement": { "value": 0.08 },
+      "minecraft:knockback_resistance": { "value": 1.0 },
+      "minecraft:fire_immune": true,
+      "minecraft:breathable": { "total_supply": 15, "suffocate_time": 0, "breathes_water": true, "breathes_air": true, "generates_bubbles": false },
+      "minecraft:damage_sensor": { "triggers": [{ "cause": "fall", "deals_damage": "no" }] },
+      "minecraft:navigation.walk": { "can_path_over_water": true, "avoid_damage_blocks": true },
+      "minecraft:movement.basic": {},
+      "minecraft:variable_max_auto_step": { "base_value": 1.0625, "jump_prevented_value": 1.0625 },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable": { "is_pushable": true, "is_pushable_by_piston": true },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:behavior.tempt": { "priority": 1, "speed_multiplier": 1.25, "items": ["glow_berries"] },
+      "minecraft:behavior.random_stroll": { "priority": 3, "speed_multiplier": 1.0 },
+      "minecraft:behavior.look_at_player": { "priority": 4, "look_distance": 6, "probability": 0.02 },
+      "minecraft:behavior.random_look_around": { "priority": 5 }
+    },
+    "events": {
+      "lepton:freeze": { "add": { "component_groups": ["lepton:frozen"] } },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          { "add": { "component_groups": ["lepton:wild", "lepton:ore_shell"] } },
+          {
+            "randomize": [
+              { "weight": 1, "set_property": { "lepton:ore": 1 } },
+              { "weight": 1, "set_property": { "lepton:ore": 2 } },
+              { "weight": 1, "set_property": { "lepton:ore": 3 } },
+              { "weight": 1, "set_property": { "lepton:ore": 4 } },
+              { "weight": 1, "set_property": { "lepton:ore": 5 } }
+            ]
+          }
+        ]
+      },
+      "lepton:ore_0": { "remove": { "component_groups": ["lepton:ore_shell"] }, "add": { "component_groups": ["lepton:bare"] }, "set_property": { "lepton:ore": 0 } },
+      "lepton:ore_1": { "remove": { "component_groups": ["lepton:bare"] }, "add": { "component_groups": ["lepton:ore_shell"] }, "set_property": { "lepton:ore": 1 } },
+      "lepton:ore_2": { "remove": { "component_groups": ["lepton:bare"] }, "add": { "component_groups": ["lepton:ore_shell"] }, "set_property": { "lepton:ore": 2 } },
+      "lepton:ore_3": { "remove": { "component_groups": ["lepton:bare"] }, "add": { "component_groups": ["lepton:ore_shell"] }, "set_property": { "lepton:ore": 3 } },
+      "lepton:ore_4": { "remove": { "component_groups": ["lepton:bare"] }, "add": { "component_groups": ["lepton:ore_shell"] }, "set_property": { "lepton:ore": 4 } },
+      "lepton:ore_5": { "remove": { "component_groups": ["lepton:bare"] }, "add": { "component_groups": ["lepton:ore_shell"] }, "set_property": { "lepton:ore": 5 } },
+      "lepton:tamed": { "remove": { "component_groups": ["lepton:wild"] }, "add": { "component_groups": ["lepton:fed"] }, "set_property": { "lepton:fed": true } }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:polished_myalite"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:myalite"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:myalite"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_myalite",
+      "count": 4
+    }
+  }
+}

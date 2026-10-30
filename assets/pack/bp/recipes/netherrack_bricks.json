@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:netherrack_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "C#",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:netherrack"
+      },
+      "C": {
+        "item": "lepton:cobblestone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:cobblestone_bricks"
+      },
+      {
+        "item": "minecraft:netherrack"
+      }
+    ],
+    "result": {
+      "item": "lepton:netherrack_bricks",
+      "count": 4
+    }
+  }
+}

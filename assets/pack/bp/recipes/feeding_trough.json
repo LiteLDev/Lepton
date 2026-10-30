@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:feeding_trough"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#W#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "tag": "minecraft:planks"
+      },
+      "W": {
+        "item": "minecraft:wheat"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:wheat"
+      }
+    ],
+    "result": {
+      "item": "lepton:feeding_trough",
+      "count": 1
+    }
+  }
+}

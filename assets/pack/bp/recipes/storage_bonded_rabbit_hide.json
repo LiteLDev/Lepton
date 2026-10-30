@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_bonded_rabbit_hide"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:rabbit_hide"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:rabbit_hide"
+      }
+    ],
+    "result": {
+      "item": "lepton:bonded_rabbit_hide",
+      "count": 1
+    }
+  }
+}

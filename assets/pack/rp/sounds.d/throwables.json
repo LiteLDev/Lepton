@@ -1,0 +1,67 @@
+{
+  "lepton.pickarang.throw": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/random/bow",
+        "pitch": 1.2,
+        "volume": 1.0
+      }
+    ]
+  },
+  "lepton.pickarang.clank": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "sounds/random/anvil_land",
+        "pitch": 2.0,
+        "volume": 0.5
+      }
+    ]
+  },
+  "lepton.pickarang.spark": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "sounds/random/fizz",
+        "pitch": 0.5,
+        "volume": 0.5
+      }
+    ]
+  },
+  "lepton.pickarang.pickup": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "sounds/random/pop",
+        "pitch": 1.125,
+        "volume": 0.5
+      },
+      {
+        "name": "sounds/random/pop",
+        "pitch": 1.0,
+        "volume": 0.5
+      },
+      {
+        "name": "sounds/random/pop",
+        "pitch": 0.875,
+        "volume": 0.5
+      },
+      {
+        "name": "sounds/random/pop",
+        "pitch": 0.75,
+        "volume": 0.5
+      }
+    ]
+  },
+  "lepton.parrot.egg": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "sounds/mob/chicken/plop",
+        "pitch": 1.0,
+        "volume": 1.0
+      }
+    ]
+  }
+}

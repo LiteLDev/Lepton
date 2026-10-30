@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:limestone_wall"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:limestone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:limestone"
+      }
+    ],
+    "result": {
+      "item": "lepton:limestone_wall",
+      "count": 6
+    }
+  }
+}

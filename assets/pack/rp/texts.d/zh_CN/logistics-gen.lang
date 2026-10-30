@@ -1,0 +1,6 @@
+entity.lepton:pipe_item.name=管道物品
+tile.lepton:chute.name=溜槽
+tile.lepton:crate.name=板条箱
+tile.lepton:encased_pipe.name=铜管道玻璃箱
+tile.lepton:feeding_trough.name=饲料槽
+tile.lepton:pipe.name=铜管道

@@ -1,0 +1,223 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:polished_limestone_vertical_slab",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.slab"
+      },
+      "states": {
+        "lepton:type": [
+          "north",
+          "south",
+          "west",
+          "east",
+          "double"
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:map_color": "#707070",
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:vertical_slab": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_newstones_newstones_polished_limestone",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.vertical_slab",
+        "bone_visibility": {
+          "half_n": "(q.block_state('lepton:type') == 'south' || q.block_state('lepton:type') == 'double')",
+          "half_s": "(q.block_state('lepton:type') == 'north' || q.block_state('lepton:type') == 'double')",
+          "half_w": "q.block_state('lepton:type') == 'east'",
+          "half_e": "q.block_state('lepton:type') == 'west'"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/polished_limestone_vertical_slab.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:type') == 'north'",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              0
+            ],
+            "size": [
+              16,
+              16,
+              8
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              0
+            ],
+            "size": [
+              16,
+              16,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'south'",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              8
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              8
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'west'",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              0,
+              0,
+              -8
+            ],
+            "size": [
+              8,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              0,
+              0,
+              -8
+            ],
+            "size": [
+              8,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'east'",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              8,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              8,
+              16,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:type') == 'double'",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              0,
+              -8
+            ],
+            "size": [
+              16,
+              16,
+              16
+            ]
+          },
+          "minecraft:light_dampening": 15,
+          "minecraft:loot": "loot_tables/blocks/polished_limestone_vertical_slab_double.json"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:thatch"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:wheat"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:wheat"
+      }
+    ],
+    "result": {
+      "item": "lepton:thatch",
+      "count": 4
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:crate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "IWI",
+      "WCW",
+      "IWI"
+    ],
+    "key": {
+      "C": {
+        "item": "minecraft:chest"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "W": {
+        "tag": "minecraft:planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:chest"
+      }
+    ],
+    "result": {
+      "item": "lepton:crate",
+      "count": 1
+    }
+  }
+}

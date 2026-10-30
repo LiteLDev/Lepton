@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:blue_corundum_lamp"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " R ",
+      "RCR",
+      " R "
+    ],
+    "key": {
+      "C": {
+        "item": "lepton:blue_corundum"
+      },
+      "R": {
+        "item": "minecraft:redstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:blue_corundum"
+      },
+      {
+        "item": "minecraft:redstone"
+      }
+    ],
+    "result": {
+      "item": "lepton:blue_crystal_lamp",
+      "count": 1
+    }
+  }
+}

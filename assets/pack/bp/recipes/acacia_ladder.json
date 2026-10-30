@@ -1,0 +1,37 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:acacia_ladder"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "# #",
+      "#W#",
+      "# #"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:stick"
+      },
+      "W": {
+        "item": "minecraft:acacia_planks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:acacia_planks"
+      },
+      {
+        "item": "minecraft:stick"
+      }
+    ],
+    "result": {
+      "item": "lepton:acacia_ladder",
+      "count": 4
+    },
+    "priority": -1
+  }
+}

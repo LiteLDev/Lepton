@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:smooth_quartz_vertical_slab_from_smooth_quartz_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:smooth_quartz"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:smooth_quartz"
+      }
+    ],
+    "result": {
+      "item": "lepton:smooth_quartz_vertical_slab",
+      "count": 2
+    }
+  }
+}

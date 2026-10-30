@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_direct_pale_oak_chest_boat"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "#X#",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "minecraft:pale_oak_planks"
+      },
+      "X": {
+        "item": "minecraft:chest"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:chest"
+      },
+      {
+        "item": "minecraft:pale_oak_planks"
+      }
+    ],
+    "result": {
+      "item": "minecraft:pale_oak_chest_boat",
+      "count": 1
+    }
+  }
+}

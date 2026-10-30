@@ -1,0 +1,72 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:gravisand",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "lepton:fall_up": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "events": {
+      "lepton:fall_up": {
+        "add": {
+          "component_groups": [
+            "lepton:fall_up"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:variant": {
+        "value": 0
+      },
+      "minecraft:type_family": {
+        "family": [
+          "lepton_gravisand",
+          "falling_block",
+          "inanimate"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.98,
+        "height": 0.98
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": "no"
+        }
+      },
+      "minecraft:health": {
+        "value": 1,
+        "max": 1
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:conditional_bandwidth_optimization": {
+        "default_values": {
+          "max_optimized_distance": 0,
+          "max_dropped_ticks": 0,
+          "use_motion_prediction_hints": true
+        }
+      }
+    }
+  }
+}

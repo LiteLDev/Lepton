@@ -1,0 +1,28 @@
+{
+  "lepton.monster_box.growl": {
+    "category": "block",
+    "subtitle": "quark.subtitles.growl",
+    "sounds": [
+      {
+        "name": "sounds/mob/ravager/idle1",
+        "pitch": 0.6,
+        "volume": 1.0
+      },
+      {
+        "name": "sounds/mob/ravager/idle2",
+        "pitch": 0.6,
+        "volume": 1.0
+      },
+      {
+        "name": "sounds/mob/ravager/idle3",
+        "pitch": 0.6,
+        "volume": 1.0
+      },
+      {
+        "name": "sounds/mob/ravager/idle4",
+        "pitch": 0.6,
+        "volume": 1.0
+      }
+    ]
+  }
+}

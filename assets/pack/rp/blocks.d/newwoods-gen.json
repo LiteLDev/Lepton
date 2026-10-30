@@ -1,0 +1,272 @@
+{
+  "lepton:ancient_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:ancient_button": {
+    "sound": "wood"
+  },
+  "lepton:ancient_door": {
+    "sound": "wood"
+  },
+  "lepton:ancient_fence": {
+    "sound": "wood"
+  },
+  "lepton:ancient_fence_gate": {
+    "sound": "wood"
+  },
+  "lepton:ancient_hedge": {
+    "sound": "wood"
+  },
+  "lepton:ancient_ladder": {
+    "sound": "wood"
+  },
+  "lepton:ancient_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:ancient_leaves": {
+    "sound": "grass"
+  },
+  "lepton:ancient_log": {
+    "sound": "wood"
+  },
+  "lepton:ancient_planks": {
+    "sound": "wood"
+  },
+  "lepton:ancient_planks_slab": {
+    "sound": "wood"
+  },
+  "lepton:ancient_planks_stairs": {
+    "sound": "wood"
+  },
+  "lepton:ancient_planks_vertical_slab": {
+    "sound": "wood"
+  },
+  "lepton:ancient_post": {
+    "sound": "wood"
+  },
+  "lepton:ancient_pressure_plate": {
+    "sound": "wood"
+  },
+  "lepton:ancient_sapling": {
+    "sound": "grass"
+  },
+  "lepton:ancient_trapdoor": {
+    "sound": "wood"
+  },
+  "lepton:ancient_wood": {
+    "sound": "wood"
+  },
+  "lepton:azalea_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:azalea_button": {
+    "sound": "wood"
+  },
+  "lepton:azalea_door": {
+    "sound": "wood"
+  },
+  "lepton:azalea_fence": {
+    "sound": "wood"
+  },
+  "lepton:azalea_fence_gate": {
+    "sound": "wood"
+  },
+  "lepton:azalea_ladder": {
+    "sound": "wood"
+  },
+  "lepton:azalea_log": {
+    "sound": "wood"
+  },
+  "lepton:azalea_planks": {
+    "sound": "wood"
+  },
+  "lepton:azalea_planks_slab": {
+    "sound": "wood"
+  },
+  "lepton:azalea_planks_stairs": {
+    "sound": "wood"
+  },
+  "lepton:azalea_planks_vertical_slab": {
+    "sound": "wood"
+  },
+  "lepton:azalea_post": {
+    "sound": "wood"
+  },
+  "lepton:azalea_pressure_plate": {
+    "sound": "wood"
+  },
+  "lepton:azalea_trapdoor": {
+    "sound": "wood"
+  },
+  "lepton:azalea_wood": {
+    "sound": "wood"
+  },
+  "lepton:blossom_bookshelf": {
+    "sound": "wood"
+  },
+  "lepton:blossom_button": {
+    "sound": "wood"
+  },
+  "lepton:blossom_door": {
+    "sound": "wood"
+  },
+  "lepton:blossom_fence": {
+    "sound": "wood"
+  },
+  "lepton:blossom_fence_gate": {
+    "sound": "wood"
+  },
+  "lepton:blossom_ladder": {
+    "sound": "wood"
+  },
+  "lepton:blossom_log": {
+    "sound": "wood"
+  },
+  "lepton:blossom_planks": {
+    "sound": "wood"
+  },
+  "lepton:blossom_planks_slab": {
+    "sound": "wood"
+  },
+  "lepton:blossom_planks_stairs": {
+    "sound": "wood"
+  },
+  "lepton:blossom_planks_vertical_slab": {
+    "sound": "wood"
+  },
+  "lepton:blossom_post": {
+    "sound": "wood"
+  },
+  "lepton:blossom_pressure_plate": {
+    "sound": "wood"
+  },
+  "lepton:blossom_trapdoor": {
+    "sound": "wood"
+  },
+  "lepton:blossom_wood": {
+    "sound": "wood"
+  },
+  "lepton:blue_blossom_hedge": {
+    "sound": "wood"
+  },
+  "lepton:blue_blossom_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:blue_blossom_leaves": {
+    "sound": "grass"
+  },
+  "lepton:blue_blossom_sapling": {
+    "sound": "grass"
+  },
+  "lepton:hollow_ancient_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_azalea_log": {
+    "sound": "wood"
+  },
+  "lepton:hollow_blossom_log": {
+    "sound": "wood"
+  },
+  "lepton:lavender_blossom_hedge": {
+    "sound": "wood"
+  },
+  "lepton:lavender_blossom_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:lavender_blossom_leaves": {
+    "sound": "grass"
+  },
+  "lepton:lavender_blossom_sapling": {
+    "sound": "grass"
+  },
+  "lepton:orange_blossom_hedge": {
+    "sound": "wood"
+  },
+  "lepton:orange_blossom_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:orange_blossom_leaves": {
+    "sound": "grass"
+  },
+  "lepton:orange_blossom_sapling": {
+    "sound": "grass"
+  },
+  "lepton:potted_ancient_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_blue_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_lavender_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_orange_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_red_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:potted_yellow_blossom_sapling": {
+    "sound": "stone"
+  },
+  "lepton:red_blossom_hedge": {
+    "sound": "wood"
+  },
+  "lepton:red_blossom_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:red_blossom_leaves": {
+    "sound": "grass"
+  },
+  "lepton:red_blossom_sapling": {
+    "sound": "grass"
+  },
+  "lepton:stripped_ancient_log": {
+    "sound": "wood"
+  },
+  "lepton:stripped_ancient_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_ancient_wood": {
+    "sound": "wood"
+  },
+  "lepton:stripped_azalea_log": {
+    "sound": "wood"
+  },
+  "lepton:stripped_azalea_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_azalea_wood": {
+    "sound": "wood"
+  },
+  "lepton:stripped_blossom_log": {
+    "sound": "wood"
+  },
+  "lepton:stripped_blossom_post": {
+    "sound": "wood"
+  },
+  "lepton:stripped_blossom_wood": {
+    "sound": "wood"
+  },
+  "lepton:vertical_ancient_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_azalea_planks": {
+    "sound": "wood"
+  },
+  "lepton:vertical_blossom_planks": {
+    "sound": "wood"
+  },
+  "lepton:yellow_blossom_hedge": {
+    "sound": "wood"
+  },
+  "lepton:yellow_blossom_leaf_carpet": {
+    "sound": "grass"
+  },
+  "lepton:yellow_blossom_leaves": {
+    "sound": "grass"
+  },
+  "lepton:yellow_blossom_sapling": {
+    "sound": "grass"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:ancient_chest_wood_ancient_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:ancient_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ancient_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:ancient_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

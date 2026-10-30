@@ -1,0 +1,8 @@
+entity.lepton:dyed_item_frame.name=Dyed Item Frame
+entity.lepton:glass_frame.name=Glass Item Frame
+item.lepton:dyed_glow_item_frame.name=Glow Item Frame
+item.lepton:dyed_item_frame.name=Item Frame
+item.lepton:glass_item_frame.name=Glass Item Frame
+item.lepton:glowing_glass_item_frame.name=Glow Glass Item Frame
+tile.lepton:glass_item_frame.name=Glass Item Frame
+tile.lepton:glowing_glass_item_frame.name=Glow Glass Item Frame

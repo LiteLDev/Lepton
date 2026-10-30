@@ -1,0 +1,52 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:black_framed_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "minecraft:black_dye"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:framed_glass"
+      },
+      {
+        "item": "minecraft:black_dye"
+      }
+    ],
+    "result": {
+      "item": "lepton:black_framed_glass",
+      "count": 8
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:hollow_warped_stem"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " L ",
+      "L L",
+      " L "
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:warped_stem"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:warped_stem"
+      }
+    ],
+    "result": {
+      "item": "lepton:hollow_warped_stem",
+      "count": 4
+    }
+  }
+}

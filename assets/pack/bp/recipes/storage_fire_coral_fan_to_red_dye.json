@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_fire_coral_fan_to_red_dye"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:fire_coral_fan"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:fire_coral_fan"
+      }
+    ],
+    "result": {
+      "item": "minecraft:red_dye",
+      "count": 1
+    }
+  }
+}

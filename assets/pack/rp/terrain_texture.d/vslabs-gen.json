@@ -1,0 +1,302 @@
+{
+  "lepton_vslabs_bamboo_mosaic": {
+    "textures": "textures/blocks/bamboo_mosaic"
+  },
+  "lepton_vslabs_bamboo_planks": {
+    "textures": "textures/blocks/bamboo_planks"
+  },
+  "lepton_vslabs_blackstone": {
+    "textures": "textures/blocks/blackstone"
+  },
+  "lepton_vslabs_brick": {
+    "textures": "textures/blocks/brick"
+  },
+  "lepton_vslabs_cherry_planks": {
+    "textures": "textures/blocks/cherry_planks"
+  },
+  "lepton_vslabs_cinnabar": {
+    "textures": "textures/blocks/cinnabar"
+  },
+  "lepton_vslabs_cinnabar_bricks": {
+    "textures": "textures/blocks/cinnabar_bricks"
+  },
+  "lepton_vslabs_cobblestone": {
+    "textures": "textures/blocks/cobblestone"
+  },
+  "lepton_vslabs_cobblestone_mossy": {
+    "textures": "textures/blocks/cobblestone_mossy"
+  },
+  "lepton_vslabs_concrete_black": {
+    "textures": "textures/blocks/concrete_black"
+  },
+  "lepton_vslabs_concrete_blue": {
+    "textures": "textures/blocks/concrete_blue"
+  },
+  "lepton_vslabs_concrete_brown": {
+    "textures": "textures/blocks/concrete_brown"
+  },
+  "lepton_vslabs_concrete_cyan": {
+    "textures": "textures/blocks/concrete_cyan"
+  },
+  "lepton_vslabs_concrete_gray": {
+    "textures": "textures/blocks/concrete_gray"
+  },
+  "lepton_vslabs_concrete_green": {
+    "textures": "textures/blocks/concrete_green"
+  },
+  "lepton_vslabs_concrete_light_blue": {
+    "textures": "textures/blocks/concrete_light_blue"
+  },
+  "lepton_vslabs_concrete_lime": {
+    "textures": "textures/blocks/concrete_lime"
+  },
+  "lepton_vslabs_concrete_magenta": {
+    "textures": "textures/blocks/concrete_magenta"
+  },
+  "lepton_vslabs_concrete_orange": {
+    "textures": "textures/blocks/concrete_orange"
+  },
+  "lepton_vslabs_concrete_pink": {
+    "textures": "textures/blocks/concrete_pink"
+  },
+  "lepton_vslabs_concrete_purple": {
+    "textures": "textures/blocks/concrete_purple"
+  },
+  "lepton_vslabs_concrete_red": {
+    "textures": "textures/blocks/concrete_red"
+  },
+  "lepton_vslabs_concrete_silver": {
+    "textures": "textures/blocks/concrete_silver"
+  },
+  "lepton_vslabs_concrete_white": {
+    "textures": "textures/blocks/concrete_white"
+  },
+  "lepton_vslabs_concrete_yellow": {
+    "textures": "textures/blocks/concrete_yellow"
+  },
+  "lepton_vslabs_cut_copper": {
+    "textures": "textures/blocks/cut_copper"
+  },
+  "lepton_vslabs_deepslate_cobbled_deepslate": {
+    "textures": "textures/blocks/deepslate/cobbled_deepslate"
+  },
+  "lepton_vslabs_deepslate_deepslate_bricks": {
+    "textures": "textures/blocks/deepslate/deepslate_bricks"
+  },
+  "lepton_vslabs_deepslate_deepslate_tiles": {
+    "textures": "textures/blocks/deepslate/deepslate_tiles"
+  },
+  "lepton_vslabs_deepslate_polished_deepslate": {
+    "textures": "textures/blocks/deepslate/polished_deepslate"
+  },
+  "lepton_vslabs_end_bricks": {
+    "textures": "textures/blocks/end_bricks"
+  },
+  "lepton_vslabs_exposed_cut_copper": {
+    "textures": "textures/blocks/exposed_cut_copper"
+  },
+  "lepton_vslabs_huge_fungus_crimson_planks": {
+    "textures": "textures/blocks/huge_fungus/crimson_planks"
+  },
+  "lepton_vslabs_huge_fungus_warped_planks": {
+    "textures": "textures/blocks/huge_fungus/warped_planks"
+  },
+  "lepton_vslabs_mangrove_planks": {
+    "textures": "textures/blocks/mangrove_planks"
+  },
+  "lepton_vslabs_mud_bricks": {
+    "textures": "textures/blocks/mud_bricks"
+  },
+  "lepton_vslabs_nether_brick": {
+    "textures": "textures/blocks/nether_brick"
+  },
+  "lepton_vslabs_oxidized_cut_copper": {
+    "textures": "textures/blocks/oxidized_cut_copper"
+  },
+  "lepton_vslabs_pale_oak_planks": {
+    "textures": "textures/blocks/pale_oak_planks"
+  },
+  "lepton_vslabs_planks_acacia": {
+    "textures": "textures/blocks/planks_acacia"
+  },
+  "lepton_vslabs_planks_big_oak": {
+    "textures": "textures/blocks/planks_big_oak"
+  },
+  "lepton_vslabs_planks_birch": {
+    "textures": "textures/blocks/planks_birch"
+  },
+  "lepton_vslabs_planks_jungle": {
+    "textures": "textures/blocks/planks_jungle"
+  },
+  "lepton_vslabs_planks_oak": {
+    "textures": "textures/blocks/planks_oak"
+  },
+  "lepton_vslabs_planks_spruce": {
+    "textures": "textures/blocks/planks_spruce"
+  },
+  "lepton_vslabs_polished_blackstone": {
+    "textures": "textures/blocks/polished_blackstone"
+  },
+  "lepton_vslabs_polished_blackstone_bricks": {
+    "textures": "textures/blocks/polished_blackstone_bricks"
+  },
+  "lepton_vslabs_polished_cinnabar": {
+    "textures": "textures/blocks/polished_cinnabar"
+  },
+  "lepton_vslabs_polished_sulfur": {
+    "textures": "textures/blocks/polished_sulfur"
+  },
+  "lepton_vslabs_polished_tuff": {
+    "textures": "textures/blocks/polished_tuff"
+  },
+  "lepton_vslabs_poplar_planks": {
+    "textures": "textures/blocks/poplar_planks"
+  },
+  "lepton_vslabs_prismarine_bricks": {
+    "textures": "textures/blocks/prismarine_bricks"
+  },
+  "lepton_vslabs_prismarine_dark": {
+    "textures": "textures/blocks/prismarine_dark"
+  },
+  "lepton_vslabs_prismarine_rough": {
+    "textures": "textures/blocks/prismarine_rough"
+  },
+  "lepton_vslabs_purpur_block": {
+    "textures": "textures/blocks/purpur_block"
+  },
+  "lepton_vslabs_quartz_block_bottom": {
+    "textures": "textures/blocks/quartz_block_bottom"
+  },
+  "lepton_vslabs_quartz_block_side": {
+    "textures": "textures/blocks/quartz_block_side"
+  },
+  "lepton_vslabs_quartz_block_top": {
+    "textures": "textures/blocks/quartz_block_top"
+  },
+  "lepton_vslabs_red_nether_brick": {
+    "textures": "textures/blocks/red_nether_brick"
+  },
+  "lepton_vslabs_red_sandstone_bottom": {
+    "textures": "textures/blocks/red_sandstone_bottom"
+  },
+  "lepton_vslabs_red_sandstone_normal": {
+    "textures": "textures/blocks/red_sandstone_normal"
+  },
+  "lepton_vslabs_red_sandstone_smooth": {
+    "textures": "textures/blocks/red_sandstone_smooth"
+  },
+  "lepton_vslabs_red_sandstone_top": {
+    "textures": "textures/blocks/red_sandstone_top"
+  },
+  "lepton_vslabs_resin_bricks": {
+    "textures": "textures/blocks/resin_bricks"
+  },
+  "lepton_vslabs_sandstone_bottom": {
+    "textures": "textures/blocks/sandstone_bottom"
+  },
+  "lepton_vslabs_sandstone_normal": {
+    "textures": "textures/blocks/sandstone_normal"
+  },
+  "lepton_vslabs_sandstone_smooth": {
+    "textures": "textures/blocks/sandstone_smooth"
+  },
+  "lepton_vslabs_sandstone_top": {
+    "textures": "textures/blocks/sandstone_top"
+  },
+  "lepton_vslabs_stone": {
+    "textures": "textures/blocks/stone"
+  },
+  "lepton_vslabs_stone_andesite": {
+    "textures": "textures/blocks/stone_andesite"
+  },
+  "lepton_vslabs_stone_andesite_smooth": {
+    "textures": "textures/blocks/stone_andesite_smooth"
+  },
+  "lepton_vslabs_stone_diorite": {
+    "textures": "textures/blocks/stone_diorite"
+  },
+  "lepton_vslabs_stone_diorite_smooth": {
+    "textures": "textures/blocks/stone_diorite_smooth"
+  },
+  "lepton_vslabs_stone_granite": {
+    "textures": "textures/blocks/stone_granite"
+  },
+  "lepton_vslabs_stone_granite_smooth": {
+    "textures": "textures/blocks/stone_granite_smooth"
+  },
+  "lepton_vslabs_stone_slab_side": {
+    "textures": "textures/blocks/stone_slab_side"
+  },
+  "lepton_vslabs_stone_slab_top": {
+    "textures": "textures/blocks/stone_slab_top"
+  },
+  "lepton_vslabs_stonebrick": {
+    "textures": "textures/blocks/stonebrick"
+  },
+  "lepton_vslabs_stonebrick_mossy": {
+    "textures": "textures/blocks/stonebrick_mossy"
+  },
+  "lepton_vslabs_sulfur": {
+    "textures": "textures/blocks/sulfur"
+  },
+  "lepton_vslabs_sulfur_bricks": {
+    "textures": "textures/blocks/sulfur_bricks"
+  },
+  "lepton_vslabs_tuff": {
+    "textures": "textures/blocks/tuff"
+  },
+  "lepton_vslabs_tuff_bricks": {
+    "textures": "textures/blocks/tuff_bricks"
+  },
+  "lepton_vslabs_weathered_cut_copper": {
+    "textures": "textures/blocks/weathered_cut_copper"
+  },
+  "lepton_vslabs_wool_colored_black": {
+    "textures": "textures/blocks/wool_colored_black"
+  },
+  "lepton_vslabs_wool_colored_blue": {
+    "textures": "textures/blocks/wool_colored_blue"
+  },
+  "lepton_vslabs_wool_colored_brown": {
+    "textures": "textures/blocks/wool_colored_brown"
+  },
+  "lepton_vslabs_wool_colored_cyan": {
+    "textures": "textures/blocks/wool_colored_cyan"
+  },
+  "lepton_vslabs_wool_colored_gray": {
+    "textures": "textures/blocks/wool_colored_gray"
+  },
+  "lepton_vslabs_wool_colored_green": {
+    "textures": "textures/blocks/wool_colored_green"
+  },
+  "lepton_vslabs_wool_colored_light_blue": {
+    "textures": "textures/blocks/wool_colored_light_blue"
+  },
+  "lepton_vslabs_wool_colored_lime": {
+    "textures": "textures/blocks/wool_colored_lime"
+  },
+  "lepton_vslabs_wool_colored_magenta": {
+    "textures": "textures/blocks/wool_colored_magenta"
+  },
+  "lepton_vslabs_wool_colored_orange": {
+    "textures": "textures/blocks/wool_colored_orange"
+  },
+  "lepton_vslabs_wool_colored_pink": {
+    "textures": "textures/blocks/wool_colored_pink"
+  },
+  "lepton_vslabs_wool_colored_purple": {
+    "textures": "textures/blocks/wool_colored_purple"
+  },
+  "lepton_vslabs_wool_colored_red": {
+    "textures": "textures/blocks/wool_colored_red"
+  },
+  "lepton_vslabs_wool_colored_silver": {
+    "textures": "textures/blocks/wool_colored_silver"
+  },
+  "lepton_vslabs_wool_colored_white": {
+    "textures": "textures/blocks/wool_colored_white"
+  },
+  "lepton_vslabs_wool_colored_yellow": {
+    "textures": "textures/blocks/wool_colored_yellow"
+  }
+}

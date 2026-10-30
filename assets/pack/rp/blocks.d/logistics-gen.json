@@ -1,0 +1,17 @@
+{
+  "lepton:chute": {
+    "sound": "wood"
+  },
+  "lepton:crate": {
+    "sound": "wood"
+  },
+  "lepton:encased_pipe": {
+    "sound": "glass"
+  },
+  "lepton:feeding_trough": {
+    "sound": "wood"
+  },
+  "lepton:pipe": {
+    "sound": "copper"
+  }
+}

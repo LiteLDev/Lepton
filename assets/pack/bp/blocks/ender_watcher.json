@@ -1,0 +1,183 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:ender_watcher",
+      "menu_category": {
+        "category": "items"
+      },
+      "states": {
+        "lepton:watched": [
+          false,
+          true
+        ],
+        "lepton:power": {
+          "values": {
+            "min": 0,
+            "max": 15
+          }
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 3
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 10
+      },
+      "minecraft:map_color": "#667f33",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_redstone_ender_watcher",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:tick": {
+        "interval_range": [
+          1,
+          1
+        ],
+        "looping": true
+      },
+      "minecraft:loot": "loot_tables/blocks/ender_watcher.json",
+      "tag:lepton:ender_watcher": {},
+      "tag:metal": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {}
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:watched') == true",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "lepton_redstone_ender_watcher_on",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 1",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 1
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 2",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 2
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 3",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 3
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 4",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 4
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 5",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 5
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 6",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 6
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 7",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 7
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 8",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 8
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 9",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 9
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 10",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 10
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 11",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 11
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 12",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 12
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 13",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 13
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 14",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 14
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('lepton:power') == 15",
+        "components": {
+          "minecraft:redstone_producer": {
+            "power": 15
+          }
+        }
+      }
+    ]
+  }
+}

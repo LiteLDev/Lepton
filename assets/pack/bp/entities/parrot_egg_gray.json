@@ -1,0 +1,49 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:parrot_egg_gray",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lepton_parrot_egg",
+          "inanimate"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:projectile": {
+        "on_hit": {
+          "impact_damage": {
+            "damage": 0,
+            "knockback": true,
+            "destroy_on_hit": false
+          },
+          "remove_on_hit": {},
+          "particle_on_hit": {
+            "particle_type": "iconcrack",
+            "num_particles": 8,
+            "on_entity_hit": true,
+            "on_other_hit": true
+          }
+        },
+        "power": 1.5,
+        "gravity": 0.03,
+        "angle_offset": 0.0,
+        "uncertainty_base": 1.0,
+        "shoot_sound": "bow"
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      }
+    }
+  }
+}

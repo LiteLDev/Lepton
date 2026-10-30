@@ -1,0 +1,48 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:backpack"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "LRL",
+      "LCL",
+      "LIL"
+    ],
+    "key": {
+      "C": {
+        "item": "minecraft:chest"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "R": {
+        "item": "lepton:ravager_hide"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ravager_hide"
+      },
+      {
+        "item": "minecraft:chest"
+      },
+      {
+        "item": "minecraft:iron_ingot"
+      },
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "lepton:backpack",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:stripped_blossom_post",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.wood"
+      },
+      "states": {
+        "lepton:side_0": [
+          "none",
+          "chain",
+          "other_post"
+        ],
+        "lepton:side_1": [
+          "none",
+          "chain",
+          "other_post"
+        ],
+        "lepton:side_2": [
+          "none",
+          "chain",
+          "other_post"
+        ],
+        "lepton:side_3": [
+          "none",
+          "chain",
+          "other_post"
+        ]
+      },
+      "traits": {
+        "minecraft:placement_position": {
+          "enabled_states": [
+            "minecraft:block_face"
+          ]
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3.0
+      },
+      "minecraft:map_color": "#993333",
+      "minecraft:flammable": {
+        "catch_chance_modifier": 5,
+        "destroy_chance_modifier": 20
+      },
+      "tag:lepton:post": {},
+      "tag:lepton:wv_wooden_posts": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:liquid_detection": {
+        "detection_rules": [
+          {
+            "liquid_type": "water",
+            "can_contain_liquid": true,
+            "on_liquid_touches": "no_reaction"
+          }
+        ]
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_newwoods_newwoods_stripped_blossom_log",
+          "render_method": "alpha_test"
+        },
+        "side": {
+          "texture": "lepton_newwoods_newwoods_stripped_blossom_log",
+          "render_method": "alpha_test"
+        },
+        "chain": {
+          "texture": "lepton_newwoods_woodvariants_post_chain",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.wv_post",
+        "bone_visibility": {
+          "beam_x": "(q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west')",
+          "beam_y": "(q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down')",
+          "beam_z": "(q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south')",
+          "post_down": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_0') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_0') == 'other_post'))",
+          "chain_down": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_0') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_0') == 'chain'))",
+          "post_up": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_1') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_1') == 'other_post'))",
+          "chain_up": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_1') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_1') == 'chain'))",
+          "post_north": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_2') == 'other_post') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_0') == 'other_post'))",
+          "chain_north": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_2') == 'chain') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_0') == 'chain'))",
+          "post_south": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_3') == 'other_post') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_1') == 'other_post'))",
+          "chain_south": "(((q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west') && q.block_state('lepton:side_3') == 'chain') || ((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_1') == 'chain'))",
+          "post_west": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_2') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_2') == 'other_post'))",
+          "chain_west": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_2') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_2') == 'chain'))",
+          "post_east": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_3') == 'other_post') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_3') == 'other_post'))",
+          "chain_east": "(((q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down') && q.block_state('lepton:side_3') == 'chain') || ((q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south') && q.block_state('lepton:side_3') == 'chain'))"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/stripped_blossom_post.json"
+    },
+    "permutations": [
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'east' || q.block_state('minecraft:block_face') == 'west')",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -8,
+              6,
+              -2
+            ],
+            "size": [
+              16,
+              4,
+              4
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -8,
+              6,
+              -2
+            ],
+            "size": [
+              16,
+              4,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'up' || q.block_state('minecraft:block_face') == 'down')",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -2,
+              0,
+              -2
+            ],
+            "size": [
+              4,
+              16,
+              4
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -2,
+              0,
+              -2
+            ],
+            "size": [
+              4,
+              16,
+              4
+            ]
+          }
+        }
+      },
+      {
+        "condition": "(q.block_state('minecraft:block_face') == 'north' || q.block_state('minecraft:block_face') == 'south')",
+        "components": {
+          "minecraft:collision_box": {
+            "origin": [
+              -2,
+              6,
+              -8
+            ],
+            "size": [
+              4,
+              4,
+              16
+            ]
+          },
+          "minecraft:selection_box": {
+            "origin": [
+              -2,
+              6,
+              -8
+            ],
+            "size": [
+              4,
+              4,
+              16
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

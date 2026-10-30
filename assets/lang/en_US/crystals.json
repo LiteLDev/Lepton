@@ -1,0 +1,18 @@
+{
+  "quark.jei.hint.corundum": "Can be found underground in large clusters of two colors each. Will slowly grow upwards if placed deep underground. Can be waxed to prevent growth and particle emission.",
+  "quark.jei.hint.crystal_lamp": "These lamps will only change the color of a beacon beam when turned on.",
+  "quark.jei.hint.magnet": "Can push and pull any blocks made of Copper or Iron when powered, depending on the side. If multiple magnets are moving the same block, the biggest force will win. A magnet's force on a block is the redstone signal it's given minus the distance to the block. Hoppers moved with a Magnet will drop one item in front for each block moved. If the item is a seed, it'll try to plant it instead. Stonecutters moved with a Magnet will try to break the block above them.",
+  "quark.jei.hint.beacon_redirection": "The beacon beam can be redirected with {} by placing it in the beam's path. Note that the final one must always face towards the sky, and that the beam has a limited horizontal distance it can cover.",
+  "quark.jei.hint.beacon_amethyst": "Amethyst",
+  "quark.jei.hint.beacon_corundum": "Corundum",
+  "quark.jei.hint.corundum_cluster_grow": "Grows alongside the respective Corundum, either naturally spawned or when left to grow.",
+  "quark.jei.hint.corundum_cluster_redirect": "Can redirect Beacon beams, check the Beacon item for info.",
+  "quark.jei.hint.minecraft.tinted_glass": "Can be used to make Beacon beams dimmer by placing the block in the way. Multiple will stack.",
+  "lp.crystals.info.header": "Crystals ({}):",
+  "lp.crystals.info.disabled": "This module is disabled.",
+  "lp.crystals.magnetic": "{} is magnetic: {}",
+  "lp.crystals.yes": "yes",
+  "lp.crystals.no": "no",
+  "lp.crystals.players_only": "Only players can use this command.",
+  "lp.crystals.hold_item": "Hold an item in your main hand."
+}

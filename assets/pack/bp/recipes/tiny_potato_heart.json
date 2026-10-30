@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:tiny_potato_heart"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "H",
+      "P"
+    ],
+    "key": {
+      "H": {
+        "item": "lepton:diamond_heart"
+      },
+      "P": {
+        "item": "minecraft:potato"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:diamond_heart"
+      },
+      {
+        "item": "minecraft:potato"
+      }
+    ],
+    "result": {
+      "item": "lepton:tiny_potato",
+      "count": 1
+    }
+  }
+}

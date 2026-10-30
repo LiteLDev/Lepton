@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:granite_bricks_wall_from_granite_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:granite"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:granite"
+      }
+    ],
+    "result": {
+      "item": "lepton:granite_bricks_wall",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "lepton_mobsoverworld_crab_leg": {
+    "textures": "textures/items/crab_leg"
+  },
+  "lepton_mobsoverworld_cooked_crab_leg": {
+    "textures": "textures/items/cooked_crab_leg"
+  },
+  "lepton_mobsoverworld_crab_shell": {
+    "textures": "textures/items/crab_shell"
+  },
+  "lepton_mobsoverworld_crab_bucket": {
+    "textures": "textures/items/crab_bucket"
+  },
+  "lepton_mobsoverworld_resilience_potion": {
+    "textures": "textures/items/resilience_potion"
+  },
+  "lepton_mobsoverworld_resilience_splash_potion": {
+    "textures": "textures/items/resilience_splash_potion"
+  },
+  "lepton_mobsoverworld_resilience_lingering_potion": {
+    "textures": "textures/items/resilience_lingering_potion"
+  }
+}

@@ -1,0 +1,12 @@
+entity.lepton:forgotten.name=遗忘者
+entity.lepton:foxhound.name=猎狐犬
+entity.lepton:soul_bead.name=灵魂珠
+entity.lepton:stoneling.name=石精灵
+entity.lepton:wraith.name=游魂
+item.lepton:diamond_heart.name=钻石之心
+item.lepton:forgotten_hat.name=遗忘者之帽
+item.lepton:soul_bead.name=灵魂珠
+item.spawn_egg.entity.lepton:forgotten.name=遗忘者刷怪蛋
+item.spawn_egg.entity.lepton:foxhound.name=猎狐犬刷怪蛋
+item.spawn_egg.entity.lepton:stoneling.name=石精灵刷怪蛋
+item.spawn_egg.entity.lepton:wraith.name=游魂刷怪蛋

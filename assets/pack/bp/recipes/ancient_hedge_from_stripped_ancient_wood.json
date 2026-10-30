@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:ancient_hedge_from_stripped_ancient_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "lepton:ancient_leaves"
+      },
+      "W": {
+        "item": "lepton:stripped_ancient_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:ancient_leaves"
+      },
+      {
+        "item": "lepton:stripped_ancient_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:ancient_hedge",
+      "count": 2
+    }
+  }
+}

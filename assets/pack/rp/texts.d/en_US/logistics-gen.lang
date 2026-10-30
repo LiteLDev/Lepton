@@ -1,0 +1,6 @@
+entity.lepton:pipe_item.name=Pipe Item
+tile.lepton:chute.name=Chute
+tile.lepton:crate.name=Storage Crate
+tile.lepton:encased_pipe.name=Encased Copper Pipe
+tile.lepton:feeding_trough.name=Feeding Trough
+tile.lepton:pipe.name=Copper Pipe

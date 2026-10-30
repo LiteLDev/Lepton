@@ -1,0 +1,6 @@
+{
+  "quark.jei.hint.repair_item_changed": "This item's repair material in an Anvil has been changed to {}.",
+  "quark.jei.hint.repair_item_changed_multiple": "This item's repair material in an Anvil has been changed to one of {}.",
+  "quark.jei.hint.repair_item_removed": "This item has been changed to not be repairable in an Anvil using repair materials.",
+  "lp.mobtweaks.player_head": "{}'s Head"
+}

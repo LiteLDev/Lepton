@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:storage_bonded_leather_uncompress"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:bonded_leather"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:bonded_leather"
+      }
+    ],
+    "result": {
+      "item": "minecraft:leather",
+      "count": 9
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:seed_pouch_cherry_sapling"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " S ",
+      "HXH",
+      " H "
+    ],
+    "key": {
+      "H": {
+        "item": "minecraft:leather"
+      },
+      "S": {
+        "item": "minecraft:string"
+      },
+      "X": {
+        "item": "minecraft:cherry_sapling"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:cherry_sapling"
+      },
+      {
+        "item": "minecraft:leather"
+      },
+      {
+        "item": "minecraft:string"
+      }
+    ],
+    "result": {
+      "item": "lepton:seed_pouch",
+      "count": 1
+    }
+  }
+}

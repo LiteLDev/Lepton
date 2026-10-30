@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:red_blossom_hedge_from_blossom_wood"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L",
+      "W"
+    ],
+    "key": {
+      "L": {
+        "item": "lepton:red_blossom_leaves"
+      },
+      "W": {
+        "item": "lepton:blossom_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:blossom_wood"
+      },
+      {
+        "item": "lepton:red_blossom_leaves"
+      }
+    ],
+    "result": {
+      "item": "lepton:red_blossom_hedge",
+      "count": 2
+    }
+  }
+}

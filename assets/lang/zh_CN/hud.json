@@ -1,0 +1,17 @@
+{
+  "quark.misc.autowalking": "自动行走",
+  "quark.misc.saturation0": "大餐",
+  "quark.misc.saturation1": "饱餐",
+  "quark.misc.saturation2": "普通餐",
+  "quark.misc.saturation3": "简餐",
+  "quark.misc.saturation4": "小吃",
+  "quark.misc.saturation5": "全餐",
+  "quark.misc.bad_saturation0": "烦扰满溢",
+  "quark.misc.bad_saturation1": "过分丰盛",
+  "quark.misc.bad_saturation2": "鲁莽大餐",
+  "quark.misc.bad_saturation3": "可疑食粮",
+  "quark.misc.bad_saturation4": "恶心小吃",
+  "quark.misc.bad_saturation5": "危险诱惑",
+  "quark.misc.shulker_box_shift": "按住Shift查看内容物",
+  "quark.misc.map_shift": "按住Shift查看地图"
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:stripped_dark_oak_post"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "F",
+      "F"
+    ],
+    "key": {
+      "F": {
+        "item": "minecraft:stripped_dark_oak_wood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:stripped_dark_oak_wood"
+      }
+    ],
+    "result": {
+      "item": "lepton:stripped_dark_oak_post",
+      "count": 8
+    }
+  }
+}

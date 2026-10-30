@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:storage_white_glass"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "##",
+      "##"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:white_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:white_shard"
+      }
+    ],
+    "result": {
+      "item": "minecraft:white_stained_glass",
+      "count": 1
+    }
+  }
+}

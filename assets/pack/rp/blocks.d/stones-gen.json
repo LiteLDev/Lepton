@@ -1,0 +1,209 @@
+{
+  "lepton:andesite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:andesite_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:andesite_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:andesite_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:andesite_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:andesite_pillar": {
+    "sound": "stone"
+  },
+  "lepton:calcite_bricks": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_bricks_slab": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_bricks_stairs": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_bricks_vertical_slab": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_bricks_wall": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_pillar": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_slab": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_stairs": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_vertical_slab": {
+    "sound": "calcite"
+  },
+  "lepton:calcite_wall": {
+    "sound": "calcite"
+  },
+  "lepton:chiseled_andesite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:chiseled_calcite_bricks": {
+    "sound": "calcite"
+  },
+  "lepton:chiseled_diorite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:chiseled_dripstone_bricks": {
+    "sound": "dripstone_block"
+  },
+  "lepton:chiseled_granite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:diorite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:diorite_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:diorite_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:diorite_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:diorite_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:diorite_pillar": {
+    "sound": "stone"
+  },
+  "lepton:dripstone_block_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_block_stairs": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_block_vertical_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_block_wall": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_bricks": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_bricks_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_bricks_stairs": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_bricks_vertical_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_bricks_wall": {
+    "sound": "dripstone_block"
+  },
+  "lepton:dripstone_pillar": {
+    "sound": "dripstone_block"
+  },
+  "lepton:granite_bricks": {
+    "sound": "stone"
+  },
+  "lepton:granite_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:granite_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:granite_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:granite_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:granite_pillar": {
+    "sound": "stone"
+  },
+  "lepton:polished_calcite": {
+    "sound": "calcite"
+  },
+  "lepton:polished_calcite_slab": {
+    "sound": "calcite"
+  },
+  "lepton:polished_calcite_stairs": {
+    "sound": "calcite"
+  },
+  "lepton:polished_calcite_vertical_slab": {
+    "sound": "calcite"
+  },
+  "lepton:polished_dripstone": {
+    "sound": "dripstone_block"
+  },
+  "lepton:polished_dripstone_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:polished_dripstone_stairs": {
+    "sound": "dripstone_block"
+  },
+  "lepton:polished_dripstone_vertical_slab": {
+    "sound": "dripstone_block"
+  },
+  "lepton:raw_copper_bricks": {
+    "sound": "stone"
+  },
+  "lepton:raw_copper_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_copper_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:raw_copper_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_copper_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:raw_gold_bricks": {
+    "sound": "stone"
+  },
+  "lepton:raw_gold_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_gold_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:raw_gold_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_gold_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:raw_iron_bricks": {
+    "sound": "stone"
+  },
+  "lepton:raw_iron_bricks_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_iron_bricks_stairs": {
+    "sound": "stone"
+  },
+  "lepton:raw_iron_bricks_vertical_slab": {
+    "sound": "stone"
+  },
+  "lepton:raw_iron_bricks_wall": {
+    "sound": "stone"
+  },
+  "lepton:stone_brick_lamp": {
+    "sound": "stone"
+  },
+  "lepton:stone_lamp": {
+    "sound": "stone"
+  },
+  "lepton:sturdy_stone": {
+    "sound": "stone"
+  }
+}

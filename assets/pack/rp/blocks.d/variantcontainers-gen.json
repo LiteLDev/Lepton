@@ -1,0 +1,110 @@
+{
+  "lepton:acacia_chest": {
+    "sound": "wood"
+  },
+  "lepton:ancient_chest": {
+    "sound": "wood"
+  },
+  "lepton:azalea_chest": {
+    "sound": "wood"
+  },
+  "lepton:bamboo_chest": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:birch_chest": {
+    "sound": "wood"
+  },
+  "lepton:blackstone_furnace": {
+    "sound": "stone"
+  },
+  "lepton:blossom_chest": {
+    "sound": "wood"
+  },
+  "lepton:cherry_chest": {
+    "sound": "cherry_wood"
+  },
+  "lepton:crimson_chest": {
+    "sound": "nether_wood"
+  },
+  "lepton:dark_oak_chest": {
+    "sound": "wood"
+  },
+  "lepton:deepslate_furnace": {
+    "sound": "deepslate"
+  },
+  "lepton:jungle_chest": {
+    "sound": "wood"
+  },
+  "lepton:mangrove_chest": {
+    "sound": "wood"
+  },
+  "lepton:nether_brick_chest": {
+    "sound": "nether_brick"
+  },
+  "lepton:oak_chest": {
+    "sound": "wood"
+  },
+  "lepton:prismarine_chest": {
+    "sound": "stone"
+  },
+  "lepton:purpur_chest": {
+    "sound": "stone"
+  },
+  "lepton:spruce_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_acacia_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_ancient_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_azalea_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_bamboo_chest": {
+    "sound": "bamboo_wood"
+  },
+  "lepton:trapped_birch_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_blossom_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_cherry_chest": {
+    "sound": "cherry_wood"
+  },
+  "lepton:trapped_crimson_chest": {
+    "sound": "nether_wood"
+  },
+  "lepton:trapped_dark_oak_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_jungle_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_mangrove_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_nether_brick_chest": {
+    "sound": "nether_brick"
+  },
+  "lepton:trapped_oak_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_prismarine_chest": {
+    "sound": "stone"
+  },
+  "lepton:trapped_purpur_chest": {
+    "sound": "stone"
+  },
+  "lepton:trapped_spruce_chest": {
+    "sound": "wood"
+  },
+  "lepton:trapped_warped_chest": {
+    "sound": "nether_wood"
+  },
+  "lepton:warped_chest": {
+    "sound": "nether_wood"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:polished_shale_vertical_slab_revert"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:polished_shale_vertical_slab"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:polished_shale_vertical_slab"
+      }
+    ],
+    "result": {
+      "item": "lepton:polished_shale_slab",
+      "count": 1
+    }
+  }
+}

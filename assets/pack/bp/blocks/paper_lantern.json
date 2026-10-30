@@ -1,0 +1,87 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:paper_lantern",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 1.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.5
+      },
+      "minecraft:map_color": "#f9fffe",
+      "tag:lepton:paper_lantern": {},
+      "tag:minecraft:is_axe_item_destructible": {},
+      "tag:wood": {},
+      "minecraft:light_emission": 15,
+      "minecraft:light_dampening": 0,
+      "minecraft:flammable": {
+        "catch_chance_modifier": 60,
+        "destroy_chance_modifier": 30
+      },
+      "minecraft:geometry": "geometry.lepton.palette_paper_lantern",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_palette_palette_paper_lantern_side",
+          "render_method": "opaque"
+        },
+        "side": {
+          "texture": "lepton_palette_palette_paper_lantern_side",
+          "render_method": "opaque"
+        },
+        "top": {
+          "texture": "lepton_palette_palette_paper_lantern_top",
+          "render_method": "opaque"
+        },
+        "inside": {
+          "texture": "lepton_palette_palette_paper_lantern_inside",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:collision_box": [
+        {
+          "origin": [
+            -2,
+            0,
+            -2
+          ],
+          "size": [
+            4,
+            16,
+            4
+          ]
+        },
+        {
+          "origin": [
+            -6,
+            2,
+            -6
+          ],
+          "size": [
+            12,
+            12,
+            12
+          ]
+        }
+      ],
+      "minecraft:selection_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          16,
+          12
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/paper_lantern.json"
+    }
+  }
+}

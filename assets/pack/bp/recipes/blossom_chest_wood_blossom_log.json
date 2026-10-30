@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:blossom_chest_wood_blossom_log"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "# #",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:blossom_log"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:blossom_log"
+      }
+    ],
+    "result": {
+      "item": "lepton:blossom_chest",
+      "count": 4
+    },
+    "priority": -2
+  }
+}

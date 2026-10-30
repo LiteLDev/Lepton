@@ -1,0 +1,32 @@
+{
+  "lepton_worldsurface_dirt": {
+    "textures": "textures/blocks/dirt"
+  },
+  "lepton_worldsurface_flower_pot": {
+    "textures": "textures/blocks/flower_pot"
+  },
+  "lepton_worldsurface_glow_lichen_growth": {
+    "textures": "textures/blocks/glow_lichen_growth"
+  },
+  "lepton_worldsurface_glow_shroom": {
+    "textures": "textures/blocks/glow_shroom"
+  },
+  "lepton_worldsurface_glow_shroom_block": {
+    "textures": "textures/blocks/glow_shroom_block"
+  },
+  "lepton_worldsurface_glow_shroom_inside": {
+    "textures": "textures/blocks/glow_shroom_inside"
+  },
+  "lepton_worldsurface_glow_shroom_ring": {
+    "textures": "textures/blocks/glow_shroom_ring"
+  },
+  "lepton_worldsurface_glow_shroom_stem": {
+    "textures": "textures/blocks/glow_shroom_stem"
+  },
+  "lepton_worldsurface_monster_box": {
+    "textures": "textures/blocks/monster_box"
+  },
+  "lepton_worldsurface_monster_box_core": {
+    "textures": "textures/blocks/monster_box_core"
+  }
+}

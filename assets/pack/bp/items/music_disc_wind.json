@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:music_disc_wind",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.record"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_gadgets_lepton_gadgets_music_disc_wind",
+      "minecraft:display_name": {
+        "value": "item.lepton:music_disc_wind.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "rare",
+      "minecraft:record": {
+        "comparator_signal": 15,
+        "duration": 1000000,
+        "sound_event": "record.13"
+      }
+    }
+  }
+}

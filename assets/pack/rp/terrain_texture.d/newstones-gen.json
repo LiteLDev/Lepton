@@ -1,0 +1,350 @@
+{
+  "lepton_newstones_newstones_chiseled_jasper_bricks": {
+    "textures": "textures/blocks/newstones/chiseled_jasper_bricks"
+  },
+  "lepton_newstones_newstones_chiseled_limestone_bricks": {
+    "textures": "textures/blocks/newstones/chiseled_limestone_bricks"
+  },
+  "lepton_newstones_newstones_chiseled_shale_bricks": {
+    "textures": "textures/blocks/newstones/chiseled_shale_bricks"
+  },
+  "lepton_newstones_newstones_jasper": {
+    "textures": "textures/blocks/newstones/jasper"
+  },
+  "lepton_newstones_newstones_jasper_bricks": {
+    "textures": "textures/blocks/newstones/jasper_bricks"
+  },
+  "lepton_newstones_newstones_jasper_pillar": {
+    "textures": "textures/blocks/newstones/jasper_pillar"
+  },
+  "lepton_newstones_newstones_jasper_pillar_top": {
+    "textures": "textures/blocks/newstones/jasper_pillar_top"
+  },
+  "lepton_newstones_newstones_limestone": {
+    "textures": "textures/blocks/newstones/limestone"
+  },
+  "lepton_newstones_newstones_limestone_bricks": {
+    "textures": "textures/blocks/newstones/limestone_bricks"
+  },
+  "lepton_newstones_newstones_limestone_pillar": {
+    "textures": "textures/blocks/newstones/limestone_pillar"
+  },
+  "lepton_newstones_newstones_limestone_pillar_top": {
+    "textures": "textures/blocks/newstones/limestone_pillar_top"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t0": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t0"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t1": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t1"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t10": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t10"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t11": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t11"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t12": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t12"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t13": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t13"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t14": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t14"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t15": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t15"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t2": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t2"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t3": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t3"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t4": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t4"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t5": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t5"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t6": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t6"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t7": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t7"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t8": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t8"
+  },
+  "lepton_newstones_newstones_myalite_chiseled_myalite_bricks_t9": {
+    "textures": "textures/blocks/newstones/myalite/chiseled_myalite_bricks_t9"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t0": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t0"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t1": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t1"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t10": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t10"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t11": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t11"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t12": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t12"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t13": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t13"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t14": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t14"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t15": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t15"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t2": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t2"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t3": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t3"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t4": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t4"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t5": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t5"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t6": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t6"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t7": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t7"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t8": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t8"
+  },
+  "lepton_newstones_newstones_myalite_myalite_bricks_t9": {
+    "textures": "textures/blocks/newstones/myalite/myalite_bricks_t9"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t0": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t0"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t1": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t1"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t10": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t10"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t11": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t11"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t12": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t12"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t13": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t13"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t14": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t14"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t15": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t15"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t2": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t2"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t3": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t3"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t4": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t4"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t5": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t5"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t6": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t6"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t7": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t7"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t8": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t8"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_t9": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_t9"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t0": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t0"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t1": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t1"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t10": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t10"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t11": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t11"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t12": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t12"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t13": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t13"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t14": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t14"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t15": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t15"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t2": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t2"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t3": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t3"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t4": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t4"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t5": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t5"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t6": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t6"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t7": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t7"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t8": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t8"
+  },
+  "lepton_newstones_newstones_myalite_myalite_pillar_top_t9": {
+    "textures": "textures/blocks/newstones/myalite/myalite_pillar_top_t9"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t0": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t0"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t1": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t1"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t10": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t10"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t11": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t11"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t12": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t12"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t13": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t13"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t14": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t14"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t15": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t15"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t2": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t2"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t3": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t3"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t4": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t4"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t5": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t5"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t6": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t6"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t7": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t7"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t8": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t8"
+  },
+  "lepton_newstones_newstones_myalite_myalite_t9": {
+    "textures": "textures/blocks/newstones/myalite/myalite_t9"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t0": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t0"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t1": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t1"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t10": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t10"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t11": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t11"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t12": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t12"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t13": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t13"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t14": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t14"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t15": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t15"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t2": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t2"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t3": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t3"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t4": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t4"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t5": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t5"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t6": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t6"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t7": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t7"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t8": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t8"
+  },
+  "lepton_newstones_newstones_myalite_polished_myalite_t9": {
+    "textures": "textures/blocks/newstones/myalite/polished_myalite_t9"
+  },
+  "lepton_newstones_newstones_permafrost": {
+    "textures": "textures/blocks/newstones/permafrost"
+  },
+  "lepton_newstones_newstones_permafrost_bricks": {
+    "textures": "textures/blocks/newstones/permafrost_bricks"
+  },
+  "lepton_newstones_newstones_polished_jasper": {
+    "textures": "textures/blocks/newstones/polished_jasper"
+  },
+  "lepton_newstones_newstones_polished_limestone": {
+    "textures": "textures/blocks/newstones/polished_limestone"
+  },
+  "lepton_newstones_newstones_polished_shale": {
+    "textures": "textures/blocks/newstones/polished_shale"
+  },
+  "lepton_newstones_newstones_shale": {
+    "textures": "textures/blocks/newstones/shale"
+  },
+  "lepton_newstones_newstones_shale_bricks": {
+    "textures": "textures/blocks/newstones/shale_bricks"
+  },
+  "lepton_newstones_newstones_shale_pillar": {
+    "textures": "textures/blocks/newstones/shale_pillar"
+  },
+  "lepton_newstones_newstones_shale_pillar_top": {
+    "textures": "textures/blocks/newstones/shale_pillar_top"
+  }
+}

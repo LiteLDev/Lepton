@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:calcite_bricks_slab_from_polished_calcite_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:polished_calcite"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:polished_calcite"
+      }
+    ],
+    "result": {
+      "item": "lepton:calcite_bricks_slab",
+      "count": 2
+    }
+  }
+}

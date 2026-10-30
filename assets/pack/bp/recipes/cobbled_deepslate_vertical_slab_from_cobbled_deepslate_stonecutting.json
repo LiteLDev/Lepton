@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:cobbled_deepslate_vertical_slab_from_cobbled_deepslate_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:cobbled_deepslate"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:cobbled_deepslate"
+      }
+    ],
+    "result": {
+      "item": "lepton:cobbled_deepslate_vertical_slab",
+      "count": 2
+    }
+  }
+}

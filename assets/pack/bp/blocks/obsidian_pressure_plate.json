@@ -1,0 +1,110 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "lepton:obsidian_pressure_plate",
+      "menu_category": {
+        "category": "construction",
+        "group": "minecraft:itemGroup.name.pressurePlate"
+      },
+      "states": {
+        "lepton:pressed": [
+          false,
+          true
+        ]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1200.0
+      },
+      "minecraft:map_color": "#191919",
+      "tag:lepton:players_only": {},
+      "tag:minecraft:is_pickaxe_item_destructible": {},
+      "tag:stone": {},
+      "tag:lepton:pressure_plate": {},
+      "tag:lepton:press_ticks_20": {},
+      "minecraft:light_dampening": 0,
+      "minecraft:collision_box": false,
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "south": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "east": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "lepton_redstone_obsidian",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/obsidian_pressure_plate.json",
+      "minecraft:geometry": {
+        "identifier": "geometry.lepton.pressure_plate",
+        "bone_visibility": {
+          "up": "q.block_state('lepton:pressed') == false",
+          "down": "q.block_state('lepton:pressed') == true"
+        }
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -7,
+          0,
+          -7
+        ],
+        "size": [
+          14,
+          1,
+          14
+        ]
+      },
+      "minecraft:movable": {
+        "movement_type": "popped"
+      }
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('lepton:pressed') == true",
+        "components": {
+          "minecraft:selection_box": {
+            "origin": [
+              -7,
+              0,
+              -7
+            ],
+            "size": [
+              14,
+              0.5,
+              14
+            ]
+          },
+          "minecraft:redstone_producer": {
+            "power": 15,
+            "strongly_powered_face": "down"
+          }
+        }
+      }
+    ]
+  }
+}

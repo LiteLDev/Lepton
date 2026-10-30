@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "lepton:resilience_splash_potion",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.splashPotion"
+      }
+    },
+    "components": {
+      "minecraft:icon": "lepton_mobsoverworld_resilience_splash_potion",
+      "minecraft:glint": true,
+      "minecraft:max_stack_size": 1,
+      "minecraft:projectile": {
+        "projectile_entity": "lepton:resilience_splash_potion_entity",
+        "minimum_critical_power": 1.0
+      },
+      "minecraft:throwable": {
+        "do_swing_animation": true,
+        "launch_power_scale": 0.5,
+        "max_launch_power": 0.5
+      }
+    }
+  }
+}

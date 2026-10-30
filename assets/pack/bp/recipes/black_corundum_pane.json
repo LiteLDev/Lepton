@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "lepton:black_corundum_pane"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "###",
+      "###"
+    ],
+    "key": {
+      "#": {
+        "item": "lepton:black_corundum"
+      }
+    },
+    "unlock": [
+      {
+        "item": "lepton:black_corundum"
+      }
+    ],
+    "result": {
+      "item": "lepton:black_corundum_pane",
+      "count": 16
+    }
+  }
+}

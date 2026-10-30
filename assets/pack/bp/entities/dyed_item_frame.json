@@ -1,0 +1,87 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "lepton:dyed_item_frame",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "lepton:facing": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ],
+          "default": 3,
+          "client_sync": true
+        },
+        "lepton:color": {
+          "type": "int",
+          "range": [
+            0,
+            16777215
+          ],
+          "default": 16777215,
+          "client_sync": true
+        },
+        "lepton:map": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "lepton:glow": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "lepton_frame_display",
+          "inanimate"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.01,
+        "height": 0.01
+      },
+      "minecraft:physics": {
+        "has_gravity": false,
+        "has_collision": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": "no"
+        }
+      },
+      "minecraft:health": {
+        "value": 1,
+        "max": 1
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:body_rotation_blocked": {},
+      "minecraft:nameable": {
+        "always_show": false,
+        "allow_name_tag_renaming": false
+      },
+      "minecraft:conditional_bandwidth_optimization": {
+        "default_values": {
+          "max_optimized_distance": 0.0,
+          "max_dropped_ticks": 0,
+          "use_motion_prediction_hints": false
+        }
+      }
+    }
+  }
+}
