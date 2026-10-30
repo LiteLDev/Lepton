@@ -358,7 +358,9 @@ LP_REGISTER_SELFTEST("newwoods.ancient_tree", [](Context& ctx) -> ll::coro::Coro
     auto const* tree = nw::treeByName("ancient");
     ctx.require(tree && plantSapling(ctx, p, *tree), "ashen sapling planted");
     stepAside(ctx, p, 10);
-    co_await ctx.ticks(2);
+    // Advance in the planting tick: the stage-1 sapling's own random-tick chain (first tick 1..2730
+    // ticks after planting, 1 in 7 to grow) is live from now on, and once grew the tree during a
+    // 2-tick wait in a client run, so the seeded growth below found no sapling.
     nw::JavaRandom r(5);
     ctx.require(nw::advanceSapling(regionOf(ctx), lp::game::blockPos(off(p, 0, 1, 0)), r), "the ashen tree grew");
     auto blocks = collectTree(ctx, off(p, 0, 1, 0), 8, 32);
