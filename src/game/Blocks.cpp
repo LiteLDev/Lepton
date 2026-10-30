@@ -21,6 +21,13 @@ namespace {
 constexpr int kUpdateAll = 3; ///< neighbours + clients
 }
 
+BlockSource* regionOf(int dim) {
+    auto level = ll::service::getLevel();
+    if (!level) return nullptr;
+    auto d = level->getDimension(dim).lock();
+    return d ? &d->getBlockSourceFromMainChunkSource() : nullptr;
+}
+
 std::string blockId(Block const& block) { return block.getTypeName(); }
 
 std::string blockIdAt(BlockSource& region, BlockPos const& pos) {

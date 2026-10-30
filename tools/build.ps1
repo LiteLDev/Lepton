@@ -7,13 +7,40 @@
 # Each platform has its own build dir (build/<target>); outputs land in
 #   bin/<target>/Lepton/  (dll, pdb, manifest.json, lang/, behavior_packs/, resource_packs/)
 # Copy that folder to `plugins/` (BDS) or `mods/` (LeviLauncher client).
+#
+# Builds of every worktree on this machine share a few build slots, so parallel work does not
+# exhaust CPU and memory: a build waits for a free slot (`$env:LP_BUILD_SLOTS`, default 2) and
+# compiles with `-Jobs` jobs (`$env:LP_BUILD_JOBS`, default half the logical processors).
 param(
     [ValidateSet('server', 'client', 'all')][string]$Target = 'all',
     [ValidateSet('release', 'debug')][string]$Mode = 'release',
-    [switch]$Tests
+    [switch]$Tests,
+    [int]$Jobs = $(if ($env:LP_BUILD_JOBS) { [int]$env:LP_BUILD_JOBS } else { [Math]::Max(2, [int]([Environment]::ProcessorCount / 2)) })
 )
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path "$PSScriptRoot/..").Path
+
+# Machine-wide build slots: an exclusively opened lock file per slot, released by the OS when the
+# process exits (so a killed build never leaves a stale lock).
+$slotCount = if ($env:LP_BUILD_SLOTS) { [Math]::Max(1, [int]$env:LP_BUILD_SLOTS) } else { 2 }
+$slotDir = Join-Path $env:LOCALAPPDATA 'lp-build'
+New-Item -ItemType Directory -Force $slotDir | Out-Null
+$slotLock = $null
+$waitStart = Get-Date
+while (-not $slotLock) {
+    for ($i = 1; $i -le $slotCount -and -not $slotLock; $i++) {
+        try {
+            $slotLock = [IO.File]::Open((Join-Path $slotDir "slot$i.lock"), 'OpenOrCreate', 'ReadWrite', 'None')
+            Write-Host "==> build slot $i/$slotCount ($Jobs jobs)"
+        } catch [IO.IOException] {}
+    }
+    if (-not $slotLock) {
+        $waited = [int]((Get-Date) - $waitStart).TotalSeconds
+        if ($waited % 60 -lt 5) { Write-Host "==> waiting for a free build slot ($waited s)" }
+        Start-Sleep -Seconds 5
+    }
+}
+
 Push-Location $root
 try {
     # Fresh shells may not have the tools on PATH yet. Append (never prepend) the registry PATH so
@@ -42,10 +69,10 @@ try {
     $targets = if ($Target -eq 'all') { @('server', 'client') } else { @($Target) }
     foreach ($t in $targets) {
         Write-Host "==> configuring $t ($Mode)"
-        xmake f -a x64 -m $Mode -p windows --target_type=$t -o "build/$t" @vsArgs -y
+        xmake f -P $root -a x64 -m $Mode -p windows --target_type=$t -o "build/$t" @vsArgs -y
         if ($LASTEXITCODE) { throw "xmake config failed for $t" }
         Write-Host "==> building $t"
-        xmake build -y Lepton
+        xmake build -P $root -y -j $Jobs Lepton
         if ($LASTEXITCODE) { throw "build failed for $t" }
         $out = Join-Path $root "bin/$t/Lepton"
         if (-not (Test-Path (Join-Path $out 'Lepton.dll'))) { throw "missing output $out" }
@@ -53,11 +80,12 @@ try {
     }
     if ($Tests) {
         Write-Host '==> unit tests'
-        xmake build -y lp-tests
+        xmake build -P $root -y -j $Jobs lp-tests
         if ($LASTEXITCODE) { throw 'lp-tests build failed' }
-        xmake run lp-tests
+        xmake run -P $root lp-tests
         if ($LASTEXITCODE) { throw 'unit tests failed' }
     }
 } finally {
     Pop-Location
+    $slotLock.Dispose()
 }

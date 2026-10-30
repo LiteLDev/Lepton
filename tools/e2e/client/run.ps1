@@ -182,6 +182,7 @@ try {
         }
         if (-not $KeepOtherMods) { Move-OtherModsAside }
         Remove-BeDDLeftover   # of a killed run
+        Clear-CachedLeptonPack         # remote modes: download this build's RP from the host
         if ($script:Headless) { Install-BeDDMod -ModsDir $script:ModsDir -PipeName $script:BeDDPipe -Trace:$HeadlessTrace }
         if ($remote) { Set-ExternalServer $hostInfo.port } else {
             Restore-TestWorld
@@ -189,7 +190,7 @@ try {
             # worlds opened for multiplayer knock each other out ("An error has occurred", "Blaze").
             if ($script:Headless) { Set-WorldSinglePlayer (Join-Path (Get-WorldsDir) $script:WorldName) }
         }
-        Reset-CameraPerspective
+        Reset-ViewOptions              # HUD shown, first person, default GUI scale (see lib.ps1)
         $prelaunch = Join-Path $PSScriptRoot "scenarios/$Scenario.prelaunch.ps1"
         if (Test-Path $prelaunch) { . $prelaunch }
         try {

@@ -60,6 +60,10 @@ pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario companion -Mode remote-
 pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario vanilla-refused -Mode remote-vanilla
 ```
 
+Before every launch the harness also resets the view options of the instance's `options.txt` to known values (`Reset-ViewOptions` in `client/lib.ps1`: HUD shown, first person, default GUI scale, safe zone and interface opacity, no debug HUD), so a run that pressed F1 / F5 or changed settings cannot spoil later screenshots.
+
+Before every launch the harness deletes the game's cached copies of Lepton's resource pack (`minecraftpe\packcache\resource` of the instance, matched by the RP UUID): every development build has the same pack UUID and version, so the client would otherwise keep using the pack it downloaded from a host in an earlier run (another unit's or an older build's assets). Prelaunch scripts need not do this themselves.
+
 How the remote modes work: `run.ps1` starts `server/run.ps1 -Scenario client-host` in the
 background with `$env:LP_E2E_HOST_DIR` (`client/out/<scenario>/host/`). The host writes
 `ready.json` with its UDP port, runs console commands dropped as `cmd-*.txt`

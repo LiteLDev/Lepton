@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "lepton:u0_probe_stone_stairs_from_u0_probe_stone_stonecutting"
+    },
+    "tags": [
+      "stonecutter"
+    ],
+    "ingredients": [
+      {
+        "item": "lepton:u0_probe_stone"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "lepton:u0_probe_stone"
+      }
+    ],
+    "result": {
+      "item": "lepton:u0_probe_stone_stairs",
+      "count": 1
+    }
+  }
+}

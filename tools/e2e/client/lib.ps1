@@ -187,19 +187,45 @@ function Get-GameDataDir {
     return Join-Path $env:APPDATA 'Minecraft Bedrock'
 }
 
-# Puts the camera back to first person (options.txt `game_thirdperson:0`) so a scenario that
-# switched views (F5 / camera presets) can't leave the shared game in third person for later runs.
-function Reset-CameraPerspective {
+# View options every run starts from (options.txt of the instance): a scenario (or a killed run)
+# that hid the HUD (F1), switched to third person (F5 / camera presets), changed the GUI scale,
+# the safe zone or the interface opacity would otherwise spoil the screenshots of later runs.
+$script:ViewOptions = [ordered]@{
+    'gfx_hidehud'                     = '0'
+    'game_thirdperson'                = '0'
+    'gfx_guiscale_offset'             = '0'
+    'gfx_safe_zone_x'                 = '1'
+    'gfx_safe_zone_y'                 = '1'
+    'gfx_safe_zone_all'               = '1'
+    'gfx_safe_zone_pos_x'             = '0'
+    'gfx_safe_zone_pos_y'             = '0'
+    'gfx_interface_opacity'           = '1'
+    'gfx_hud_text_background_opacity' = '0.6'
+    'gfx_ui_profile'                  = '0'
+    'dev_debug_hud'                   = '0'
+    'gfx_splitscreen'                 = '0'
+}
+
+function Reset-ViewOptions {
     $data = Get-GameDataDir
     foreach ($o in Get-ChildItem -Recurse -Path $data -Filter 'options.txt' -ErrorAction SilentlyContinue) {
-        $lines = Get-Content $o.FullName
-        if ($lines -match '^game_thirdperson:[1-9]') {
-            $lines -replace '^game_thirdperson:\d+', 'game_thirdperson:0' | Set-Content $o.FullName
-            Write-Step "reset camera perspective to first person in $($o.FullName)"
+        $lines   = @(Get-Content $o.FullName)
+        $changed = @()
+        $lines = $lines | ForEach-Object {
+            if ($_ -match '^([^:]+):(.*)$' -and $script:ViewOptions.Contains($Matches[1]) -and $Matches[2] -ne $script:ViewOptions[$Matches[1]]) {
+                $changed += "$($Matches[1]):$($Matches[2])"
+                "$($Matches[1]):$($script:ViewOptions[$Matches[1]])"
+            } else { $_ }
+        }
+        if ($changed) {
+            $lines | Set-Content $o.FullName
+            Write-Step "reset view options ($($changed -join ', ')) in $($o.FullName)"
         }
     }
 }
 
+# Kept for scenarios that call it: the camera is one of the view options.
+function Reset-CameraPerspective { Reset-ViewOptions }
 function Get-WorldsDir {
     $data = Get-GameDataDir
     $dirs = @(Get-ChildItem (Join-Path $data 'Users') -Directory -ErrorAction SilentlyContinue |
@@ -224,6 +250,20 @@ function Deploy-Mod([string]$BinDir) {
 function Remove-DeployedMod {
     $dest = Join-Path $script:ModsDir $script:ModName
     if (Test-Path $dest) { Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue; Write-Step "removed $dest" }
+}
+
+# The game keeps resource packs downloaded from servers in its pack cache by UUID and version, and
+# every development build of Lepton's RP has the same ones: without this, a remote run would test
+# the RP of whichever build the instance downloaded first. Drops the cached copies of Lepton's RP
+# (UUID from assets/pack/rp/manifest.json) so the client downloads the host's pack again.
+function Clear-CachedLeptonPack {
+    $uuid = (Get-Content (Join-Path $script:RepoRoot 'assets/pack/rp/manifest.json') -Raw | ConvertFrom-Json).header.uuid
+    $cache = Join-Path (Split-Path $script:ModsDir) 'Minecraft Bedrock\minecraftpe\packcache\resource'
+    if (-not (Test-Path $cache)) { return }
+    Get-ChildItem $cache -Directory | Where-Object {
+        $m = Join-Path $_.FullName 'manifest.json'
+        (Test-Path $m) -and ((Get-Content $m -Raw) -match [regex]::Escape($uuid))
+    } | ForEach-Object { Write-Step "dropping the cached Lepton RP $($_.Name)"; Remove-Item -Recurse -Force $_.FullName }
 }
 
 # Remove mods\BeDD (a leftover of a killed run, or this run's copy once the game is
