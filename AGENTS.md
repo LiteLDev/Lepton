@@ -136,7 +136,7 @@ pwsh tools/build.ps1 -Target all -Tests     # bin/server/Lepton + bin/client/Lep
 pwsh tools/build.ps1 -Target server -Tests  # one platform + unit tests
 xmake build -y lp-tests; xmake run lp-tests
 pwsh -NoProfile -File tools/e2e/server/run.ps1 -Scenario smoke       # BDS (4 slots, waits for a free one)
-pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless client via LeviHeadlessInput
+pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless client via Be.D.D.
 ```
 
 - Builds are throttled machine-wide: `tools/build.ps1` waits for one of `$env:LP_BUILD_SLOTS` (default 2)
@@ -150,7 +150,7 @@ pwsh -NoProfile -File tools/e2e/client/run.ps1 -Scenario smoke       # headless 
 - Log contract: `Lepton enabled` on enable; `Lepton world ready` when a world is available.
 - E2E client runs: set `$env:LEVI_E2E_SLOTS='1,2,3,4'` to take the first free game slot. Locks live in
   `%APPDATA%\levilauncher.exe\` (`bei-e2e.lock` for slot 1, `hiN-e2e.lock` for clones); the harness
-  waits for them. Headless input (LeviHeadlessInput) is the default: the game runs in the
+  waits for them. Headless input (Be.D.D.) is the default: the game runs in the
   background and never takes the real mouse/keyboard.
 - Worktrees under the main checkout: run xmake with `-P .` (as `tools/build.ps1` does), otherwise xmake
   picks the parent checkout's project and builds there. If a build rewrites `xmake-requires.lock`
