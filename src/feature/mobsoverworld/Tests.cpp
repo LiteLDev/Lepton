@@ -412,16 +412,44 @@ LP_REGISTER_SELFTEST("mobsoverworld.toretoise_stomp", [](Context& ctx) -> ll::co
     Actor*  pig = s.add(entities::spawn(0, "minecraft:pig", at(pos, 2.0f)));
     ctx.require(t && pig, "an oretoise and a pig spawn");
     int64_t id = entities::idOf(*t), pigId = entities::idOf(*pig);
+    // Neither mob may stroll away during the 20-tick wind-up: the stomp only reaches 3 blocks
+    // around the (Quark-offset) centre, and a strolling pig left that box in one client run. The
+    // oretoise is frozen; the pig is put back inside the box every tick until the stomp.
+    entities::triggerEvent(*t, "lepton:freeze");
     co_await ctx.ticks(10);
     auto& player = ctx.player();
     hold(ctx, player, "minecraft:stick");
     entities::find(id)->hurtByCause(1, Cause::EntityAttack, player);
     co_await ctx.ticks(1);
-    ctx.check(mo::toretoise::angerOf(*entities::find(id)) > 0, "a hit makes it angry");
-    int health = entities::find(pigId) ? entities::find(pigId)->getHealth() : 0;
-    co_await ctx.ticks(25);
-    auto* p = entities::find(pigId);
-    ctx.check(!p || p->getHealth() < health, "the stomp hurts mobs around it");
+    t = entities::find(id);
+    ctx.require(t != nullptr, "the oretoise survives the hit");
+    ctx.check(mo::toretoise::angerOf(*t) > 0, "a hit makes it angry");
+    auto pinPig = [&]() -> Actor* {
+        Actor* tt = entities::find(id);
+        Actor* p  = entities::find(pigId);
+        if (!tt || !p) return p;
+        Vec3 c = tt->getPosition();
+        // Inside the stomp box (x and z centre + 1 block), just outside the oretoise's own box.
+        p->teleportTo(Vec3{c.x + 1.0f, c.y, c.z + 2.2f}, false, 0, 1, false);
+        return p;
+    };
+    Actor* p      = pinPig();
+    int    health = p ? p->getHealth() : 0;
+    for (int i = 0; i < 40 && entities::find(id) && mo::toretoise::angerOf(*entities::find(id)) > 0; ++i) {
+        pinPig();
+        co_await ctx.ticks(1);
+    }
+    co_await ctx.ticks(1);
+    t = entities::find(id);
+    ctx.check(t && mo::toretoise::angerOf(*t) == 0, "the anger runs out (stomp)");
+    p = entities::find(pigId);
+    std::string where;
+    if (p && t) {
+        Vec3 d = p->getPosition() - t->getPosition();
+        where  = " (pig at " + std::to_string(d.x) + "," + std::to_string(d.y) + "," + std::to_string(d.z) +
+                " from the oretoise, health " + std::to_string(health) + " -> " + std::to_string(p->getHealth()) + ")";
+    }
+    ctx.check(!p || p->getHealth() < health, "the stomp hurts mobs around it" + where);
     hold(ctx, player, "minecraft:air", 0);
 });
 
